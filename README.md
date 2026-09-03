@@ -51,7 +51,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | --- | --- | --- | --- |
 | 1.1 | Theorem | main comparability, continuous | ⚪ statement recorded (`QFS.TheoremOneOne`), not proved |
 | 1.2 | Remark | strength of the hypotheses | ⚪ (condition (M) is `QFS.CondM`) |
-| 1.3 | Theorem | main comparability, discrete | ⚪ statement recorded (`QFS.TheoremOneThree`), not proved |
+| 1.3 | Theorem | main comparability, discrete | ✅ **proved** (`QFS.theoremOneThree`) |
 | 1.4 | Theorem | `H_k(Ω) = H^{α/2}(Ω)` | ❌ out of scope |
 | 1.5 | Corollary | regular Dirichlet form | ❌ out of scope |
 | 1.6 | Corollary | Harnack / Hölder regularity | ❌ out of scope (quoted from [DyKa15]) |
@@ -102,7 +102,11 @@ false as stated). From Section 1, the function-space definitions, assumption
 and 1.3 are recorded as type-checked `Prop`s so the remaining target is precise.
 **Section 5 is formalised completely**, Theorem 5.15 included
 (`QFS.path_props`); its Step 2 needed a repair, recorded as Deviation 16.
-Section 6 remains a project in its own right.
+**Section 6 is formalised**, so Theorem 1.3 — the paper's main discrete
+theorem — is proved (`QFS.theoremOneThree`). Its Section 6 needed a repair too:
+see Deviation 17. What is left is the continuous half, Theorem 1.1, which needs
+Section 3's discrete approximation and hence Lemma 3.3, false as stated (see
+Deviation 7).
 
 ## What is proved, in detail
 
@@ -161,7 +165,18 @@ Section 6 remains a project in its own right.
 | The "trivially true" reverse inequality of (1.5) | §1, after Thm. 1.1 | `QFS.form_le_formHs` | ✅ proved |
 | **Equation (1.6)**: `H^{α/2}(Ω) ⊆ H_k(Ω)` | eq. (1.6) | `QFS.Hs_subset_Hk` | ✅ **proved** |
 | Statement of Theorem 1.1 (with the `α`-uniform form) | Thm. 1.1 | `QFS.TheoremOneOne`, `QFS.TheoremOneOneUniform` | ⚪ stated, not proved |
-| Statement of Theorem 1.3 | Thm. 1.3 | `QFS.discreteForm`, `QFS.TheoremOneThree` | ⚪ stated, not proved |
+| Statement of Theorem 1.3 | Thm. 1.3 | `QFS.discreteForm`, `QFS.TheoremOneThree` | ✅ stated |
+| **Theorem 1.3** | Thm. 1.3, §6 | `QFS.theoremOneThree` | ✅ **proved** |
+| Telescoping and Cauchy–Schwarz along a walk | §6 | `QFS.walk_telescope`, `QFS.list_sq_sum_le`, `QFS.walk_sq_le` | ✅ proved |
+| A walk stays within its total length of its start | §6 | `QFS.norm_sub_start_le` | ✅ proved |
+| **Assumption (1.7) at an edge of `G`** | §6 | `QFS.jumpKernel_le_of_dart` | ✅ **proved** |
+| **The chain estimate for one pair** | §6 | `QFS.chain_estimate` | ✅ **proved** |
+| Both sides are finite sums | §6 | `QFS.pairSet`, `QFS.pairSet_finite`, `QFS.discreteForm_eq_sum`, `QFS.tsum_subtype_eq_finset_sum` | ✅ proved |
+| A list sum against the values it takes | §6 | `QFS.list_sum_le_card_mul_sum`, `QFS.ofReal_list_sum` | ✅ proved |
+| **Step 6's double counting, as a sum bound** | §6 | `QFS.sum_select_le`, `QFS.card_le_of_encard_le` | ✅ **proved** |
+| Dimension `0` is degenerate | §6 | `QFS.discreteForm_dim_zero` | ✅ proved |
+| **Theorem 5.15 with edges longer than `R₀`** | Thm. 5.15 (strengthened) | `QFS.PathPropsLong`, `QFS.PathPropsLongHolds`, `QFS.path_props_long` | ✅ **proved** |
+| Forgetting the extra clause; transfer along `Γ' ≤ Γ` | Thm. 5.15 | `QFS.PathPropsLong.toPathProps`, `QFS.PathPropsLongHolds.toPathPropsHolds`, `QFS.PathPropsLong.mono_config` | ✅ proved |
 | Every `√d/2`-ball holds a lattice point | §5.1 preamble | `QFS.exists_lattice_mem_closedBall` | ✅ proved |
 | Paths not leaving a set | Def. 5.3 | `QFS.ConnWithin` | ✅ defined |
 | **Lemma 5.1 (1), (2)**: lattice points in cones | Lem. 5.1 | `QFS.exists_lattice_mem_cone`, `QFS.exists_lattice_mem_inter` | ✅ **proved** |
@@ -221,7 +236,7 @@ Section 6 remains a project in its own right.
 | `G` as a `SimpleGraph`, with walks | §5.3 | `QFS.latticeGraph`, `QFS.LatticePt` | ✅ defined |
 | Statement of Theorem 5.15 | Thm. 5.15 | `QFS.PathProps`, `QFS.PathPropsHolds` | ✅ stated |
 | **Theorem 5.15** | Thm. 5.15 | `QFS.path_props` | ✅ **proved** |
-| Theorem 5.15, Steps 3–6 | Thm. 5.15 | `QFS.pathProps_of_scaleData`, `QFS.pathPropsHolds_of_scaleData` | ✅ proved |
+| Theorem 5.15, Steps 3–6 | Thm. 5.15 | `QFS.pathPropsLong_of_scaleData`, `QFS.pathPropsHolds_of_scaleData`, `QFS.pathPropsLongHolds_of_scaleData` | ✅ proved |
 | Coordinates determine a point; rounding is injective | (new) | `QFS.euclidean_ext`, `QFS.round_injOn_lattice` | ✅ proved |
 | **`#(B_M ∩ ℤ^d) ≤ (2⌈M⌉+1)^d`, uniformly in the centre** | Thm. 5.15, Steps 1–2 | `QFS.encard_lattice_inter_closedBall_le` | ✅ **proved** |
 | **A block of side `ℓ` has `≥ ℓ^d` lattice points** | Thm. 5.15, Step 2 | `QFS.le_encard_block` | ✅ **proved** |
@@ -258,7 +273,7 @@ Section 6 remains a project in its own right.
 | **The local data of Steps 1–2** | Thm. 5.15, Steps 1–2 | `QFS.ScaleData` | ✅ **defined** |
 | Step 5's upper bound, from `edge_near` | Thm. 5.15, Step 5 | `QFS.ScaleData.edgeLen_lt` | ✅ proved |
 | The fibre bound on the lattice as a type | Thm. 5.15, Step 6 | `QFS.ScaleData.fibre_le_latticePt` | ✅ proved |
-| **Steps 3–6: the assembly** | Thm. 5.15, Steps 3–6 | `QFS.pathProps_of_scaleData` | ✅ **proved** |
+| **Steps 3–6: the assembly** | Thm. 5.15, Steps 3–6 | `QFS.pathPropsLong_of_scaleData` | ✅ **proved** |
 | **Theorem 5.15 from Steps 1–2** | Thm. 5.15 | `QFS.pathPropsHolds_of_scaleData` | ✅ **proved** |
 | Balanced hashes; the paper's "WLOG `#` majority set `= a`" | Thm. 5.15, Step 2 | `QFS.exists_hash`, `QFS.exists_indexed_rep` | ✅ proved |
 | The one-point part of admissibility | Thm. 5.15, Step 2 | `QFS.AdmissiblePt`, `QFS.Admissible.left`, `QFS.Admissible.right` | ✅ defined |
@@ -520,26 +535,47 @@ Each departure from the paper, and why.
     paper states it is nevertheless proved, as
     `QFS.exists_favoredWalk_covering` and `QFS.exists_choiceWalk_covering`.
 
+17. **Section 6's chaining needs edges longer than `R₀`, and claim (4) does not
+    give it.** The computation displayed in Section 6 applies the *lower* bound
+    of assumption (1.7) at each edge `{z_i, z_{i+1}}` of `p_xy`, to replace
+    `|z_{i+1} − z_i|^{-d-α}` by `Λ ω(z_i, z_{i+1})`. That bound is only assumed
+    for `|x − y| > R₀`. But claim (4) of Theorem 5.15 bounds an edge below only
+    by `λ^{-1}|x − y|`, and `λ ≥ R₀`, so for a pair with `|x − y|` just above
+    `R₀` the guaranteed edge length is about `R₀/λ ≤ 1` — well short of `R₀`.
+    Restricting to pairs with `|x − y| > λR₀` does not help either: the pairs
+    with `R₀ < |x − y| ≤ λR₀` still need chains, and `ω(x, y)` may vanish for
+    them, since the indicator in (1.7) is `0` unless one point lies in the
+    other's cone.
+
+    The repair is in the construction, not in the estimate. Theorem 5.15 routes
+    a pair at the scale `n` with `|x − y| ∈ [Δ^{n-1}, Δ^n)`, and at the bottom
+    scale `n = 1` the town is `T(Δ, 1)`, whose edges can be as short as `1`.
+    Routing **one scale up** — the admissible window becomes `[Δ^{m-1}, Δ^m)`
+    with `m ≥ 1`, which is `QFS.Admissible` — makes every edge at least
+    `Δ^m ≥ Δ` long, and `Δ > R₀` by `QFS.ScaleStep`. The cost is a factor `Δ` in
+    `λ`, which becomes `2Δ²R`.
+
+    `QFS.PathPropsLong` is Theorem 5.15 with the extra clause `R₀ < |edge|`, and
+    `QFS.path_props_long` proves it; `QFS.PathPropsLong.toPathProps` forgets the
+    clause, so `QFS.path_props` still records exactly the paper's statement.
+
 ## Not attempted
 
-Recorded here rather than silently omitted. The paper's two main theorems and
-the machinery specific to them are out of scope for this formalisation; what is
-formalised is the geometric and graph-theoretic layer they are built on.
+Recorded here rather than silently omitted. What is not formalised is the
+continuous half of the paper — Theorem 1.1 and everything downstream of it —
+together with the results the paper itself quotes from elsewhere.
 
 | Result | Paper | Why not |
 | --- | --- | --- |
-| Comparability on balls, continuous | Thm. 1.1 | Needs the whole of §§3, 5, 6. Statement recorded as `QFS.TheoremOneOne`. |
-| Comparability on balls, discrete | Thm. 1.3 | The paper's main theorem; needs §§5–6. Statement recorded as `QFS.TheoremOneThree`. |
-| `H_k(Ω) = H^{α/2}(Ω)`, density | Thm. 1.4 | Depends on Thm. 1.3 and on Lipschitz-domain extension theory not in scope. |
+| Comparability on balls, continuous | Thm. 1.1 | Needs §3's discrete approximation, hence Lemma 3.3, which is false as stated (Deviation 7). Statement recorded as `QFS.TheoremOneOne`. |
+| `H_k(Ω) = H^{α/2}(Ω)`, density | Thm. 1.4 | Depends on Thm. 1.1 and on Lipschitz-domain extension theory not in scope. |
 | Regular Dirichlet form; Markov process | Cor. 1.5 | Depends on Thm. 1.1 and on Dirichlet-form theory (Fukushima–Oshima–Takeda) absent from Mathlib. |
 | Weak Harnack, Hölder regularity | Cor. 1.6 | Quoted from Dyda–Kassmann; not proved in the paper. |
-| `hℤ^d` rescaling | Cor. 3.1 | Depends on Thm. 1.3. |
-| Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Thm. 1.3's setting, and on Lemma 3.3 (see Deviations 7). |
+| `hℤ^d` rescaling | Cor. 3.1 | A rescaling of Theorem 1.3; the rescaled discrete setting is not set up here. |
+| Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Lemma 3.3 (see Deviation 7). |
 | Lemma 3.3 for `d ≥ 2` | Lem. 3.3 | True but needs an argument the paper does not give; see Deviations 7. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
-| Path properties | §5 (Thm. 5.15) | The quantitative path estimates; statement recorded as `QFS.PathPropsHolds`. See below. (Results 5.1–5.14 and 5.16 **are** formalised.) |
-| Proof of Theorem 1.3 | §6 | As above. |
-| Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §§3 and 6. |
+| Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §3 and to the continuous half. |
 
 ## Lemma 5.7
 
@@ -757,17 +793,19 @@ follows from that local data.
 | `edge_near` | every endpoint lies in `B_{Δ^{m+1}R}(Δ^{m+1}z)` (Steps 1, 6) |
 | `fibre_le` | at most `K` pairs share a walk through a given edge (`φ_z`) |
 
-`QFS.Admissible` is the paper's set `A` — lattice pairs in
-`B_{2√d Δⁿ}(z)` at distance in `[Δ^{n-1}, Δⁿ)`, with the paper's `n` being
-`m + 1`. Then `QFS.pathProps_of_scaleData` proves
+`QFS.Admissible` is the paper's set `A` — lattice pairs in the ball
+`B_{2√d Δ^{m+1}}(Δ^{m+1}z)` at distance in `[Δ^{m-1}, Δ^m)`, with `m ≥ 1`. The
+paper's window is one scale lower; routing a scale up is what makes every edge
+longer than `R₀`, which Section 6 needs (Deviation 17). Then
+`QFS.pathPropsLong_of_scaleData` proves
 
 ```
-PathProps Γ t ((2C+1)(2⌈R⌉+1)^d K) (2ΔR)
+PathPropsLong Γ t ((2C+1)(2⌈R⌉+1)^d K) (2Δ²R) R₀
 ```
 
-whenever `Δ ≥ 2`, `R ≥ 1` and `2^C ≥ 2ΔR`, and
-`QFS.pathPropsHolds_of_scaleData` wraps that into `PathPropsHolds`. The four
-steps:
+whenever `Δ ≥ 2`, `R ≥ 1`, `R₀ < Δ` and `2^C ≥ 2ΔR`, and
+`QFS.pathPropsLongHolds_of_scaleData` wraps that into `PathPropsLongHolds`. The
+four steps:
 
 * **Step 3** is `QFS.exists_scale_and_centre`. `QFS.exists_scale` puts every
   `L ≥ 1` in exactly one window `[Δ^m, Δ^{m+1})` (`Nat.findGreatest` on
@@ -778,9 +816,9 @@ steps:
   for every `d ≥ 1` is what makes the paper's radius `2√d Δⁿ` sufficient.
 * **Step 4** is `length_le` verbatim.
 * **Step 5** turns the absolute edge bounds into bounds relative to `‖x − y‖`.
-  Since `Δ^m ≤ ‖x − y‖ < Δ^{m+1}` and every edge has length in
-  `[Δ^m, 2Δ^{m+1}R)`, both comparisons hold with `λ = 2ΔR` — the paper's
-  constant. The upper bound is not an extra hypothesis:
+  Since `Δ^{m-1} ≤ ‖x − y‖ < Δ^m` and every edge has length in
+  `[Δ^m, 2Δ^{m+1}R)`, both comparisons hold with `λ = 2Δ²R` — the paper's
+  `2ΔR`, times the scale shift. The upper bound is not an extra hypothesis:
   `QFS.ScaleData.edgeLen_lt` derives `2Δ^{m+1}R` from `edge_near` alone, since
   both endpoints sit in a ball of that diameter, which is how the paper gets it
   too.
@@ -836,8 +874,42 @@ configuration with at most `L` types whose cones sit inside `Γ`'s, and
 walks are walks.
 
 The one substantive change is to Step 2's assignment `φ_z`, which as stated does
-not bound the multiplicity of a first-jump edge; see **Deviation 16**. Section 6
-sits on top of Theorem 5.15 and is not attempted.
+not bound the multiplicity of a first-jump edge; see **Deviation 16**. A second
+change, needed by Section 6, routes every pair one scale up so that every edge is
+longer than `R₀`; see **Deviation 17**.
+
+## Section 6: Theorem 1.3
+
+Section 6 is short — the paper calls it "an easy consequence of Theorem 5.15" —
+and `QFS.theoremOneThree` is its proof, with no hypothesis on the dimension.
+Given a pair `x, y ∈ B_R(x₀) ∩ ℤ^d` at distance more than `R₀`, take the path
+`p_xy = (x = z_1, …, z_k = y)` of Theorem 5.15 and:
+
+* **telescope and Cauchy–Schwarz.** `QFS.walk_telescope` sums the increments
+  along a walk, `QFS.list_sq_sum_le` is `(∑ aᵢ)² ≤ n ∑ aᵢ²`, and
+  `QFS.walk_sq_le` combines them: `(f(x) − f(y))² ≤ k ∑ᵢ (f(z_{i+1}) − f(z_i))²`.
+* **rescale the kernel.** Claim (4) gives `|z_{i+1} − z_i| ≤ λ|x − y|`, so
+  `|x − y|^{-d-α} ≤ λ^{d+α}|z_{i+1} − z_i|^{-d-α}` — the `rpow` is antitone in
+  its base for a nonpositive exponent.
+* **apply (1.7).** `QFS.jumpKernel_le_of_dart`: an edge of `G` means one endpoint
+  lies in the other's cone, so the indicator in (1.7) is `1`; and the edge is
+  longer than `R₀` by `QFS.PathPropsLong`, so the lower bound applies and
+  `|z_{i+1} − z_i|^{-d-α} ≤ Λ ω(z_i, z_{i+1})`.
+
+`QFS.chain_estimate` is those three steps for one pair. Summing over pairs is
+where claim (3) enters: `QFS.sum_select_le` is the double count — if every pair
+selects a set of edges, and no edge is selected by more than `M` pairs, summing
+over the selected sets costs a factor `M`. Both balls hold finitely many lattice
+points (`QFS.pairSet_finite`), so both sides of Theorem 1.3 are finite sums
+(`QFS.discreteForm_eq_sum`) and the exchange is `Finset.sum_comm`.
+
+The constants are `κ = 1 + 2Nλ` — a walk of at most `N` edges each at most
+`λ|x − y| < 2λR` long stays within `2NλR` of `x` — and
+`c = N λ^{d+α} Λ (N M)`. The paper's `c = (2Λλ^{d+α}(N−1)M)^{-1}` (it states the
+reciprocal, comparing in the other direction) carries a factor `2` where this
+carries the second `N`: the extra `N` bounds the number of *darts* a single walk
+can devote to one edge, which the paper's "for simplicity we assume every path is
+of length `N`" elides.
 
 ## A gap in Definition 5.13
 
