@@ -626,7 +626,8 @@ theorem cor_rescaled_kernel {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd
         KernelBounds Γ α Λ k →
       ∃ C : ℝ, 0 < C ∧
       ∀ h : ℝ, 0 < h →
-      ∃ Γ' : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ' θ' ∧
+      ∃ Γ' : Configuration (EuclideanSpace ℝ (Fin d)),
+        (∀ u, (Γ' u).apex = θ') ∧ IsBounded Γ' θ' ∧
         ∀ x ∈ scaledLattice d h, ∀ y ∈ scaledLattice d h, Real.sqrt d * h < ‖x - y‖ →
           ENNReal.ofReal C⁻¹ *
               ((indE (coneAt Γ' x) y + indE (coneAt Γ' y) x) * jumpKernel d α x y)
@@ -676,7 +677,7 @@ theorem cor_rescaled_kernel {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd
   obtain ⟨G, hG⟩ : ∃ G : Configuration (EuclideanSpace ℝ (Fin d)),
       G = fun u => (⟨ax (fav u), hax (fav u), θ', hθ'0, hθ'le⟩ :
         DCone (EuclideanSpace ℝ (Fin d))) := ⟨_, rfl⟩
-  refine ⟨G, ⟨hθ'0, fun u => by rw [hG]⟩, ?_⟩
+  refine ⟨G, fun u => by rw [hG], ⟨hθ'0, fun u => by rw [hG]⟩, ?_⟩
   intro x hx y hy hxy
   refine ⟨?_, ?_⟩
   swap

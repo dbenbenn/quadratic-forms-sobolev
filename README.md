@@ -211,6 +211,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **Equation (1.6)**: `H^{α/2}(Ω) ⊆ H_k(Ω)` | eq. (1.6) | `QFS.Hs_subset_Hk` | ✅ **proved** |
 | Statement of Theorem 1.1 (with the `α`-uniform form) | Thm. 1.1 | `QFS.TheoremOneOne`, `QFS.TheoremOneOneUniform` | ⚪ stated, not proved |
 | The enlarged-ball form of Theorem 1.1 | §3.2 | `QFS.TheoremOneOneBall` | ⚪ stated, not proved |
+| **Non-vacuity of the hypotheses** | (new) | `QFS.constConfig`, `QFS.isBounded_constConfig`, `QFS.condMeas_constConfig`, `QFS.indE_add_indE_le_two`, `QFS.kernelBounds_jumpKernel`, `QFS.discreteKernelBounds_jumpKernel`, `QFS.theoremOneThree_nonvacuous` | ✅ **proved** |
 | Statement of Theorem 1.3 | Thm. 1.3 | `QFS.discreteForm`, `QFS.TheoremOneThree` | ✅ stated |
 | **Theorem 1.3** | Thm. 1.3, §6 | `QFS.theoremOneThree` | ✅ **proved** |
 | Telescoping and Cauchy–Schwarz along a walk | §6 | `QFS.walk_telescope`, `QFS.list_sq_sum_le`, `QFS.walk_sq_le` | ✅ proved |
@@ -664,6 +665,15 @@ Each departure from the paper, and why.
     `QFS.RefFamily` does not constrain its apex angle `θ` to `(0, π/2]`, which
     only weakens the hypothesis of everything proved from it.
 
+20. **Two further notes on hypotheses, neither a defect.** Theorem 1.3's
+    dependency sentence — "the constant `c` depends on `Λ`, `ϑ`, `R₀` and on the
+    dimension `d`" — omits `α`, but the paper's own proof produces `λ^{d+α}`, so
+    `c` does depend on `α`. `QFS.TheoremOneThree` quantifies `κ` and `c` after
+    `α`, which is what the proof supports. And Proposition 3.5 assumes `k`
+    measurable; `QFS.KernelBounds` does not, because the argument runs entirely
+    through the lower Lebesgue integral and never needs it — a weaker hypothesis,
+    hence a stronger result.
+
 ## Not attempted
 
 Recorded here rather than silently omitted. What is not formalised is the
@@ -1043,6 +1053,25 @@ The `Q ≠ P` in `choiceAdj` needs blocks at distinct centres to be distinct:
 `QFS.block_nonempty` (a cube of side `≥ 1` holds a lattice point) and
 `QFS.townIndex_ne`, where sparse population is used again — it gives
 `h > √d ℓ`, so distinct centres have disjoint cubes.
+
+## Non-vacuity
+
+A formalisation of this size is worth checking against vacuity: every headline
+result quantifies over configurations and kernels constrained by (1.4) or (1.7),
+and if those constraints were unsatisfiable the theorems would be empty.
+`Nonvacuous.lean` exhibits witnesses. For every `ϑ ∈ (0, π/2]` the constant
+configuration is `ϑ`-bounded (`QFS.isBounded_constConfig`) and satisfies the
+measurability Proposition 3.5 assumes (`QFS.condMeas_constConfig`), and the plain
+jump kernel `|x − y|^{-d-α}` satisfies both (1.4) and (1.7) with `Λ = 2`
+(`QFS.kernelBounds_jumpKernel`, `QFS.discreteKernelBounds_jumpKernel`), because
+the indicator bracket never exceeds `2` (`QFS.indE_add_indE_le_two`).
+`QFS.theoremOneThree_nonvacuous` collects these.
+
+Two earlier non-vacuity checks are recorded with their results:
+`QFS.exists_admissible` shows every pair of distinct lattice points really is
+admissible at some scale and centre, so `QFS.ScaleData` must supply the walk that
+`PathProps` returns; and the reduction `QFS.pathPropsLong_of_scaleData` is therefore
+not vacuous either.
 
 ## Verification
 

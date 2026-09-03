@@ -104,13 +104,14 @@ kernel on `hℤ^d` gives a kernel on `ℤ^d` satisfying (1.7) with the same `Λ`
 theorem discreteKernelBounds_rescale {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
     {α Λ R₀ h : ℝ} (hh : 0 < h)
     {ω : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
-    (hω : DiscreteKernelBounds Γ α Λ (R₀ * h) ω) :
-    DiscreteKernelBounds (fun x => Γ (h • x)) α Λ R₀
+    (hω : DiscreteKernelBounds Γ α Λ (R₀ * h) (scaledLattice d h) ω) :
+    DiscreteKernelBounds (fun x => Γ (h • x)) α Λ R₀ (lattice d)
       (fun x y => ENNReal.ofReal (h ^ ((d:ℝ) + α)) * ω (h • x) (h • y)) where
   one_le := hω.one_le
-  symm := fun x y => by rw [hω.symm]
+  symm := fun x hx y hy => by
+    rw [hω.symm (h • x) (smul_mem_scaledLattice hx) (h • y) (smul_mem_scaledLattice hy)]
   lower := by
-    intro x y hxy
+    intro x hx y hy hxy
     have hd : (R₀ * h) < ‖h • x - h • y‖ := by
       rw [← smul_sub, norm_smul, Real.norm_eq_abs, abs_of_pos hh]
       have : ‖x - y‖ = ‖x - y‖ := rfl
@@ -125,7 +126,8 @@ theorem discreteKernelBounds_rescale {Γ : Configuration (EuclideanSpace ℝ (Fi
       exact (smul_mem_doubleCone_iff hh (Γ (h • a)).norm_axis (Γ (h • a)).apex_pos
         (Γ (h • a)).apex_le (b - a)).symm
     rw [hcone x y, hcone y x, ← ofReal_rpow_mul_jumpKernel hh α x y]
-    have hlow := hω.lower (h • x) (h • y) hd
+    have hlow := hω.lower (h • x) (smul_mem_scaledLattice hx) (h • y)
+      (smul_mem_scaledLattice hy) hd
     calc ENNReal.ofReal Λ⁻¹ * ((indE (coneAt Γ (h • x)) (h • y)
             + indE (coneAt Γ (h • y)) (h • x))
           * (ENNReal.ofReal (h ^ ((d:ℝ) + α)) * jumpKernel d α (h • x) (h • y)))
@@ -134,11 +136,12 @@ theorem discreteKernelBounds_rescale {Γ : Configuration (EuclideanSpace ℝ (Fi
               * jumpKernel d α (h • x) (h • y))) := by ring
       _ ≤ ENNReal.ofReal (h ^ ((d:ℝ) + α)) * ω (h • x) (h • y) := mul_le_mul' le_rfl hlow
   upper := by
-    intro x y hxy
+    intro x hx y hy hxy
     have hd : (R₀ * h) < ‖h • x - h • y‖ := by
       rw [← smul_sub, norm_smul, Real.norm_eq_abs, abs_of_pos hh]
       nlinarith [hω.one_le]
-    have hup := hω.upper (h • x) (h • y) hd
+    have hup := hω.upper (h • x) (smul_mem_scaledLattice hx) (h • y)
+      (smul_mem_scaledLattice hy) hd
     calc ENNReal.ofReal (h ^ ((d:ℝ) + α)) * ω (h • x) (h • y)
         ≤ ENNReal.ofReal (h ^ ((d:ℝ) + α)) *
             (ENNReal.ofReal Λ * jumpKernel d α (h • x) (h • y)) := mul_le_mul' le_rfl hup
@@ -179,7 +182,7 @@ theorem corollaryThreeOne (ϑ Λ α R₀ : ℝ) (hϑ : 0 < ϑ) (hΛ : 1 ≤ Λ) 
     ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
       ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ →
       ∀ h : ℝ, 0 < h →
-      ∀ ω, DiscreteKernelBounds Γ α Λ (R₀ * h) ω →
+      ∀ ω, DiscreteKernelBounds Γ α Λ (R₀ * h) (scaledLattice d h) ω →
       ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ) (f : EuclideanSpace ℝ (Fin d) → ℝ),
         0 < R →
         discreteFormOn (scaledLattice d h) (ball x₀ R) (R₀ * h) (jumpKernel d α) f

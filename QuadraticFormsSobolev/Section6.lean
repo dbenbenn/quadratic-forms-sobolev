@@ -107,7 +107,7 @@ of `PathPropsLong`. -/
 /-- At an edge of `G` longer than `R₀`, the jump kernel is at most `Λ ω`. -/
 theorem jumpKernel_le_of_dart {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
     {α Λ R₀ : ℝ} {ω : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
-    (hω : DiscreteKernelBounds Γ α Λ R₀ ω) (D : (latticeGraph Γ).Dart)
+    (hω : DiscreteKernelBounds Γ α Λ R₀ (lattice d) ω) (D : (latticeGraph Γ).Dart)
     (hD : R₀ < ‖D.toProd.1 - D.toProd.2‖) :
     jumpKernel d α D.toProd.1 D.toProd.2 ≤ ENNReal.ofReal Λ * ω D.toProd.1 D.toProd.2 := by
   have hΛ0 : (0:ℝ) < Λ := lt_of_lt_of_le zero_lt_one hω.one_le
@@ -121,7 +121,7 @@ theorem jumpKernel_le_of_dart {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
     · have h1 : indE (coneAt Γ D.toProd.2) D.toProd.1 = 1 := Set.indicator_of_mem h _
       rw [h1]
       exact le_add_self
-  have hlow := hω.lower D.toProd.1 D.toProd.2 hD
+  have hlow := hω.lower D.toProd.1 D.adj.1 D.toProd.2 D.adj.2.1 hD
   have hstep : ENNReal.ofReal Λ⁻¹ * jumpKernel d α D.toProd.1 D.toProd.2
       ≤ ω D.toProd.1 D.toProd.2 := by
     refine le_trans ?_ hlow
@@ -147,7 +147,7 @@ most `λ‖x − y‖` long and all longer than `R₀`, then the `H^{α/2}` term
 is controlled by the `ω`-terms of the walk's edges. -/
 theorem chain_estimate {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
     {α Λ R₀ lam : ℝ} {ω : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
-    (hω : DiscreteKernelBounds Γ α Λ R₀ ω) (hα : 0 < α) (hlam : 1 ≤ lam)
+    (hω : DiscreteKernelBounds Γ α Λ R₀ (lattice d) ω) (hα : 0 < α) (hlam : 1 ≤ lam)
     (f : EuclideanSpace ℝ (Fin d) → ℝ) {x y : EuclideanSpace ℝ (Fin d)}
     (w : (latticeGraph Γ).Walk x y)
     (hb : ∀ D ∈ w.darts, ‖D.toProd.1 - D.toProd.2‖ ≤ lam * ‖x - y‖ ∧
