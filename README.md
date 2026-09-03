@@ -68,7 +68,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 3.2 | Lemma | the indicator inequality | ✅ |
 | 3.3 | Lemma | small cone inside `V^m_r` | ❗ false for `d = 1`; ✅ **proved for `d ≥ 2`** (`QFS.lemma_new_config`) |
 | 3.4 | Lemma | `\|s−t\|` vs `\|x−y\|` | ✅ for `hℤ^d`; ❗ **false as printed** |
-| 3.5 | Proposition | test-function bound | ❌ out of scope (uses 3.3) |
+| 3.5 | Proposition | test-function bound | ✅ **proved** for `d ≥ 2` (`QFS.prop_test_fct`), with `QFS.CondMeas` as hypothesis |
 | 3.6 | Corollary | the rescaled kernel | ❌ out of scope |
 | 3.7 | Lemma | `H_k` on balls | ❌ out of scope |
 | 4.1 | Theorem | **connectivity of `G[U]`** | ✅ **proved** |
@@ -153,6 +153,14 @@ is available.
 | **The form and the kernel under `x ↦ hx`** | Cor. 3.1 | `QFS.discreteFormOn_smul`, `QFS.jumpKernel_smul`, `QFS.ofReal_rpow_mul_jumpKernel`, `QFS.preimage_smul_ball` | ✅ **proved** |
 | **"every `ω ∈ M` is `h^{-d-α} ω̃(h⁻¹·, h⁻¹·)`"** | Cor. 3.1 | `QFS.discreteKernelBounds_rescale`, `QFS.indE_congr` | ✅ **proved** |
 | **Corollary 3.1** | Cor. 3.1 | `QFS.corollaryThreeOne` | ✅ **proved** |
+| The volume of a cube; cubes are measurable | §2, §3 | `QFS.cube_eq_preimage`, `QFS.measurableSet_cube`, `QFS.volume_cube` | ✅ proved |
+| **The discrete kernel `ω^k_h`** | §3.1 | `QFS.discreteKernel` | ✅ **defined** |
+| **The upper bound of Prop. 3.5 / Cor. 3.6(ii)** | §3.1 | `QFS.discreteKernel_le` | ✅ **proved** |
+| A favoured index exists; Lemma 3.2 in `ℝ≥0∞` | §3.1 | `QFS.exists_isFavoured`, `QFS.lemma_min_dist_E`, `QFS.indE_le_indE`, `QFS.indE_eq_ofReal_ind` | ✅ proved |
+| **The pointwise estimate of Prop. 3.5** | Prop. 3.5 | `QFS.discreteKernel_integrand_ge` | ✅ **proved** |
+| Debreu's measurability, as a hypothesis | §2, Prop. 3.5 | `QFS.CondMeas`, `QFS.measurableSet_cubeCone` | ✅ stated |
+| Integrating the estimate; the `1/L` share | Prop. 3.5 | `QFS.discreteKernel_ge_volume`, `QFS.inv_card_le_volume_cubeCone` | ✅ proved |
+| **Proposition 3.5** | Prop. 3.5 | `QFS.prop_test_fct` | ✅ **proved** (`d ≥ 2`) |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
 | The lattice is closed under negation | (new) | `QFS.neg_mem_lattice` | ✅ proved |
@@ -648,9 +656,9 @@ together with the results the paper itself quotes from elsewhere.
 | `H_k(Ω) = H^{α/2}(Ω)`, density | Thm. 1.4 | Depends on Thm. 1.1 and on Lipschitz-domain extension theory not in scope. |
 | Regular Dirichlet form; Markov process | Cor. 1.5 | Depends on Thm. 1.1 and on Dirichlet-form theory (Fukushima–Oshima–Takeda) absent from Mathlib. |
 | Weak Harnack, Hölder regularity | Cor. 1.6 | Quoted from Dyda–Kassmann; not proved in the paper. |
-| Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integrating the kernel over pairs of cubes; the measure-theoretic scaffolding is not set up here. Its three "tailor-made" inputs — Lemmas 3.2, 3.3 (for `d ≥ 2`) and 3.4 — **are** proved. |
+| The rescaled kernel `ω^k_h` for `h ≠ 1` | Cor. 3.6 | Needs the change of variables for Lebesgue measure under `x ↦ hx`; Proposition 3.5, which is the substance, **is** proved. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
-| `{x | V ⊆ Γ(x)}` is Lebesgue measurable | §2 (after Cor. 2.4) | The paper does not prove it — "This implication is due to [Debreu67, Thm. 4.4]". It is what would make the sets `A_h^m(u)` measurable for Proposition 3.5; `QFS.volume_cube_le_card_mul` avoids needing it. |
+| `{x | V ⊆ Γ(x)}` is Lebesgue measurable | §2 (after Cor. 2.4) | The paper does not prove it — "This implication is due to [Debreu67, Thm. 4.4]". It is what makes the sets `A_h^m(u)` measurable, which Proposition 3.5 integrates over, so it is carried there as the explicit hypothesis `QFS.CondMeas`. |
 | Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §3 and to the continuous half. |
 
 ## Lemma 5.7
