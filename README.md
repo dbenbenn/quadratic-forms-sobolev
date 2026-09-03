@@ -88,7 +88,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 5.11 | Definition | favored by majority | ✅ |
 | 5.12 | Remark | the favored cone is not unique | ⚪ (reflected in the design, see below) |
 | 5.13 | Definition | the favored graph | ✅ |
-| 5.14 | Proposition | renormalisation | ❌ out of scope |
+| 5.14 | Proposition | renormalisation | ✅ |
 | 5.15 | Theorem | path properties | ❌ out of scope |
 | 5.16 | Lemma | the first jump | ❌ out of scope |
 | 7.1 | Lemma | auxiliary integral estimate | ❌ out of scope |
@@ -100,8 +100,7 @@ the machinery of Sections 5 and 6 (Lemma 3.3, which Proposition 3.5 needs, is
 false as stated). From Section 1, the function-space definitions, assumption
 (1.4), the reverse inequality and equation (1.6) are proved, and Theorems 1.1
 and 1.3 are recorded as type-checked `Prop`s so the remaining target is precise.
-Proposition 5.14, Theorem 5.15, Lemma 5.16 and Section 6 remain a project in
-their own right.
+Theorem 5.15, Lemma 5.16 and Section 6 remain a project in their own right.
 
 ## What is proved, in detail
 
@@ -210,6 +209,11 @@ their own right.
 | **Favored by majority** | Def. 5.11 | `QFS.blockFibre`, `QFS.FavoredIn` | ✅ **defined** |
 | A favored cone exists in a nonempty block | Def. 5.11 / Rem. 5.12 | `QFS.exists_favoredIn` | ✅ proved |
 | **The favored graph** | Def. 5.13 | `QFS.FavoredEdge`, `QFS.FavoredConn` | ✅ **defined** |
+| Cones are invariant under positive scaling | Prop. 5.14 proof | `QFS.smul_mem_cone` | ✅ proved |
+| A double cone ignores the sign of its axis | Prop. 5.14 proof | `QFS.doubleCone_neg` | ✅ proved |
+| Distinct lattice points are `≥ 1` apart | Prop. 5.14 proof | `QFS.one_le_norm_sub_of_lattice` | ✅ proved |
+| Blocks within `R` of a point | Prop. 5.14 | `QFS.townBall` | ✅ defined |
+| **Proposition 5.14**: renormalisation | Prop. 5.14 | `QFS.renormalization` | ✅ **proved** |
 
 ## Deviations
 
@@ -354,12 +358,19 @@ Each departure from the paper, and why.
     `QFS.mem_cone_of_norm_sub_lt` (which is the case `p = t·v`, where the gap is
     `t sin ϑ` — recorded as `QFS.coneGap_smul_axis`).
 
-12. **Lemma 5.7's monotonicity clause is not formalised.** The lemma asserts
-    `r_i < r_{i+1}`, `ρ_i < ρ_{i+1}`, `R_i < R_{i+1}` and `δ < r_1`. The
-    formalisation gives each `k` its own `r_k ≤ ρ_k ≤ R_k` with `δ < r_k`, which
-    is what the proof of Lemma 5.7 itself uses — the monotonicity is never
-    invoked there, and with `δ < r_k` for every `k` it is not needed to carry the
-    invariant. It is presumably wanted by Corollary 5.8, which is out of scope.
+12. **Lemma 5.7's monotonicity clause is not formalised — and is not what is
+    needed.** The lemma asserts `r_i < r_{i+1}`, `ρ_i < ρ_{i+1}`, `R_i < R_{i+1}`
+    and `δ < r_1`. The formalisation gives each `k` its own `r_k ≤ ρ_k ≤ R_k`
+    with `δ < r_k`, which is all the proof of Lemma 5.7 itself uses — the
+    monotonicity is never invoked there, and with `δ < r_k` for every `k` it is
+    not needed to carry the invariant.
+
+    Corollary 5.8 is the natural consumer, and it turns out monotonicity would
+    not suffice there either: reaching an arbitrary `r` needs the radii to be
+    *unbounded*, which strict monotonicity alone does not give. What Corollary
+    5.8 actually needs is the growth bound `k ≤ r_k`, and that is recorded by
+    `QFS.core_induction` and falls out of the construction
+    (`r_{k+1} > ρ_k + 1 ≥ r_k + 1`).
 
 13. **Lemma 5.9's constant is too small, and its intermediate estimate fails for
     every admissible apex angle.** The proof passes through
@@ -417,7 +428,7 @@ formalised is the geometric and graph-theoretic layer they are built on.
 | Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Thm. 1.3's setting, and on Lemma 3.3 (see Deviations 7). |
 | Lemma 3.3 for `d ≥ 2` | Lem. 3.3 | True but needs an argument the paper does not give; see Deviations 7. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
-| Renormalisation | §5 (Prop. 5.14, Thm. 5.15, Lem. 5.16) | The scale statement, the path properties and the first jump. (Results 5.1–5.13 **are** formalised.) |
+| Path properties | §5 (Thm. 5.15, Lem. 5.16) | The quantitative path estimates and the first jump. (Results 5.1–5.14 **are** formalised.) |
 | Proof of Theorem 1.3 | §6 | As above. |
 | Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §§3 and 6. |
 
@@ -478,6 +489,25 @@ needs, and it comes out of the construction.
   only records finiteness.
 * The hypothesis `0 < r` is not needed: for `r ≤ 0` the ball is empty and the
   conclusion vacuous. It is kept, to match the paper.
+
+## Proposition 5.14
+
+`QFS.renormalization`, following the paper: the town is identified with `ℤ^d` by
+`x ↦ Q_ℓ(hx)` (`QFS.townIndex`), the configuration sending `x` to the cone of
+apex angle `ϑ/2` with the axis of a cone favored in `Q_ℓ(hx)` is `ϑ/2`-bounded,
+Lemma 5.9 turns each of its edges into an edge of the favored graph, and
+Corollary 5.8 supplies the connectivity.
+
+Sparse population enters at exactly one point, and it is the point the definition
+was made for: an edge joins *distinct* lattice indices, so `‖hx − hy‖ ≥ h`, and
+`δ < h/ℓ` gives `δℓ < h`, which is Lemma 5.9's distance hypothesis.
+
+The apex bound needed at the end — that the favored cone `W(Q)` has apex angle at
+least `ϑ`, so that `Ṽ(v, ϑ) ⊆ W(Q)` — is why `QFS.exists_favoredIn` returns a
+cone *realised at a point of the block* rather than merely one of maximal fibre.
+A maximal-fibre cone that is not realised would carry no information about its
+apex angle. The block is nonempty exactly when the edge condition is non-vacuous,
+so the two cases fit together.
 
 ## Verification
 

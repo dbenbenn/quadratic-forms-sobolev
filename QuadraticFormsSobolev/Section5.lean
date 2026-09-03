@@ -1241,4 +1241,16 @@ theorem lattice_inter_closedBall_finite (a : EuclideanSpace ℝ (Fin d)) (M : �
   · have he : (fun i => ((n i : ℤ) : ℝ)) = WithLp.ofLp x := funext fun i => (hn i).symm
     simp only [he, WithLp.toLp_ofLp]
 
+
+/-- Distinct lattice points are at distance at least `1`; their squared distance
+is a positive natural number. -/
+lemma one_le_norm_sub_of_lattice {x y : EuclideanSpace ℝ (Fin d)} (hx : x ∈ lattice d)
+    (hy : y ∈ lattice d) (hne : x ≠ y) : 1 ≤ ‖x - y‖ := by
+  obtain ⟨n, hn⟩ := exists_natCast_sq_norm (lattice_sub hx hy)
+  have hpos : 0 < ‖x - y‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hne)
+  have hn0 : 0 < (n : ℝ) := by rw [← hn]; positivity
+  have hn1 : 1 ≤ n := by exact_mod_cast hn0
+  have hn1' : (1 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn1
+  nlinarith
+
 end QFS

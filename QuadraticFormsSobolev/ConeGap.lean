@@ -252,4 +252,18 @@ theorem coneGap_ge_of_mem_half {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ : 0 < 
   refine Real.strictMonoOn_sin.monotoneOn ⟨by linarith [pi_pos], by linarith⟩
     ⟨by linarith [pi_pos], by linarith⟩ (by linarith)
 
+
+/-- Cones are invariant under positive scaling. -/
+lemma smul_mem_cone {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
+    {t : ℝ} (ht : 0 < t) {h : E} (hh : h ∈ cone v ϑ) : t • h ∈ cone v ϑ := by
+  rw [mem_cone_iff_coneGap_pos hv hϑ hϑ'] at hh ⊢
+  rw [coneGap_smul v ϑ ht.le]
+  positivity
+
+/-- A double cone does not depend on the sign of its axis. -/
+lemma doubleCone_neg (v : E) (ϑ : ℝ) : doubleCone (-v) ϑ = doubleCone v ϑ := by
+  rw [doubleCone, doubleCone, cone_neg, Set.union_comm]
+  congr 1
+  simp
+
 end QFS
