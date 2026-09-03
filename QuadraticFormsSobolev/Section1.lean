@@ -140,6 +140,26 @@ def TheoremOneOneUniform (d : ℕ) : Prop :=
         MemLp f 2 (volume.restrict (ball x₀ R)) →
         formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ R) k f
 
+/-- The comparability **with an enlarged ball**, which is what Section 3.2's
+limiting argument delivers:
+
+  `|f|_{H^{α/2}(B_R)} ≤ c |f|_{H_k(B_{κR})}`.
+
+Theorem 1.1 is this with `κ = 1`, and the paper gets there by the appendix lemma
+(its version of [DyKa15, Lemma 6.9]), whose proof rests on a Whitney
+decomposition and on inequality (13) of [Dyda06] — neither proved in the paper.
+Recording the enlarged-ball form separately pins down what Section 3 alone
+would give. -/
+def TheoremOneOneBall (d : ℕ) : Prop :=
+  ∀ ϑ Λ α : ℝ, 0 < ϑ → 1 ≤ Λ → 0 < α → α < 2 →
+    ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsAdmissible Γ ϑ →
+      ∀ k, KernelBounds Γ α Λ k →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
+        MemLp f 2 (volume.restrict (ball x₀ (κ * R))) →
+        formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f
+
 /-- The discrete quadratic form of Theorem 1.3: the sum over pairs of lattice
 points of `S` at distance more than `R₀`. -/
 noncomputable def discreteForm (S : Set (EuclideanSpace ℝ (Fin d))) (R₀ : ℝ)

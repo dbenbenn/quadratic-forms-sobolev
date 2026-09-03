@@ -14,22 +14,32 @@ in the discrete setting.
 
 ## Scope
 
-The paper's main theorems rest on a long chaining-and-renormalisation argument
-(Sections 5 and 6) on top of a layer of point-set geometry and graph theory
-(Sections 2, 3 and 4). **This repository formalises that lower layer**: the
-function-space set-up of Section 1 (including equation (1.6)), the full
-definitional set-up of Section 2, the geometric lemmas of Sections 2 and 3, the
-whole of Section 4 — the paper's "continuous prelude", whose main result,
-**Theorem 4.1**, is proved here (`QFS.cont_connectivity`) — and Section 5's
-auxiliary results, core induction and discrete template, Lemmas 5.1–5.8 — the
-quantitative discrete counterparts of the Section 4 lemmas, the induction that
-assembles them, and its uniform consequence. The paper's main theorems (1.1 and 1.3) are recorded as
-type-checked `Prop`s, so what remains to be proved is stated precisely. See
-*Not attempted* below for what is deliberately left out.
+The paper's main results are **Theorem 1.3** (comparability of discrete quadratic
+forms on `ℤ^d`) and **Theorem 1.1** (its continuous counterpart), the second
+deduced from the first by a discrete approximation.
 
-Along the way the formalisation turned up four defects in the paper; all are
-recorded under *Deviations*, and two of them are accompanied by Lean proofs that
-the statement as printed is false:
+**Theorem 1.3 is proved here** (`QFS.theoremOneThree`), and with it everything it
+rests on: Section 2's definitional set-up and reference cones, Section 4's
+"continuous prelude" and its Theorem 4.1, the whole of Section 5 including
+**Theorem 5.15** (`QFS.path_props`), and Section 6.
+
+Of the road to Theorem 1.1, Section 3 is formalised as far as the discrete
+kernel goes — Corollary 3.1, Lemmas 3.2–3.4, **Proposition 3.5** and **Corollary
+3.6** — leaving the limiting argument of §3.2. Theorem 1.1 itself is recorded as
+a type-checked `Prop`, together with the enlarged-ball form
+(`QFS.TheoremOneOneBall`) that §3.2 alone would give; its last step, from a ball
+`B*` down to `B`, is an appendix lemma the paper quotes from a Whitney
+decomposition and from Dyda's inequality (13) rather than proving. See *Not
+attempted*.
+
+Two results carry hypotheses the paper does not: Proposition 3.5 and Corollary
+3.6 need `d ≥ 2`, because Lemma 3.3 is false in dimension one, and they take as
+given the measurability the paper obtains by quoting Debreu's theorem
+(`QFS.CondMeas`).
+
+Along the way the formalisation turned up a number of defects in the paper. All
+are recorded under *Deviations*; three come with Lean proofs that the statement
+as printed is false:
 
 * **Lemma 3.4** is stated for `x, y ∈ ℤ^d` but is only true for `x, y ∈ hℤ^d`,
   which is what its own "follows by scaling" argument gives
@@ -38,11 +48,25 @@ the statement as printed is false:
   Proposition 3.5 uses it (`QFS.lemma_new_config_false_dim_one`); for `d ≥ 2` it
   is true, and proved here (`QFS.lemma_new_config`), by an argument the paper
   does not give.
+* **Lemma 5.9**'s intermediate estimate fails for *every* `ϑ ≤ π/2`, and its
+  constant is too small (`QFS.paper_threshold_insufficient`).
+
+and the rest are gaps or slips repaired silently:
+
 * **Lemma 4.6** needs a hypothesis `z ∈ U` that is not stated.
 * **Theorem 4.1**'s induction is applied to a set that need not be connected;
-  the repair is to run it on `B_r(x) ∩ Ṽ[x]` with the half-cone.
+  the repair is to run it on `B_r(x) ∩ Ṽ[x]` with the half-cone. Its proof also
+  opens with an observation that is false as printed for cones of small apex
+  (Deviation 18).
 * **Lemma 5.6** is called obvious, but the obvious argument (stepping radially
-  toward the tip) does not work; see *Deviations* 11.
+  toward the tip) does not work.
+* **Definition 5.13**'s favored graph is too weak for Step 2 of Theorem 5.15.
+* **Step 2 of Theorem 5.15** asks only that `φ_z` be balanced, which does not
+  bound the multiplicity of a first-jump edge, so claim (3) fails for an
+  adversarial choice (Deviation 16).
+* **Section 6** chains along edges longer than `R₀`, which claim (4) of Theorem
+  5.15 does not provide (Deviation 17).
+* Four smaller printed slips are listed in Deviation 19.
 
 ## Coverage: every numbered result in the paper
 
@@ -96,23 +120,13 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 7.1 | Lemma | auxiliary integral estimate | ❌ out of scope |
 | 7.2 | Lemma | a Lebesgue differentiation argument | ❌ out of scope |
 
-Sections 2 and 4 are formalised completely — apart from one remark of Section 2
-that the paper itself quotes rather than proves, see *Not attempted* — as is
-Section 5's auxiliary
-subsection (Lemmas 5.1–5.5). Of Section 3, everything that does not need the
-kernel `ω^k_h` is formalised, Lemma 3.3 for `d ≥ 2` included. From Section 1,
-the function-space definitions, assumption
-(1.4), the reverse inequality and equation (1.6) are proved, and Theorems 1.1
-and 1.3 are recorded as type-checked `Prop`s so the remaining target is precise.
-**Section 5 is formalised completely**, Theorem 5.15 included
-(`QFS.path_props`); its Step 2 needed a repair, recorded as Deviation 16.
-**Section 6 is formalised**, so Theorem 1.3 — the paper's main discrete
-theorem — is proved (`QFS.theoremOneThree`). Its Section 6 needed a repair too:
-see Deviation 17. What is left is the continuous half, Theorem 1.1: it needs Section 3's
-discrete kernel `ω^k_h` and the limiting argument of §3.2, and its final step —
-from a ball `B*` down to `B` — is the appendix lemma the paper itself quotes
-from a Whitney decomposition and from Dyda's inequality (13), neither of which
-is available.
+Sections 2, 4, 5 and 6 are formalised completely, apart from one remark of
+Section 2 that the paper itself quotes rather than proves (see *Not attempted*).
+Of Section 3, everything up to and including Corollary 3.6 is formalised; what
+remains there is the limiting argument of §3.2 and Lemma 3.7. From Section 1,
+the function-space definitions, assumption (1.4), the reverse inequality and
+equation (1.6) are proved, Theorem 1.3 is proved, and Theorem 1.1 is recorded as
+a type-checked `Prop` alongside its enlarged-ball form.
 
 ## What is proved, in detail
 
@@ -196,6 +210,7 @@ is available.
 | The "trivially true" reverse inequality of (1.5) | §1, after Thm. 1.1 | `QFS.form_le_formHs` | ✅ proved |
 | **Equation (1.6)**: `H^{α/2}(Ω) ⊆ H_k(Ω)` | eq. (1.6) | `QFS.Hs_subset_Hk` | ✅ **proved** |
 | Statement of Theorem 1.1 (with the `α`-uniform form) | Thm. 1.1 | `QFS.TheoremOneOne`, `QFS.TheoremOneOneUniform` | ⚪ stated, not proved |
+| The enlarged-ball form of Theorem 1.1 | §3.2 | `QFS.TheoremOneOneBall` | ⚪ stated, not proved |
 | Statement of Theorem 1.3 | Thm. 1.3 | `QFS.discreteForm`, `QFS.TheoremOneThree` | ✅ stated |
 | **Theorem 1.3** | Thm. 1.3, §6 | `QFS.theoremOneThree` | ✅ **proved** |
 | Telescoping and Cauchy–Schwarz along a walk | §6 | `QFS.walk_telescope`, `QFS.list_sq_sum_le`, `QFS.walk_sq_le` | ✅ proved |
