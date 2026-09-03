@@ -380,4 +380,85 @@ theorem exists_choiceWalk_covering {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π /
     (le_refl ((2 * ⌈R⌉₊ + 1) ^ d))), fun x hxlat hxr => ?_⟩
   exact hwcov _ (by rw [hTdef]; exact ⟨x, ⟨hxlat, hxr⟩, rfl⟩)
 
+
+/-! ## Selecting the scale and the centre
+
+The path for a pair `(x, y)` of distinct lattice points is built at the scale `m`
+with `Δ^m ≤ ‖x − y‖ < Δ^{m+1}` — which exists because distinct lattice points are
+at distance at least `1 = Δ^0` — and around a centre of the index lattice near
+`x`. -/
+
+/-- **Scale selection.** Every `L ≥ 1` lies in exactly one window `[Δ^m, Δ^{m+1})`. -/
+theorem exists_scale {Δ : ℝ} (hΔ : 1 < Δ) {L : ℝ} (hL : 1 ≤ L) :
+    ∃ m : ℕ, Δ ^ m ≤ L ∧ L < Δ ^ (m + 1) := by
+  classical
+  obtain ⟨N, hN⟩ : ∃ N : ℕ, L < Δ ^ N := pow_unbounded_of_one_lt L hΔ
+  have hP0 : Δ ^ (0 : ℕ) ≤ L := by simpa using hL
+  have hPN : ¬ (Δ ^ N ≤ L) := not_le.mpr hN
+  have hmspec : Δ ^ Nat.findGreatest (fun k => Δ ^ k ≤ L) N ≤ L :=
+    Nat.findGreatest_spec (P := fun k => Δ ^ k ≤ L) (Nat.zero_le N) hP0
+  have hmle : Nat.findGreatest (fun k => Δ ^ k ≤ L) N ≤ N :=
+    Nat.findGreatest_le (P := fun k => Δ ^ k ≤ L) N
+  have hmlt : Nat.findGreatest (fun k => Δ ^ k ≤ L) N < N := by
+    rcases lt_or_eq_of_le hmle with h | h
+    · exact h
+    · exact absurd (h ▸ hmspec) hPN
+  refine ⟨Nat.findGreatest (fun k => Δ ^ k ≤ L) N, hmspec, ?_⟩
+  exact not_le.mp (Nat.findGreatest_is_greatest (P := fun k => Δ ^ k ≤ L)
+    (Nat.lt_succ_self _) (by omega))
+
+/-- **Centre selection.** Every point is within `(s/2)√d` of a point of `sℤ^d`. -/
+theorem exists_centre {s : ℝ} (hs : 0 < s) (x : EuclideanSpace ℝ (Fin d)) :
+    ∃ w ∈ lattice d, ‖x - s • w‖ ≤ s / 2 * Real.sqrt d := by
+  obtain ⟨w, hwlat, hw⟩ := exists_lattice_mem_closedBall (s⁻¹ • x)
+  refine ⟨w, hwlat, ?_⟩
+  have he : x - s • w = -(s • (w - s⁻¹ • x)) := by
+    rw [smul_sub, smul_smul, mul_inv_cancel₀ (ne_of_gt hs), one_smul]
+    abel
+  rw [he, norm_neg, norm_smul, Real.norm_eq_abs, abs_of_pos hs]
+  calc s * ‖w - s⁻¹ • x‖ ≤ s * (Real.sqrt d / 2) := mul_le_mul_of_nonneg_left hw hs.le
+    _ = s / 2 * Real.sqrt d := by ring
+
+/-- Distinct lattice points admit a scale: their distance is at least `1`. -/
+theorem exists_scale_of_lattice {Δ : ℝ} (hΔ : 1 < Δ)
+    {x y : EuclideanSpace ℝ (Fin d)} (hx : x ∈ lattice d) (hy : y ∈ lattice d)
+    (hne : x ≠ y) : ∃ m : ℕ, Δ ^ m ≤ ‖x - y‖ ∧ ‖x - y‖ < Δ ^ (m + 1) :=
+  exists_scale hΔ (one_le_norm_sub_of_lattice hx hy hne)
+
+/-- **Step 3 of Theorem 5.15: choosing the scale and the centre.**
+
+Any two distinct lattice points `x ≠ y` sit in a common ball
+`B_{2√d Δ^{m+1}}(Δ^{m+1} z)` around a centre of the index lattice `Δ^{m+1}ℤ^d`,
+at the unique scale `m` with `Δ^m ≤ ‖x − y‖ < Δ^{m+1}`.
+
+This is the selection the paper performs at the start of Step 3 ("choose `n`
+such that `|x − y| ∈ [Δ^{n−1}, Δ^n)`, then choose `z`"), with the paper's `n`
+being our `m + 1`. The radius `2√d Δ^n` is the paper's, and the two estimates
+below are why it is enough: `x` is within `(Δ^n/2)√d` of the nearest centre and
+`y` is a further `‖x − y‖ < Δ^n` away, and `√d/2 + 1 ≤ 2√d` for every `d ≥ 1`. -/
+theorem exists_scale_and_centre {Δ : ℝ} (hΔ : 1 < Δ) (hd : 1 ≤ d)
+    {x y : EuclideanSpace ℝ (Fin d)} (hx : x ∈ lattice d) (hy : y ∈ lattice d)
+    (hne : x ≠ y) :
+    ∃ (m : ℕ) (z : EuclideanSpace ℝ (Fin d)), z ∈ lattice d ∧
+      Δ ^ m ≤ ‖x - y‖ ∧ ‖x - y‖ < Δ ^ (m + 1) ∧
+      ‖x - Δ ^ (m + 1) • z‖ ≤ 2 * Real.sqrt d * Δ ^ (m + 1) ∧
+      ‖y - Δ ^ (m + 1) • z‖ ≤ 2 * Real.sqrt d * Δ ^ (m + 1) := by
+  obtain ⟨m, hm1, hm2⟩ := exists_scale_of_lattice hΔ hx hy hne
+  have hs : (0:ℝ) < Δ ^ (m + 1) := pow_pos (by linarith) _
+  obtain ⟨z, hzlat, hz⟩ := exists_centre (d := d) hs x
+  -- `√d ≥ 1`, so `√d / 2 + 1 ≤ 2 √d`.
+  have hsd : (1:ℝ) ≤ Real.sqrt d := by
+    rw [show (1:ℝ) = Real.sqrt 1 by simp]
+    exact Real.sqrt_le_sqrt (by exact_mod_cast hd)
+  refine ⟨m, z, hzlat, hm1, hm2, ?_, ?_⟩
+  · calc ‖x - Δ ^ (m + 1) • z‖ ≤ Δ ^ (m + 1) / 2 * Real.sqrt d := hz
+      _ ≤ 2 * Real.sqrt d * Δ ^ (m + 1) := by nlinarith
+  · have htri : ‖y - Δ ^ (m + 1) • z‖ ≤ ‖x - y‖ + ‖x - Δ ^ (m + 1) • z‖ := by
+      have he : y - Δ ^ (m + 1) • z = -(x - y) + (x - Δ ^ (m + 1) • z) := by abel
+      calc ‖y - Δ ^ (m + 1) • z‖ = ‖-(x - y) + (x - Δ ^ (m + 1) • z)‖ := by rw [he]
+        _ ≤ ‖-(x - y)‖ + ‖x - Δ ^ (m + 1) • z‖ := norm_add_le _ _
+        _ = ‖x - y‖ + ‖x - Δ ^ (m + 1) • z‖ := by rw [norm_neg]
+    have hxz : ‖x - Δ ^ (m + 1) • z‖ ≤ Δ ^ (m + 1) / 2 * Real.sqrt d := hz
+    nlinarith
+
 end QFS

@@ -66,7 +66,8 @@ theorem connect_first_jump {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
       ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ →
       ∀ (x : EuclideanSpace ℝ (Fin d)) (n : ℕ),
         ∃ w ∈ lattice d,
-          block (Δ ^ n) (Δ ^ (n + 1) • w) ⊆ ball x (Δ ^ (n + 1) * R₁) ∩ coneAt Γ x := by
+          block (Δ ^ n) (Δ ^ (n + 1) • w) ⊆ ball x (Δ ^ (n + 1) * R₁) ∩ coneAt Γ x ∧
+          ∀ q ∈ block (Δ ^ n) (Δ ^ (n + 1) • w), Δ ^ n ≤ ‖q - x‖ := by
   have hϑ2 : (0:ℝ) < ϑ / 2 := by positivity
   have hϑ2' : ϑ / 2 ≤ π / 2 := by linarith [pi_pos]
   have hs2 : 0 < Real.sin (ϑ / 2) :=
@@ -126,15 +127,27 @@ theorem connect_first_jump {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
       le_antisymm (infNorm_le le_rfl (fun i => by rw [sub_self]; simp)) (infNorm_nonneg _)
     simp only [closedCube, Set.mem_ofPred_eq, he]
     positivity
-  intro q hq
-  have hqcube : q ∈ closedCube (Δ ^ n) (Δ ^ (n + 1) • w) := hq.2
-  have hqcone : q - x ∈ cone (Γ x).axis ϑ := Set.mem_iInter₂.mp (hcube hqcube) x hxcube
-  refine ⟨?_, ?_⟩
+  -- the block is far from `x`: the shrink radius forces it
+  have hfarc : apexShrinkConst d ϑ * Δ ^ n < ‖Δ ^ (n + 1) • w - x‖ := by
+    rw [hcxnorm]
+    have h1 : apexShrinkConst d ϑ * Δ ^ n = Δ ^ (n + 1) * ρ := by
+      rw [hρ, pow_succ]
+      field_simp
+    rw [h1]
+    nlinarith
+  have hδd : Real.sqrt d / 2 + 1 ≤ apexShrinkConst d ϑ := by
+    rw [apexShrinkConst, le_div_iff₀ hs2]
+    have hs1 := Real.sin_le_one (ϑ / 2)
+    nlinarith
+  have hqc : ∀ q ∈ block (Δ ^ n) (Δ ^ (n + 1) • w),
+      ‖q - Δ ^ (n + 1) • w‖ ≤ Δ ^ n / 2 * Real.sqrt d := by
+    intro q hq
+    have := closedCube_subset_closedBall (le_of_lt hΔnn) (Δ ^ (n + 1) • w) hq.2
+    rwa [Metric.mem_closedBall, dist_eq_norm] at this
+  refine ⟨fun q hq => ⟨?_, ?_⟩, fun q hq => ?_⟩
   · -- inside the ball
     rw [mem_ball, dist_eq_norm]
-    have h1 : ‖q - Δ ^ (n + 1) • w‖ ≤ Δ ^ n / 2 * Real.sqrt d := by
-      have := closedCube_subset_closedBall (le_of_lt hΔnn) (Δ ^ (n + 1) • w) hqcube
-      rwa [Metric.mem_closedBall, dist_eq_norm] at this
+    have h1 := hqc q hq
     have h2 : ‖Δ ^ (n + 1) • w - x‖ < Δ ^ (n + 1) * R' := by
       rw [hcxnorm]
       nlinarith
@@ -143,7 +156,7 @@ theorem connect_first_jump {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
       rw [he]
       exact norm_add_le _ _
     have h4 : Δ ^ n / 2 * Real.sqrt d ≤ Δ ^ (n + 1) * Real.sqrt d := by
-      have : Δ ^ n / 2 ≤ Δ ^ (n + 1) := by
+      have h5 : Δ ^ n / 2 ≤ Δ ^ (n + 1) := by
         rw [pow_succ]
         nlinarith
       nlinarith
@@ -151,8 +164,14 @@ theorem connect_first_jump {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
   · -- inside the cone at `x`
     rw [mem_coneAt]
     exact doubleCone_mono (le_of_lt hϑ) (Γ x).apex_le_pi (hΓ.2 x)
-      (Set.mem_union_left _ hqcone)
-
+      (Set.mem_union_left _ (Set.mem_iInter₂.mp (hcube hq.2) x hxcube))
+  · -- and far from `x`
+    have h1 := hqc q hq
+    have h2 : ‖Δ ^ (n + 1) • w - x‖ ≤ ‖q - x‖ + ‖q - Δ ^ (n + 1) • w‖ := by
+      have he : Δ ^ (n + 1) • w - x = (q - x) - (q - Δ ^ (n + 1) • w) := by abel
+      rw [he]
+      exact norm_sub_le _ _
+    nlinarith
 
 /-! ## The graph `G` as a simple graph, and the statement of Theorem 5.15
 
