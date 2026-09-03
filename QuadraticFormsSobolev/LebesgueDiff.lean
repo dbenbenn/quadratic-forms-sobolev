@@ -270,4 +270,103 @@ theorem tendsto_avg_stepIndex_indicator {φ : EuclideanSpace ℝ (Fin d) → ℝ
   filter_upwards [ae_restrict_mem (measurableSet_closedCube (hpos i).le _)] with y hy
   exact Set.indicator_of_mem (hi hy) φ
 
+/-! ## Integrating a step function over the tiling
+
+The other half of Section 3.2's bookkeeping: a function constant on each tile
+integrates to the sum of its values times `h^d`. Indexing the tiles by
+`Fin d → ℤ` rather than by the lattice as a subset keeps the index type
+countable on the nose. -/
+
+/-- The point `h·n` of `hℤ^d`. -/
+noncomputable def latticePt (d : ℕ) (h : ℝ) (n : Fin d → ℤ) : EuclideanSpace ℝ (Fin d) :=
+  WithLp.toLp 2 (fun i => (n i : ℝ) * h)
+
+lemma latticePt_mem_scaledLattice (h : ℝ) (n : Fin d → ℤ) :
+    latticePt d h n ∈ scaledLattice d h := fun i => ⟨n i, rfl⟩
+
+lemma latticePt_injective {h : ℝ} (hh : h ≠ 0) :
+    Function.Injective (latticePt d h) := by
+  intro n m hnm
+  funext i
+  have hc : ∀ p : Fin d → ℤ, (latticePt d h p) i = (p i : ℝ) * h := fun _ => rfl
+  have := congrArg (fun x : EuclideanSpace ℝ (Fin d) => x i) hnm
+  rw [hc, hc] at this
+  have : (n i : ℝ) = (m i : ℝ) := by
+    field_simp at this
+    tauto
+  exact_mod_cast this
+
+lemma halfClosedCube_eq_preimage (h : ℝ) (u : EuclideanSpace ℝ (Fin d)) :
+    halfClosedCube h u = (WithLp.ofLp : EuclideanSpace ℝ (Fin d) → (Fin d → ℝ)) ⁻¹'
+      (Set.pi Set.univ (fun i => Ico (u i - h / 2) (u i + h / 2))) := by
+  ext x
+  simp only [Set.mem_preimage, Set.mem_univ_pi, halfClosedCube, Set.mem_ofPred_eq]
+
+lemma measurableSet_halfClosedCube (h : ℝ) (u : EuclideanSpace ℝ (Fin d)) :
+    MeasurableSet (halfClosedCube h u) := by
+  rw [halfClosedCube_eq_preimage]
+  exact (PiLp.volume_preserving_ofLp (Fin d)).measurable
+    (MeasurableSet.univ_pi (fun _ => measurableSet_Ico))
+
+lemma volume_halfClosedCube {h : ℝ} (hh : 0 ≤ h) (u : EuclideanSpace ℝ (Fin d)) :
+    volume (halfClosedCube h u) = ENNReal.ofReal (h ^ d) := by
+  rw [halfClosedCube_eq_preimage,
+    MeasurePreserving.measure_preimage (PiLp.volume_preserving_ofLp (Fin d))
+    (MeasurableSet.univ_pi (fun _ => measurableSet_Ico)).nullMeasurableSet, volume_pi_pi]
+  have hfac : ∀ i : Fin d, volume (Ico (u i - h / 2) (u i + h / 2)) = ENNReal.ofReal h := by
+    intro i
+    rw [Real.volume_Ico]
+    congr 1
+    ring
+  rw [Finset.prod_congr rfl (fun i _ => hfac i), Finset.prod_const, Finset.card_univ,
+    Fintype.card_fin, ← ENNReal.ofReal_pow hh]
+
+/-- The tile containing `s` is the one indexed by `stepIndex`. -/
+lemma stepIndex_eq_of_mem {h : ℝ} (hh : 0 < h) {x s : EuclideanSpace ℝ (Fin d)}
+    (hx : x ∈ scaledLattice d h) (hs : s ∈ halfClosedCube h x) : stepIndex d h s = x := by
+  obtain ⟨w, -, huniq⟩ := existsUnique_mem_halfClosedCube (d := d) hh s
+  rw [huniq (stepIndex d h s) ⟨stepIndex_mem_scaledLattice s, mem_halfClosedCube_stepIndex hh s⟩,
+    huniq x ⟨hx, hs⟩]
+
+lemma iUnion_halfClosedCube {h : ℝ} (hh : 0 < h) :
+    (⋃ n : Fin d → ℤ, halfClosedCube h (latticePt d h n)) = Set.univ := by
+  refine Set.eq_univ_of_forall (fun s => ?_)
+  refine Set.mem_iUnion.mpr ⟨fun i => round (s i / h), ?_⟩
+  have he : latticePt d h (fun i => round (s i / h)) = stepIndex d h s := rfl
+  rw [he]
+  exact mem_halfClosedCube_stepIndex hh s
+
+lemma pairwiseDisjoint_halfClosedCube {h : ℝ} (hh : 0 < h) :
+    Pairwise (Function.onFun Disjoint
+      (fun n : Fin d → ℤ => halfClosedCube h (latticePt d h n))) := by
+  intro n m hnm
+  refine Set.disjoint_left.mpr (fun s hsn hsm => ?_)
+  have h1 := stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h n) hsn
+  have h2 := stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h m) hsm
+  exact hnm (latticePt_injective (ne_of_gt hh) (h1.symm.trans h2))
+
+/-- The integral over `ℝ^d` splits along the tiling. -/
+theorem lintegral_eq_tsum_halfClosedCube {h : ℝ} (hh : 0 < h)
+    (F : EuclideanSpace ℝ (Fin d) → ℝ≥0∞) :
+    ∫⁻ s, F s = ∑' n : Fin d → ℤ, ∫⁻ s in halfClosedCube h (latticePt d h n), F s := by
+  rw [← setLIntegral_univ F, ← iUnion_halfClosedCube (d := d) hh,
+    lintegral_iUnion (fun n => measurableSet_halfClosedCube h (latticePt d h n))
+      (pairwiseDisjoint_halfClosedCube hh)]
+
+/-- **A step function integrates to the sum of its values times `h^d`.** This is
+the identity Section 3.2 uses to turn the discrete sums of Corollary 3.1 into
+integrals. -/
+theorem lintegral_stepFun {h : ℝ} (hh : 0 < h)
+    (c : EuclideanSpace ℝ (Fin d) → ℝ≥0∞) :
+    ∫⁻ s, c (stepIndex d h s)
+      = ∑' n : Fin d → ℤ, c (latticePt d h n) * ENNReal.ofReal (h ^ d) := by
+  rw [lintegral_eq_tsum_halfClosedCube hh]
+  refine tsum_congr (fun n => ?_)
+  have hcongr : ∀ s ∈ halfClosedCube h (latticePt d h n),
+      c (stepIndex d h s) = c (latticePt d h n) := by
+    intro s hs
+    rw [stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h n) hs]
+  rw [setLIntegral_congr_fun (measurableSet_halfClosedCube h (latticePt d h n)) hcongr,
+    setLIntegral_const, volume_halfClosedCube hh.le]
+
 end QFS
