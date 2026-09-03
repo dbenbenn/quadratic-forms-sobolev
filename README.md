@@ -39,12 +39,64 @@ Theorem 4.1). See *Not attempted* below for what is deliberately left out.
 | Eq. (✝): `⋃_{ξ∈B̄_ℓ} V_{2ℓ}[ξ] ⊆ V_ℓ` | Lem. 2.7 proof | `QFS.iUnion_shift_shrink_subset` | ✅ proved |
 | `V_{2ℓ}[ξ] ⊆ V_ℓ[x] ⊆ V[ξ]` for `ξ ∈ B̄_ℓ(x)` | Lem. 2.7 proof | `QFS.shift_shrink_sandwich` | ✅ proved |
 | **Lemma 2.7**: cone in intersection | Lem. 2.7 | `QFS.cone_in_intersection`, `QFS.cone_in_intersection'` | ✅ **proved** |
+| Angle between lines; triangle inequality | Lem. 2.2 proof | `QFS.dangle`, `QFS.dangle_triangle` | ✅ proved |
+| `w ∈ V(v,θ)`, `2θ ≤ ϑ` ⟹ `V(v,θ) ⊆ V(w,ϑ)` | Lem. 2.2 proof | `QFS.doubleCone_subset_of_axis_mem` | ✅ proved |
+| Finite subcover of `S^{d-1}` by cones | Lem. 2.2 proof | `QFS.exists_finite_axes` | ✅ proved |
+| **Lemma 2.2**: finitely many reference cones | Lem. 2.2 | `QFS.ref_cones` | ✅ **proved** |
+| Family of reference cones, `V^m_r`, `V^m_r[x]` | Def. 2.3 | `QFS.RefFamily`, `.shrunk`, `.shrunkAt` | ✅ defined |
+| **Corollary 2.4**: finite-image subconfiguration | Cor. 2.4 | `QFS.ref_config` | ✅ **proved** |
+
+## Deviations
+
+Each departure from the paper, and why.
+
+1. **Lemma 2.7 is proved for an arbitrary set.** The paper states it for "a cone
+   `V` with apex angle `ϑ`", but the proof it gives — equations (⋆) and (✝) —
+   never uses that `V` is a cone, only that it is a subset of `ℝ^d`. The Lean
+   proof follows the paper's argument verbatim; the statement it proves is
+   therefore about an arbitrary `V : Set (EuclideanSpace ℝ (Fin d))`. The
+   paper's own reading is the special case where `V` is a double cone.
+
+2. **`ϑ`-boundedness is formalised as a positive lower bound.** Definition 2.1
+   says `Γ` is `ϑ`-bounded when the *infimum* `ϑ` of the apex angles of `Γ(ℝ^d)`
+   is positive. `QFS.IsBounded Γ ϑ` says `0 < ϑ` and `ϑ ≤ (Γ x).apex` for all
+   `x`. These agree on what every later argument uses (a uniform positive lower
+   bound), and avoid carrying an infimum that is never needed as such.
+
+3. **Corollary 2.4: the apex angle of `Γ̃` is `ϑ/3`, not `ϑ`.** The corollary's
+   last sentence reads "The minimum of apex angles of cones in `Γ̃(ℝ^d)` is
+   `ϑ`". But `Γ̃` is built from the reference cones of Lemma 2.2, whose apex
+   angle is `θ = ϑ/3`. `QFS.ref_config` proves `(Γ' x).apex = ϑ/3` and
+   `IsBounded Γ' (ϑ/3)`. This is a slip in the paper with no consequences: every
+   later use of Corollary 2.4 needs only that the angle is positive and depends
+   on `d` and `ϑ` alone.
+
+4. **Corollary 2.4: the sets `M_i` in the paper's proof.** The displayed
+   definition ends with `M_L = {x | V^L ⊆ Γ(x)} \ M_{L-1}`, which does not make
+   the union `⋃ M_i` disjoint (it should subtract `M_1 ∪ ⋯ ∪ M_{L-1}`). The Lean
+   proof takes the equivalent and cleaner route of choosing, for each `x`, some
+   index with `V^m ⊆ Γ(x)`; the paper's `M_i` are exactly the fibres of that
+   choice.
 
 ## Not attempted
 
-Recorded here rather than silently omitted.
+Recorded here rather than silently omitted. The paper's two main theorems and
+the machinery specific to them are out of scope for this formalisation; what is
+formalised is the geometric and graph-theoretic layer they are built on.
 
-*(to be filled in as the scope is fixed)*
+| Result | Paper | Why not |
+| --- | --- | --- |
+| Comparability on balls, continuous | Thm. 1.1 | Needs the whole of §§3, 5, 6. |
+| Comparability on balls, discrete | Thm. 1.3 | The paper's main theorem; needs §§5–6. |
+| `H_k(Ω) = H^{α/2}(Ω)`, density | Thm. 1.4 | Depends on Thm. 1.3 and on Lipschitz-domain extension theory not in scope. |
+| Regular Dirichlet form; Markov process | Cor. 1.5 | Depends on Thm. 1.1 and on Dirichlet-form theory (Fukushima–Oshima–Takeda) absent from Mathlib. |
+| Weak Harnack, Hölder regularity | Cor. 1.6 | Quoted from Dyda–Kassmann; not proved in the paper. |
+| `hℤ^d` rescaling | Cor. 3.1 | Depends on Thm. 1.3. |
+| Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Thm. 1.3's setting. |
+| `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
+| Chaining and renormalisation | §5 (Lems. 5.1–5.16) | The technical heart of the paper; a formalisation project in its own right. |
+| Proof of Theorem 1.3 | §6 | As above. |
+| Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §§3 and 6. |
 
 ## Building
 

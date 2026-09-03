@@ -1,0 +1,223 @@
+/-
+Lemma 2.2, Definition 2.3 and Corollary 2.4 of Bux–Kassmann–Schulze: the
+reduction of an arbitrary `ϑ`-bounded configuration to a finite family of
+reference cones.
+-/
+import QuadraticFormsSobolev.Defs
+
+open Real Set Metric InnerProductGeometry
+
+namespace QFS
+
+variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+
+/-! ## The angle between two lines
+
+A double cone `V(v, ϑ)` is determined by the *line* spanned by `v`, and
+membership `h ∈ V(v, ϑ)` says exactly that the line spanned by `h` makes an
+angle less than `ϑ` with the line spanned by `v`. That quantity obeys a triangle
+inequality, which is what the proof of Lemma 2.2 uses when it passes from a
+covering of the sphere to an inclusion of cones. -/
+
+/-- The angle between the lines spanned by `v` and `h`. -/
+noncomputable def dangle (v h : E) : ℝ := min (angle v h) (π - angle v h)
+
+lemma dangle_comm (v h : E) : dangle v h = dangle h v := by
+  simp [dangle, angle_comm]
+
+lemma dangle_nonneg (v h : E) : 0 ≤ dangle v h :=
+  le_min (angle_nonneg v h) (by linarith [angle_le_pi v h])
+
+@[simp] lemma dangle_neg_right (v h : E) : dangle v (-h) = dangle v h := by
+  simp only [dangle, angle_neg_right]
+  rw [min_comm]
+  ring_nf
+
+/-- Membership in a double cone, expressed through `dangle`. -/
+lemma mem_doubleCone_iff_dangle {v h : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ₀ : 0 ≤ ϑ) (hϑ : ϑ ≤ π) :
+    h ∈ doubleCone v ϑ ↔ h ≠ 0 ∧ dangle v h < ϑ := by
+  rw [mem_doubleCone_iff_angle hv hϑ₀ hϑ]
+  refine and_congr_right (fun _ => ?_)
+  rw [dangle, min_lt_iff]
+  constructor
+  · rintro (h1 | h1)
+    · exact Or.inl h1
+    · exact Or.inr (by linarith)
+  · rintro (h1 | h1)
+    · exact Or.inl h1
+    · exact Or.inr (by linarith)
+
+/-- The triangle inequality for the angle between lines. -/
+theorem dangle_triangle (v w h : E) : dangle v h ≤ dangle v w + dangle w h := by
+  have t1 : angle v h ≤ angle v w + angle w h := angle_le_angle_add_angle v w h
+  have t2 : angle v h ≤ (π - angle v w) + (π - angle w h) := by
+    have := angle_le_angle_add_angle (-v) w (-h)
+    rwa [angle_neg_neg, angle_neg_left, angle_neg_right] at this
+  have t3 : π - angle v h ≤ angle v w + (π - angle w h) := by
+    have := angle_le_angle_add_angle v w (-h)
+    rwa [angle_neg_right, angle_neg_right] at this
+  have t4 : π - angle v h ≤ (π - angle v w) + angle w h := by
+    have := angle_le_angle_add_angle (-v) w h
+    rwa [angle_neg_left, angle_neg_left] at this
+  simp only [dangle]
+  rcases le_total (angle v w) (π / 2) with ha | ha <;>
+    rcases le_total (angle w h) (π / 2) with hb | hb
+  · have ea : min (angle v w) (π - angle v w) = angle v w := min_eq_left (by linarith)
+    have eb : min (angle w h) (π - angle w h) = angle w h := min_eq_left (by linarith)
+    rw [ea, eb]
+    exact le_trans (min_le_left _ _) t1
+  · have ea : min (angle v w) (π - angle v w) = angle v w := min_eq_left (by linarith)
+    have eb : min (angle w h) (π - angle w h) = π - angle w h := min_eq_right (by linarith)
+    rw [ea, eb]
+    exact le_trans (min_le_right _ _) (by linarith)
+  · have ea : min (angle v w) (π - angle v w) = π - angle v w := min_eq_right (by linarith)
+    have eb : min (angle w h) (π - angle w h) = angle w h := min_eq_left (by linarith)
+    rw [ea, eb]
+    exact le_trans (min_le_right _ _) (by linarith)
+  · have ea : min (angle v w) (π - angle v w) = π - angle v w := min_eq_right (by linarith)
+    have eb : min (angle w h) (π - angle w h) = π - angle w h := min_eq_right (by linarith)
+    rw [ea, eb]
+    exact le_trans (min_le_left _ _) (by linarith)
+
+/-- If the axis `w` lies in `V(v, θ)` and `2θ ≤ ϑ`, then `V(v, θ) ⊆ V(w, ϑ)`.
+This is the geometric step in the proof of Lemma 2.2. -/
+lemma doubleCone_subset_of_axis_mem {v w : E} (hv : ‖v‖ = 1) (hw : ‖w‖ = 1)
+    {θ ϑ : ℝ} (hθ : 0 ≤ θ) (hϑ : ϑ ≤ π) (hwv : w ∈ doubleCone v θ) (h2 : 2 * θ ≤ ϑ) :
+    doubleCone v θ ⊆ doubleCone w ϑ := by
+  have hθπ : θ ≤ π := by linarith
+  have hϑ₀ : 0 ≤ ϑ := by linarith
+  intro h hh
+  rw [mem_doubleCone_iff_dangle hv hθ hθπ] at hh hwv
+  rw [mem_doubleCone_iff_dangle hw hϑ₀ hϑ]
+  refine ⟨hh.1, ?_⟩
+  calc dangle w h ≤ dangle w v + dangle v h := dangle_triangle w v h
+    _ < θ + θ := by
+        rw [dangle_comm w v]
+        exact add_lt_add hwv.2 hh.2
+    _ ≤ ϑ := by linarith
+
+/-! ## Lemma 2.2: the finite family of reference cones -/
+
+variable [FiniteDimensional ℝ E]
+
+/-- The compactness step in the proof of Lemma 2.2: the unit sphere is covered by
+the double cones `V(v, ϑ/3)`, `v ∈ S^{d-1}`, and finitely many of them suffice.
+The finite family depends only on `E` and `ϑ`, never on a configuration. -/
+theorem exists_finite_axes {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
+    ∃ S : Finset E, (∀ v ∈ S, ‖v‖ = 1) ∧
+      ∀ w : E, ‖w‖ = 1 → ∃ v ∈ S, w ∈ doubleCone v (ϑ / 3) := by
+  classical
+  have hcomp : IsCompact (sphere (0 : E) 1) := isCompact_sphere 0 1
+  have hcover : sphere (0 : E) 1 ⊆ ⋃ v : sphere (0 : E) 1, doubleCone (v : E) (ϑ / 3) := by
+    intro w hw
+    refine Set.mem_iUnion.mpr ⟨⟨w, hw⟩, ?_⟩
+    have hw1 : ‖w‖ = 1 := by simpa [dist_zero_right] using hw
+    have hne : w ≠ 0 := by intro h; rw [h] at hw1; simp at hw1
+    rw [mem_doubleCone_iff_angle hw1 (by positivity) (by linarith [pi_pos])]
+    exact ⟨hne, Or.inl (by rw [angle_self hne]; positivity)⟩
+  obtain ⟨t, ht⟩ := hcomp.elim_finite_subcover
+    (fun v : sphere (0 : E) 1 => doubleCone (v : E) (ϑ / 3))
+    (fun v => isOpen_doubleCone (v : E) (ϑ / 3)) hcover
+  refine ⟨t.image Subtype.val, ?_, ?_⟩
+  · intro v hv
+    rw [Finset.mem_image] at hv
+    obtain ⟨a, -, ha⟩ := hv
+    rw [← ha]
+    simpa [dist_zero_right] using a.2
+  · intro w hw
+    have hws : w ∈ sphere (0 : E) 1 := by simpa [dist_zero_right] using hw
+    obtain ⟨v, hv⟩ := Set.mem_iUnion.mp (ht hws)
+    obtain ⟨hvt, hmem⟩ := Set.mem_iUnion.mp hv
+    exact ⟨(v : E), Finset.mem_image_of_mem Subtype.val hvt, hmem⟩
+
+/-- **Lemma 2.2** of Bux–Kassmann–Schulze. For a `ϑ`-bounded configuration `Γ`
+there are finitely many double cones `V¹, …, V^L` centred at `0`, with common
+apex angle `θ = ϑ/3` and unit axes, such that every `Γ(x)` contains one of them.
+
+The finite family of axes is produced before `Γ` is mentioned: it depends only on
+the space and on `ϑ`, exactly as the paper asserts. -/
+theorem ref_cones {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
+    ∃ S : Finset E, (∀ v ∈ S, ‖v‖ = 1) ∧
+      ∀ Γ : Configuration E, IsBounded Γ ϑ →
+        ∀ x : E, ∃ v ∈ S, doubleCone v (ϑ / 3) ⊆ (Γ x).carrier := by
+  obtain ⟨S, hS, hcov⟩ := exists_finite_axes (E := E) hϑ hϑ'
+  refine ⟨S, hS, fun Γ hΓ x => ?_⟩
+  obtain ⟨v, hvS, hv⟩ := hcov (Γ x).axis (Γ x).norm_axis
+  refine ⟨v, hvS, ?_⟩
+  exact doubleCone_subset_of_axis_mem (hS v hvS) (Γ x).norm_axis (by positivity)
+    (Γ x).apex_le_pi hv (by linarith [hΓ.2 x])
+
+
+/-! ## Definition 2.3: the family of reference cones -/
+
+/-- **Definition 2.3**: a *family of reference cones* associated to `Γ`, with
+common apex angle `θ` and unit axes, such that every `Γ(x)` contains one of them.
+Lemma 2.2 produces such a family with `θ = ϑ/3`. -/
+structure RefFamily (Γ : Configuration E) (θ : ℝ) where
+  /-- The axes `v¹, …, v^L` of the reference cones. -/
+  axes : Finset E
+  /-- Each axis is a unit vector. -/
+  norm_axes : ∀ v ∈ axes, ‖v‖ = 1
+  /-- Every `Γ(x)` contains one of the reference cones. -/
+  covers : ∀ x, ∃ v ∈ axes, doubleCone v θ ⊆ (Γ x).carrier
+
+/-- The reference cone `V^m` about the axis `v`. -/
+def RefFamily.cone {Γ : Configuration E} {θ : ℝ} (_F : RefFamily Γ θ) (v : E) : Set E :=
+  doubleCone v θ
+
+/-- `V^m_r`, the `r`-shrinking of a reference cone (Definition 2.3). -/
+def RefFamily.shrunk {Γ : Configuration E} {θ : ℝ} (F : RefFamily Γ θ) (v : E) (r : ℝ) :
+    Set E := shrink (F.cone v) r
+
+/-- `V^m_r[x] = V^m_r + x` (Definition 2.3). -/
+def RefFamily.shrunkAt {Γ : Configuration E} {θ : ℝ} (F : RefFamily Γ θ) (v : E) (r : ℝ)
+    (x : E) : Set E := shift (F.shrunk v r) x
+
+/-- Lemma 2.2 gives a family of reference cones with apex angle `ϑ/3`. -/
+noncomputable def refFamily {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
+    (Γ : Configuration E) (hΓ : IsBounded Γ ϑ) : RefFamily Γ (ϑ / 3) :=
+  { axes := (ref_cones (E := E) hϑ hϑ').choose
+    norm_axes := (ref_cones (E := E) hϑ hϑ').choose_spec.1
+    covers := (ref_cones (E := E) hϑ hϑ').choose_spec.2 Γ hΓ }
+
+/-! ## Corollary 2.4: a finite-valued subconfiguration -/
+
+/-- **Corollary 2.4** of Bux–Kassmann–Schulze. A `ϑ`-bounded configuration `Γ`
+admits a configuration `Γ̃` with finite image, contained in `Γ` pointwise. Every
+cone of `Γ̃` has apex angle `ϑ/3`, so `Γ̃` is `ϑ/3`-bounded.
+
+(The paper asserts that the minimum apex angle of `Γ̃` is `ϑ`; by Lemma 2.2 the
+reference cones have apex angle `ϑ/3`, which is what is proved here. Nothing
+downstream uses more than positivity of that angle. See the README.) -/
+theorem ref_config {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
+    (Γ : Configuration E) (hΓ : IsBounded Γ ϑ) :
+    ∃ Γ' : Configuration E, (Set.range Γ').Finite ∧
+      (∀ x, (Γ' x).carrier ⊆ (Γ x).carrier) ∧
+      (∀ x, (Γ' x).apex = ϑ / 3) ∧ IsBounded Γ' (ϑ / 3) := by
+  classical
+  obtain ⟨S, hS, hprop⟩ := ref_cones (E := E) hϑ hϑ'
+  have hθ : 0 < ϑ / 3 := by positivity
+  have hθ' : ϑ / 3 ≤ π / 2 := by linarith [pi_pos]
+  set f : E → DCone E := fun v =>
+    if h : ‖v‖ = 1 then ⟨v, h, ϑ / 3, hθ, hθ'⟩ else Γ 0 with hf
+  choose v hvS hv using hprop Γ hΓ
+  have hfv : ∀ x, f (v x) = ⟨v x, hS _ (hvS x), ϑ / 3, hθ, hθ'⟩ := by
+    intro x
+    rw [hf]
+    exact dif_pos (hS _ (hvS x))
+  refine ⟨fun x => f (v x), ?_, ?_, ?_, ?_⟩
+  · refine Set.Finite.subset (Set.Finite.image f S.finite_toSet) ?_
+    rintro _ ⟨x, rfl⟩
+    exact ⟨v x, hvS x, rfl⟩
+  · intro x
+    show (f (v x)).carrier ⊆ (Γ x).carrier
+    rw [hfv x]
+    exact hv x
+  · intro x
+    show (f (v x)).apex = ϑ / 3
+    rw [hfv x]
+  · refine ⟨hθ, fun x => ?_⟩
+    show ϑ / 3 ≤ (f (v x)).apex
+    rw [hfv x]
+
+end QFS
