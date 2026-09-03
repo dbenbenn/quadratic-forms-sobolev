@@ -236,6 +236,9 @@ own right.
 | `≥ #Q/L` points of `Q` adjacent to all of `P` | Thm. 5.15, Step 2 | `QFS.exists_large_adj_of_favoredEdge` | ✅ proved |
 | The cyclic indices determine the scheme | Thm. 5.15, Step 2 | `QFS.cyclic_pair_injective` | ✅ proved |
 | **The assignment `φ_z`, with bounded fibres** | Thm. 5.15, Step 2 | `QFS.exists_fun_fiber_le`, `QFS.exists_scheme_assignment` | ✅ **proved** |
+| **Scale separation**: a length pins the scale | Thm. 5.15, Step 6 | `QFS.scale_separation` | ✅ **proved** |
+| **Centre count** at a fixed scale | Thm. 5.15, Step 6 | `QFS.ncard_lattice_scaled_ball_le` | ✅ **proved** |
+| **The multiplicity bound** from the three labels | Thm. 5.15, Step 6 | `QFS.card_le_mul_of_fiber_le` | ✅ **proved** |
 | `#(B_R ∩ ℤ^d)` in `ncard` form | Thm. 5.15 | `QFS.ncard_lattice_inter_ball_le` | ✅ proved |
 
 ## Deviations
@@ -628,11 +631,31 @@ What the proof of 5.15 still needs, beyond what is here:
    What is left is assembly: building the `a²` walks as `SimpleGraph.Walk`s along
    the Step 1 block walk with alternating representatives, which needs the
    majority sets indexed by `ZMod a` — bookkeeping rather than new mathematics.
-4. **The edge-multiplicity count** of Step 6, which bounds how many scales and
-   how many centres `z` a given edge can serve.
+4. ~~**The edge-multiplicity count.**~~ **Its three ingredients are done.**
+   An edge is used by a pair only through a logarithmic scale, a centre of the
+   index lattice at that scale, and `φ_z`; each ranges over a bounded set.
 
-Nothing here looks false, but it is a larger project than any single result so
-far, and Section 6 sits on top of it.
+   *Scales.* `QFS.scale_separation`: the edges of the walk for a pair at scale `m`
+   have length in `[Δ^m, 2Δ^{m+1}R)` (Step 5), and these windows overlap only
+   boundedly — two scales sharing a length differ by at most `C`, where
+   `2^C ≥ 2ΔR`. This is what lets the paper "fix `n`".
+
+   *Centres.* `QFS.ncard_lattice_scaled_ball_le`: at a fixed scale `s`, only
+   `(2⌈R⌉+1)^d` centres of the index lattice have their ball of radius `sR`
+   containing a given point. Rescaling reduces this to the ball count of item 1;
+   the paper's `#(B_{2R} ∩ ℤ^d)` is the two-endpoint version of the same bound.
+
+   *Combination.* `QFS.card_le_mul_of_fiber_le`: if each element of a set carries
+   two labels ranging in `S × C` and no label pair carries more than `K`
+   elements, the set has at most `#S · #C · K` elements. With the labels the
+   scale and the centre, and `K` the fibre bound of `φ_z`, this is Step 6.
+
+All four items are now discharged, and Step 1 is proved outright. What remains
+for Theorem 5.15 is assembly: constructing the `a²` walks as `SimpleGraph.Walk`s
+along the Step 1 block walk with alternating representatives (which needs the
+majority sets indexed by `ZMod a`), then reading off the four claims from the
+lemmas above. That is bookkeeping over the pieces rather than new mathematics,
+but it is a substantial amount of it. Section 6 sits on top.
 
 ## Verification
 
