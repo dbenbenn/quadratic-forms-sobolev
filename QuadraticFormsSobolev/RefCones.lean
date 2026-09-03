@@ -123,7 +123,7 @@ theorem exists_finite_axes {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
     rw [Finset.mem_image] at hv
     obtain ⟨a, -, ha⟩ := hv
     rw [← ha]
-    simpa [dist_zero_right] using a.2
+    simp
   · intro w hw
     have hws : w ∈ sphere (0 : E) 1 := by simpa [dist_zero_right] using hw
     obtain ⟨v, hv⟩ := Set.mem_iUnion.mp (ht hws)
@@ -210,14 +210,12 @@ theorem ref_config {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
     rintro _ ⟨x, rfl⟩
     exact ⟨v x, hvS x, rfl⟩
   · intro x
-    show (f (v x)).carrier ⊆ (Γ x).carrier
-    rw [hfv x]
+    simp only [hfv x]
     exact hv x
   · intro x
-    show (f (v x)).apex = ϑ / 3
-    rw [hfv x]
+    simp only [hfv x]
   · refine ⟨hθ, fun x => ?_⟩
-    show ϑ / 3 ≤ (f (v x)).apex
-    rw [hfv x]
+    simp only [hfv x]
+    exact le_refl _
 
 end QFS

@@ -50,6 +50,11 @@ Theorem 4.1). See *Not attempted* below for what is deliberately left out.
 | `‖x−y‖_∞ > h` ⟹ `≥ 2h` on `hℤ^d` | Lem. 3.4 proof | `QFS.two_mul_le_infNorm_sub` | ✅ proved |
 | **Lemma 3.4**: `|s−t|` vs `|x−y|` | Lem. 3.4 | `QFS.lemma_cubes` | ✅ **proved** (corrected, see below) |
 | Lemma 3.4 as literally stated is false | Lem. 3.4 | `QFS.lemma_cubes_literal_false` | ✅ **disproved** |
+| `A_h^m(u)`; `h`-favoured index by majority | §3 | `QFS.cubeCone`, `QFS.IsFavoured` | ✅ defined |
+| `A_h(u) = ⋃_i A_h^i(u)` | §3 | `QFS.cube_eq_biUnion_cubeCone` | ✅ proved |
+| `λ_d(A_h^m(u)) ≥ L⁻¹ λ_d(A_h(u))` | §3 | `QFS.volume_cube_le_card_mul` | ✅ proved |
+| **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
+| **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
 
 ## Deviations
 
@@ -100,6 +105,29 @@ Each departure from the paper, and why.
    argument yields and what the applications (Proposition 3.5 with `h = 1`,
    Corollary 3.6 on `hℤ^d`) actually use — is `QFS.lemma_cubes`.
 
+6. **Lemma 3.2 needs neither the lattice nor the favouring.** The lemma is
+   stated for `x, y ∈ ℤ^d` and `1`-favoured indices `m` at `x`, `n` at `y`, with
+   `s ∈ A_1^m(x)` and `t ∈ A_1^n(y)`. Its proof uses only `s ∈ A_1(x)` and
+   `t ∈ A_1(y)`. `QFS.lemma_min_dist` proves that (more general) statement;
+   `QFS.lemma_min_dist_favoured` is the paper's exact form, deduced from it.
+
+7. **Lemma 3.3 is false in dimension one**, at the radius `r = √d` at which
+   Proposition 3.5 applies it. The paper introduces it with "The assertion of
+   the following lemma is obviously true". In `d = 1` every double cone
+   `V(v, θ)` with `θ ∈ (0, π/2]` is all of `ℝ \ {0}`, so
+   `V(v, θ) ∩ ℤ = ℤ \ {0}`, whereas `V^m_r ∩ ℤ = {n ∈ ℤ : |n| > r}` omits `±1`
+   once `r ≥ 1`. Since `√d = 1` when `d = 1`, no `θ` and no axis `v` can give
+   `V(v,θ) ∩ ℤ ⊆ V^m_{√d} ∩ ℤ`. `QFS.lemma_new_config_false_dim_one` is a Lean
+   proof of this, for every `θ ∈ (0, π/2]`, every unit axis `v`, and every
+   reference cone.
+
+   This is a defect in the statement, not in the paper's results: for `d = 1`
+   there is only one double cone, so `V^Γ[x] = ℝ \ {x}` and Theorems 1.1 and
+   1.3 hold trivially. For `d ≥ 2` the lemma is true but not obvious — one must
+   choose the axis `v(m)` to avoid the finitely many lines through the lattice
+   points of norm below `r / sin(θ_m/2)`, and only then shrink `θ`. That
+   argument is not in the paper and is not formalised here.
+
 ## Not attempted
 
 Recorded here rather than silently omitted. The paper's two main theorems and
@@ -114,7 +142,8 @@ formalised is the geometric and graph-theoretic layer they are built on.
 | Regular Dirichlet form; Markov process | Cor. 1.5 | Depends on Thm. 1.1 and on Dirichlet-form theory (Fukushima–Oshima–Takeda) absent from Mathlib. |
 | Weak Harnack, Hölder regularity | Cor. 1.6 | Quoted from Dyda–Kassmann; not proved in the paper. |
 | `hℤ^d` rescaling | Cor. 3.1 | Depends on Thm. 1.3. |
-| Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Thm. 1.3's setting. |
+| Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Thm. 1.3's setting, and on Lemma 3.3 (see Deviations 7). |
+| Lemma 3.3 for `d ≥ 2` | Lem. 3.3 | True but needs an argument the paper does not give; see Deviations 7. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
 | Chaining and renormalisation | §5 (Lems. 5.1–5.16) | The technical heart of the paper; a formalisation project in its own right. |
 | Proof of Theorem 1.3 | §6 | As above. |

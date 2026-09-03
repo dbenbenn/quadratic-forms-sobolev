@@ -3,8 +3,9 @@ Section 3 of Bux–Kassmann–Schulze: the lattice `hℤ^d`, and Lemma 3.4 compa
 `|s-t|` with `|x-y|` for cube points over lattice points.
 -/
 import QuadraticFormsSobolev.Cubes
+import QuadraticFormsSobolev.RefCones
 
-open Real Set Metric
+open Real Set Metric MeasureTheory
 
 namespace QFS
 
@@ -75,7 +76,7 @@ theorem lemma_cubes {h : ℝ} (hh : 0 < h) {x y s t : EuclideanSpace ℝ (Fin d)
     have : ‖x - y‖ = 0 := by simp [EuclideanSpace.norm_eq]
     rw [this] at hxy
     simp at hxy
-  haveI : Nonempty (Fin d) := ⟨⟨0, hd⟩⟩
+  have : Nonempty (Fin d) := ⟨⟨0, hd⟩⟩
   have hsd : (0 : ℝ) < Real.sqrt d := Real.sqrt_pos.mpr (by exact_mod_cast hd)
   -- `‖x-y‖ ≤ √d · N` gives `h < N`, and lattice integrality upgrades this to `2h ≤ N`.
   have hN1 : ‖x - y‖ ≤ Real.sqrt d * infNorm (x - y) := norm_le_sqrt_dim_mul_infNorm _
@@ -120,10 +121,14 @@ theorem lemma_cubes {h : ℝ} (hh : 0 < h) {x y s t : EuclideanSpace ℝ (Fin d)
 With `x, y ∈ ℤ^d` (rather than `hℤ^d`) the lower bound fails already for
 `d = 1`, `h = 3/2`, `x = 0`, `y = 2`, `s = 7/10`, `t = 13/10`. -/
 
-/-- A point of `ℝ^1` from a real number. -/
-private def pt (c : ℝ) : EuclideanSpace ℝ (Fin 1) := WithLp.toLp 2 (fun _ => c)
+/-- The point of `ℝ^1` with coordinate `c`. -/
+def pt (c : ℝ) : EuclideanSpace ℝ (Fin 1) := WithLp.toLp 2 (fun _ => c)
 
-private lemma norm_pt_sub (a b : ℝ) : ‖pt a - pt b‖ = |a - b| := by
+@[simp] lemma pt_apply (c : ℝ) (i : Fin 1) : pt c i = c := rfl
+
+@[simp] lemma pt_zero : pt 0 = 0 := rfl
+
+lemma norm_pt_sub (a b : ℝ) : ‖pt a - pt b‖ = |a - b| := by
   rw [EuclideanSpace.norm_eq]
   have hcoord : ∀ i : Fin 1, ‖(pt a - pt b) i‖ ^ 2 = (a - b) ^ 2 := by
     intro i
@@ -131,7 +136,7 @@ private lemma norm_pt_sub (a b : ℝ) : ‖pt a - pt b‖ = |a - b| := by
   rw [Finset.sum_congr rfl (fun i _ => hcoord i)]
   simp [Real.sqrt_sq_eq_abs]
 
-private lemma infNorm_pt_sub (a b : ℝ) : infNorm (pt a - pt b) = |a - b| := by
+lemma infNorm_pt_sub (a b : ℝ) : infNorm (pt a - pt b) = |a - b| := by
   obtain ⟨i, hi⟩ := exists_infNorm_eq (pt a - pt b)
   rw [hi]
   simp [pt]
@@ -159,5 +164,191 @@ theorem lemma_cubes_literal_false :
     (by simpa using hlat 0) (by simpa using hlat 2) hxy hs ht
   rw [norm_pt_sub, norm_pt_sub, h1] at this
   norm_num at this
+
+
+/-! ## Favoured indices by majority (Section 3)
+
+`A_h^m(u) = {x ∈ A_h(u) | V^m ⊆ Γ(x)}`, and `m` is *`h`-favoured by majority at
+`u`* when this set has maximal Lebesgue measure among the reference cones. -/
+
+section Favoured
+
+variable {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {θ : ℝ}
+
+/-- `A_h^m(u) = {x ∈ A_h(u) | V^m ⊆ Γ(x)}`. -/
+def cubeCone (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    (V : Set (EuclideanSpace ℝ (Fin d))) (h : ℝ) (u : EuclideanSpace ℝ (Fin d)) :
+    Set (EuclideanSpace ℝ (Fin d)) :=
+  {x ∈ cube h u | V ⊆ (Γ x).carrier}
+
+lemma cubeCone_subset_cube (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    (V : Set (EuclideanSpace ℝ (Fin d))) (h : ℝ) (u : EuclideanSpace ℝ (Fin d)) :
+    cubeCone Γ V h u ⊆ cube h u := fun _ hx => hx.1
+
+/-- `A_h(u) = ⋃_{i ∈ {1,…,L}} A_h^i(u)`, the identity from which the bound
+`λ_d(A_h^m(u)) ≥ L⁻¹ λ_d(A_h(u))` is read off. -/
+lemma cube_eq_biUnion_cubeCone (F : RefFamily Γ θ) (h : ℝ)
+    (u : EuclideanSpace ℝ (Fin d)) :
+    cube h u = ⋃ v ∈ F.axes, cubeCone Γ (F.cone v) h u := by
+  ext x
+  constructor
+  · intro hx
+    obtain ⟨v, hvS, hv⟩ := F.covers x
+    exact Set.mem_biUnion hvS ⟨hx, hv⟩
+  · intro hx
+    obtain ⟨v, -, hx'⟩ := Set.mem_iUnion₂.mp hx
+    exact hx'.1
+
+/-- `v` is an *`h`-favoured index by majority at `u`*: among the reference cones,
+`A_h^v(u)` has maximal Lebesgue measure. -/
+def IsFavoured (F : RefFamily Γ θ) (h : ℝ) (u v : EuclideanSpace ℝ (Fin d)) : Prop :=
+  v ∈ F.axes ∧ ∀ w ∈ F.axes,
+    volume (cubeCone Γ (F.cone w) h u) ≤ volume (cubeCone Γ (F.cone v) h u)
+
+/-- `λ_d(A_h^m(u)) ≥ L⁻¹ λ_d(A_h(u))` for every `h`-favoured index `m` at `u`
+(Section 3, the remark following the definition). -/
+theorem volume_cube_le_card_mul (F : RefFamily Γ θ) {h : ℝ}
+    {u v : EuclideanSpace ℝ (Fin d)} (hv : IsFavoured F h u v) :
+    volume (cube h u) ≤ F.axes.card * volume (cubeCone Γ (F.cone v) h u) := by
+  rw [cube_eq_biUnion_cubeCone F h u]
+  calc volume (⋃ w ∈ F.axes, cubeCone Γ (F.cone w) h u)
+      ≤ ∑ w ∈ F.axes, volume (cubeCone Γ (F.cone w) h u) := measure_biUnion_finset_le _ _
+    _ ≤ ∑ _w ∈ F.axes, volume (cubeCone Γ (F.cone v) h u) :=
+        Finset.sum_le_sum (fun w hw => hv.2 w hw)
+    _ = F.axes.card * volume (cubeCone Γ (F.cone v) h u) := by
+        rw [Finset.sum_const, nsmul_eq_mul]
+
+end Favoured
+
+/-! ## Lemma 3.2 -/
+
+section Indicator
+
+variable {E : Type*}
+
+/-- The indicator function of a set, valued in `ℝ`. -/
+noncomputable def ind (S : Set E) (x : E) : ℝ := Set.indicator S (fun _ => 1) x
+
+lemma ind_nonneg (S : Set E) (x : E) : 0 ≤ ind S x :=
+  Set.indicator_nonneg (fun _ _ => zero_le_one) x
+
+lemma ind_of_mem {S : Set E} {x : E} (h : x ∈ S) : ind S x = 1 :=
+  Set.indicator_of_mem h _
+
+/-- The comparison of indicators used throughout: if membership on the left
+forces membership on the right, the indicators compare. -/
+lemma ind_le_ind {S T : Set E} {x y : E} (h : x ∈ S → y ∈ T) : ind S x ≤ ind T y := by
+  by_cases hx : x ∈ S
+  · rw [ind_of_mem hx, ind_of_mem (h hx)]
+  · rw [ind, Set.indicator_of_notMem hx]
+    exact ind_nonneg T y
+
+end Indicator
+
+/-- The content of the proof of Lemma 3.2: if `y ∈ V_{√d}[x]`, then
+`B̄_{√d/2}(y) ⊆ V_{√d/2}[x]`, and hence the whole unit cube `A_1(y)` lies in
+`V_{√d/2}[x]`. -/
+lemma cube_subset_of_mem_shift_shrink {S : Set (EuclideanSpace ℝ (Fin d))}
+    {x y : EuclideanSpace ℝ (Fin d)} (hy : y ∈ shift (shrink S (Real.sqrt d)) x) :
+    cube 1 y ⊆ shift (shrink S (Real.sqrt d / 2)) x := by
+  rw [← shrink_shift] at hy ⊢
+  have h2 : (Real.sqrt d : ℝ) = 2 * (Real.sqrt d / 2) := by ring
+  rw [h2] at hy
+  refine (cube_subset_closedBall y).trans ?_
+  have hball := closedBall_subset_shrink hy
+  have he : (1 : ℝ) / 2 * Real.sqrt d = Real.sqrt d / 2 := by ring
+  rwa [he]
+
+/-- **Lemma 3.2** of Bux–Kassmann–Schulze. The paper states it for `x, y ∈ ℤ^d`
+and `1`-favoured indices `m` at `x` and `n` at `y`, with `s ∈ A_1^m(x)` and
+`t ∈ A_1^n(y)`; its proof uses only `s ∈ A_1(x)` and `t ∈ A_1(y)`, which is what
+is assumed here. See `lemma_min_dist_favoured` for the paper's exact form. -/
+theorem lemma_min_dist {V W : Set (EuclideanSpace ℝ (Fin d))}
+    {x y s t : EuclideanSpace ℝ (Fin d)} (hs : s ∈ cube 1 x) (ht : t ∈ cube 1 y) :
+    ind (shift (shrink V (Real.sqrt d / 2)) x) t
+        + ind (shift (shrink W (Real.sqrt d / 2)) y) s
+      ≥ ind (shift (shrink V (Real.sqrt d)) x) y
+        + ind (shift (shrink W (Real.sqrt d)) y) x := by
+  refine add_le_add (ind_le_ind (fun hy => ?_)) (ind_le_ind (fun hx => ?_))
+  · exact cube_subset_of_mem_shift_shrink hy ht
+  · exact cube_subset_of_mem_shift_shrink hx hs
+
+/-- **Lemma 3.2** in the paper's exact form, with lattice points and `1`-favoured
+indices. -/
+theorem lemma_min_dist_favoured {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {θ : ℝ}
+    (F : RefFamily Γ θ) {x y v w s t : EuclideanSpace ℝ (Fin d)}
+    (_hx : x ∈ lattice d) (_hy : y ∈ lattice d)
+    (_hv : IsFavoured F 1 x v) (_hw : IsFavoured F 1 y w)
+    (hs : s ∈ cubeCone Γ (F.cone v) 1 x) (ht : t ∈ cubeCone Γ (F.cone w) 1 y) :
+    ind (shift (shrink (F.cone v) (Real.sqrt d / 2)) x) t
+        + ind (shift (shrink (F.cone w) (Real.sqrt d / 2)) y) s
+      ≥ ind (shift (shrink (F.cone v) (Real.sqrt d)) x) y
+        + ind (shift (shrink (F.cone w) (Real.sqrt d)) y) x :=
+  lemma_min_dist hs.1 ht.1
+
+
+lemma norm_pt (c : ℝ) : ‖pt c‖ = |c| := by
+  have := norm_pt_sub c 0
+  simpa using this
+
+lemma pt_mem_lattice (n : ℤ) : pt (n : ℝ) ∈ lattice 1 := by
+  rw [mem_lattice_iff]
+  exact fun i => ⟨n, by simp⟩
+
+/-! ## Lemma 3.3 is false in dimension one
+
+Lemma 3.3 asserts: for every `r > 0` there is an apex angle `θ > 0` such that
+each reference cone `V^m` admits an axis `v(m)` with
+`V(v(m), θ) ∩ ℤ^d ⊆ V^m_r ∩ ℤ^d`. Proposition 3.5 applies it with `r = √d`.
+
+In `d = 1` every double cone is all of `ℝ \ {0}`, so `V(v, θ) ∩ ℤ = ℤ \ {0}`,
+while `V^m_r ∩ ℤ = {n : |n| > r}` omits `±1` as soon as `r ≥ 1`. With `r = √d = 1`
+the inclusion therefore fails for every choice of `θ` and `v`. -/
+
+/-- In `ℝ^1` every double cone contains the lattice point `1`. -/
+lemma pt_one_mem_doubleCone {v : EuclideanSpace ℝ (Fin 1)} (hv : ‖v‖ = 1)
+    {θ : ℝ} (hθ : 0 < θ) (hθ' : θ ≤ π / 2) : pt 1 ∈ doubleCone v θ := by
+  have hcos : Real.cos θ < 1 := by
+    have h0 : (0 : ℝ) ∈ Set.Icc 0 π := ⟨le_refl 0, Real.pi_pos.le⟩
+    have hm : θ ∈ Set.Icc 0 π := ⟨hθ.le, by linarith [Real.pi_pos]⟩
+    have := Real.strictAntiOn_cos h0 hm hθ
+    simpa using this
+  have hv0 : |v 0| = 1 := by
+    rw [← hv, EuclideanSpace.norm_eq]
+    simp [Real.sqrt_sq_eq_abs]
+  have hne : pt 1 ≠ 0 := by
+    intro hc
+    have := congrArg (fun z : EuclideanSpace ℝ (Fin 1) => z 0) hc
+    simp at this
+  rcases (abs_eq (by norm_num : (0:ℝ) ≤ 1)).mp hv0 with h1 | h1
+  · refine Or.inl ⟨hne, ?_⟩
+    have hinner : (inner ℝ v (pt 1) : ℝ) = 1 := by
+      simp [PiLp.inner_apply, h1]
+    rw [hinner, norm_pt]
+    simpa using hcos
+  · refine Or.inr ⟨by simpa using hne, ?_⟩
+    have hneg : -pt (1 : ℝ) = pt (-1) := by
+      ext i; simp
+    rw [hneg]
+    have hinner : (inner ℝ v (pt (-1)) : ℝ) = 1 := by
+      simp [PiLp.inner_apply, h1]
+    rw [hinner, norm_pt]
+    simpa using hcos
+
+/-- **Lemma 3.3 is false in dimension one** for `r = √d = 1`: no apex angle
+`θ ∈ (0, π/2]` and no unit axis `v` give `V(v,θ) ∩ ℤ ⊆ V_r ∩ ℤ`, whatever the
+reference cone `V(u, ϑ)`. -/
+theorem lemma_new_config_false_dim_one
+    (u : EuclideanSpace ℝ (Fin 1)) (ϑ : ℝ)
+    (v : EuclideanSpace ℝ (Fin 1)) (hv : ‖v‖ = 1) (θ : ℝ) (hθ : 0 < θ) (hθ' : θ ≤ π / 2) :
+    ¬ (doubleCone v θ ∩ lattice 1 ⊆ shrink (doubleCone u ϑ) 1 ∩ lattice 1) := by
+  intro H
+  have h1 : pt 1 ∈ doubleCone v θ ∩ lattice 1 :=
+    ⟨pt_one_mem_doubleCone hv hθ hθ', by simpa using pt_mem_lattice 1⟩
+  obtain ⟨-, hball⟩ := (H h1).1
+  have hmem : (0 : EuclideanSpace ℝ (Fin 1)) ∈ closedBall (pt 1) 1 := by
+    rw [Metric.mem_closedBall, dist_zero_left, norm_pt]
+    norm_num
+  exact zero_notMem_doubleCone u ϑ (hball hmem)
 
 end QFS

@@ -1,18 +1,68 @@
 /-
-The two set-theoretic steps (⋆) and (✝) in the proof of Lemma 2.7 of
-Bux–Kassmann–Schulze, and the conclusion drawn from them.
+Translation and shrinking of subsets of a normed space.
 
-The paper states Lemma 2.7 for a cone `V`, but its proof uses nothing about `V`
-beyond its being a subset of `ℝ^d`; we prove the general statement here and
-specialise it to cones in `Cubes.lean`.
+Definition 2.1 of Bux-Kassmann-Schulze forms double half-cones `V_r` and shifted
+cones `V[x]`; both operations, and the whole of the proof of Lemma 2.7, use only
+the normed group structure, so they are developed here in that generality.
 -/
-import QuadraticFormsSobolev.Defs
+import Mathlib
 
 open Real Set Metric
 
 namespace QFS
 
-variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+variable {E : Type*} [NormedAddCommGroup E]
+
+/-! ## Shrinking a set
+
+For a set `S` and `r > 0`, `S_r = {y ∈ S | closedBall y r ⊆ S}`. Applied to a double
+cone this is the paper's *double half-cone* `V_r` (Definition 2.1). -/
+
+
+/-- The `r`-shrinking `S_r = {y ∈ S | B̄_r(y) ⊆ S}` of Definition 2.1. -/
+def shrink (S : Set E) (r : ℝ) : Set E := {y ∈ S | closedBall y r ⊆ S}
+
+@[simp] lemma mem_shrink {S : Set E} {r : ℝ} {y : E} :
+    y ∈ shrink S r ↔ y ∈ S ∧ closedBall y r ⊆ S := Iff.rfl
+
+lemma shrink_subset (S : Set E) (r : ℝ) : shrink S r ⊆ S := fun _ h => h.1
+
+/-! ## Shifted cones -/
+
+/-- `S[x] = S + x`, the shift of Definition 2.1. -/
+def shift (S : Set E) (x : E) : Set E := {y | y - x ∈ S}
+
+@[simp] lemma mem_shift {S : Set E} {x y : E} : y ∈ shift S x ↔ y - x ∈ S := Iff.rfl
+
+/-- `shift` really is translation: `S[x] = S + x`. -/
+lemma shift_eq_image (S : Set E) (x : E) : shift S x = (fun h => x + h) '' S := by
+  ext y
+  simp only [mem_shift, Set.mem_image]
+  constructor
+  · exact fun h => ⟨y - x, h, by abel⟩
+  · rintro ⟨h, hh, rfl⟩
+    simpa using hh
+
+@[simp] lemma shift_zero (S : Set E) : shift S 0 = S := by ext y; simp [shift]
+
+/-- Shrinking commutes with shifting. -/
+lemma shrink_shift (S : Set E) (r : ℝ) (x : E) :
+    shrink (shift S x) r = shift (shrink S r) x := by
+  ext y
+  simp only [mem_shrink, mem_shift, Set.subset_def, Metric.mem_closedBall, dist_eq_norm]
+  constructor
+  · rintro ⟨hy, hb⟩
+    refine ⟨hy, fun z hz => ?_⟩
+    have h1 : ‖z + x - y‖ ≤ r := by
+      have he : z + x - y = z - (y - x) := by abel
+      rw [he]; exact hz
+    simpa using hb (z + x) h1
+  · rintro ⟨hy, hb⟩
+    refine ⟨hy, fun z hz => ?_⟩
+    have h1 : ‖z - x - (y - x)‖ ≤ r := by
+      have he : z - x - (y - x) = z - y := by abel
+      rw [he]; exact hz
+    exact hb (z - x) h1
 
 /-! ## Elementary properties of `shift` -/
 
@@ -42,7 +92,7 @@ the intersection of all translates `S[ξ]` with `‖ξ‖ ≤ ℓ`. -/
 theorem shrink_eq_iInter_shift (S : Set E) {ℓ : ℝ} (hℓ : 0 ≤ ℓ) :
     shrink S ℓ = ⋂ ξ ∈ closedBall (0 : E) ℓ, shift S ξ := by
   ext ζ
-  simp only [mem_shrink, Set.mem_iInter, mem_shift, Metric.mem_closedBall, dist_zero_right,
+  simp only [mem_shrink, Set.mem_iInter, mem_shift, Metric.mem_closedBall,
     Set.subset_def, dist_eq_norm]
   constructor
   · rintro ⟨-, hb⟩ ξ hξ

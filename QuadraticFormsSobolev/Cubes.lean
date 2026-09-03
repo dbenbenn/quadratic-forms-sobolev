@@ -3,7 +3,7 @@ Definition 2.5 (cubes) of Bux–Kassmann–Schulze, the comparison between the
 Euclidean and the maximum norm, and Lemma 2.7 in the concrete form stated in the
 paper.
 -/
-import QuadraticFormsSobolev.Shrink
+import QuadraticFormsSobolev.Defs
 
 open Real Set Metric Finset
 
