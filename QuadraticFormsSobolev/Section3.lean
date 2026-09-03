@@ -243,10 +243,8 @@ def IsFavoured (F : RefFamily Γ θ) (h : ℝ) (u v : EuclideanSpace ℝ (Fin d)
 
 /-- The volume of a cube: `λ_d(A_h(u)) = h^d`. Proposition 3.5's constant
 `1/((2√d)^{d+2}L²)` rests on `λ_d(A_1(u)) = 1`. -/
-theorem volume_cube {h : ℝ} (hh : 0 < h) (u : EuclideanSpace ℝ (Fin d)) :
-    volume (cube h u) = ENNReal.ofReal (h ^ d) := by
-  have hbox : cube h u
-      = (WithLp.ofLp : EuclideanSpace ℝ (Fin d) → (Fin d → ℝ)) ⁻¹'
+theorem cube_eq_preimage {h : ℝ} (hh : 0 < h) (u : EuclideanSpace ℝ (Fin d)) :
+    cube h u = (WithLp.ofLp : EuclideanSpace ℝ (Fin d) → (Fin d → ℝ)) ⁻¹'
         (Set.pi Set.univ (fun i => Ioo (u i - h / 2) (u i + h / 2))) := by
     ext x
     simp only [Set.mem_preimage, Set.mem_univ_pi, Set.mem_Ioo, mem_cube_iff]
@@ -267,7 +265,17 @@ theorem volume_cube {h : ℝ} (hh : 0 < h) (u : EuclideanSpace ℝ (Fin d)) :
         rw [h2, abs_lt]
         obtain ⟨ha, hb⟩ := hx i
         constructor <;> linarith
-  rw [hbox, MeasurePreserving.measure_preimage (PiLp.volume_preserving_ofLp (Fin d))
+
+/-- Cubes are measurable. -/
+theorem measurableSet_cube {h : ℝ} (hh : 0 < h) (u : EuclideanSpace ℝ (Fin d)) :
+    MeasurableSet (cube h u) := by
+  rw [cube_eq_preimage hh]
+  exact (PiLp.volume_preserving_ofLp (Fin d)).measurable
+    (MeasurableSet.univ_pi (fun _ => measurableSet_Ioo))
+
+theorem volume_cube {h : ℝ} (hh : 0 < h) (u : EuclideanSpace ℝ (Fin d)) :
+    volume (cube h u) = ENNReal.ofReal (h ^ d) := by
+  rw [cube_eq_preimage hh, MeasurePreserving.measure_preimage (PiLp.volume_preserving_ofLp (Fin d))
     (MeasurableSet.univ_pi (fun _ => measurableSet_Ioo)).nullMeasurableSet, volume_pi_pi]
   have hfac : ∀ i : Fin d, volume (Ioo (u i - h / 2) (u i + h / 2)) = ENNReal.ofReal h := by
     intro i
