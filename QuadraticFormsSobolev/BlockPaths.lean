@@ -457,4 +457,107 @@ lemma schemeIndex_le {Δ L d m : ℕ} (hL : 0 < L) {n : ℕ} (h1 : 1 ≤ n)
   calc Δ ^ (m * d) / L ≤ (L * n) / L := Nat.div_le_div_right h
     _ = n := Nat.mul_div_cancel_left n hL
 
+/-! ## Counting the admissible points
+
+The hashes are balanced because the ball holds only `≍ Δ^{md}` lattice points
+while a block's majority set holds `≍ Δ^{md}/L` of them. -/
+
+/-- A natural multiple of a lattice point is a lattice point. -/
+lemma nsmul_mem_lattice {n : ℕ} {w : EuclideanSpace ℝ (Fin d)} (hw : w ∈ lattice d) :
+    ((n : ℝ)) • w ∈ lattice d := by
+  rw [mem_lattice_iff] at hw ⊢
+  intro i
+  obtain ⟨k, hk⟩ := hw i
+  refine ⟨n * k, ?_⟩
+  have he : ((n : ℝ) • w) i = (n : ℝ) * w i := by simp
+  rw [he, hk]
+  push_cast
+  ring
+
+/-- **The ball count.** At scale `m` there are at most `(2⌈2√dΔ⌉+1)^d Δ^{md}`
+admissible points: the ball has radius `2√d Δ^{m+1}`, which is `Δ^m` times a
+constant. -/
+theorem encard_admissiblePt_le {Δ : ℕ} (hΔ : 1 ≤ Δ) (m : ℕ)
+    (z : EuclideanSpace ℝ (Fin d)) :
+    {x | AdmissiblePt (Δ : ℝ) m z x}.encard
+      ≤ (((2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) ^ d * Δ ^ (m * d) : ℕ) : ℕ∞) := by
+  have hΔR : (1:ℝ) ≤ (Δ : ℝ) := by exact_mod_cast hΔ
+  have hsub : {x | AdmissiblePt (Δ : ℝ) m z x} ⊆
+      lattice d ∩ closedBall ((Δ:ℝ) ^ (m + 1) • z) (2 * Real.sqrt d * (Δ:ℝ) ^ (m + 1)) := by
+    rintro x ⟨hlat, hb⟩
+    exact ⟨hlat, by rw [Metric.mem_closedBall, dist_eq_norm]; exact hb⟩
+  refine le_trans (Set.encard_le_encard hsub)
+    (le_trans (encard_lattice_inter_closedBall_le _ _) ?_)
+  -- the whole estimate is now a statement about natural numbers
+  have hPpos : 1 ≤ Δ ^ m := Nat.one_le_pow _ _ (by omega)
+  have hceil : ⌈2 * Real.sqrt d * (Δ:ℝ) ^ (m + 1)⌉₊
+      ≤ ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ * Δ ^ m := by
+    refine Nat.ceil_le.mpr ?_
+    have hcast : ((⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ * Δ ^ m : ℕ) : ℝ)
+        = (⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ : ℝ) * (Δ:ℝ) ^ m := by push_cast; ring
+    rw [hcast]
+    have hle : 2 * Real.sqrt d * (Δ : ℝ) ≤ (⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ : ℝ) :=
+      Nat.le_ceil _
+    have hp : (0:ℝ) ≤ (Δ:ℝ) ^ m := by positivity
+    calc 2 * Real.sqrt d * (Δ:ℝ) ^ (m + 1)
+        = (2 * Real.sqrt d * (Δ : ℝ)) * (Δ:ℝ) ^ m := by rw [pow_succ]; ring
+      _ ≤ (⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ : ℝ) * (Δ:ℝ) ^ m :=
+          mul_le_mul_of_nonneg_right hle hp
+  have hstep : 2 * ⌈2 * Real.sqrt d * (Δ:ℝ) ^ (m + 1)⌉₊ + 1
+      ≤ (2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) * Δ ^ m := by
+    have := Nat.mul_le_mul_left 2 hceil
+    calc 2 * ⌈2 * Real.sqrt d * (Δ:ℝ) ^ (m + 1)⌉₊ + 1
+        ≤ 2 * (⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ * Δ ^ m) + 1 := by omega
+      _ ≤ (2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) * Δ ^ m := by
+          have : (2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) * Δ ^ m
+              = 2 * (⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ * Δ ^ m) + Δ ^ m := by ring
+          omega
+  have hfin : (2 * ⌈2 * Real.sqrt d * (Δ:ℝ) ^ (m + 1)⌉₊ + 1) ^ d
+      ≤ (2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) ^ d * Δ ^ (m * d) := by
+    calc (2 * ⌈2 * Real.sqrt d * (Δ:ℝ) ^ (m + 1)⌉₊ + 1) ^ d
+        ≤ ((2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) * Δ ^ m) ^ d :=
+          Nat.pow_le_pow_left hstep d
+      _ = (2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) ^ d * Δ ^ (m * d) := by
+          rw [Nat.mul_pow, ← pow_mul]
+  exact_mod_cast hfin
+
+/-! ## The majority set is large enough to index
+
+The paper's "each block contains at least `Δ^{d(n-1)}/L` lattice points where the
+associated cone is favored by majority". -/
+
+/-- A block's majority set has at least `a` points. -/
+theorem schemeIndex_le_ncard_blockFibre {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {Δ L : ℕ} (hL : 0 < L) (hΔ : 1 ≤ Δ)
+    (htypes : ∀ B : Set (EuclideanSpace ℝ (Fin d)), (Γ '' B).ncard ≤ L)
+    {m : ℕ} {c : EuclideanSpace ℝ (Fin d)} (hc : c ∈ lattice d)
+    {V : DCone (EuclideanSpace ℝ (Fin d))} (hV : FavoredIn Γ (block ((Δ:ℝ) ^ m) c) V) :
+    schemeIndex Δ L d m ≤ (blockFibre Γ (block ((Δ:ℝ) ^ m) c) V).ncard := by
+  have hΔR : (1:ℝ) ≤ (Δ : ℝ) := by exact_mod_cast hΔ
+  have hℓ : (1:ℝ) ≤ (Δ:ℝ) ^ m := one_le_pow₀ hΔR
+  have hQfin : (block ((Δ:ℝ) ^ m) c).Finite := block_finite (by linarith) c
+  have hFfin : (blockFibre Γ (block ((Δ:ℝ) ^ m) c) V).Finite := hQfin.subset (fun _ h => h.1)
+  -- the majority set is nonempty
+  have hFne : 1 ≤ (blockFibre Γ (block ((Δ:ℝ) ^ m) c) V).ncard := by
+    obtain ⟨p, hp⟩ := block_nonempty hℓ c
+    have h1 : (1 : ℕ∞) ≤ (blockFibre Γ (block ((Δ:ℝ) ^ m) c) (Γ p)).encard :=
+      Set.one_le_encard_iff_nonempty.mpr ⟨p, hp, rfl⟩
+    have h2 : (1 : ℕ∞) ≤ (blockFibre Γ (block ((Δ:ℝ) ^ m) c) V).encard :=
+      le_trans h1 (hV (Γ p))
+    rw [← hFfin.cast_ncard_eq] at h2
+    exact_mod_cast h2
+  -- and it carries at least a `1/L` share of the block
+  have hpig : (block ((Δ:ℝ) ^ m) c).ncard
+      ≤ L * (blockFibre Γ (block ((Δ:ℝ) ^ m) c) V).ncard :=
+    ncard_le_mul_ncard_blockFibre hQfin hV (htypes _)
+  have hbig : Δ ^ (m * d) ≤ (block ((Δ:ℝ) ^ m) c).ncard := by
+    have hcast : (((Δ ^ m : ℕ)) : ℝ) = (Δ:ℝ) ^ m := by push_cast; ring
+    have h1 : (((Δ ^ m) ^ d : ℕ) : ℕ∞) ≤ (block ((Δ:ℝ) ^ m) c).encard := by
+      have := le_encard_block (d := d) (ℓ := Δ ^ m) hc
+      rwa [hcast] at this
+    rw [← hQfin.cast_ncard_eq] at h1
+    have h2 : (Δ ^ m) ^ d ≤ (block ((Δ:ℝ) ^ m) c).ncard := by exact_mod_cast h1
+    rwa [← pow_mul] at h2
+  exact schemeIndex_le hL hFne (le_trans hbig hpig)
+
 end QFS
