@@ -35,7 +35,65 @@ the statement as printed is false:
 * **Theorem 4.1**'s induction is applied to a set that need not be connected;
   the repair is to run it on `B_r(x) ∩ Ṽ[x]` with the half-cone.
 
-## Status
+## Coverage: every numbered result in the paper
+
+One row per numbered statement, including the ones not attempted. ✅ proved,
+❗ disproved as printed, ⚪ prose remark with nothing to prove, ❌ out of scope.
+
+| # | Kind | Label | State |
+| --- | --- | --- | --- |
+| 1.1 | Theorem | main comparability, continuous | ❌ out of scope |
+| 1.2 | Remark | strength of the hypotheses | ⚪ (condition (M) is `QFS.CondM`) |
+| 1.3 | Theorem | main comparability, discrete | ❌ out of scope |
+| 1.4 | Theorem | `H_k(Ω) = H^{α/2}(Ω)` | ❌ out of scope |
+| 1.5 | Corollary | regular Dirichlet form | ❌ out of scope |
+| 1.6 | Corollary | Harnack / Hölder regularity | ❌ out of scope (quoted from [DyKa15]) |
+| 2.1 | Definition | cones, half-cones, configurations | ✅ |
+| 2.2 | Lemma | finitely many reference cones | ✅ |
+| 2.3 | Definition | family of reference cones | ✅ |
+| 2.4 | Corollary | finite-image subconfiguration | ✅ |
+| 2.5 | Definition | cubes | ✅ |
+| 2.6 | Remark | half-closed cubes used once | ⚪ |
+| 2.7 | Lemma | cone in intersection | ✅ |
+| 3.1 | Corollary | `hℤ^d` rescaling | ❌ out of scope |
+| 3.2 | Lemma | the indicator inequality | ✅ |
+| 3.3 | Lemma | small cone inside `V^m_r` | ❗ **false for `d = 1`, `r = √d`** |
+| 3.4 | Lemma | `\|s−t\|` vs `\|x−y\|` | ✅ for `hℤ^d`; ❗ **false as printed** |
+| 3.5 | Proposition | test-function bound | ❌ out of scope (uses 3.3) |
+| 3.6 | Corollary | the rescaled kernel | ❌ out of scope |
+| 3.7 | Lemma | `H_k` on balls | ❌ out of scope |
+| 4.1 | Theorem | **connectivity of `G[U]`** | ✅ **proved** |
+| 4.2 | Definition | type of a point | ✅ |
+| 4.3 | Lemma | same type ⟹ path of length ≤ 2 | ✅ |
+| 4.4 | Definition | well-connected in `U` | ✅ |
+| 4.5 | Lemma | three observations | ✅ (all three parts) |
+| 4.6 | Lemma | "über Bande" | ✅ (needs an unstated `z ∈ U`) |
+| 5.1 | Lemma | lattice points in cones | ❌ out of scope |
+| 5.2 | Corollary | discrete same-type | ❌ out of scope |
+| 5.3 | Definition | `r`-`R`-connected | ❌ out of scope |
+| 5.4 | Lemma | density, discrete | ❌ out of scope |
+| 5.5 | Lemma | "über Bande", discrete | ❌ out of scope |
+| 5.6 | Lemma | the jump constant `δ` | ❌ out of scope |
+| 5.7 | Lemma | the core induction | ❌ out of scope |
+| 5.8 | Corollary | discrete template | ❌ out of scope |
+| 5.9 | Lemma | apex shrinking | ❌ out of scope |
+| 5.10 | Definition | towns | ❌ out of scope |
+| 5.11 | Definition | town configurations | ❌ out of scope |
+| 5.12 | Remark | — | ❌ out of scope |
+| 5.13 | Definition | scales | ❌ out of scope |
+| 5.14 | Proposition | renormalisation | ❌ out of scope |
+| 5.15 | Theorem | path properties | ❌ out of scope |
+| 5.16 | Lemma | the first jump | ❌ out of scope |
+| 7.1 | Lemma | auxiliary integral estimate | ❌ out of scope |
+| 7.2 | Lemma | a Lebesgue differentiation argument | ❌ out of scope |
+
+Sections 2 and 4 are formalised completely. Section 3 is formalised as far as it
+can be without the machinery of Sections 5 and 6 (Lemma 3.3, which Proposition
+3.5 needs, is false as stated). Sections 5, 6 and 7 are a formalisation project
+in their own right.
+
+## What is proved, in detail
+
 
 | Result | Paper | Lean | State |
 | --- | --- | --- | --- |
