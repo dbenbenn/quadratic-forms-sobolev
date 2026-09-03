@@ -13,24 +13,32 @@ namespace QFS
 
 variable {d : ℕ}
 
-/-- **Lemma 5.9** of Bux–Kassmann–Schulze. There is a constant `δ`, depending only
-on `ϑ` and `d`, such that whenever `‖x − y‖ ≥ δ ℓ` and `y` lies in the cone of
-apex angle `ϑ/2` at `x`, the whole cube `Ā_ℓ(y)` lies in the cone of apex angle
-`ϑ` based at *every* point of `Ā_ℓ(x)`.
+/-- The constant `δ` of Lemma 5.9. The paper's `3√d/(2 sin ϑ)` is too small; see
+the README. -/
+noncomputable def apexShrinkConst (d : ℕ) (ϑ : ℝ) : ℝ :=
+  (Real.sqrt d + 1) / Real.sin (ϑ / 2)
 
-The constant proved here is `δ = (√d + 1)/sin(ϑ/2)`; the paper's
-`δ = 3√d/(2 sin ϑ)` is too small — see the README. -/
-theorem renormalization_apex_shrink {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
-    ∃ δ : ℝ, 0 < δ ∧
-      ∀ v : EuclideanSpace ℝ (Fin d), ‖v‖ = 1 →
-      ∀ ℓ : ℝ, 0 < ℓ → ∀ x y : EuclideanSpace ℝ (Fin d),
-        δ * ℓ ≤ ‖x - y‖ → y ∈ shift (cone v (ϑ / 2)) x →
-        closedCube ℓ y ⊆ ⋂ z ∈ closedCube ℓ x, shift (cone v ϑ) z := by
+lemma apexShrinkConst_pos {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
+    0 < apexShrinkConst d ϑ := by
   have hs2 : 0 < Real.sin (ϑ / 2) :=
     Real.sin_pos_of_pos_of_lt_pi (by positivity) (by linarith [pi_pos])
   have hD : (0:ℝ) ≤ Real.sqrt d := Real.sqrt_nonneg _
-  refine ⟨(Real.sqrt d + 1) / Real.sin (ϑ / 2), by positivity, ?_⟩
-  intro v hv ℓ hℓ x y hdist hy u hu
+  rw [apexShrinkConst]
+  positivity
+
+/-- **Lemma 5.9** of Bux–Kassmann–Schulze. Whenever `‖x − y‖ ≥ δ ℓ` and `y` lies
+in the cone of apex angle `ϑ/2` at `x`, the whole cube `Ā_ℓ(y)` lies in the cone
+of apex angle `ϑ` based at *every* point of `Ā_ℓ(x)`. -/
+theorem renormalization_apex_shrink {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
+    {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1) {ℓ : ℝ} (hℓ : 0 < ℓ)
+    {x y : EuclideanSpace ℝ (Fin d)}
+    (hdist : apexShrinkConst d ϑ * ℓ ≤ ‖x - y‖) (hy : y ∈ shift (cone v (ϑ / 2)) x) :
+    closedCube ℓ y ⊆ ⋂ z ∈ closedCube ℓ x, shift (cone v ϑ) z := by
+  have hs2 : 0 < Real.sin (ϑ / 2) :=
+    Real.sin_pos_of_pos_of_lt_pi (by positivity) (by linarith [pi_pos])
+  have hD : (0:ℝ) ≤ Real.sqrt d := Real.sqrt_nonneg _
+  rw [apexShrinkConst] at hdist
+  intro u hu
   -- the gap of `y − x` with respect to the *wide* cone
   have hgapy : (Real.sqrt d + 1) * ℓ ≤ coneGap v ϑ (y - x) := by
     refine le_trans ?_ (coneGap_ge_of_mem_half hv hϑ hϑ' hy)
@@ -89,5 +97,135 @@ theorem paper_threshold_insufficient {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π
       ⟨by linarith [pi_pos], hϑ'⟩ (by linarith)
   rw [div_lt_div_iff₀ (by positivity) (by norm_num)]
   nlinarith
+
+
+/-- Lemma 5.9 in the paper's phrasing, "there is a constant `δ`". -/
+theorem exists_apexShrinkConst {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
+    ∃ δ : ℝ, 0 < δ ∧
+      ∀ v : EuclideanSpace ℝ (Fin d), ‖v‖ = 1 → ∀ ℓ : ℝ, 0 < ℓ →
+      ∀ x y : EuclideanSpace ℝ (Fin d), δ * ℓ ≤ ‖x - y‖ →
+        y ∈ shift (cone v (ϑ / 2)) x →
+        closedCube ℓ y ⊆ ⋂ z ∈ closedCube ℓ x, shift (cone v ϑ) z :=
+  ⟨apexShrinkConst d ϑ, apexShrinkConst_pos hϑ hϑ',
+    fun _ hv _ hℓ _ _ hdist hy => renormalization_apex_shrink hϑ hϑ' hv hℓ hdist hy⟩
+
+/-! ## Definition 5.10: blocks and towns -/
+
+/-- A **block** `Q_ℓ(x) = ℤ^d ∩ Ā_ℓ(x)`: the lattice points inside a cube. -/
+def block (ℓ : ℝ) (x : EuclideanSpace ℝ (Fin d)) : Set (EuclideanSpace ℝ (Fin d)) :=
+  lattice d ∩ closedCube ℓ x
+
+/-- The **town at scale `(h, ℓ)`**: the blocks centred at the points of `hℤ^d`. -/
+def town (h ℓ : ℝ) : Set (Set (EuclideanSpace ℝ (Fin d))) :=
+  (fun x => block ℓ x) '' scaledLattice d h
+
+/-- A town of scale `(h, ℓ)` is **`ϑ`-sparsely populated** when the constant `δ`
+of Lemma 5.9 is less than `h/ℓ`. -/
+def SparselyPopulated (d : ℕ) (ϑ h ℓ : ℝ) : Prop := apexShrinkConst d ϑ < h / ℓ
+
+/-- The paper's identification of the town with the integer lattice,
+`x ↦ Q_ℓ(h x)`, used in the proof of Proposition 5.14. -/
+def townIndex (h ℓ : ℝ) (x : EuclideanSpace ℝ (Fin d)) : Set (EuclideanSpace ℝ (Fin d)) :=
+  block ℓ (h • x)
+
+lemma townIndex_mem_town {h ℓ : ℝ} {x : EuclideanSpace ℝ (Fin d)} (hx : x ∈ lattice d) :
+    townIndex h ℓ x ∈ town h ℓ := by
+  refine ⟨h • x, ?_, rfl⟩
+  intro i
+  obtain ⟨n, hn⟩ := (mem_lattice_iff.mp hx) i
+  refine ⟨n, ?_⟩
+  have he : (h • x) i = h * x i := by simp
+  rw [he, hn]
+  ring
+
+/-- Blocks are finite, so "maximal size" in Definition 5.11 is meaningful. -/
+theorem block_finite {ℓ : ℝ} (hℓ : 0 ≤ ℓ) (x : EuclideanSpace ℝ (Fin d)) :
+    (block ℓ x).Finite :=
+  (lattice_inter_closedBall_finite x (ℓ / 2 * Real.sqrt d)).subset
+    (Set.inter_subset_inter Set.Subset.rfl (closedCube_subset_closedBall hℓ x))
+
+/-- A block contains its centre, when that is a lattice point. -/
+lemma mem_block_self {ℓ : ℝ} (hℓ : 0 ≤ ℓ) {x : EuclideanSpace ℝ (Fin d)}
+    (hx : x ∈ lattice d) : x ∈ block ℓ x := by
+  refine ⟨hx, ?_⟩
+  have he : infNorm (x - x) = 0 :=
+    le_antisymm (infNorm_le le_rfl (fun i => by rw [sub_self]; simp)) (infNorm_nonneg _)
+  simp only [closedCube, Set.mem_ofPred_eq, he]
+  linarith
+
+/-! ## Definition 5.11: favored by majority -/
+
+/-- The fibre of `Γ` over a double cone inside a block. Types are compared as
+double cones, following Definition 4.2. -/
+def blockFibre (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    (Q : Set (EuclideanSpace ℝ (Fin d))) (V : DCone (EuclideanSpace ℝ (Fin d))) :
+    Set (EuclideanSpace ℝ (Fin d)) := {x ∈ Q | (Γ x).carrier = V.carrier}
+
+/-- **Definition 5.11**: `V` is *favored by majority* in the block `Q` when its
+fibre has maximal size. -/
+def FavoredIn (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    (Q : Set (EuclideanSpace ℝ (Fin d))) (V : DCone (EuclideanSpace ℝ (Fin d))) : Prop :=
+  ∀ W : DCone (EuclideanSpace ℝ (Fin d)),
+    (blockFibre Γ Q W).encard ≤ (blockFibre Γ Q V).encard
+
+/-- A cone favored by majority exists in every nonempty finite block.
+
+**Remark 5.12** notes that it need not be unique; accordingly `FavoredIn` is a
+predicate, not a function, and every later statement quantifies over *some*
+favored cone. -/
+theorem exists_favoredIn (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    {Q : Set (EuclideanSpace ℝ (Fin d))} (hQfin : Q.Finite) (hQne : Q.Nonempty) :
+    ∃ V, FavoredIn Γ Q V := by
+  classical
+  have hSfin : ((fun x => Γ x) '' Q).Finite := hQfin.image _
+  have hSne : hSfin.toFinset.Nonempty := by
+    obtain ⟨p, hp⟩ := hQne
+    exact ⟨Γ p, by simpa using ⟨p, hp, rfl⟩⟩
+  obtain ⟨V, -, hVmax⟩ :=
+    Finset.exists_max_image hSfin.toFinset (fun W => (blockFibre Γ Q W).encard) hSne
+  refine ⟨V, fun W => ?_⟩
+  rcases Set.eq_empty_or_nonempty (blockFibre Γ Q W) with hW | ⟨p, hpQ, hptype⟩
+  · rw [hW]
+    simp
+  · have hfib : blockFibre Γ Q W = blockFibre Γ Q (Γ p) := by
+      simp only [blockFibre, hptype]
+    rw [hfib]
+    exact hVmax (Γ p) (by simpa using ⟨p, hpQ, rfl⟩)
+
+/-! ## Definition 5.13: the favored graph -/
+
+/-- **Definition 5.13**: a directed edge from block `Q` to block `P`, given by a
+cone favored by majority in `Q` that contains every point of `P` when based at
+every point of `Q`. -/
+def FavoredEdge (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    (Q P : Set (EuclideanSpace ℝ (Fin d))) : Prop :=
+  ∃ V : DCone (EuclideanSpace ℝ (Fin d)), FavoredIn Γ Q V ∧
+    ∀ x ∈ Q, ∀ y ∈ P, y ∈ shift V.carrier x
+
+/-- Connectivity in the **favored graph** of a town, by undirected edge paths
+through blocks of `T`. -/
+def FavoredConn (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    (T : Set (Set (EuclideanSpace ℝ (Fin d)))) :
+    Set (EuclideanSpace ℝ (Fin d)) → Set (EuclideanSpace ℝ (Fin d)) → Prop :=
+  Relation.ReflTransGen
+    (fun Q P => Q ∈ T ∧ P ∈ T ∧ (FavoredEdge Γ Q P ∨ FavoredEdge Γ P Q))
+
+@[refl] lemma FavoredConn.refl (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    (T : Set (Set (EuclideanSpace ℝ (Fin d)))) (Q : Set (EuclideanSpace ℝ (Fin d))) :
+    FavoredConn Γ T Q Q := Relation.ReflTransGen.refl
+
+lemma FavoredConn.trans {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {T : Set (Set (EuclideanSpace ℝ (Fin d)))} {Q P S : Set (EuclideanSpace ℝ (Fin d))}
+    (h₁ : FavoredConn Γ T Q P) (h₂ : FavoredConn Γ T P S) : FavoredConn Γ T Q S :=
+  Relation.ReflTransGen.trans h₁ h₂
+
+lemma FavoredConn.symm {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {T : Set (Set (EuclideanSpace ℝ (Fin d)))} {Q P : Set (EuclideanSpace ℝ (Fin d))}
+    (h : FavoredConn Γ T Q P) : FavoredConn Γ T P Q := by
+  induction h with
+  | refl => exact FavoredConn.refl _ _ _
+  | tail _ hstep ih =>
+      exact FavoredConn.trans
+        (Relation.ReflTransGen.single ⟨hstep.2.1, hstep.1, hstep.2.2.symm⟩) ih
 
 end QFS

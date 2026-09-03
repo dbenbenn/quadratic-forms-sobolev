@@ -84,10 +84,10 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 5.7 | Lemma | the core induction | ✅ (monotonicity clause omitted, see Deviations 12) |
 | 5.8 | Corollary | discrete template | ✅ |
 | 5.9 | Lemma | apex shrinking | ✅ (corrected constant, see Deviations 13) |
-| 5.10 | Definition | towns | ❌ out of scope |
-| 5.11 | Definition | town configurations | ❌ out of scope |
-| 5.12 | Remark | — | ❌ out of scope |
-| 5.13 | Definition | scales | ❌ out of scope |
+| 5.10 | Definition | blocks and towns | ✅ |
+| 5.11 | Definition | favored by majority | ✅ |
+| 5.12 | Remark | the favored cone is not unique | ⚪ (reflected in the design, see below) |
+| 5.13 | Definition | the favored graph | ✅ |
 | 5.14 | Proposition | renormalisation | ❌ out of scope |
 | 5.15 | Theorem | path properties | ❌ out of scope |
 | 5.16 | Lemma | the first jump | ❌ out of scope |
@@ -100,8 +100,8 @@ the machinery of Sections 5 and 6 (Lemma 3.3, which Proposition 3.5 needs, is
 false as stated). From Section 1, the function-space definitions, assumption
 (1.4), the reverse inequality and equation (1.6) are proved, and Theorems 1.1
 and 1.3 are recorded as type-checked `Prop`s so the remaining target is precise.
-The renormalisation machinery of Lemmas 5.10–5.16 and Section 6 remain a project
-in their own right.
+Proposition 5.14, Theorem 5.15, Lemma 5.16 and Section 6 remain a project in
+their own right.
 
 ## What is proved, in detail
 
@@ -203,6 +203,13 @@ in their own right.
 | Half-angle cone has gap `≥ ‖h‖ sin(ϑ/2)` | Lem. 5.9 proof | `QFS.coneGap_ge_of_mem_half` | ✅ proved |
 | **Lemma 5.9**: apex shrinking | Lem. 5.9 | `QFS.renormalization_apex_shrink` | ✅ **proved** (corrected constant) |
 | The paper's threshold in Lem. 5.9 is too small | Lem. 5.9 proof | `QFS.paper_threshold_insufficient` | ✅ **disproved** |
+| Lemma 5.9's constant, explicitly | Lem. 5.9 | `QFS.apexShrinkConst` | ✅ defined |
+| Lattice points in a ball are finite | (new; needed by Def. 5.11) | `QFS.lattice_inter_closedBall_finite` | ✅ proved |
+| **Block, town, sparsely populated** | Def. 5.10 | `QFS.block`, `QFS.town`, `QFS.SparselyPopulated` | ✅ **defined** |
+| Blocks are finite; the town–`ℤ^d` identification | Def. 5.10 | `QFS.block_finite`, `QFS.townIndex`, `QFS.townIndex_mem_town` | ✅ proved |
+| **Favored by majority** | Def. 5.11 | `QFS.blockFibre`, `QFS.FavoredIn` | ✅ **defined** |
+| A favored cone exists in a nonempty block | Def. 5.11 / Rem. 5.12 | `QFS.exists_favoredIn` | ✅ proved |
+| **The favored graph** | Def. 5.13 | `QFS.FavoredEdge`, `QFS.FavoredConn` | ✅ **defined** |
 
 ## Deviations
 
@@ -384,6 +391,15 @@ Each departure from the paper, and why.
     `QFS.closedCube` are both provided; Lemma 5.9 is proved for the closed cube,
     as Section 5.2 states it, which is the stronger reading.
 
+15. **Remark 5.12 is reflected in the design.** The remark observes that a cone
+    favored by majority in a block need not be unique. `QFS.FavoredIn` is
+    therefore a *predicate* rather than a choice function, and
+    `QFS.FavoredEdge` quantifies over *some* favored cone, as Definition 5.13
+    does. `QFS.exists_favoredIn` supplies existence in a nonempty finite block —
+    which needs blocks to be finite, hence
+    `QFS.lattice_inter_closedBall_finite`. Without finiteness the phrase "has
+    maximal size" in Definition 5.11 would be satisfied by every cone.
+
 ## Not attempted
 
 Recorded here rather than silently omitted. The paper's two main theorems and
@@ -401,7 +417,7 @@ formalised is the geometric and graph-theoretic layer they are built on.
 | Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Thm. 1.3's setting, and on Lemma 3.3 (see Deviations 7). |
 | Lemma 3.3 for `d ≥ 2` | Lem. 3.3 | True but needs an argument the paper does not give; see Deviations 7. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
-| Renormalisation | §5 (Lems. 5.10–5.16) | The "town" and scale machinery. (Lemmas 5.1–5.9 **are** formalised.) |
+| Renormalisation | §5 (Prop. 5.14, Thm. 5.15, Lem. 5.16) | The scale statement, the path properties and the first jump. (Results 5.1–5.13 **are** formalised.) |
 | Proof of Theorem 1.3 | §6 | As above. |
 | Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §§3 and 6. |
 
