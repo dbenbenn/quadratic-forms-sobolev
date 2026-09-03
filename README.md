@@ -171,6 +171,9 @@ right.
 | Ball of radius `< gap` sits in the cone | (new) | `QFS.closedBall_subset_cone` | ✅ proved |
 | Axis step raises the gap by `a sin ϑ` | (new; key to Lem. 5.6) | `QFS.coneGap_add_smul_axis` | ✅ proved |
 | **Lemma 5.6**: bounded jumps toward the tip | Lem. 5.6 | `QFS.exists_closer_lattice_nearby` | ✅ **proved** |
+| Lattice points have integer squared norm | (new) | `QFS.exists_natCast_sq_norm` | ✅ proved |
+| The descent principle | Lem. 5.6, "I.e." clause | `QFS.Jump`, `QFS.exists_min_of_jump` | ✅ proved |
+| **Lemma 5.6 in full**, chain down to the tip | Lem. 5.6 | `QFS.exists_min_chain_in_cone` | ✅ **proved** |
 
 ## Deviations
 

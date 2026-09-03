@@ -419,4 +419,120 @@ theorem exists_closer_lattice_nearby {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π
         _ ≤ ρ + (t + a) := by linarith
         _ < 2 * t₀ + a₀ + ρ + 1 := by linarith
 
+
+/-! ## Descent by bounded jumps
+
+Lemma 5.6 continues: "I.e., we can go from `x` within `V` to a lattice point of
+minimum distance to the tip via a chain of jumps each bounded in length from
+above by `δ`." That clause is a general consequence of the local statement, and
+is what the induction of Lemma 5.7 consumes; we record it separately.
+
+The descent terminates because squared distances between lattice points are
+natural numbers. -/
+
+lemma lattice_sub {x y : EuclideanSpace ℝ (Fin d)} (hx : x ∈ lattice d)
+    (hy : y ∈ lattice d) : x - y ∈ lattice d := by
+  rw [mem_lattice_iff] at hx hy ⊢
+  intro i
+  obtain ⟨n, hn⟩ := hx i
+  obtain ⟨m, hm⟩ := hy i
+  refine ⟨n - m, ?_⟩
+  have he : (x - y) i = x i - y i := by simp
+  rw [he, hn, hm]
+  push_cast
+  ring
+
+lemma zero_mem_lattice : (0 : EuclideanSpace ℝ (Fin d)) ∈ lattice d := by
+  rw [mem_lattice_iff]
+  exact fun i => ⟨0, by simp⟩
+
+/-- The squared norm of a lattice point is a natural number. -/
+lemma exists_natCast_sq_norm {x : EuclideanSpace ℝ (Fin d)} (hx : x ∈ lattice d) :
+    ∃ n : ℕ, ‖x‖ ^ 2 = (n : ℝ) := by
+  rw [mem_lattice_iff] at hx
+  choose m hm using hx
+  have hsq : ‖x‖ ^ 2 = ∑ i, ((m i : ℤ) : ℝ) ^ 2 := by
+    rw [EuclideanSpace.norm_eq, Real.sq_sqrt (by positivity)]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    rw [hm i, Real.norm_eq_abs, sq_abs]
+  have hnn : (0 : ℤ) ≤ ∑ i, (m i) ^ 2 := Finset.sum_nonneg (fun i _ => sq_nonneg _)
+  refine ⟨(∑ i, (m i) ^ 2).toNat, ?_⟩
+  rw [hsq]
+  have hcast : (((∑ i, (m i) ^ 2).toNat : ℕ) : ℝ) = ((∑ i, (m i) ^ 2 : ℤ) : ℝ) := by
+    exact_mod_cast congrArg (fun z : ℤ => (z : ℝ)) (Int.toNat_of_nonneg hnn)
+  rw [hcast]
+  push_cast
+  ring
+
+/-- A single jump of the descent: within `W`, strictly closer to `c`, of length
+less than `δ`. -/
+def Jump (W : Set (EuclideanSpace ℝ (Fin d))) (c : EuclideanSpace ℝ (Fin d)) (δ : ℝ) :
+    EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → Prop :=
+  fun p q => p ∈ W ∩ lattice d ∧ q ∈ W ∩ lattice d ∧ ‖q - c‖ < ‖p - c‖ ∧ ‖q - p‖ < δ
+
+/-- **The descent principle.** If from every non-minimal lattice point of `W`
+there is a jump of length less than `δ` strictly closer to `c`, then every
+lattice point of `W` reaches a lattice point of `W` at minimal distance to `c`
+through such jumps. -/
+theorem exists_min_of_jump {W : Set (EuclideanSpace ℝ (Fin d))}
+    {c : EuclideanSpace ℝ (Fin d)} (hc : c ∈ lattice d) {δ : ℝ}
+    (hstep : ∀ p ∈ W ∩ lattice d,
+      (∃ q ∈ W ∩ lattice d, ‖q - c‖ < ‖p - c‖) →
+      ∃ q ∈ W ∩ lattice d, ‖q - c‖ < ‖p - c‖ ∧ ‖q - p‖ < δ) :
+    ∀ x ∈ W ∩ lattice d, ∃ m ∈ W ∩ lattice d,
+      (∀ w ∈ W ∩ lattice d, ‖m - c‖ ≤ ‖w - c‖) ∧
+      Relation.ReflTransGen (Jump W c δ) x m := by
+  -- Induct on the natural number `‖x − c‖²`.
+  have key : ∀ n : ℕ, ∀ x ∈ W ∩ lattice d, ‖x - c‖ ^ 2 = (n : ℝ) →
+      ∃ m ∈ W ∩ lattice d, (∀ w ∈ W ∩ lattice d, ‖m - c‖ ≤ ‖w - c‖) ∧
+        Relation.ReflTransGen (Jump W c δ) x m := by
+    intro n
+    induction n using Nat.strong_induction_on with
+    | _ n ih =>
+      intro x hx hxn
+      by_cases hmin : ∀ w ∈ W ∩ lattice d, ‖x - c‖ ≤ ‖w - c‖
+      · exact ⟨x, hx, hmin, Relation.ReflTransGen.refl⟩
+      · have hex : ∃ q ∈ W ∩ lattice d, ‖q - c‖ < ‖x - c‖ := by
+          by_contra hcon
+          refine hmin (fun w hw => ?_)
+          by_contra hlt
+          exact hcon ⟨w, hw, by linarith [not_le.mp hlt]⟩
+        obtain ⟨q, hq, hqc, hqx⟩ := hstep x hx hex
+        obtain ⟨k, hk⟩ := exists_natCast_sq_norm (lattice_sub hq.2 hc)
+        have hkn : k < n := by
+          have h1 : (k : ℝ) < (n : ℝ) := by
+            rw [← hk, ← hxn]
+            have h0 : 0 ≤ ‖q - c‖ := norm_nonneg _
+            nlinarith
+          exact_mod_cast h1
+        obtain ⟨m, hm, hmmin, hchain⟩ := ih k hkn q hq hk
+        exact ⟨m, hm, hmmin, Relation.ReflTransGen.head ⟨hx, hq, hqc, hqx⟩ hchain⟩
+  intro x hx
+  obtain ⟨n, hn⟩ := exists_natCast_sq_norm (lattice_sub hx.2 hc)
+  exact key n x hx hn
+
+
+/-- **Lemma 5.6, in full**, including the clause the paper states with "I.e.":
+within a double cone of apex angle at least `ϑ`, every lattice point reaches a
+lattice point of minimal distance to the tip through a chain of jumps each of
+length less than `δ`, with `δ` depending only on `ϑ` and `d`. -/
+theorem exists_min_chain_in_cone {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ V : DCone (EuclideanSpace ℝ (Fin d)), ϑ ≤ V.apex →
+      ∀ x ∈ V.carrier ∩ lattice d,
+        ∃ m ∈ V.carrier ∩ lattice d,
+          (∀ w ∈ V.carrier ∩ lattice d, ‖m‖ ≤ ‖w‖) ∧
+          Relation.ReflTransGen (Jump V.carrier 0 δ) x m := by
+  obtain ⟨δ, hδ0, hδ⟩ := exists_closer_lattice_nearby (d := d) hϑ hϑ'
+  refine ⟨δ, hδ0, fun V hV x hx => ?_⟩
+  have hstep : ∀ p ∈ V.carrier ∩ lattice d,
+      (∃ q ∈ V.carrier ∩ lattice d, ‖q - 0‖ < ‖p - 0‖) →
+      ∃ q ∈ V.carrier ∩ lattice d, ‖q - 0‖ < ‖p - 0‖ ∧ ‖q - p‖ < δ := by
+    rintro p ⟨hpV, hplat⟩ ⟨q, ⟨hqV, hqlat⟩, hqp⟩
+    rw [sub_zero, sub_zero] at hqp
+    obtain ⟨y, hylat, hyV, hyn, hyd⟩ := hδ V hV p hplat hpV ⟨q, hqlat, hqV, hqp⟩
+    exact ⟨y, ⟨hyV, hylat⟩, by rw [sub_zero, sub_zero]; exact hyn, hyd⟩
+  obtain ⟨m, hm, hmin, hchain⟩ :=
+    exists_min_of_jump (W := V.carrier) (c := 0) (δ := δ) zero_mem_lattice hstep x hx
+  exact ⟨m, hm, fun w hw => by simpa [sub_zero] using hmin w hw, hchain⟩
+
 end QFS
