@@ -381,4 +381,79 @@ theorem block_sep {h ℓ : ℝ} {c₁ c₂ : EuclideanSpace ℝ (Fin d)}
   have hle : infNorm (p - q) ≤ ‖p - q‖ := infNorm_le_norm _
   linarith
 
+/-! ## The retraction `idx`
+
+Blocks at distinct centres are disjoint, so a representative determines its block
+and hence its index. -/
+
+/-- Blocks at distinct centres of the index lattice are disjoint. -/
+theorem block_disjoint {h ℓ : ℝ} (hℓ : ℓ < h) {c₁ c₂ : EuclideanSpace ℝ (Fin d)}
+    (hc : h ≤ infNorm (c₁ - c₂)) {u : EuclideanSpace ℝ (Fin d)}
+    (h₁ : u ∈ block ℓ c₁) (h₂ : u ∈ block ℓ c₂) : False := by
+  have := block_sep hc h₁ h₂
+  rw [sub_self, norm_zero] at this
+  linarith
+
+/-- **The retraction.** If the blocks in play are pairwise disjoint and each
+carries an injective family of representatives, the index of a representative can
+be read back off the point — which is what lets Step 6 recover the two hashes
+from an edge. -/
+theorem exists_retraction {α ι : Type*} [Inhabited ι] {Blk : Set (Set α)}
+    (rep : Set α → ι → α) (hmem : ∀ B ∈ Blk, ∀ i, rep B i ∈ B)
+    (hinj : ∀ B ∈ Blk, Function.Injective (rep B))
+    (hdisj : ∀ B ∈ Blk, ∀ B' ∈ Blk, ∀ u, u ∈ B → u ∈ B' → B = B') :
+    ∃ idx : α → ι, ∀ B ∈ Blk, ∀ i, idx (rep B i) = i := by
+  classical
+  refine ⟨fun u => if h : ∃ p : Set α × ι, p.1 ∈ Blk ∧ rep p.1 p.2 = u
+    then (h.choose).2 else default, ?_⟩
+  intro B hB i
+  have hex : ∃ p : Set α × ι, p.1 ∈ Blk ∧ rep p.1 p.2 = rep B i := ⟨(B, i), hB, rfl⟩
+  dsimp only
+  rw [dif_pos hex]
+  obtain ⟨q, hqdef⟩ : ∃ q : Set α × ι, q = hex.choose := ⟨_, rfl⟩
+  have hq : q.1 ∈ Blk ∧ rep q.1 q.2 = rep B i := by rw [hqdef]; exact hex.choose_spec
+  rw [← hqdef]
+  have h1 : rep B i ∈ q.1 := by rw [← hq.2]; exact hmem q.1 hq.1 q.2
+  have hBB : q.1 = B := hdisj q.1 hq.1 B hB (rep B i) h1 (hmem B hB i)
+  rw [hBB] at hq
+  exact hinj B hB hq.2
+
+/-! ## The number of representatives per block
+
+The paper's `a = Δ^{d(n-1)}/L`, floored at `1` so that it stays positive at the
+bottom scale, where the block is a single lattice point and the whole ball holds
+only boundedly many points anyway. -/
+
+/-- The paper's `a`. -/
+def schemeIndex (Δ L d m : ℕ) : ℕ := max 1 (Δ ^ (m * d) / L)
+
+lemma schemeIndex_pos (Δ L d m : ℕ) : 0 < schemeIndex Δ L d m :=
+  lt_of_lt_of_le Nat.one_pos (le_max_left _ _)
+
+instance schemeIndex_neZero (Δ L d m : ℕ) : NeZero (schemeIndex Δ L d m) :=
+  ⟨Nat.pos_iff_ne_zero.mp (schemeIndex_pos Δ L d m)⟩
+
+/-- `L a ≥ Δ^{md}`: at positive scales `L` divides `Δ^{md}` and `a` is the exact
+quotient; at scale `0` both sides are absorbed by `L ≥ 1`. -/
+lemma pow_le_mul_schemeIndex {Δ L d : ℕ} (hL : 0 < L) (hLΔ : L ∣ Δ) (hd : 1 ≤ d) (m : ℕ) :
+    Δ ^ (m * d) ≤ L * schemeIndex Δ L d m := by
+  rcases Nat.eq_zero_or_pos m with rfl | hm
+  · have h1 : 1 ≤ schemeIndex Δ L d 0 := schemeIndex_pos Δ L d 0
+    calc Δ ^ (0 * d) = 1 := by simp
+      _ ≤ L * schemeIndex Δ L d 0 := Nat.one_le_iff_ne_zero.mpr
+          (Nat.mul_ne_zero (Nat.pos_iff_ne_zero.mp hL) (Nat.pos_iff_ne_zero.mp h1))
+  · have hmd : m * d ≠ 0 := Nat.mul_ne_zero (Nat.pos_iff_ne_zero.mp hm)
+      (Nat.pos_iff_ne_zero.mp hd)
+    have hdvd : L ∣ Δ ^ (m * d) := dvd_pow hLΔ hmd
+    calc Δ ^ (m * d) = L * (Δ ^ (m * d) / L) := (Nat.mul_div_cancel' hdvd).symm
+      _ ≤ L * schemeIndex Δ L d m := Nat.mul_le_mul_left _ (le_max_right _ _)
+
+/-- `a ≤ n` whenever `n ≥ 1` and `Δ^{md} ≤ L n` — the form the majority-set bound
+comes in. -/
+lemma schemeIndex_le {Δ L d m : ℕ} (hL : 0 < L) {n : ℕ} (h1 : 1 ≤ n)
+    (h : Δ ^ (m * d) ≤ L * n) : schemeIndex Δ L d m ≤ n := by
+  refine max_le h1 ?_
+  calc Δ ^ (m * d) / L ≤ (L * n) / L := Nat.div_le_div_right h
+    _ = n := Nat.mul_div_cancel_left n hL
+
 end QFS
