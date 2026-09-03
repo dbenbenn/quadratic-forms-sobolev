@@ -83,7 +83,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 5.6 | Lemma | the jump constant `δ` | ✅ |
 | 5.7 | Lemma | the core induction | ✅ (monotonicity clause omitted, see Deviations 12) |
 | 5.8 | Corollary | discrete template | ✅ |
-| 5.9 | Lemma | apex shrinking | ❌ out of scope |
+| 5.9 | Lemma | apex shrinking | ✅ (corrected constant, see Deviations 13) |
 | 5.10 | Definition | towns | ❌ out of scope |
 | 5.11 | Definition | town configurations | ❌ out of scope |
 | 5.12 | Remark | — | ❌ out of scope |
@@ -100,7 +100,7 @@ the machinery of Sections 5 and 6 (Lemma 3.3, which Proposition 3.5 needs, is
 false as stated). From Section 1, the function-space definitions, assumption
 (1.4), the reverse inequality and equation (1.6) are proved, and Theorems 1.1
 and 1.3 are recorded as type-checked `Prop`s so the remaining target is precise.
-The renormalisation machinery of Lemmas 5.9–5.16 and Section 6 remain a project
+The renormalisation machinery of Lemmas 5.10–5.16 and Section 6 remain a project
 in their own right.
 
 ## What is proved, in detail
@@ -198,6 +198,11 @@ in their own right.
 | Cor. 2.4 with a uniform bound on `L` | Cor. 2.4 / Cor. 5.8 proof | `QFS.ref_config_uniform` | ✅ proved |
 | Connectivity is monotone in `Γ` and in `r` | Cor. 5.8 proof | `QFS.ConnWithin.mono_config`, `QFS.RRConnected.mono_radius` | ✅ proved |
 | **Corollary 5.8**: the discrete template | Cor. 5.8 | `QFS.discrete_template` | ✅ **proved** |
+| Closed cube `Ā_ℓ(u)` | §5.2 | `QFS.closedCube` | ✅ defined |
+| **Gap = distance to the cone boundary** | (new; sharp) | `QFS.coneGap_eq_norm_mul_sin` | ✅ **proved** |
+| Half-angle cone has gap `≥ ‖h‖ sin(ϑ/2)` | Lem. 5.9 proof | `QFS.coneGap_ge_of_mem_half` | ✅ proved |
+| **Lemma 5.9**: apex shrinking | Lem. 5.9 | `QFS.renormalization_apex_shrink` | ✅ **proved** (corrected constant) |
+| The paper's threshold in Lem. 5.9 is too small | Lem. 5.9 proof | `QFS.paper_threshold_insufficient` | ✅ **disproved** |
 
 ## Deviations
 
@@ -349,6 +354,36 @@ Each departure from the paper, and why.
     invoked there, and with `δ < r_k` for every `k` it is not needed to carry the
     invariant. It is presumably wanted by Corollary 5.8, which is out of scope.
 
+13. **Lemma 5.9's constant is too small, and its intermediate estimate fails for
+    every admissible apex angle.** The proof passes through
+
+    > if `y ∈ Ṽ[x]` and `|x − y| ≥ ℓ√d/(2 sin ϑ)`, then `B_{ℓ√d/2}(y) ⊆ V̄[x]`,
+
+    and concludes with `δ = 3√d/(2 sin ϑ)`. By `QFS.coneGap_eq_norm_mul_sin` the
+    distance from `y` to the boundary of `V̄[x]` is exactly
+    `‖y − x‖ sin(ϑ − ∠(v, y−x))`, and `y ∈ Ṽ[x]` bounds `∠(v, y−x)` only by
+    `ϑ/2` — not by `0`. At the paper's threshold distance the guaranteed gap is
+    therefore only
+
+    > `ℓ√d sin(ϑ/2) / (2 sin ϑ) = ℓ√d / (4 cos(ϑ/2))`,
+
+    which is less than the required `ℓ√d/2` precisely when `cos(ϑ/2) > 1/2`,
+    i.e. for every `ϑ ≤ π/2`. `QFS.paper_threshold_insufficient` is a Lean proof
+    of this. The same slip costs the final constant: `3√d/(2 sin ϑ)` is at least
+    the necessary `√d/sin(ϑ/2)` only when `cos(ϑ/2) ≤ 3/4`, i.e. for
+    `ϑ ≳ 82.8°`. Since `ϑ` is an infimum of apex angles and may be arbitrarily
+    small, this is not a harmless slack.
+
+    `QFS.renormalization_apex_shrink` proves the lemma with
+    `δ = (√d + 1)/sin(ϑ/2)`, which is the sharp `√d/sin(ϑ/2)` plus enough to make
+    the inequalities strict. Nothing downstream needs the particular value.
+
+14. **Section 5.2 uses closed cubes, Definition 2.5 open ones.** The paper
+    "recalls" the cube notation as `A_ℓ(x) = {y : ‖y−x‖_∞ ≤ ℓ/2}`, but
+    Definition 2.5 defines `A_h(u)` with a strict inequality. `QFS.cube` and
+    `QFS.closedCube` are both provided; Lemma 5.9 is proved for the closed cube,
+    as Section 5.2 states it, which is the stronger reading.
+
 ## Not attempted
 
 Recorded here rather than silently omitted. The paper's two main theorems and
@@ -366,7 +401,7 @@ formalised is the geometric and graph-theoretic layer they are built on.
 | Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Thm. 1.3's setting, and on Lemma 3.3 (see Deviations 7). |
 | Lemma 3.3 for `d ≥ 2` | Lem. 3.3 | True but needs an argument the paper does not give; see Deviations 7. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
-| Renormalisation | §5 (Lems. 5.9–5.16) | The "town" and scale machinery. (Lemmas 5.1–5.8 **are** formalised.) |
+| Renormalisation | §5 (Lems. 5.10–5.16) | The "town" and scale machinery. (Lemmas 5.1–5.9 **are** formalised.) |
 | Proof of Theorem 1.3 | §6 | As above. |
 | Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §§3 and 6. |
 

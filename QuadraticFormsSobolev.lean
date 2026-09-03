@@ -8,3 +8,4 @@ import QuadraticFormsSobolev.Section1
 import QuadraticFormsSobolev.Section3
 import QuadraticFormsSobolev.Section4
 import QuadraticFormsSobolev.Section5
+import QuadraticFormsSobolev.Renormalization

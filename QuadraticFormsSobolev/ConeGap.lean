@@ -201,4 +201,55 @@ theorem shift_cone_subset_shrink {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ : 0 
   intro p hp
   exact mem_shrink_cone_of_lt_coneGap hv hϑ hϑ' hρ hp
 
+
+/-! ## The gap as a distance
+
+`coneGap v ϑ h = ‖h‖ sin(ϑ − ∠(v,h))`, which is the exact distance from `h` to the
+boundary of the cone. This makes the constants in Section 5.2 computable. -/
+
+open InnerProductGeometry in
+/-- The component of `h` across the axis has norm `‖h‖ sin ∠(v,h)`. -/
+lemma norm_across_eq {v : E} (hv : ‖v‖ = 1) (h : E) :
+    ‖across v h‖ = ‖h‖ * Real.sin (angle v h) := by
+  have hin : ⟪v, h⟫ = ‖h‖ * Real.cos (angle v h) := by
+    have := cos_angle_mul_norm_mul_norm v h
+    rw [hv, one_mul] at this
+    linarith [this]
+  have hpy := norm_sq_eq_inner_sq_add hv h
+  have hsc : Real.sin (angle v h) ^ 2 + Real.cos (angle v h) ^ 2 = 1 :=
+    Real.sin_sq_add_cos_sq _
+  have hsq : ‖across v h‖ ^ 2 = (‖h‖ * Real.sin (angle v h)) ^ 2 := by
+    rw [hin] at hpy; nlinarith
+  have h2 : 0 ≤ ‖across v h‖ := norm_nonneg _
+  have h3 : 0 ≤ ‖h‖ * Real.sin (angle v h) :=
+    mul_nonneg (norm_nonneg _) (sin_angle_nonneg v h)
+  have := congrArg Real.sqrt hsq
+  rwa [Real.sqrt_sq h2, Real.sqrt_sq h3] at this
+
+open InnerProductGeometry in
+/-- **The gap is the distance to the cone boundary**: `‖h‖ sin(ϑ − ∠(v,h))`. -/
+theorem coneGap_eq_norm_mul_sin {v : E} (hv : ‖v‖ = 1) (ϑ : ℝ) (h : E) :
+    coneGap v ϑ h = ‖h‖ * Real.sin (ϑ - angle v h) := by
+  have hin : ⟪v, h⟫ = ‖h‖ * Real.cos (angle v h) := by
+    have := cos_angle_mul_norm_mul_norm v h
+    rw [hv, one_mul] at this
+    linarith [this]
+  rw [coneGap, hin, norm_across_eq hv, Real.sin_sub]
+  ring
+
+open InnerProductGeometry in
+/-- A point of the *half*-angle cone `Ṽ(v, ϑ/2)` has gap at least
+`‖h‖ sin(ϑ/2)` with respect to `Ṽ(v, ϑ)` — and this is sharp, by
+`coneGap_eq_norm_mul_sin`, as the angle approaches `ϑ/2`. -/
+theorem coneGap_ge_of_mem_half {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) {h : E} (hh : h ∈ cone v (ϑ / 2)) :
+    ‖h‖ * Real.sin (ϑ / 2) ≤ coneGap v ϑ h := by
+  rw [mem_cone_iff_angle hv (by positivity) (by linarith [pi_pos])] at hh
+  obtain ⟨-, hlt⟩ := hh
+  have hnn : 0 ≤ angle v h := angle_nonneg v h
+  rw [coneGap_eq_norm_mul_sin hv]
+  refine mul_le_mul_of_nonneg_left ?_ (norm_nonneg h)
+  refine Real.strictMonoOn_sin.monotoneOn ⟨by linarith [pi_pos], by linarith⟩
+    ⟨by linarith [pi_pos], by linarith⟩ (by linarith)
+
 end QFS

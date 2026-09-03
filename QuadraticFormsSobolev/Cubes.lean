@@ -153,4 +153,29 @@ theorem cone_in_intersection' (V : Set (EuclideanSpace ℝ (Fin d))) {h : ℝ} (
   · refine Set.subset_iInter₂ (fun ξ hξ => ?_)
     exact (cone_in_intersection V hh x hξ).2
 
+
+/-- The *closed* cube `Ā_ℓ(u) = {y : ‖y − u‖_∞ ≤ ℓ/2}`.
+
+Section 5.2 of the paper "recalls" the cube notation with a non-strict
+inequality, whereas Definition 2.5 defines `A_h(u)` with a strict one. The two
+sections therefore use different sets; we keep both, and the results of Section
+5.2 are proved for the closed cube, as stated there. -/
+def closedCube (h : ℝ) (u : EuclideanSpace ℝ (Fin d)) : Set (EuclideanSpace ℝ (Fin d)) :=
+  {x | infNorm (x - u) ≤ h / 2}
+
+lemma cube_subset_closedCube (h : ℝ) (u : EuclideanSpace ℝ (Fin d)) :
+    cube h u ⊆ closedCube h u := by
+  intro x hx
+  rw [mem_cube_iff] at hx
+  exact le_of_lt hx
+
+/-- `Ā_ℓ(u) ⊆ B̄_{(ℓ/2)√d}(u)`. -/
+lemma closedCube_subset_closedBall {h : ℝ} (_hh : 0 ≤ h) (u : EuclideanSpace ℝ (Fin d)) :
+    closedCube h u ⊆ closedBall u (h / 2 * Real.sqrt d) := by
+  intro x hx
+  rw [Metric.mem_closedBall, dist_eq_norm]
+  calc ‖x - u‖ ≤ Real.sqrt d * infNorm (x - u) := norm_le_sqrt_dim_mul_infNorm _
+    _ ≤ Real.sqrt d * (h / 2) := mul_le_mul_of_nonneg_left hx (Real.sqrt_nonneg _)
+    _ = h / 2 * Real.sqrt d := by ring
+
 end QFS
