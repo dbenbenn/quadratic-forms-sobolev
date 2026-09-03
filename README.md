@@ -219,6 +219,11 @@ own right.
 | **Lemma 5.16**: the first jump | Lem. 5.16 | `QFS.connect_first_jump` | ✅ **proved** |
 | `G` as a `SimpleGraph`, with walks | §5.3 | `QFS.latticeGraph`, `QFS.LatticePt` | ✅ defined |
 | Statement of Theorem 5.15 | Thm. 5.15 | `QFS.PathProps`, `QFS.PathPropsHolds` | ⚪ stated, not proved |
+| Coordinates determine a point; rounding is injective | (new) | `QFS.euclidean_ext`, `QFS.round_injOn_lattice` | ✅ proved |
+| **`#(B_M ∩ ℤ^d) ≤ (2⌈M⌉+1)^d`, uniformly in the centre** | Thm. 5.15, Steps 1–2 | `QFS.encard_lattice_inter_closedBall_le` | ✅ **proved** |
+| **A block of side `ℓ` has `≥ ℓ^d` lattice points** | Thm. 5.15, Step 2 | `QFS.le_encard_block` | ✅ **proved** |
+| `#(B_R ∩ ℤ^d) ≥ ℓ^d` when the cube fits | Thm. 5.15 | `QFS.le_encard_lattice_inter_closedBall` | ✅ proved |
+| **Majority sets have `≥ #Q/L` points** | Thm. 5.15, Step 2 | `QFS.ncard_le_mul_ncard_blockFibre` | ✅ **proved** |
 
 ## Deviations
 
@@ -536,10 +541,21 @@ point" would not give.
 
 What the proof of 5.15 still needs, beyond what is here:
 
-1. **Lattice-point counting.** `#(B_r ∩ ℤ^d) ≍ r^d`, both bounds. The upper bound
-   is close to `QFS.lattice_inter_closedBall_finite`; the lower bound is new, and
-   the sizes of blocks and majority sets (`Δ^{d(n-1)}/L`) depend on `Δ` being an
-   even integer.
+1. ~~**Lattice-point counting.**~~ **Done.**
+   `QFS.encard_lattice_inter_closedBall_le` bounds `#(B_M ∩ ℤ^d)` by
+   `(2⌈M⌉+1)^d` *uniformly in the centre* — which is what the argument needs,
+   since it counts balls around many different points;
+   `QFS.le_encard_lattice_inter_closedBall` is the matching lower bound, giving
+   the paper's `≍`. `QFS.le_encard_block` shows a block of integer side `ℓ`
+   centred at a lattice point holds at least `ℓ^d` lattice points, and
+   `QFS.ncard_le_mul_ncard_blockFibre` is the pigeonhole: a cone favored by
+   majority is carried by at least `#Q/L` points of the block. Together these are
+   the paper's "each block contains at least `Δ^{d(n-1)}/L` lattice points where
+   the associated cone is favored by majority".
+
+   Both directions rest on `QFS.euclidean_ext` and `QFS.round_injOn_lattice`:
+   rounding coordinates injects the lattice into `ℤ^d`, which gives the upper
+   bound, and translating a box of integers into a cube gives the lower one.
 2. **Concatenating favored-graph paths** across all blocks of a ball into the
    single path `P^n_z` of Step 1, with the bound `t ≤ #(B_r∩ℤ^d)·#(B_R∩ℤ^d)`.
 3. **The cyclic scheme** of Step 2 — the `a²` paths through the majority sets,
