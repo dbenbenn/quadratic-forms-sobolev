@@ -164,4 +164,138 @@ theorem form_le_of_theoremOneOneBall (h11 : TheoremOneOneBall d)
         rw [ENNReal.ofReal_mul (mul_nonneg (by linarith) hC), ENNReal.ofReal_mul (by linarith)]
         ring
 
+/-! ## Lipschitz functions satisfy the a priori hypothesis
+
+This is the half of the Lipschitz reduction that does work: a Lipschitz function
+lies in `H^{α/2}` of a ball whenever `α < 2`, because
+`(f(s) − f(t))²|s − t|^{-d-α} ≤ L²|s − t|^{2-d-α}` and the exponent `2 − d − α`
+exceeds `−d`. So mollification does supply the a priori hypothesis of the
+dominated-convergence step above; what it does not supply is the bound on the
+right-hand side, for the reason recorded in `form_le_of_theoremOneOneBall`. -/
+
+/-- `‖u‖^γ` is integrable on a ball as soon as `γ > −d`; in polar coordinates
+this is the integrability of `y^{d-1+γ}` at the origin. -/
+theorem lintegral_ball_rpow_lt_top (hd : 0 < d) {r γ : ℝ} (hr : 0 < r)
+    (hγ : -(d : ℝ) < γ) :
+    ∫⁻ u in ball (0 : EuclideanSpace ℝ (Fin d)) r, ENNReal.ofReal (‖u‖ ^ γ) < ∞ := by
+  have hdim : Module.finrank ℝ (EuclideanSpace ℝ (Fin d)) = d := by simp
+  have hnt : Nontrivial (EuclideanSpace ℝ (Fin d)) := by
+    rw [← Module.finrank_pos_iff (R := ℝ), hdim]; exact hd
+  -- the radial integrand, after the polar-coordinates reduction
+  have hexp : (-1 : ℝ) < ((d - 1 : ℕ) : ℝ) + γ := by
+    have : ((d - 1 : ℕ) : ℝ) = (d : ℝ) - 1 := by
+      have : 1 ≤ d := hd
+      push_cast [Nat.cast_sub this]
+      ring
+    rw [this]; linarith
+  have hrad : IntegrableOn
+      (fun y : ℝ => y ^ (Module.finrank ℝ (EuclideanSpace ℝ (Fin d)) - 1) • y ^ γ)
+      (Ioo 0 r) volume := by
+    rw [hdim]
+    refine (integrableOn_congr_fun ?_ measurableSet_Ioo).mpr
+      ((intervalIntegral.integrableOn_Ioo_rpow_iff hr).mpr hexp)
+    intro y hy
+    have hy0 : (0 : ℝ) < y := hy.1
+    change y ^ (d - 1) • y ^ γ = y ^ (((d - 1 : ℕ) : ℝ) + γ)
+    rw [smul_eq_mul, ← Real.rpow_natCast y (d - 1), ← Real.rpow_add hy0]
+  have hint : IntegrableOn (fun u : EuclideanSpace ℝ (Fin d) => ‖u‖ ^ γ) (ball 0 r) volume :=
+    (integrableOn_fun_norm_addHaar volume (f := fun y : ℝ => y ^ γ) (r := r)).mpr hrad
+  have := hint.hasFiniteIntegral
+  refine lt_of_le_of_lt (le_of_eq ?_) this
+  refine lintegral_congr_ae ?_
+  filter_upwards with u
+  rw [← ofReal_norm, Real.norm_eq_abs, abs_of_nonneg (Real.rpow_nonneg (norm_nonneg u) γ)]
+
+
+/-- **A Lipschitz function lies in `H^{α/2}` of a ball, for every `α < 2`.**
+
+This is what the mollification step of the Lipschitz reduction delivers: it puts
+`f_ε` into the class where `limsup_lintegral_le_of_dominant` applies. -/
+theorem formHs_lt_top_of_lipschitzOn (hd : 0 < d) {α : ℝ} (hα2 : α < 2)
+    {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ} (hR : 0 < R)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} {L : ℝ≥0}
+    (hf : LipschitzOnWith L f (ball x₀ R)) :
+    formHs (ball x₀ R) α f < ∞ := by
+  set γ : ℝ := 2 - (d : ℝ) - α with hγdef
+  have hγ : -(d : ℝ) < γ := by rw [hγdef]; linarith
+  set G : EuclideanSpace ℝ (Fin d) → ℝ≥0∞ := fun u => ENNReal.ofReal (‖u‖ ^ γ) with hGdef
+  have hGmeas : Measurable G := by rw [hGdef]; fun_prop
+  -- the pointwise majorant
+  have hmaj : ∀ p ∈ ball x₀ R ×ˢ ball x₀ R,
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+        ≤ ENNReal.ofReal ((L : ℝ) ^ 2) * G (p.1 - p.2) := by
+    rintro ⟨s, t⟩ ⟨hs, ht⟩
+    rcases eq_or_ne s t with rfl | hst
+    · simp
+    have hn : 0 < ‖s - t‖ := by
+      rw [norm_pos_iff]; exact sub_ne_zero_of_ne hst
+    have hlip : |f t - f s| ≤ (L : ℝ) * ‖s - t‖ := by
+      have := hf.dist_le_mul t ht s hs
+      rwa [Real.dist_eq, dist_eq_norm, norm_sub_rev t s] at this
+    have hsq : (f t - f s) ^ 2 ≤ (L : ℝ) ^ 2 * ‖s - t‖ ^ 2 := by
+      nlinarith [sq_abs (f t - f s), abs_nonneg (f t - f s), norm_nonneg (s - t),
+        NNReal.coe_nonneg L]
+    have hker : jumpKernel d α s t = ENNReal.ofReal (‖s - t‖ ^ (-(d : ℝ) - α)) := rfl
+    have hcomb : ‖s - t‖ ^ 2 * ‖s - t‖ ^ (-(d : ℝ) - α) = ‖s - t‖ ^ γ := by
+      rw [← Real.rpow_natCast ‖s - t‖ 2, ← Real.rpow_add hn, hγdef]
+      congr 1
+      push_cast
+      ring
+    rw [hker, hGdef, ← ENNReal.ofReal_mul (by positivity), ← ENNReal.ofReal_mul (by positivity)]
+    refine ENNReal.ofReal_le_ofReal ?_
+    calc (f t - f s) ^ 2 * ‖s - t‖ ^ (-(d : ℝ) - α)
+        ≤ ((L : ℝ) ^ 2 * ‖s - t‖ ^ 2) * ‖s - t‖ ^ (-(d : ℝ) - α) := by
+          exact mul_le_mul_of_nonneg_right hsq (Real.rpow_nonneg (norm_nonneg _) _)
+      _ = (L : ℝ) ^ 2 * ‖s - t‖ ^ γ := by rw [mul_assoc, hcomb]
+  -- the majorant has finite integral
+  have hprodmeas : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((L : ℝ) ^ 2) * G (p.1 - p.2) :=
+    (hGmeas.comp (measurable_fst.sub measurable_snd)).const_mul _
+  have hinner : ∀ s : EuclideanSpace ℝ (Fin d), s ∈ ball x₀ R →
+      ∫⁻ t in ball x₀ R, G (s - t)
+        ≤ ∫⁻ u in ball (0 : EuclideanSpace ℝ (Fin d)) (2 * R), G u := by
+    intro s hs
+    have hsub : ball x₀ R ⊆ (fun t => t - s) ⁻¹' ball (0 : EuclideanSpace ℝ (Fin d)) (2 * R) := by
+      intro t ht
+      simp only [Set.mem_preimage, mem_ball, dist_zero_right]
+      have h1 : ‖t - x₀‖ < R := by rwa [mem_ball, dist_eq_norm] at ht
+      have h2 : ‖s - x₀‖ < R := by rwa [mem_ball, dist_eq_norm] at hs
+      calc ‖t - s‖ = ‖(t - x₀) - (s - x₀)‖ := by rw [sub_sub_sub_cancel_right]
+        _ ≤ ‖t - x₀‖ + ‖s - x₀‖ := norm_sub_le _ _
+        _ < 2 * R := by linarith
+    calc ∫⁻ t in ball x₀ R, G (s - t)
+        = ∫⁻ t in ball x₀ R, G (t - s) := by
+          refine lintegral_congr fun t => ?_
+          rw [hGdef]
+          simp only [norm_sub_rev]
+      _ ≤ ∫⁻ t in (fun t => t - s) ⁻¹' ball (0 : EuclideanSpace ℝ (Fin d)) (2 * R), G (t - s) :=
+          lintegral_mono_set hsub
+      _ = ∫⁻ u in ball (0 : EuclideanSpace ℝ (Fin d)) (2 * R), G u :=
+          (measurePreserving_sub_right volume s).setLIntegral_comp_preimage
+            measurableSet_ball hGmeas
+  have hfin : ∫⁻ u in ball (0 : EuclideanSpace ℝ (Fin d)) (2 * R), G u < ∞ :=
+    lintegral_ball_rpow_lt_top hd (by linarith) hγ
+  calc formHs (ball x₀ R) α f
+      ≤ ∫⁻ p in ball x₀ R ×ˢ ball x₀ R, ENNReal.ofReal ((L : ℝ) ^ 2) * G (p.1 - p.2) := by
+        refine lintegral_mono_ae ?_
+        filter_upwards [ae_restrict_mem ((measurableSet_ball).prod measurableSet_ball)]
+          with p hp using hmaj p hp
+    _ = ENNReal.ofReal ((L : ℝ) ^ 2) *
+          ∫⁻ p in ball x₀ R ×ˢ ball x₀ R, G (p.1 - p.2) :=
+        lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
+    _ = ENNReal.ofReal ((L : ℝ) ^ 2) *
+          ∫⁻ s in ball x₀ R, ∫⁻ t in ball x₀ R, G (s - t) := by
+        rw [Measure.volume_eq_prod, ← Measure.prod_restrict,
+          lintegral_prod
+            (fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) => G (p.1 - p.2))
+            (hGmeas.comp (measurable_fst.sub measurable_snd)).aemeasurable]
+    _ ≤ ENNReal.ofReal ((L : ℝ) ^ 2) *
+          ∫⁻ _ in ball x₀ R, ∫⁻ u in ball (0 : EuclideanSpace ℝ (Fin d)) (2 * R), G u := by
+        refine mul_le_mul' le_rfl (lintegral_mono_ae ?_)
+        filter_upwards [ae_restrict_mem measurableSet_ball] with s hs using hinner s hs
+    _ < ∞ := by
+        rw [setLIntegral_const]
+        exact ENNReal.mul_lt_top ENNReal.ofReal_lt_top
+          (ENNReal.mul_lt_top hfin measure_ball_lt_top)
+
 end QFS
