@@ -79,7 +79,12 @@ produces exactly the paper's `q^k_i` at odd `k` and `q^k_{i+j}` at even `k`. -/
 
 /-- **The lift of a block walk to `G`.** Given a representative `ρ B i` in the
 majority set of each block, a walk in the choice graph lifts to a walk in `G` of
-the same length, alternating between the two given indices. -/
+the same length, alternating between the two given indices.
+
+Every edge of the lift joins a representative of index `α` to one of index `β`.
+That is what bounds an interior edge's multiplicity in Step 6: the edge reveals
+both indices, and hence — once `α` and `β` are chosen as `f(y) + g(x)` and
+`g(x)` — both hashes. -/
 theorem exists_alternating_walk {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
     {W : ConeChoice d} {a : ℕ}
     (ρ : Set (EuclideanSpace ℝ (Fin d)) → ZMod a → EuclideanSpace ℝ (Fin d))
@@ -88,25 +93,32 @@ theorem exists_alternating_walk {Γ : Configuration (EuclideanSpace ℝ (Fin d))
     ∀ {B B' : Set (EuclideanSpace ℝ (Fin d))} (Wk : (choiceGraph Γ W).Walk B B')
       (α β : ZMod a),
       ∃ w : (latticeGraph Γ).Walk (ρ B α)
-        (ρ B' (if Even Wk.length then α else β)), w.length = Wk.length := by
+        (ρ B' (if Even Wk.length then α else β)), w.length = Wk.length ∧
+        ∀ e ∈ w.edges, ∃ B₁ B₂, e = s(ρ B₁ α, ρ B₂ β) := by
   intro B B' Wk
   induction Wk with
   | nil =>
       intro α _
       simp only [SimpleGraph.Walk.length_nil]
-      exact ⟨SimpleGraph.Walk.nil, rfl⟩
+      exact ⟨SimpleGraph.Walk.nil, rfl, by simp⟩
   | cons hadj Wk' ih =>
       intro α β
-      obtain ⟨w', hw'⟩ := ih β α
+      obtain ⟨w', hw', hwe⟩ := ih β α
       have hidx : (if Even (Wk'.length + 1) then α else β)
           = (if Even Wk'.length then β else α) := by
         by_cases he : Even Wk'.length
         · rw [if_neg (by simp [Nat.even_add_one, he]), if_pos he]
         · rw [if_pos (by simp [Nat.even_add_one, he]), if_neg he]
       rw [SimpleGraph.Walk.length_cons, hidx]
-      refine ⟨SimpleGraph.Walk.cons ?_ w', ?_⟩
+      refine ⟨SimpleGraph.Walk.cons ?_ w', ?_, ?_⟩
       · exact latticeAdj_of_choiceAdj hadj (hρlat _ _) (hρ _ _) (hρlat _ _) (hρ _ _)
       · rw [SimpleGraph.Walk.length_cons, hw']
+      · intro e he
+        rw [SimpleGraph.Walk.edges_cons, List.mem_cons] at he
+        rcases he with rfl | he
+        · exact ⟨_, _, rfl⟩
+        · obtain ⟨B₁, B₂, hB⟩ := hwe e he
+          exact ⟨B₂, B₁, by rw [hB, Sym2.eq_swap]⟩
 
 
 /-! ## Blocks at distinct centres are distinct
