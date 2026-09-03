@@ -310,4 +310,113 @@ theorem discr_ueber_bande (hϑ : 0 < ϑ) (hb : ∀ w, ϑ ≤ (Γ w).apex)
     rw [h2]
     exact neg_mem_doubleCone_iff.mpr h1
 
+
+/-! ## Lemma 5.6: bounded jumps toward the tip -/
+
+/-- **Lemma 5.6** of Bux–Kassmann–Schulze. There is a constant `δ > 0`, depending
+only on `ϑ` and `d`, such that for every double cone of apex angle at least `ϑ`:
+if some lattice point of the cone lies closer to the tip than a given lattice
+point `x` of the cone, then some lattice point of the cone within `δ` of `x`
+does. Equivalently, one may descend to a lattice point of minimal distance to the
+tip by jumps of length at most `δ`.
+
+The paper calls the assertion obvious. It is short but not immediate: stepping
+radially inward keeps the *angle* to the cone axis unchanged, so a point near the
+boundary stays near the boundary and no ball of fixed radius fits. The step used
+here is radial *and* along the axis, the second part raising the distance to the
+cone boundary by exactly `a sin ϑ` (`coneGap_add_smul_axis`) — enough room for a
+ball of radius `√d/2`, hence for a lattice point. -/
+theorem exists_closer_lattice_nearby {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ V : DCone (EuclideanSpace ℝ (Fin d)), ϑ ≤ V.apex →
+      ∀ x ∈ lattice d, x ∈ V.carrier →
+        (∃ z ∈ lattice d, z ∈ V.carrier ∧ ‖z‖ < ‖x‖) →
+        ∃ y ∈ lattice d, y ∈ V.carrier ∧ ‖y‖ < ‖x‖ ∧ ‖y - x‖ < δ := by
+  have hs0 : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [pi_pos])
+  have hρ0 : (0:ℝ) ≤ Real.sqrt d / 2 := by positivity
+  have ha₀0 : 0 < (Real.sqrt d / 2 + 1) / Real.sin ϑ := div_pos (by linarith) hs0
+  refine ⟨2 * ((Real.sqrt d / 2 + 1) / Real.sin ϑ + Real.sqrt d / 2 + 1)
+    + (Real.sqrt d / 2 + 1) / Real.sin ϑ + Real.sqrt d / 2 + 1, by linarith, ?_⟩
+  rintro V hV x hxlat hxV ⟨z, hzlat, hzV, hzx⟩
+  set ρ : ℝ := Real.sqrt d / 2 with hρdef
+  set a₀ : ℝ := (ρ + 1) / Real.sin ϑ with ha₀def
+  set t₀ : ℝ := a₀ + ρ + 1 with ht₀def
+  have ht₀0 : 0 < t₀ := by rw [ht₀def]; linarith
+  have hxne : x ≠ 0 := ne_zero_of_mem_doubleCone hxV
+  have hR0 : 0 < ‖x‖ := norm_pos_iff.mpr hxne
+  have hxn : ‖x‖ ≠ 0 := ne_of_gt hR0
+  by_cases hcase : ‖x‖ ≤ t₀
+  · refine ⟨z, hzlat, hzV, hzx, ?_⟩
+    calc ‖z - x‖ ≤ ‖z‖ + ‖x‖ := norm_sub_le _ _
+      _ < 2 * t₀ := by linarith
+      _ < 2 * t₀ + a₀ + ρ + 1 := by linarith
+  · rw [not_le] at hcase
+    -- The half-cone containing `x`.
+    obtain ⟨v, hv1, hvsub, hxc⟩ : ∃ v : EuclideanSpace ℝ (Fin d), ‖v‖ = 1 ∧
+        cone v V.apex ⊆ V.carrier ∧ x ∈ cone v V.apex := by
+      rcases mem_doubleCone_iff.mp hxV with h | h
+      · exact ⟨V.axis, V.norm_axis, Set.subset_union_left, h⟩
+      · refine ⟨-V.axis, by simp [V.norm_axis], ?_, ?_⟩
+        · rw [cone_neg]; exact Set.subset_union_right
+        · rw [cone_neg]; exact h
+    have hap0 : 0 < V.apex := V.apex_pos
+    have hap' : V.apex ≤ π / 2 := V.apex_le
+    have hsV : Real.sin ϑ ≤ Real.sin V.apex :=
+      Real.strictMonoOn_sin.monotoneOn ⟨by linarith [pi_pos], by linarith⟩
+        ⟨by linarith [pi_pos, hap0], hap'⟩ hV
+    have hsV0 : 0 < Real.sin V.apex := lt_of_lt_of_le hs0 hsV
+    set a : ℝ := (ρ + 1) / Real.sin V.apex with hadef
+    have ha0 : 0 < a := div_pos (by linarith) hsV0
+    have haa₀ : a ≤ a₀ := by
+      rw [hadef, ha₀def]
+      apply div_le_div_of_nonneg_left (by linarith) hs0 hsV
+    set t : ℝ := a + ρ + 1 with htdef
+    have ht0 : 0 < t := by rw [htdef]; linarith
+    have htt₀ : t ≤ t₀ := by rw [htdef, ht₀def]; linarith
+    have htR : t < ‖x‖ := lt_of_le_of_lt htt₀ hcase
+    -- Step radially inward by `t`, then along the axis by `a`.
+    obtain ⟨lam, hlamdef⟩ : ∃ l : ℝ, l = 1 - t / ‖x‖ := ⟨_, rfl⟩
+    have hlam0 : 0 < lam := by rw [hlamdef, sub_pos, div_lt_one hR0]; exact htR
+    obtain ⟨p, hpdef⟩ : ∃ q : EuclideanSpace ℝ (Fin d), q = lam • x + a • v := ⟨_, rfl⟩
+    have hnx' : ‖lam • x‖ = ‖x‖ - t := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_pos hlam0, hlamdef]
+      field_simp
+    have hdx' : ‖lam • x - x‖ = t := by
+      have hcoef : lam - 1 = -(t / ‖x‖) := by rw [hlamdef]; ring
+      have he : lam • x - x = (lam - 1) • x := by rw [sub_smul, one_smul]
+      rw [he, hcoef, norm_smul, Real.norm_eq_abs, abs_neg, abs_of_pos (div_pos ht0 hR0)]
+      field_simp
+    have hav : ‖a • v‖ = a := by
+      rw [norm_smul, hv1, Real.norm_eq_abs, abs_of_pos ha0, mul_one]
+    -- The gap at `p` leaves room for a lattice point.
+    have hgapx : 0 < coneGap v V.apex x := (mem_cone_iff_coneGap_pos hv1 hap0 hap' x).mp hxc
+    have hgapx' : 0 ≤ coneGap v V.apex (lam • x) := by
+      rw [coneGap_smul v V.apex hlam0.le x]
+      positivity
+    have hgapp : coneGap v V.apex p = coneGap v V.apex (lam • x) + (ρ + 1) := by
+      rw [hpdef, coneGap_add_smul_axis hv1, hadef]
+      field_simp
+    have hgapρ : ρ < coneGap v V.apex p := by rw [hgapp]; linarith
+    obtain ⟨y, hylat, hyp⟩ := exists_lattice_mem_closedBall p
+    rw [← hρdef] at hyp
+    have hyc : y ∈ cone v V.apex := by
+      refine closedBall_subset_cone hv1 hap0 hap' hgapρ ?_
+      rw [Metric.mem_closedBall, dist_eq_norm]
+      exact hyp
+    have hpnorm : ‖p‖ ≤ (‖x‖ - t) + a := by
+      calc ‖p‖ ≤ ‖lam • x‖ + ‖a • v‖ := by rw [hpdef]; exact norm_add_le _ _
+        _ = (‖x‖ - t) + a := by rw [hnx', hav]
+    have hpx : ‖p - x‖ ≤ t + a := by
+      calc ‖p - x‖ = ‖(lam • x - x) + a • v‖ := by rw [hpdef]; congr 1; abel
+        _ ≤ ‖lam • x - x‖ + ‖a • v‖ := norm_add_le _ _
+        _ = t + a := by rw [hdx', hav]
+    refine ⟨y, hylat, hvsub hyc, ?_, ?_⟩
+    · calc ‖y‖ = ‖(y - p) + p‖ := by congr 1; abel
+        _ ≤ ‖y - p‖ + ‖p‖ := norm_add_le _ _
+        _ ≤ ρ + ((‖x‖ - t) + a) := by linarith
+        _ < ‖x‖ := by rw [htdef]; linarith
+    · calc ‖y - x‖ = ‖(y - p) + (p - x)‖ := by congr 1; abel
+        _ ≤ ‖y - p‖ + ‖p - x‖ := norm_add_le _ _
+        _ ≤ ρ + (t + a) := by linarith
+        _ < 2 * t₀ + a₀ + ρ + 1 := by linarith
+
 end QFS

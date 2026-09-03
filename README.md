@@ -21,7 +21,7 @@ function-space set-up of Section 1 (including equation (1.6)), the full
 definitional set-up of Section 2, the geometric lemmas of Sections 2 and 3, the
 whole of Section 4 — the paper's "continuous prelude", whose main result,
 **Theorem 4.1**, is proved here (`QFS.cont_connectivity`) — and Section 5's
-auxiliary results, Lemmas 5.1–5.5, the quantitative discrete counterparts of the
+auxiliary results, Lemmas 5.1–5.6, the quantitative discrete counterparts of the
 Section 4 lemmas. The paper's main theorems (1.1 and 1.3) are recorded as
 type-checked `Prop`s, so what remains to be proved is stated precisely. See
 *Not attempted* below for what is deliberately left out.
@@ -77,7 +77,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 5.3 | Definition | `r`-`R`-connected | ✅ |
 | 5.4 | Lemma | density, discrete | ✅ |
 | 5.5 | Lemma | "über Bande", discrete | ✅ |
-| 5.6 | Lemma | the jump constant `δ` | ❌ out of scope |
+| 5.6 | Lemma | the jump constant `δ` | ✅ |
 | 5.7 | Lemma | the core induction | ❌ out of scope |
 | 5.8 | Corollary | discrete template | ❌ out of scope |
 | 5.9 | Lemma | apex shrinking | ❌ out of scope |
@@ -166,6 +166,11 @@ right.
 | `r`-`R`-connected | Def. 5.3 | `QFS.RRConnected` | ✅ defined |
 | **Lemma 5.4**: discrete density | Lem. 5.4 | `QFS.exists_rrConnected` | ✅ **proved** |
 | **Lemma 5.5**: discrete "über Bande" | Lem. 5.5 | `QFS.discr_ueber_bande` | ✅ **proved** |
+| Signed distance to the cone boundary | (new; §§4–5 use it) | `QFS.coneGap` | ✅ defined |
+| `p ∈ Ṽ ↔ gap > 0`; gap is `1`-Lipschitz | (new) | `QFS.mem_cone_iff_coneGap_pos`, `QFS.coneGap_sub_le` | ✅ proved |
+| Ball of radius `< gap` sits in the cone | (new) | `QFS.closedBall_subset_cone` | ✅ proved |
+| Axis step raises the gap by `a sin ϑ` | (new; key to Lem. 5.6) | `QFS.coneGap_add_smul_axis` | ✅ proved |
+| **Lemma 5.6**: bounded jumps toward the tip | Lem. 5.6 | `QFS.exists_closer_lattice_nearby` | ✅ **proved** |
 
 ## Deviations
 
@@ -293,6 +298,23 @@ Each departure from the paper, and why.
     equality of the underlying double cones — `(Γ x).carrier = (Γ y).carrier` —
     which is the paper's notion, rather than the finer `Γ x = Γ y`.
 
+11. **Lemma 5.6 is not obvious.** The paper introduces it with "The assertion of
+    the following lemma is obvious." The natural first attempt — step from `x`
+    radially inward toward the tip — fails: scaling does not change the *angle*
+    to the cone axis, so a lattice point close to the boundary of the cone stays
+    close to it, and no ball of radius `√d/2` fits, so no lattice point is
+    produced. The proof formalised here steps radially inward by a fixed amount
+    *and* along the cone axis; the second move raises the distance to the cone
+    boundary by exactly `a sin ϑ` (`QFS.coneGap_add_smul_axis`), which is what
+    makes room for a lattice point.
+
+    This motivated the auxiliary notion `QFS.coneGap v ϑ p = ⟪v,p⟫ sin ϑ −
+    ‖p − ⟪v,p⟫v‖ cos ϑ`, the signed distance from `p` to the cone boundary. It is
+    positive exactly on the cone, `1`-Lipschitz, and positively homogeneous, and
+    `QFS.closedBall_subset_cone` subsumes the earlier
+    `QFS.mem_cone_of_norm_sub_lt` (which is the case `p = t·v`, where the gap is
+    `t sin ϑ` — recorded as `QFS.coneGap_smul_axis`).
+
 ## Not attempted
 
 Recorded here rather than silently omitted. The paper's two main theorems and
@@ -310,7 +332,7 @@ formalised is the geometric and graph-theoretic layer they are built on.
 | Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Thm. 1.3's setting, and on Lemma 3.3 (see Deviations 7). |
 | Lemma 3.3 for `d ≥ 2` | Lem. 3.3 | True but needs an argument the paper does not give; see Deviations 7. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
-| Core induction; renormalisation | §5 (Lems. 5.6–5.16) | Lemma 5.7 alone is 185 lines of dense argument; 5.8–5.16 build the "town" and scale machinery. A project in its own right. (Lemmas 5.1–5.5 **are** formalised.) |
+| Core induction; renormalisation | §5 (Lems. 5.7–5.16) | Lemma 5.7 alone is 185 lines of dense argument; 5.8–5.16 build the "town" and scale machinery. A project in its own right. (Lemmas 5.1–5.6 **are** formalised.) |
 | Proof of Theorem 1.3 | §6 | As above. |
 | Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §§3 and 6. |
 

@@ -8,6 +8,7 @@ intersect (used in Lemma 4.3), and the constant `λ` of the observation opening
 the proof of Theorem 4.1.
 -/
 import QuadraticFormsSobolev.Defs
+import QuadraticFormsSobolev.ConeGap
 
 open Real Set Metric
 open RealInnerProductSpace
