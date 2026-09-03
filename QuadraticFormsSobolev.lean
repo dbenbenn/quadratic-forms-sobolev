@@ -17,3 +17,4 @@ import QuadraticFormsSobolev.Multiplicity
 import QuadraticFormsSobolev.Assembly
 import QuadraticFormsSobolev.PathAssembly
 import QuadraticFormsSobolev.BlockPaths
+import QuadraticFormsSobolev.Section6
