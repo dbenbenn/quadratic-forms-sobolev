@@ -25,7 +25,9 @@ rests on: Section 2's definitional set-up and reference cones, Section 4's
 
 Of the road to Theorem 1.1, Section 3 is formalised as far as the discrete
 kernel goes — Corollary 3.1, Lemmas 3.2–3.4, **Proposition 3.5** and **Corollary
-3.6** — leaving the limiting argument of §3.2. Theorem 1.1 itself is recorded as
+3.6** — as is §3.2's scaffolding (the step functions, their almost-everywhere
+convergence, and the tiling identity that turns the discrete sums into
+integrals), leaving one limit in §3.2 open. Theorem 1.1 itself is recorded as
 a type-checked `Prop`, together with the enlarged-ball form
 (`QFS.TheoremOneOneBall`) that §3.2 alone would give; its last step, from a ball
 `B*` down to `B`, is an appendix lemma the paper quotes from a Whitney
@@ -123,7 +125,8 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 Sections 2, 4, 5 and 6 are formalised completely, apart from one remark of
 Section 2 that the paper itself quotes rather than proves (see *Not attempted*).
 Of Section 3, everything up to and including Corollary 3.6 is formalised; what
-remains there is the limiting argument of §3.2 and Lemma 3.7. From Section 1,
+remains there is one limit in §3.2 (the right-hand side of `(discret)`) and
+Lemma 3.7. From Section 1,
 the function-space definitions, assumption (1.4), the reverse inequality and
 equation (1.6) are proved, Theorem 1.3 is proved, and Theorem 1.1 is recorded as
 a type-checked `Prop` alongside its enlarged-ball form.
@@ -184,6 +187,10 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **The Vitali family of cubes** | Lem. 7.2 | `QFS.unitBallVol`, `QFS.volume_closedBall_eq`, `QFS.cubeVitaliConst`, `QFS.cubeVitali_doubling`, `QFS.cubeVitali`, `QFS.closedCube_mem_setsAt`, `QFS.tendsto_closedCube_filterAt` | ✅ **proved** |
 | **Lemma 7.2**: differentiation along cubes | Lem. 7.2 | `QFS.lemma_lebesgue_diff` | ✅ **proved** |
 | **The half-closed cubes tile `ℝ^d`** | §3.2 | `QFS.existsUnique_mem_halfClosedCube` | ✅ **proved** |
+| **The tiling as a countable measurable partition** | §3.2 | `QFS.latticePt`, `QFS.latticePt_injective`, `QFS.halfClosedCube_eq_preimage`, `QFS.measurableSet_halfClosedCube`, `QFS.volume_halfClosedCube`, `QFS.iUnion_halfClosedCube`, `QFS.pairwiseDisjoint_halfClosedCube` | ✅ **proved** |
+| **The step index `x_h(s)`** | §3.2 | `QFS.stepIndex`, `QFS.stepIndex_mem_scaledLattice`, `QFS.mem_halfClosedCube_stepIndex`, `QFS.mem_closedCube_stepIndex`, `QFS.stepIndex_eq_of_mem`, `QFS.halfClosedCube_subset_closedCube` | ✅ **proved** |
+| **`f_h(x_h(s)) → f(s)` almost everywhere** | §3.2 | `QFS.tendsto_avg_stepIndex`, `QFS.tendsto_avg_stepIndex_indicator` | ✅ **proved** |
+| **A step function integrates to `∑ c(x)·h^d`** | §3.2 | `QFS.lintegral_eq_tsum_halfClosedCube`, `QFS.lintegral_stepFun` | ✅ **proved** |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
 | The lattice is closed under negation | (new) | `QFS.neg_mem_lattice` | ✅ proved |
@@ -693,7 +700,7 @@ together with the results the paper itself quotes from elsewhere.
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
 | `{x | V ⊆ Γ(x)}` is Lebesgue measurable | §2 (after Cor. 2.4) | The paper does not prove it — "This implication is due to [Debreu67, Thm. 4.4]". It is what makes the sets `A_h^m(u)` measurable, which Proposition 3.5 integrates over, so it is carried there as the explicit hypothesis `QFS.CondMeas`. |
 | Auxiliary integral estimate | Lem. 7.1 | An integral computation feeding the appendix lemma, which is itself quoted rather than proved. |
-| The limiting argument | §3.2 | Not formalised; see the note below. Its two inputs **are** proved: Lemma 7.2 (`QFS.lemma_lebesgue_diff`) and the tiling by half-closed cubes (`QFS.existsUnique_mem_halfClosedCube`), as are the discrete estimates it feeds on (Corollaries 3.1 and 3.6). |
+| The passage to the limit `h → 0` | §3.2 | Not formalised; see the note below. Everything the passage rests on **is** proved: the discrete estimates it feeds on (Corollaries 3.1 and 3.6), the almost-everywhere convergence `f_h(x_h(s)) → f(s)` (`QFS.tendsto_avg_stepIndex`, from Lemma 7.2 along the tiling), and the identity turning the discrete sums into integrals (`QFS.lintegral_stepFun`). What is missing is one limit: `limsup_h ∫∫ g_h ≤ ∫∫ g` on the right-hand side. |
 
 ### A note on §3.2's dominated convergence
 
@@ -720,6 +727,37 @@ For Lipschitz `f` a dominant does exist, since
 whether one may reduce to that case is not addressed. This is recorded as an
 obstacle encountered in formalising the step, not as a claim that the step is
 wrong.
+
+Three reductions were tried and do not remove it.
+
+* **Truncation.** It *is* enough to prove the theorem for bounded `f`: the
+  truncations `f_N = max(−N, min(N, f))` satisfy `|f_N(x) − f_N(y)| ≤
+  |f(x) − f(y)|`, so `|f_N|_{H_k(B*)} ≤ |f|_{H_k(B*)}`, while Fatou gives
+  `|f|_{H^{α/2}(B)} ≤ liminf_N |f_N|_{H^{α/2}(B)}`. But boundedness alone still
+  produces no dominant, because `∫∫_{B*×B*} k = ∞`: the obstruction is the
+  diagonal singularity of `k`, not the size of `f`.
+* **Avoiding the right-hand limit altogether.** Fatou on the left plus a bound
+  `∫∫ g_h ≤ C|f|_{H_k(B*)}` *uniform in `h`* would suffice, with no limit on the
+  right at all. Jensen reduces this to
+  `[⨍⨍_{A×A'}(f(s)−f(t))²]·[∫∫_{A×A'} k] ≤ C h^{2d} ∫∫_{A×A'}(f(s)−f(t))² k(s,t)`
+  on each pair of cubes — a correlation inequality that is false in general, and
+  false in exactly the relevant configuration: `k` carries the cone structure, so
+  it can vanish on precisely the part of `A × A'` where `(f(s) − f(t))²` is
+  large.
+* **Jensen against the `k`-weighted measure.** Jensen with respect to
+  `k(s,t)·d(s,t)/∫∫_{A×A'}k` does give the required per-cube inequality, but for
+  the `k`-weighted average of `f(s) − f(t)`, whereas `f_h(x) − f_h(y)` is its
+  Lebesgue average; the two are not comparable without further information
+  about `k`.
+
+What the repository now contains is everything on both sides of that one limit:
+the discrete inequality's ingredients (Corollaries 3.1 and 3.6), the
+almost-everywhere convergence `f_h(x_h(s)) → f(s)` for locally integrable `f`
+(`QFS.tendsto_avg_stepIndex`, and `QFS.tendsto_avg_stepIndex_indicator` for the
+paper's restriction of the integral to `B*`), and the identity
+`∫ c(x_h(s)) ds = ∑_n c(h·n)·h^d` (`QFS.lintegral_stepFun`) by which the sums of
+Corollary 3.1 become integrals. Fatou is then available on the left; only the
+right-hand limit is open.
 
 ## Lemma 5.7
 
