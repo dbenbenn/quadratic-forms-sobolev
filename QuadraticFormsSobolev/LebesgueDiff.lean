@@ -191,4 +191,83 @@ theorem lemma_lebesgue_diff {φ : EuclideanSpace ℝ (Fin d) → ℝ}
   filter_upwards [(cubeVitali d).ae_tendsto_average hφ] with s hs ι l hn un hpos hlim hmem
   exact hs.comp (tendsto_closedCube_filterAt hn un hpos hlim hmem)
 
+/-! ## The step functions of Section 3.2
+
+Section 3.2 replaces `f` by the piecewise-constant approximation
+`f_h(x) = h^{-d} ∫_{A_h(x) ∩ B*} f`, indexed by the lattice point whose
+half-closed cube contains the point. This section proves the convergence
+`f_h(x_h(s)) → f(s)` for almost every `s` that the argument rests on. -/
+
+/-- The lattice point of `hℤ^d` whose half-closed cube contains `s`. -/
+noncomputable def stepIndex (d : ℕ) (h : ℝ) (s : EuclideanSpace ℝ (Fin d)) :
+    EuclideanSpace ℝ (Fin d) :=
+  WithLp.toLp 2 (fun i => (round (s i / h) : ℝ) * h)
+
+lemma stepIndex_mem_scaledLattice {h : ℝ} (s : EuclideanSpace ℝ (Fin d)) :
+    stepIndex d h s ∈ scaledLattice d h :=
+  fun i => ⟨round (s i / h), rfl⟩
+
+lemma mem_halfClosedCube_stepIndex {h : ℝ} (hh : 0 < h)
+    (s : EuclideanSpace ℝ (Fin d)) : s ∈ halfClosedCube h (stepIndex d h s) := by
+  intro i
+  have hc : (stepIndex d h s) i = (round (s i / h) : ℝ) * h := rfl
+  rw [Set.mem_Ico, hc, round_eq]
+  have h1 : ((⌊s i / h + 1 / 2⌋ : ℤ) : ℝ) ≤ s i / h + 1 / 2 := Int.floor_le _
+  have h2 : s i / h + 1 / 2 < (⌊s i / h + 1 / 2⌋ : ℤ) + 1 := Int.lt_floor_add_one _
+  have h3 : s i = (s i / h) * h := by field_simp
+  constructor <;> nlinarith [h1, h2, h3.le, h3.ge]
+
+lemma halfClosedCube_subset_closedCube {h : ℝ} (hh : 0 ≤ h)
+    (u : EuclideanSpace ℝ (Fin d)) : halfClosedCube h u ⊆ closedCube h u := by
+  intro x hx
+  rw [closedCube_eq_iInter hh]
+  intro T hT
+  obtain ⟨i, rfl⟩ := Set.mem_range.mp hT
+  exact ⟨(hx i).1, le_of_lt (hx i).2⟩
+
+lemma mem_closedCube_stepIndex {h : ℝ} (hh : 0 < h)
+    (s : EuclideanSpace ℝ (Fin d)) : s ∈ closedCube h (stepIndex d h s) :=
+  halfClosedCube_subset_closedCube hh.le _ (mem_halfClosedCube_stepIndex hh s)
+
+/-- **The convergence Section 3.2 rests on.** For almost every `s`, the averages
+of `φ` over the cubes of the tiling that contain `s` converge to `φ(s)`. -/
+theorem tendsto_avg_stepIndex {φ : EuclideanSpace ℝ (Fin d) → ℝ}
+    (hφ : LocallyIntegrable φ volume) :
+    ∀ᵐ s : EuclideanSpace ℝ (Fin d),
+      ∀ {ι : Type} {l : Filter ι} (hn : ι → ℝ), (∀ i, 0 < hn i) →
+        Tendsto hn l (𝓝 0) →
+        Tendsto (fun i => ⨍ y in closedCube (hn i) (stepIndex d (hn i) s), φ y) l (𝓝 (φ s)) := by
+  filter_upwards [lemma_lebesgue_diff hφ] with s hs ι l hn hpos hlim
+  exact hs hn (fun i => stepIndex d (hn i) s) hpos hlim
+    (fun i => mem_closedCube_stepIndex (hpos i) s)
+
+/-- The paper's `f_h` restricts the integral to `B*`; for `s` in the interior of
+`B*` that makes no difference in the limit, since the cubes eventually lie inside
+`B*`. -/
+theorem tendsto_avg_stepIndex_indicator {φ : EuclideanSpace ℝ (Fin d) → ℝ}
+    (hφ : LocallyIntegrable φ volume) (S : Set (EuclideanSpace ℝ (Fin d))) :
+    ∀ᵐ s : EuclideanSpace ℝ (Fin d), s ∈ interior S →
+      ∀ {ι : Type} {l : Filter ι} (hn : ι → ℝ), (∀ i, 0 < hn i) →
+        Tendsto hn l (𝓝 0) →
+        Tendsto (fun i => ⨍ y in closedCube (hn i) (stepIndex d (hn i) s),
+          S.indicator φ y) l (𝓝 (φ s)) := by
+  filter_upwards [tendsto_avg_stepIndex hφ] with s hs hsS ι l hn hpos hlim
+  -- the cubes eventually lie inside `S`
+  obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp isOpen_interior s hsS
+  have hsd : (0:ℝ) ≤ Real.sqrt d := Real.sqrt_nonneg _
+  have hlim' : Tendsto (fun i => hn i * Real.sqrt d) l (𝓝 0) := by
+    simpa using hlim.mul_const (Real.sqrt d)
+  have hev : ∀ᶠ i in l, closedCube (hn i) (stepIndex d (hn i) s) ⊆ S := by
+    filter_upwards [hlim' (Iio_mem_nhds hε)] with i hi
+    refine fun y hy => interior_subset (hball ?_)
+    have h1 := closedCube_subset_closedBall_of_mem (mem_closedCube_stepIndex (hpos i) s) hy
+    rw [Metric.mem_closedBall] at h1
+    rw [Metric.mem_ball]
+    exact lt_of_le_of_lt h1 hi
+  refine Tendsto.congr' ?_ (hs hn hpos hlim)
+  filter_upwards [hev] with i hi
+  refine (average_congr ?_).symm
+  filter_upwards [ae_restrict_mem (measurableSet_closedCube (hpos i).le _)] with y hy
+  exact Set.indicator_of_mem (hi hy) φ
+
 end QFS
