@@ -218,4 +218,42 @@ theorem ref_config {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
     simp only [hfv x]
     exact le_refl _
 
+
+/-- **Corollary 2.4 with a uniform bound on the number of cones**, as used in the
+proof of Corollary 5.8: the number `L` of reference cones is produced before the
+configuration, so it depends only on the space and on `ϑ`. -/
+theorem ref_config_uniform {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
+    ∃ L : ℕ, ∀ Γ : Configuration E, IsBounded Γ ϑ →
+      ∃ Γ' : Configuration E, (Set.range Γ').encard ≤ (L : ℕ∞) ∧
+        (∀ x, (Γ' x).carrier ⊆ (Γ x).carrier) ∧
+        (∀ x, (Γ' x).apex = ϑ / 3) ∧ IsBounded Γ' (ϑ / 3) := by
+  classical
+  obtain ⟨S, hS, hprop⟩ := ref_cones (E := E) hϑ hϑ'
+  have hθ : 0 < ϑ / 3 := by positivity
+  have hθ' : ϑ / 3 ≤ π / 2 := by linarith [pi_pos]
+  refine ⟨S.card, fun Γ hΓ => ?_⟩
+  set f : E → DCone E := fun v =>
+    if h : ‖v‖ = 1 then ⟨v, h, ϑ / 3, hθ, hθ'⟩ else Γ 0 with hf
+  choose v hvS hv using hprop Γ hΓ
+  have hfv : ∀ x, f (v x) = ⟨v x, hS _ (hvS x), ϑ / 3, hθ, hθ'⟩ := by
+    intro x
+    rw [hf]
+    exact dif_pos (hS _ (hvS x))
+  refine ⟨fun x => f (v x), ?_, ?_, ?_, ?_⟩
+  · calc (Set.range fun x => f (v x)).encard
+        ≤ (f '' (S : Set E)).encard := by
+          refine Set.encard_mono ?_
+          rintro _ ⟨x, rfl⟩
+          exact ⟨v x, Finset.mem_coe.mpr (hvS x), rfl⟩
+      _ ≤ (S : Set E).encard := Set.encard_image_le _ _
+      _ = (S.card : ℕ∞) := Set.encard_coe_eq_coe_finsetCard S
+  · intro x
+    simp only [hfv x]
+    exact hv x
+  · intro x
+    simp only [hfv x]
+  · refine ⟨hθ, fun x => ?_⟩
+    simp only [hfv x]
+    exact le_refl _
+
 end QFS

@@ -928,11 +928,12 @@ theorem core_induction_step (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
       ∀ c : EuclideanSpace ℝ (Fin d), ∀ x ∈ lattice d, x ∈ shift (cone v ϑV) c →
         ∃ y ∈ lattice d, y ∈ shift (cone v ϑV) c ∧ ‖y - c‖ ≤ t₀ ∧
           Relation.ReflTransGen (Jump (shift (cone v ϑV) c) c δ) x y)
-    {k : ℕ} {r' ρ' R' : ℝ} (hδr' : δ < r') (hrρ' : r' ≤ ρ') (hρR' : ρ' ≤ R')
+    {k : ℕ} {r' ρ' R' : ℝ} (hδr' : δ < r') (hkr' : (k : ℝ) ≤ r')
+    (hrρ' : r' ≤ ρ') (hρR' : ρ' ≤ R')
     (IH : ∀ G : Configuration (EuclideanSpace ℝ (Fin d)), (∀ z, ϑ ≤ (G z).apex) →
       ∀ p ∈ lattice d, (typesIn G (ball p ρ')).encard ≤ (k : ℕ∞) →
         RRConnected G r' R' p) :
-    ∃ r ρ R : ℝ, δ < r ∧ r ≤ ρ ∧ ρ ≤ R ∧
+    ∃ r ρ R : ℝ, δ < r ∧ ((k + 1 : ℕ) : ℝ) ≤ r ∧ r ≤ ρ ∧ ρ ≤ R ∧
       ∀ G : Configuration (EuclideanSpace ℝ (Fin d)), (∀ z, ϑ ≤ (G z).apex) →
       ∀ x ∈ lattice d, (typesIn G (ball x ρ)).encard ≤ ((k + 1 : ℕ) : ℕ∞) →
         RRConnected G r R x := by
@@ -966,7 +967,7 @@ theorem core_induction_step (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
   obtain ⟨R3, hR3⟩ : ∃ t : ℝ, t = s2 + (2 * s2 + Real.sqrt d) / Real.sin ϑ + 1 := ⟨_, rfl⟩
   have hR30 : 0 < R3 := by linarith
   obtain ⟨R, hR⟩ : ∃ t : ℝ, t = R' + s2 + S + R3 + ρ + 2 * S + sh + 1 := ⟨_, rfl⟩
-  refine ⟨S, ρ, R, by linarith, by linarith, by linarith, ?_⟩
+  refine ⟨S, ρ, R, by linarith, by push_cast; linarith, by linarith, by linarith, ?_⟩
   intro G hb x hxlat hcard
   obtain ⟨xh, hxhlat, hxhx, hxhconn⟩ :=
     exists_rrConnected (Γ := G) (r := s) (R := S) hϑ hb (le_of_lt hs0') (by linarith) hxlat
@@ -1100,7 +1101,7 @@ depending only on `ϑ` and `d`, such that every lattice point is
 `r_k`-`R_k`-connected as soon as at most `k` cone types are realised at the
 lattice points of `B_{ρ_k}`. -/
 theorem core_induction (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
-    ∃ δ : ℝ, 0 < δ ∧ ∀ k : ℕ, ∃ r ρ R : ℝ, δ < r ∧ r ≤ ρ ∧ ρ ≤ R ∧
+    ∃ δ : ℝ, 0 < δ ∧ ∀ k : ℕ, ∃ r ρ R : ℝ, δ < r ∧ (k : ℝ) ≤ r ∧ r ≤ ρ ∧ ρ ≤ R ∧
       ∀ G : Configuration (EuclideanSpace ℝ (Fin d)), (∀ z, ϑ ≤ (G z).apex) →
       ∀ x ∈ lattice d, (typesIn G (ball x ρ)).encard ≤ (k : ℕ∞) →
         RRConnected G r R x := by
@@ -1108,7 +1109,7 @@ theorem core_induction (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
   refine ⟨δ, hδ0, fun k => ?_⟩
   induction k with
   | zero =>
-      refine ⟨δ + 1, δ + 1, δ + 1, by linarith, le_rfl, le_rfl, ?_⟩
+      refine ⟨δ + 1, δ + 1, δ + 1, by linarith, by push_cast; linarith, le_rfl, le_rfl, ?_⟩
       intro G _hb x hxlat hcard
       exfalso
       have hmem : (G x).carrier ∈ typesIn G (ball x (δ + 1)) :=
@@ -1119,8 +1120,8 @@ theorem core_induction (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
       rw [h0] at hmem
       exact absurd hmem (Set.notMem_empty _)
   | succ k ih =>
-      obtain ⟨r', ρ', R', h1, h2, h3, IH⟩ := ih
-      exact core_induction_step hϑ hϑ' hδ0 ht₀0 hchain h1 h2 h3 IH
+      obtain ⟨r', ρ', R', h1, hk1, h2, h3, IH⟩ := ih
+      exact core_induction_step hϑ hϑ' hδ0 ht₀0 hchain h1 hk1 h2 h3 IH
 
 
 /-- **Lemma 5.7** in the form recorded by `CoreInduction`, for a fixed
@@ -1129,7 +1130,7 @@ theorem coreInduction_holds (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hb : ∀ z, �
     ∃ δ : ℝ, 0 < δ ∧ CoreInduction Γ δ := by
   obtain ⟨δ, hδ0, h⟩ := core_induction (d := d) (ϑ := ϑ) hϑ hϑ'
   refine ⟨δ, hδ0, fun k => ?_⟩
-  obtain ⟨r, ρ, R, h1, h2, h3, h4⟩ := h k
+  obtain ⟨r, ρ, R, h1, -, h2, h3, h4⟩ := h k
   exact ⟨r, ρ, R, h1, h2, h3, h4 Γ hb⟩
 
 
@@ -1141,5 +1142,67 @@ theorem connWithin_empty {x y : EuclideanSpace ℝ (Fin d)}
   induction h with
   | refl => rfl
   | tail _ hstep _ => simp at hstep
+
+
+/-! ## Corollary 5.8 -/
+
+/-- Shrinking every cone of the configuration only removes edges. -/
+lemma ConnWithin.mono_config {Γ' : Configuration (EuclideanSpace ℝ (Fin d))}
+    (h : ∀ z, (Γ' z).carrier ⊆ (Γ z).carrier) {S : Set (EuclideanSpace ℝ (Fin d))}
+    {x y : EuclideanSpace ℝ (Fin d)} (hxy : ConnWithin Γ' S x y) : ConnWithin Γ S x y := by
+  induction hxy with
+  | refl => exact ConnWithin.refl _
+  | tail _ hstep ih =>
+      refine ConnWithin.trans ih (Relation.ReflTransGen.single ?_)
+      exact ⟨hstep.1, hstep.2.1, hstep.2.2.imp (fun e => h _ e) (fun e => h _ e)⟩
+
+lemma RRConnected.mono_config {Γ' : Configuration (EuclideanSpace ℝ (Fin d))}
+    (h : ∀ z, (Γ' z).carrier ⊆ (Γ z).carrier) {r R : ℝ} {x : EuclideanSpace ℝ (Fin d)}
+    (hx : RRConnected Γ' r R x) : RRConnected Γ r R x :=
+  fun y hy hylat => ConnWithin.mono_config h (hx y hy hylat)
+
+/-- The observation closing the proof of Corollary 5.8: an `r`-`R`-connected point
+is `r'`-`R`-connected for every `r' ≤ r`. -/
+lemma RRConnected.mono_radius {r₁ r₂ R : ℝ} (h : r₂ ≤ r₁) {x : EuclideanSpace ℝ (Fin d)}
+    (hx : RRConnected Γ r₁ R x) : RRConnected Γ r₂ R x :=
+  fun y hy hylat => hx y (Metric.ball_subset_ball h hy) hylat
+
+/-- **Corollary 5.8** of Bux–Kassmann–Schulze. For every `r > 0` there is `R ≥ r`,
+depending only on `r`, `ϑ` and `d`, such that for *any* configuration with apex
+angles bounded below by `ϑ`, every lattice point is `r`-`R`-connected.
+
+By Corollary 2.4 one may replace the configuration by one taking at most `L`
+values, with `L` depending only on `ϑ` and `d` (`ref_config_uniform`); Lemma 5.7
+then applies with `k = L`, and the observation `RRConnected.mono_radius` brings
+the small radius down to `r`. Because the paper's `r_k` are only known to exist
+for each `k`, we take `k = max L ⌈r⌉₊` and use that `k ≤ r_k`, which is how
+`core_induction` records the growth of the radii.
+
+(The hypothesis `0 < r` that the paper states is not needed — for `r ≤ 0` the
+ball `B_r(x)` is empty and the conclusion is vacuous. It is kept for fidelity.) -/
+theorem discrete_template {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {r : ℝ} (_hr : 0 < r) :
+    ∃ R : ℝ, r ≤ R ∧ ∀ G : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded G ϑ →
+      ∀ x ∈ lattice d, RRConnected G r R x := by
+  obtain ⟨L, hL⟩ := ref_config_uniform (E := EuclideanSpace ℝ (Fin d)) hϑ hϑ'
+  obtain ⟨δ, hδ0, hcore⟩ :=
+    core_induction (d := d) (ϑ := ϑ / 3) (by positivity) (by linarith [pi_pos])
+  obtain ⟨rk, ρk, Rk, h1, hkr, h2, h3, h4⟩ := hcore (max L ⌈r⌉₊)
+  have hrk : r ≤ rk := by
+    have hle : r ≤ ((max L ⌈r⌉₊ : ℕ) : ℝ) := by
+      calc r ≤ ((⌈r⌉₊ : ℕ) : ℝ) := Nat.le_ceil r
+        _ ≤ ((max L ⌈r⌉₊ : ℕ) : ℝ) := by exact_mod_cast Nat.le_max_right L ⌈r⌉₊
+    linarith
+  refine ⟨Rk, by linarith, fun G hG x hxlat => ?_⟩
+  obtain ⟨G', hcard, hsub, _hapex, hb'⟩ := hL G hG
+  refine RRConnected.mono_config hsub (RRConnected.mono_radius hrk ?_)
+  refine h4 G' hb'.2 x hxlat ?_
+  calc (typesIn G' (ball x ρk)).encard
+      ≤ ((fun V : DCone (EuclideanSpace ℝ (Fin d)) => V.carrier) '' (Set.range G')).encard := by
+        refine Set.encard_mono ?_
+        rintro _ ⟨p, -, rfl⟩
+        exact ⟨G' p, ⟨p, rfl⟩, rfl⟩
+    _ ≤ (Set.range G').encard := Set.encard_image_le _ _
+    _ ≤ (L : ℕ∞) := hcard
+    _ ≤ ((max L ⌈r⌉₊ : ℕ) : ℕ∞) := by exact_mod_cast Nat.le_max_left L ⌈r⌉₊
 
 end QFS

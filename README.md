@@ -21,8 +21,9 @@ function-space set-up of Section 1 (including equation (1.6)), the full
 definitional set-up of Section 2, the geometric lemmas of Sections 2 and 3, the
 whole of Section 4 — the paper's "continuous prelude", whose main result,
 **Theorem 4.1**, is proved here (`QFS.cont_connectivity`) — and Section 5's
-auxiliary results and core induction, Lemmas 5.1–5.7 — the quantitative discrete
-counterparts of the Section 4 lemmas, and the induction that assembles them. The paper's main theorems (1.1 and 1.3) are recorded as
+auxiliary results, core induction and discrete template, Lemmas 5.1–5.8 — the
+quantitative discrete counterparts of the Section 4 lemmas, the induction that
+assembles them, and its uniform consequence. The paper's main theorems (1.1 and 1.3) are recorded as
 type-checked `Prop`s, so what remains to be proved is stated precisely. See
 *Not attempted* below for what is deliberately left out.
 
@@ -81,7 +82,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 5.5 | Lemma | "über Bande", discrete | ✅ |
 | 5.6 | Lemma | the jump constant `δ` | ✅ |
 | 5.7 | Lemma | the core induction | ✅ (monotonicity clause omitted, see Deviations 12) |
-| 5.8 | Corollary | discrete template | ❌ out of scope |
+| 5.8 | Corollary | discrete template | ✅ |
 | 5.9 | Lemma | apex shrinking | ❌ out of scope |
 | 5.10 | Definition | towns | ❌ out of scope |
 | 5.11 | Definition | town configurations | ❌ out of scope |
@@ -99,7 +100,7 @@ the machinery of Sections 5 and 6 (Lemma 3.3, which Proposition 3.5 needs, is
 false as stated). From Section 1, the function-space definitions, assumption
 (1.4), the reverse inequality and equation (1.6) are proved, and Theorems 1.1
 and 1.3 are recorded as type-checked `Prop`s so the remaining target is precise.
-The renormalisation machinery of Lemmas 5.8–5.16 and Section 6 remain a project
+The renormalisation machinery of Lemmas 5.9–5.16 and Section 6 remain a project
 in their own right.
 
 ## What is proved, in detail
@@ -194,6 +195,9 @@ in their own right.
 | **Lemma 5.7, the induction step** | Lem. 5.7 | `QFS.core_induction_step` | ✅ **proved** |
 | **Lemma 5.7** | Lem. 5.7 | `QFS.core_induction`, `QFS.coreInduction_holds` | ✅ **proved** |
 | `ConnWithin` is not vacuous | (sanity check) | `QFS.connWithin_empty` | ✅ proved |
+| Cor. 2.4 with a uniform bound on `L` | Cor. 2.4 / Cor. 5.8 proof | `QFS.ref_config_uniform` | ✅ proved |
+| Connectivity is monotone in `Γ` and in `r` | Cor. 5.8 proof | `QFS.ConnWithin.mono_config`, `QFS.RRConnected.mono_radius` | ✅ proved |
+| **Corollary 5.8**: the discrete template | Cor. 5.8 | `QFS.discrete_template` | ✅ **proved** |
 
 ## Deviations
 
@@ -362,7 +366,7 @@ formalised is the geometric and graph-theoretic layer they are built on.
 | Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Thm. 1.3's setting, and on Lemma 3.3 (see Deviations 7). |
 | Lemma 3.3 for `d ≥ 2` | Lem. 3.3 | True but needs an argument the paper does not give; see Deviations 7. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
-| Renormalisation | §5 (Lems. 5.8–5.16) | The "town" and scale machinery. (Lemmas 5.1–5.7 **are** formalised.) |
+| Renormalisation | §5 (Lems. 5.9–5.16) | The "town" and scale machinery. (Lemmas 5.1–5.8 **are** formalised.) |
 | Proof of Theorem 1.3 | §6 | As above. |
 | Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §§3 and 6. |
 
@@ -402,6 +406,27 @@ Three departures from the paper's proof, all forced:
 * `Set.encard` is used for "at most `k` cone types", never `Set.ncard`: the
   latter is `0` on infinite sets, which would make the hypothesis vacuously
   satisfiable and the lemma false as stated in Lean.
+
+`core_induction` also records that `k ≤ r_k`, so the radii grow without bound.
+That is not part of the paper's statement, but Corollary 5.8 needs it: the paper
+derives 5.8 from 5.7 "and the observation that an `r`-`R`-connected point is
+`r'`-`R`-connected for `r' ≤ r`", which only lowers the small radius. To reach an
+arbitrary `r` one must instead take `k` large — the index is the *number of cone
+types*, capped at `L`, but nothing stops using a larger `k`, whose hypothesis is
+weaker. Presumably this is what the paper's unformalised monotonicity clause
+`r_i < r_{i+1}` is for; the growth bound `k ≤ r_k` is what the argument actually
+needs, and it comes out of the construction.
+
+## Corollary 5.8
+
+`QFS.discrete_template`. Two supporting results the paper uses implicitly:
+
+* `QFS.ref_config_uniform` — Corollary 2.4 with the number `L` of reference cones
+  produced *before* the configuration, which is the proof's "`L` is a constant
+  that depends only on `ϑ` and `d`". The formalisation of Corollary 2.4 itself
+  only records finiteness.
+* The hypothesis `0 < r` is not needed: for `r ≤ 0` the ball is empty and the
+  conclusion vacuous. It is kept, to match the paper.
 
 ## Verification
 
