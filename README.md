@@ -45,8 +45,7 @@ the statement as printed is false:
 ## Coverage: every numbered result in the paper
 
 One row per numbered statement, including the ones not attempted. ✅ proved,
-❗ disproved as printed, ⚪ prose remark with nothing to prove, 🚧 partially
-proved with the remainder named, ❌ out of scope.
+❗ disproved as printed, ⚪ prose remark with nothing to prove, ❌ out of scope.
 
 | # | Kind | Label | State |
 | --- | --- | --- | --- |
@@ -90,7 +89,7 @@ proved with the remainder named, ❌ out of scope.
 | 5.12 | Remark | the favored cone is not unique | ⚪ (reflected in the design, see below) |
 | 5.13 | Definition | the favored graph | ✅ |
 | 5.14 | Proposition | renormalisation | ✅ |
-| 5.15 | Theorem | path properties | 🚧 Steps 3–6 proved; reduced to Steps 1–2 (`QFS.pathPropsHolds_of_scaleData`) |
+| 5.15 | Theorem | path properties | ✅ **proved** (`QFS.path_props`) |
 | 5.16 | Lemma | the first jump | ✅ |
 | 7.1 | Lemma | auxiliary integral estimate | ❌ out of scope |
 | 7.2 | Lemma | a Lebesgue differentiation argument | ❌ out of scope |
@@ -101,10 +100,9 @@ the machinery of Sections 5 and 6 (Lemma 3.3, which Proposition 3.5 needs, is
 false as stated). From Section 1, the function-space definitions, assumption
 (1.4), the reverse inequality and equation (1.6) are proved, and Theorems 1.1
 and 1.3 are recorded as type-checked `Prop`s so the remaining target is precise.
-Theorem 5.15 is reduced to Steps 1–2: its Steps 3–6 are proved, so the theorem
-follows from the local path family at each scale and centre
-(`QFS.pathPropsHolds_of_scaleData`). Section 6 remains a project in its own
-right.
+**Section 5 is formalised completely**, Theorem 5.15 included
+(`QFS.path_props`); its Step 2 needed a repair, recorded as Deviation 16.
+Section 6 remains a project in its own right.
 
 ## What is proved, in detail
 
@@ -222,7 +220,8 @@ right.
 | **Lemma 5.16**: the first jump | Lem. 5.16 | `QFS.connect_first_jump` | ✅ **proved** |
 | `G` as a `SimpleGraph`, with walks | §5.3 | `QFS.latticeGraph`, `QFS.LatticePt` | ✅ defined |
 | Statement of Theorem 5.15 | Thm. 5.15 | `QFS.PathProps`, `QFS.PathPropsHolds` | ✅ stated |
-| **Theorem 5.15, Steps 3–6** | Thm. 5.15 | `QFS.pathProps_of_scaleData`, `QFS.pathPropsHolds_of_scaleData` | 🚧 **proved from Steps 1–2** |
+| **Theorem 5.15** | Thm. 5.15 | `QFS.path_props` | ✅ **proved** |
+| Theorem 5.15, Steps 3–6 | Thm. 5.15 | `QFS.pathProps_of_scaleData`, `QFS.pathPropsHolds_of_scaleData` | ✅ proved |
 | Coordinates determine a point; rounding is injective | (new) | `QFS.euclidean_ext`, `QFS.round_injOn_lattice` | ✅ proved |
 | **`#(B_M ∩ ℤ^d) ≤ (2⌈M⌉+1)^d`, uniformly in the centre** | Thm. 5.15, Steps 1–2 | `QFS.encard_lattice_inter_closedBall_le` | ✅ **proved** |
 | **A block of side `ℓ` has `≥ ℓ^d` lattice points** | Thm. 5.15, Step 2 | `QFS.le_encard_block` | ✅ **proved** |
@@ -261,6 +260,20 @@ right.
 | The fibre bound on the lattice as a type | Thm. 5.15, Step 6 | `QFS.ScaleData.fibre_le_latticePt` | ✅ proved |
 | **Steps 3–6: the assembly** | Thm. 5.15, Steps 3–6 | `QFS.pathProps_of_scaleData` | ✅ **proved** |
 | **Theorem 5.15 from Steps 1–2** | Thm. 5.15 | `QFS.pathPropsHolds_of_scaleData` | ✅ **proved** |
+| Balanced hashes; the paper's "WLOG `#` majority set `= a`" | Thm. 5.15, Step 2 | `QFS.exists_hash`, `QFS.exists_indexed_rep` | ✅ proved |
+| The one-point part of admissibility | Thm. 5.15, Step 2 | `QFS.AdmissiblePt`, `QFS.Admissible.left`, `QFS.Admissible.right` | ✅ defined |
+| **What an edge reveals about its pair** | Thm. 5.15, Step 6 | `QFS.Reveals`, `QFS.encard_reveals_le` | ✅ **proved** |
+| **The local data of Steps 1–2** | Thm. 5.15, Steps 1–2 | `QFS.BlockData` | ✅ **defined** |
+| **Step 2: the assembly** | Thm. 5.15, Step 2 | `QFS.scaleData_of_blockData` | ✅ **proved** |
+| Block separation, and disjointness | Thm. 5.15, Step 5 | `QFS.infNorm_smul_sub_lattice`, `QFS.block_sep`, `QFS.block_disjoint` | ✅ proved |
+| The index is recoverable from its representative | Thm. 5.15, Step 6 | `QFS.exists_retraction` | ✅ proved |
+| **The paper's `a = Δ^{d(n−1)}/L`** | Thm. 5.15, Step 2 | `QFS.schemeIndex`, `QFS.pow_le_mul_schemeIndex`, `QFS.schemeIndex_le` | ✅ **proved** |
+| A natural multiple of a lattice point | (new) | `QFS.nsmul_mem_lattice` | ✅ proved |
+| **The ball holds `≲ Δ^{md}` admissible points** | Thm. 5.15, Step 2 | `QFS.encard_admissiblePt_le` | ✅ **proved** |
+| **The majority set has `≥ a` points** | Thm. 5.15, Step 2 | `QFS.schemeIndex_le_ncard_blockFibre` | ✅ **proved** |
+| **Steps 1 and 2** | Thm. 5.15, Steps 1–2 | `QFS.exists_blockData` | ✅ **proved** |
+| Edges come from darts; the graph shrinks with `Γ` | (new) | `QFS.exists_dart_edge`, `QFS.latticeGraph_mono` | ✅ proved |
+| **Theorem 5.15 transfers along `Γ' ≤ Γ`** | Cor. 2.4 + Thm. 5.15 | `QFS.PathProps.mono_config` | ✅ **proved** |
 
 ## Deviations
 
@@ -458,6 +471,55 @@ Each departure from the paper, and why.
     `QFS.lattice_inter_closedBall_finite`. Without finiteness the phrase "has
     maximal size" in Definition 5.11 would be satisfied by every cone.
 
+16. **Step 2's assignment `φ_z` is too weak for Step 6, and the paper's own
+    scheme repairs it.** This is the one substantive gap found in Section 5.
+
+    Step 2 asks only that `φ_z : A → M` be *globally* balanced,
+    `#φ_z⁻¹(p) ≤ K`, and Step 6 then asserts that "the usage of paths that start
+    in some point `x` and end in some other point `y` … is bounded by `K`". That
+    does not follow. Consider the **first-jump edge** `{x, q}`, where `q` is the
+    vertex of `φ_z(x, y)` lying in `x`'s own block. It is used by every partner
+    `y` of `x` whose assigned walk carries `q`'s index at `x`'s position along
+    the block walk. The walks with a fixed index at a fixed position number `a`,
+    so their total capacity under a merely balanced `φ_z` is `K a`, which is
+    larger than the `≍ Δ^{nd}` partners `x` has. An adversarial balanced `φ_z`
+    may therefore route all of them through the single edge `{x, q}`, and its
+    multiplicity is unbounded in the scale. Claim (3) fails for that `φ_z`.
+
+    The repair stays inside the paper's scheme and only *fixes its parameters*.
+    Take two maps `f, g` of the ball to `ZMod a`, each with fibres of size at
+    most `K₁` (`QFS.exists_hash`), and set
+
+    > `i = f(y) + g(x)` and `i + j = g(x)`,
+
+    so that the scheme's alternating labels are `α = f(y) + g(x)` at odd
+    positions and `β = g(x)` at even ones. Then
+
+    * every consecutive pair `{α, β}` determines `g(x) = β` and
+      `f(y) = α − β`, so an interior edge is used by at most `K₁²` pairs — this
+      is `QFS.cyclic_pair_injective` in its intended role;
+    * at `x`'s end the label is a translate of `f`, hence balanced in `y` for
+      fixed `x`, bounding the first-jump edge at `x` by `K₁`;
+    * at `y`'s end the label is `α` or `β`, and *both* are translates of `g`,
+      hence balanced in `x` for fixed `y`, bounding the first-jump edge at `y` —
+      **whatever the parity** of the block walk's length.
+
+    The last point is why `α` must carry both hashes. With the more obvious
+    choice `α = f(y)`, `β = g(x)` an even-length block walk ends on `α`, which
+    is constant in `x`, and the multiplicity at `y`'s end is again unbounded.
+    Since the choice-graph may be bipartite, one cannot arrange the parity away.
+
+    `QFS.encard_reveals_le` is the resulting count: whichever of the three
+    shapes an edge has, it confines `g(x)` to eight values and `f(y)` to nine,
+    all computed from the edge alone, so at most `72 K₁²` pairs used it.
+
+    A second, purely simplifying consequence: once the scheme's parameters are
+    functions of `x` and `y` alone, the walk for a pair need not be a sub-walk
+    of one *global* covering walk, so Step 1 is used only in its pairwise form
+    (Proposition 5.14 plus `QFS.exists_choiceWalk_of_choiceConn`). Step 1 as the
+    paper states it is nevertheless proved, as
+    `QFS.exists_favoredWalk_covering` and `QFS.exists_choiceWalk_covering`.
+
 ## Not attempted
 
 Recorded here rather than silently omitted. The paper's two main theorems and
@@ -558,9 +620,9 @@ so the two cases fit together.
 
 ## Theorem 5.15
 
-`QFS.PathPropsHolds` records the statement, and **Steps 3–6 of its proof are
-formalised**: `QFS.pathPropsHolds_of_scaleData` derives the theorem from the
-local path family of Steps 1–2. Its four
+`QFS.PathPropsHolds` records the statement and **`QFS.path_props` proves it**:
+for every `d ≥ 1` and every `0 < ϑ ≤ π/2` and every `R₀`, the path family exists
+with constants independent of the configuration. Its four
 claims count and measure edges, which the `Relation.ReflTransGen` used up to this
 point cannot express — that records only that a path exists, not which one. So
 the paths are Mathlib `SimpleGraph.Walk`s in `QFS.latticeGraph`, which carry a
@@ -651,9 +713,10 @@ What the proof of 5.15 still needs, beyond what is here:
    counting of item 1: `#A ≲ Δ^{2nd}` while `a² ≳ Δ^{2d(n-1)}/L²`, a ratio of
    `Δ^{2d}L²`.
 
-   What is left is assembly: building the `a²` walks as `SimpleGraph.Walk`s along
-   the Step 1 block walk with alternating representatives, which needs the
-   majority sets indexed by `ZMod a` — bookkeeping rather than new mathematics.
+   The assignment is where the paper's proof needed repair: a merely balanced
+   `φ_z` does not bound the multiplicity of a first-jump edge, and the fix is to
+   fix the scheme's parameters by two balanced hashes. See **Deviation 16**;
+   `QFS.exists_scheme_assignment` is kept as the paper's own statement.
 4. ~~**The edge-multiplicity count.**~~ **Its three ingredients are done.**
    An edge is used by a pair only through a logarithmic scale, a centre of the
    index lattice at that scale, and `φ_z`; each ranges over a bounded set.
@@ -739,16 +802,42 @@ Claims (1)–(4) are all four discharged, and the reduction is not vacuous:
 admissible at some scale and centre, so `ScaleData` is obliged to supply the
 walk that `PathProps` then returns.
 
-### What is left
+### Steps 1 and 2: `exists_blockData`
 
-Only Steps 1–2 as a single statement: `∃ ScaleData Γ Δ R t K m z` for every
-scale `m` and centre `z`. Every ingredient is present —
-`QFS.exists_choiceWalk_covering` (Step 1 for the choice graph),
-`QFS.renormalization_choice`, `QFS.exists_alternating_walk`,
-`QFS.exists_scheme_assignment` and `QFS.connect_first_jump` — and what remains
-is the bookkeeping the paper's own "WLOG" hides: indexing each majority set by
-`ZMod a`, cutting the covering walk between the two blocks a pair is assigned
-to, and grafting the two first jumps onto the ends. Section 6 sits on top.
+`QFS.BlockData` is the local package Steps 1–2 produce, and `QFS.exists_blockData`
+builds it at every scale and centre. Its fields and their sources:
+
+| Field | Where it comes from |
+| --- | --- |
+| `W` | `QFS.renormalization_choice` — one favored cone per block |
+| `walk` | Proposition 5.14 plus `QFS.exists_choiceWalk_of_choiceConn`, length `≤ (2⌈R⌉+1)^d` |
+| `jump` | Lemma 5.16, `QFS.connect_first_jump` |
+| `rep`, `idx` | `QFS.exists_indexed_rep` and `QFS.exists_retraction` |
+| `sep` | `QFS.block_sep` with `QFS.infNorm_smul_sub_lattice` |
+| `near` | the cube radius `(ℓ/2)√d` against the town-ball radius |
+| `hf`, `hg` | `QFS.exists_hash` on the admissible points |
+
+The constants are the paper's: `Δ` is the scale step of `QFS.ScaleStep` (even,
+divisible by `L`, and larger than both `δ` and `R₀`), `R₁` the first-jump radius,
+`r = 2√d + R₁`, and `R` what Proposition 5.14 returns for that `r`. The number of
+representatives per block is `QFS.schemeIndex Δ L d m = max 1 (Δ^{md}/L)` — the
+paper's `a = Δ^{d(n−1)}/L`, floored at `1` because at the bottom scale a block is
+a single lattice point and `Δ^{md}/L` is not a positive integer; there the ball
+holds only boundedly many points anyway, so the hashes are trivially balanced.
+`QFS.schemeIndex_le_ncard_blockFibre` is the paper's "each block contains at
+least `Δ^{d(n−1)}/L` lattice points where the associated cone is favored by
+majority", and `QFS.encard_admissiblePt_le` is the matching upper bound on the
+ball, giving `K₁ = (2⌈2√dΔ⌉+1)^d L`.
+
+The assumption Step 2 opens with — "assume `#Γ(ℤ^d) ≤ L`" — is discharged rather
+than assumed: `QFS.ref_config_uniform` (Corollary 2.4) replaces `Γ` by a
+configuration with at most `L` types whose cones sit inside `Γ`'s, and
+`QFS.PathProps.mono_config` carries the conclusion back up, since a subgraph's
+walks are walks.
+
+The one substantive change is to Step 2's assignment `φ_z`, which as stated does
+not bound the multiplicity of a first-jump edge; see **Deviation 16**. Section 6
+sits on top of Theorem 5.15 and is not attempted.
 
 ## A gap in Definition 5.13
 
