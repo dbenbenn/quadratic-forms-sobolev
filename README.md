@@ -224,6 +224,11 @@ own right.
 | **A block of side `ℓ` has `≥ ℓ^d` lattice points** | Thm. 5.15, Step 2 | `QFS.le_encard_block` | ✅ **proved** |
 | `#(B_R ∩ ℤ^d) ≥ ℓ^d` when the cube fits | Thm. 5.15 | `QFS.le_encard_lattice_inter_closedBall` | ✅ proved |
 | **Majority sets have `≥ #Q/L` points** | Thm. 5.15, Step 2 | `QFS.ncard_le_mul_ncard_blockFibre` | ✅ **proved** |
+| Reachability chain ⟹ walk, confined | Thm. 5.15, Step 1 | `QFS.exists_walk_of_reflTransGen` | ✅ proved |
+| **A walk in a finite set shortens to length `< #S`** | Thm. 5.15, Step 1 | `QFS.exists_walk_length_lt`, `QFS.exists_walk_of_reflTransGen_lt` | ✅ **proved** |
+| **Concatenation through way-points** | Thm. 5.15, Step 1 | `QFS.exists_walk_through_list`, `QFS.exists_walk_covering` | ✅ **proved** |
+| The bridge for `G`; walks from `RRConnected` | Thm. 5.15, Step 1 | `QFS.exists_walk_of_connWithin`, `QFS.exists_walk_of_rrConnected` | ✅ proved |
+| `#(B_R ∩ ℤ^d)` in `ncard` form | Thm. 5.15 | `QFS.ncard_lattice_inter_ball_le` | ✅ proved |
 
 ## Deviations
 
@@ -556,8 +561,29 @@ What the proof of 5.15 still needs, beyond what is here:
    Both directions rest on `QFS.euclidean_ext` and `QFS.round_injOn_lattice`:
    rounding coordinates injects the lattice into `ℤ^d`, which gives the upper
    bound, and translating a box of integers into a cube gives the lower one.
-2. **Concatenating favored-graph paths** across all blocks of a ball into the
-   single path `P^n_z` of Step 1, with the bound `t ≤ #(B_r∩ℤ^d)·#(B_R∩ℤ^d)`.
+2. ~~**Concatenating favored-graph paths.**~~ **Done, abstractly.**
+   `QFS.exists_walk_covering` is Step 1's conclusion in general form: if every two
+   way-points of a finite nonempty `T` are joined by a walk inside `S` of length
+   at most `N`, then a single walk inside `S` of length at most `#T · N` passes
+   through all of `T` — the paper's `t ≤ #(B_r∩ℤ^d) · #(B_R∩ℤ^d)`, with its
+   properties (1), (2) and (3).
+
+   The length bounds come from a fact worth isolating. `Relation.ReflTransGen`,
+   which carries every connectivity result of Sections 4 and 5, records only that
+   a path *exists*. But a walk confined to a **finite** vertex set shortens to a
+   path — delete the cycles, `SimpleGraph.Walk.bypass` — whose support is
+   duplicate-free and hence no longer than `#S`. So
+   `QFS.exists_walk_of_reflTransGen_lt` upgrades any confined reachability chain
+   to a walk of length `< #S` for free, with no change to Lemma 5.7, Corollary
+   5.8 or Proposition 5.14. Specialised to `G` this is
+   `QFS.exists_walk_of_rrConnected`: an `r`-`R`-connected point reaches every
+   lattice point of its `r`-ball by a walk of length less than `(2⌈R⌉+1)^d`, which
+   is where the counting of item 1 enters.
+
+   What remains for Step 1 proper is the instantiation: applying
+   `exists_walk_covering` with `T` the blocks of `T_n` inside `B_{Δⁿr}(z)` and the
+   walks supplied by Proposition 5.14 — routine, but it needs the favored graph
+   presented as a `SimpleGraph` on blocks, which `QFS.FavoredConn` is not yet.
 3. **The cyclic scheme** of Step 2 — the `a²` paths through the majority sets,
    and an assignment `φ_z` of pairs to paths with fibres bounded by a constant.
    The paper's justification is that `a` and `#A` are comparable; making that

@@ -11,3 +11,4 @@ import QuadraticFormsSobolev.Section5
 import QuadraticFormsSobolev.Renormalization
 import QuadraticFormsSobolev.Counting
 import QuadraticFormsSobolev.FirstJump
+import QuadraticFormsSobolev.Paths
