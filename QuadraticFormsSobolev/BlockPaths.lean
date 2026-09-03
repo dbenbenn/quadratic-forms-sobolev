@@ -560,4 +560,224 @@ theorem schemeIndex_le_ncard_blockFibre {Γ : Configuration (EuclideanSpace ℝ 
     rwa [← pow_mul] at h2
   exact schemeIndex_le hL hFne (le_trans hbig hpig)
 
+/-! ## Steps 1 and 2: the local data exists
+
+Everything is now in place. The constants are the paper's: `Δ` is the scale step
+of `ScaleStep`, `R₁` the first-jump radius of Lemma 5.16, `r = 2√d + R₁`, and `R`
+the radius Proposition 5.14 returns for that `r`. -/
+
+/-- **Steps 1 and 2 of Theorem 5.15.** For a configuration with at most `L`
+types, the local data exists at every scale and every centre. -/
+theorem exists_blockData {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd : 1 ≤ d)
+    {L : ℕ} (hL : 0 < L) (R₀ : ℝ) :
+    ∃ (Δ : ℕ) (R : ℝ) (K₁ N₀ : ℕ), 2 ≤ Δ ∧ R₀ < (Δ : ℝ) ∧ 2 * Real.sqrt d < R ∧ 0 < K₁ ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ →
+        (∀ B : Set (EuclideanSpace ℝ (Fin d)), (Γ '' B).ncard ≤ L) →
+      ∀ (m : ℕ) (z : EuclideanSpace ℝ (Fin d)), z ∈ lattice d →
+        Nonempty (BlockData Γ (Δ : ℝ) R (schemeIndex Δ L d m) K₁ N₀ m z) := by
+  classical
+  have hsd : (0:ℝ) ≤ Real.sqrt d := Real.sqrt_nonneg _
+  -- the scale step, with the facts we need
+  obtain ⟨Δs⟩ := exists_scaleStep d ϑ R₀ L hL
+  have hΔ0R : (0:ℝ) < (Δs.val : ℝ) := lt_trans (apexShrinkConst_pos hϑ hϑ') Δs.gt_delta
+  obtain ⟨Δ, hΔ2, hΔR₀, hΔδ, hΔL, hΔsp⟩ :
+      ∃ Δ : ℕ, 2 ≤ Δ ∧ R₀ < (Δ:ℝ) ∧ apexShrinkConst d ϑ < (Δ:ℝ) ∧ L ∣ Δ ∧
+        ∀ n : ℕ, SparselyPopulated d ϑ ((Δ:ℝ) ^ (n + 1)) ((Δ:ℝ) ^ n) := by
+    refine ⟨Δs.val, ?_, Δs.gt_R₀, Δs.gt_delta, Δs.dvd,
+      fun n => sparselyPopulated_of_scaleStep Δs hΔ0R n⟩
+    have h0' : 0 < Δs.val := by exact_mod_cast hΔ0R
+    obtain ⟨k, hk⟩ := Δs.even
+    omega
+  have hΔ1 : 1 ≤ Δ := by omega
+  have hΔ1R : (1:ℝ) ≤ (Δ:ℝ) := by exact_mod_cast hΔ1
+  have hΔ2R : (2:ℝ) ≤ (Δ:ℝ) := by exact_mod_cast hΔ2
+  -- the first-jump radius, and the two renormalisation radii
+  obtain ⟨R₁, hR₁1, hjump⟩ := connect_first_jump (d := d) hϑ hϑ' hΔδ hΔ1R
+  have hr : (0:ℝ) < 2 * Real.sqrt d + R₁ := by linarith
+  obtain ⟨Rc, hRcr, hren⟩ := renormalization_choice (d := d) hϑ hϑ' hr
+  refine ⟨Δ, Rc + Real.sqrt d + 1, (2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) ^ d * L,
+    (2 * ⌈Rc⌉₊ + 1) ^ d, hΔ2, hΔR₀, by linarith, ?_, ?_⟩
+  · exact Nat.mul_pos (Nat.pow_pos (by omega)) hL
+  intro Γ hΓ htypes m z hz
+  have : Inhabited (ZMod (schemeIndex Δ L d m)) := ⟨0⟩
+  have hh : (0:ℝ) < (Δ:ℝ) ^ (m + 1) := by positivity
+  have hℓ0 : (0:ℝ) < (Δ:ℝ) ^ m := by positivity
+  have hℓ1 : (1:ℝ) ≤ (Δ:ℝ) ^ m := one_le_pow₀ hΔ1R
+  have hℓhlt : (Δ:ℝ) ^ m < (Δ:ℝ) ^ (m + 1) := by
+    rw [pow_succ]; nlinarith
+  have hℓh : (Δ:ℝ) ^ m ≤ (Δ:ℝ) ^ (m + 1) := hℓhlt.le
+  obtain ⟨W, hWfav, hconn⟩ := hren Γ hΓ _ _ hh hℓ1 (hΔsp m)
+  -- the blocks in play
+  obtain ⟨Blk, hBlk⟩ : ∃ S, S = townBall ((Δ:ℝ) ^ (m + 1)) ((Δ:ℝ) ^ m) z Rc := ⟨_, rfl⟩
+  obtain ⟨Jmp, hJmp⟩ : ∃ S, S = townBall ((Δ:ℝ) ^ (m + 1)) ((Δ:ℝ) ^ m) z
+      (2 * Real.sqrt d + R₁) := ⟨_, rfl⟩
+  -- centres of blocks in play are lattice points
+  have hctr : ∀ w ∈ lattice d, ((Δ:ℝ) ^ (m + 1)) • w ∈ lattice d := by
+    intro w hw
+    have he : ((Δ:ℝ) ^ (m + 1)) • w = ((Δ ^ (m + 1) : ℕ) : ℝ) • w := by push_cast; ring_nf
+    rw [he]
+    exact nsmul_mem_lattice hw
+  -- the representatives
+  have hrepex : ∀ B : Set (EuclideanSpace ℝ (Fin d)),
+      ∃ ρ : ZMod (schemeIndex Δ L d m) → EuclideanSpace ℝ (Fin d),
+        B ∈ Blk → (Function.Injective ρ ∧ ∀ i, ρ i ∈ blockFibre Γ B (W B)) := by
+    intro B
+    by_cases hB : B ∈ Blk
+    · rw [hBlk] at hB
+      obtain ⟨w, ⟨hwlat, -⟩, rfl⟩ := hB
+      have hfav : FavoredIn Γ (block ((Δ:ℝ) ^ m) (((Δ:ℝ) ^ (m + 1)) • w)) (W _) :=
+        hWfav _ (block_finite hℓ0.le _)
+      obtain ⟨ρ, hinj, hmem⟩ := exists_indexed_rep
+        (schemeIndex_le_ncard_blockFibre hL hΔ1 htypes (hctr w hwlat) hfav)
+      exact ⟨ρ, fun _ => ⟨hinj, hmem⟩⟩
+    · exact ⟨fun _ => 0, fun hc => absurd hc hB⟩
+  choose rep hrep using hrepex
+  have hrepmem : ∀ B ∈ Blk, ∀ i, rep B i ∈ blockFibre Γ B (W B) :=
+    fun B hB i => (hrep B hB).2 i
+  have hrepblk : ∀ B ∈ Blk, ∀ i, rep B i ∈ B := fun B hB i => (hrepmem B hB i).1
+  -- the retraction
+  have hdisj : ∀ B ∈ Blk, ∀ B' ∈ Blk, ∀ u, u ∈ B → u ∈ B' → B = B' := by
+    intro B hB B' hB' u hu hu'
+    rw [hBlk] at hB hB'
+    obtain ⟨w, ⟨hwlat, -⟩, rfl⟩ := hB
+    obtain ⟨w', ⟨hw'lat, -⟩, rfl⟩ := hB'
+    simp only [townIndex] at hu hu' ⊢
+    by_cases hww : w = w'
+    · rw [hww]
+    · exact absurd (block_disjoint hℓhlt
+        (infNorm_smul_sub_lattice hh hwlat hw'lat hww) hu hu') (fun h => h)
+  obtain ⟨idx, hidx⟩ := exists_retraction rep hrepblk
+    (fun B hB => (hrep B hB).1) hdisj
+  have hreplat : ∀ B ∈ Blk, ∀ i, rep B i ∈ lattice d := by
+    intro B hB i
+    have hmem := hrepblk B hB i
+    rw [hBlk] at hB
+    obtain ⟨w, -, rfl⟩ := hB
+    exact hmem.1
+  -- Step 1: the block walk
+  have hwalk : ∀ B ∈ Jmp, ∀ B' ∈ Jmp, ∃ Wk : (choiceGraph Γ W).Walk B B',
+      Wk.length ≤ (2 * ⌈Rc⌉₊ + 1) ^ d ∧ ∀ C ∈ Wk.support, C ∈ Blk := by
+    intro B hB B' hB'
+    rw [hJmp] at hB hB'
+    obtain ⟨x, ⟨hxlat, hxr⟩, rfl⟩ := hB
+    obtain ⟨y, ⟨hylat, hyr⟩, rfl⟩ := hB'
+    obtain ⟨wk, hwS, hwlen⟩ := exists_choiceWalk_of_choiceConn
+      (townBall_finite _ _ z Rc) (⟨x, ⟨hxlat, lt_of_lt_of_le hxr hRcr⟩, rfl⟩)
+      (hconn z hz x hxlat y hylat hxr.le hyr.le)
+    exact ⟨wk, le_of_lt (lt_of_lt_of_le hwlen (ncard_townBall_le _ _ z Rc)),
+      fun C hC => by rw [hBlk]; exact hwS C hC⟩
+  -- Lemma 5.16: the first jump
+  have hjmp : ∀ x, AdmissiblePt (Δ:ℝ) m z x → ∃ B ∈ Jmp,
+      ∀ q ∈ B, (latticeGraph Γ).Adj x q ∧ (Δ:ℝ) ^ m ≤ ‖q - x‖ := by
+    intro x hx
+    obtain ⟨w, hwlat, hsub, hfar⟩ := hjump Γ hΓ x m
+    have hball := (hsub (mem_block_self hℓ0.le (hctr w hwlat))).1
+    rw [mem_ball, dist_eq_norm] at hball
+    have hwz : ‖w - z‖ < 2 * Real.sqrt d + R₁ := by
+      have hn : ‖(Δ:ℝ) ^ (m + 1) • w - (Δ:ℝ) ^ (m + 1) • z‖
+          = (Δ:ℝ) ^ (m + 1) * ‖w - z‖ := by
+        rw [← smul_sub, norm_smul, Real.norm_eq_abs, abs_of_pos hh]
+      have htri : ‖(Δ:ℝ) ^ (m + 1) • w - (Δ:ℝ) ^ (m + 1) • z‖
+          ≤ ‖(Δ:ℝ) ^ (m + 1) • w - x‖ + ‖x - (Δ:ℝ) ^ (m + 1) • z‖ := by
+        have hde : (Δ:ℝ) ^ (m + 1) • w - (Δ:ℝ) ^ (m + 1) • z
+            = ((Δ:ℝ) ^ (m + 1) • w - x) + (x - (Δ:ℝ) ^ (m + 1) • z) := by abel
+        rw [hde]; exact norm_add_le _ _
+      rw [hn] at htri
+      nlinarith [hx.2, hball, hh]
+    refine ⟨townIndex ((Δ:ℝ) ^ (m + 1)) ((Δ:ℝ) ^ m) w, by rw [hJmp]; exact
+      ⟨w, ⟨hwlat, hwz⟩, rfl⟩, fun q hq => ?_⟩
+    simp only [townIndex] at hq
+    exact ⟨⟨hx.1, hq.1, Or.inl (hsub hq).2⟩, hfar q hq⟩
+  -- block separation
+  have hsep : ∀ B ∈ Blk, ∀ B' ∈ Blk, B ≠ B' → ∀ p ∈ B, ∀ q ∈ B',
+      (Δ:ℝ) ^ m ≤ ‖p - q‖ := by
+    intro B hB B' hB' hne p hp q hq
+    rw [hBlk] at hB hB'
+    obtain ⟨w, ⟨hwlat, -⟩, rfl⟩ := hB
+    obtain ⟨w', ⟨hw'lat, -⟩, rfl⟩ := hB'
+    simp only [townIndex] at hp hq
+    have hww : w ≠ w' := fun hc => hne (by rw [hc])
+    have hbs := block_sep (infNorm_smul_sub_lattice hh hwlat hw'lat hww) hp hq
+    have h2 : (Δ:ℝ) ^ (m + 1) = (Δ:ℝ) * (Δ:ℝ) ^ m := by rw [pow_succ]; ring
+    nlinarith
+  -- everything in play is near the centre
+  have hnear : ∀ B ∈ Blk, ∀ q ∈ B,
+      ‖(Δ:ℝ) ^ (m + 1) • z - q‖ < (Δ:ℝ) ^ (m + 1) * (Rc + Real.sqrt d + 1) := by
+    intro B hB q hq
+    rw [hBlk] at hB
+    obtain ⟨w, ⟨hwlat, hwR⟩, rfl⟩ := hB
+    simp only [townIndex] at hq
+    have h1 : ‖q - (Δ:ℝ) ^ (m + 1) • w‖ ≤ (Δ:ℝ) ^ m / 2 * Real.sqrt d := by
+      have hcb := closedCube_subset_closedBall hℓ0.le ((Δ:ℝ) ^ (m + 1) • w) hq.2
+      rwa [Metric.mem_closedBall, dist_eq_norm] at hcb
+    have h2 : ‖(Δ:ℝ) ^ (m + 1) • z - (Δ:ℝ) ^ (m + 1) • w‖
+        = (Δ:ℝ) ^ (m + 1) * ‖z - w‖ := by
+      rw [← smul_sub, norm_smul, Real.norm_eq_abs, abs_of_pos hh]
+    have h3 : ‖z - w‖ < Rc := by rw [norm_sub_rev]; exact hwR
+    have htri : ‖(Δ:ℝ) ^ (m + 1) • z - q‖
+        ≤ ‖(Δ:ℝ) ^ (m + 1) • z - (Δ:ℝ) ^ (m + 1) • w‖
+          + ‖(Δ:ℝ) ^ (m + 1) • w - q‖ := by
+      have hde : (Δ:ℝ) ^ (m + 1) • z - q
+          = ((Δ:ℝ) ^ (m + 1) • z - (Δ:ℝ) ^ (m + 1) • w)
+            + ((Δ:ℝ) ^ (m + 1) • w - q) := by abel
+      rw [hde]; exact norm_add_le _ _
+    have h4 : ‖(Δ:ℝ) ^ (m + 1) • w - q‖ ≤ (Δ:ℝ) ^ m / 2 * Real.sqrt d := by
+      rw [norm_sub_rev]; exact h1
+    rw [h2] at htri
+    nlinarith [hh, hsd, hℓh]
+  -- the two hashes
+  have hadmfin : {x | AdmissiblePt (Δ:ℝ) m z x}.Finite :=
+    (lattice_inter_closedBall_finite ((Δ:ℝ) ^ (m + 1) • z)
+      (2 * Real.sqrt d * (Δ:ℝ) ^ (m + 1))).subset
+      (fun x hx => ⟨hx.1, by rw [Metric.mem_closedBall, dist_eq_norm]; exact hx.2⟩)
+  have hAcard : hadmfin.toFinset.card
+      ≤ ((2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) ^ d * L) * schemeIndex Δ L d m := by
+    have h1 := encard_admissiblePt_le (d := d) hΔ1 m z
+    rw [← hadmfin.cast_ncard_eq] at h1
+    have h2 : {x | AdmissiblePt (Δ:ℝ) m z x}.ncard
+        ≤ (2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) ^ d * Δ ^ (m * d) := by exact_mod_cast h1
+    rw [← Set.ncard_eq_toFinset_card _ hadmfin]
+    calc {x | AdmissiblePt (Δ:ℝ) m z x}.ncard
+        ≤ (2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) ^ d * Δ ^ (m * d) := h2
+      _ ≤ (2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) ^ d * (L * schemeIndex Δ L d m) :=
+          Nat.mul_le_mul_left _ (pow_le_mul_schemeIndex hL hΔL hd m)
+      _ = ((2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) ^ d * L) * schemeIndex Δ L d m := by
+          rw [Nat.mul_assoc]
+  obtain ⟨hfun, hfbal⟩ := exists_hash
+    (K := (2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) ^ d * L) hadmfin.toFinset hAcard
+  obtain ⟨gfun, hgbal⟩ := exists_hash
+    (K := (2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) ^ d * L) hadmfin.toFinset hAcard
+  have hbal : ∀ F : EuclideanSpace ℝ (Fin d) → ZMod (schemeIndex Δ L d m),
+      (∀ γ, (hadmfin.toFinset.filter fun x => F x = γ).card
+        ≤ (2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) ^ d * L) →
+      ∀ γ, {y | AdmissiblePt (Δ:ℝ) m z y ∧ F y = γ}.encard
+        ≤ (((2 * ⌈2 * Real.sqrt d * (Δ : ℝ)⌉₊ + 1) ^ d * L : ℕ) : ℕ∞) := by
+    intro F hF γ
+    have hset : {y | AdmissiblePt (Δ:ℝ) m z y ∧ F y = γ}
+        = ↑(hadmfin.toFinset.filter fun x => F x = γ) := by
+      ext y
+      simp [Set.Finite.mem_toFinset]
+    rw [hset, Set.encard_coe_eq_coe_finsetCard]
+    exact_mod_cast hF γ
+  have hjs : Jmp ⊆ Blk := by rw [hJmp, hBlk]; exact townBall_mono _ _ z hRcr
+  refine ⟨?_⟩
+  exact
+    { W := W
+      Blk := Blk
+      Jmp := Jmp
+      jmp_sub := hjs
+      rep := rep
+      rep_mem := hrepmem
+      rep_lat := hreplat
+      idx := idx
+      idx_rep := hidx
+      walk := hwalk
+      jump := hjmp
+      sep := hsep
+      near := hnear
+      hf := hfun
+      hg := gfun
+      hf_bal := hbal hfun hfbal
+      hg_bal := hbal gfun hgbal }
+
 end QFS
