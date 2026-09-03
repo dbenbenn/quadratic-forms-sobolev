@@ -198,6 +198,9 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **The tile-averaging operator, and that it preserves the integral** | §3.2 | `QFS.tileAvg`, `QFS.lintegral_tileAvg` | ✅ **proved** |
 | **Generalized (Vitali) dominated convergence, dominants allowed to move** | §3.2 | `QFS.limsup_lintegral_le_of_dominant` | ✅ **proved** |
 | **A Lipschitz function has finite `H^{α/2}` seminorm on a ball (`α < 2`)** | §3.2 | `QFS.formHs_lt_top_of_lipschitzOn`, `QFS.lintegral_ball_rpow_lt_top` | ✅ **proved** |
+| **Pairs in a common tile; the tiling of pairs** | §3.2 | `QFS.sameTile`, `QFS.sameTile_eq_iUnion`, `QFS.measurableSet_sameTile`, `QFS.norm_sub_le_of_sameTile`, `QFS.coneSet` | ✅ **proved** |
+| **On close cone pairs the kernel dominates the flat measure** | §3.2 (new) | `QFS.lintegral_sq_le_form_of_close` | ✅ **proved** |
+| **The cone part of the modulus `A_h` is bounded uniformly in `h`** | §3.2 (new) | `QFS.oscillation_sameTile_le_form` | ✅ **proved** |
 | **Granted Theorem 1.1, an approximation bounded on `H^{α/2}` is bounded on `H_k`** — the circularity in the mollification route | §3.2 | `QFS.form_le_of_theoremOneOneBall` | ✅ **proved** |
 | **The form on `ℝ^d` as a supremum over balls** | Thm. 1.4 | `QFS.lintegral_univ_prod_eq_iSup`, `QFS.form_univ_eq_iSup` | ✅ **proved** |
 | **Theorem 1.4 for `Ω = ℝ^d`**, granted Theorem 1.1 | Thm. 1.4 | `QFS.TheoremOneFourUniv`, `QFS.theoremOneFourUniv_of_theoremOneOne`, `QFS.form_univ_le_formHs_univ` | ✅ **proved** |
@@ -726,6 +729,48 @@ The repository now proves every link in the chain from the discrete theory to
 Theorem 1.1 except one, and that one is a single statement:
 
 > **Open.** Every `f ∈ H_k(B*)` already lies in `H^{α/2}(B*)`.
+
+It is enough to prove something weaker. Decomposing
+`f_h(x) − f_h(y) = (f_h(x) − f(s)) + (f(s) − f(t)) + (f(t) − f_h(y))`, weighting by
+`k(s,t)` and summing over the pairs, the middle term contributes
+`|f|²_{H_k(B*)}` and each outer term contributes `‖f − E_hf‖²_{L²(B*)}` times
+`sup_s ∫_{|s−t|>h/2} k(s,t)dt = O(Λ h^{-α})`:
+
+  `∫∫ g_h ≤ 9|f|²_{H_k(B*)} + C(d,α,Λ)·A_h`,   `A_h := h^{-α}‖f − E_hf‖²_{L²(B*)}`.
+
+Fatou on the left of `(discret)` then closes the theorem — with **no** dominated
+convergence and no limit on the right — as soon as
+
+> **Enough.** `liminf_{h→0} h^{-α}‖f − E_hf‖²_{L²(B*)} < ∞` for `f ∈ H_k(B*)`.
+
+`A_h` is an `L²` modulus of continuity at one scale, a Besov `B^{α/2}_{2,∞}`
+quantity with no singular kernel in it — strictly weaker than the
+`B^{α/2}_{2,2} = H^{α/2}` membership the paper's argument silently assumes.
+
+**Half of it is proved.** `A_h` splits into a cone part and an off-cone part, and
+`QFS.oscillation_sameTile_le_form` bounds the cone part by `Λ d^{(d+α)/2}|f|²_{H_k}`,
+uniformly in `h`. The mechanism is that the lower bound of (1.4) is used in the
+one direction that costs nothing: on pairs at distance `≤ r` the singular kernel
+is bounded *below* by `Λ^{-1}r^{-d-α}`, so it dominates the flat measure
+(`QFS.lintegral_sq_le_form_of_close`); with `r = √d·h` and the tiles of the
+`h`-tiling, the powers of `h` cancel exactly.
+
+**What is left** is the off-cone oscillation inside a single tile: for `s,t` in one
+cube of side `h` with `t ∉ V^Γ[s]`, the difference `f(s) − f(t)` has to be
+recovered by chaining through cone pairs. That is precisely what §§4–6 achieve —
+but in the discrete setting, where a tile is a single point and the oscillation
+inside it is invisible. Discretising to apply Theorem 1.3 destroys the very
+quantity to be estimated, which is why the two-scale attempts recurse the wrong
+way (they bound `A_h` by `A_{h'}` for `h' < h`).
+
+For a **constant** configuration the statement is true and easy: if `Γ ≡ V` then
+`f ∈ H_k` says `∫_{z ∈ V}|z|^{-d-α}‖f(·+z) − f‖²_{L²}dz < ∞`, and on the Fourier
+side `∫_V |z|^{-d-α}|e^{iξ·z} − 1|²dz = |ξ|^α J(ξ/|ξ|)` with `J` continuous and
+strictly positive on the sphere (it vanishes only if `e^{iθ·w} = 1` throughout a
+cone with interior), so the cone-restricted energy is comparable to the full one.
+Every difficulty is in the variation of `Γ` from point to point, which is exactly
+what Corollary 2.4 tames only down to *finitely many* cone types, on measurable
+pieces that admit no Fourier transform.
 
 The chain, with each link's status:
 
