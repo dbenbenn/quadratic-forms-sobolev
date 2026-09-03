@@ -24,6 +24,42 @@ lemma mem_lattice_iff {x : EuclideanSpace ℝ (Fin d)} :
     x ∈ lattice d ↔ ∀ i, ∃ n : ℤ, x i = n := by
   simp [lattice, scaledLattice]
 
+/-! ## Lattice points in a bounded region
+
+Needed to make "maximal size" in Definition 5.11 meaningful, and to pick the
+axis of Lemma 3.3. -/
+
+/-- Only finitely many lattice points lie in a ball. -/
+theorem lattice_inter_closedBall_finite (a : EuclideanSpace ℝ (Fin d)) (M : ℝ) :
+    (lattice d ∩ closedBall a M).Finite := by
+  classical
+  obtain ⟨K, hK⟩ : ∃ K : ℕ, ‖a‖ + M ≤ (K : ℝ) := ⟨⌈‖a‖ + M⌉₊, Nat.le_ceil _⟩
+  have hFfin : (Set.pi Set.univ (fun _ : Fin d => Set.Icc (-(K : ℤ)) (K : ℤ))).Finite :=
+    Set.Finite.pi (fun _ => Set.finite_Icc _ _)
+  refine Set.Finite.subset
+    (hFfin.image (fun n : Fin d → ℤ =>
+      (WithLp.toLp 2 (fun i => ((n i : ℤ) : ℝ)) : EuclideanSpace ℝ (Fin d)))) ?_
+  rintro x ⟨hxlat, hxb⟩
+  rw [mem_lattice_iff] at hxlat
+  choose n hn using hxlat
+  rw [Metric.mem_closedBall, dist_eq_norm] at hxb
+  refine ⟨n, Set.mem_univ_pi.mpr (fun i => ?_), ?_⟩
+  · have h1 : |x i - a i| ≤ M := by
+      have h := abs_coord_le_norm (x - a) i
+      have he : (x - a) i = x i - a i := by simp
+      rw [he] at h
+      linarith
+    have h2 : |a i| ≤ ‖a‖ := abs_coord_le_norm a i
+    have h3 : |((n i : ℤ) : ℝ)| ≤ (K : ℝ) := by
+      rw [← hn i]
+      have h4 := abs_sub_abs_le_abs_sub (x i) (a i)
+      linarith
+    rw [← Int.cast_abs] at h3
+    have h5 : |n i| ≤ (K : ℤ) := by exact_mod_cast h3
+    exact Set.mem_Icc.mpr (abs_le.mp h5)
+  · have he : (fun i => ((n i : ℤ) : ℝ)) = WithLp.ofLp x := funext fun i => (hn i).symm
+    simp only [he, WithLp.toLp_ofLp]
+
 lemma infNorm_sub_comm (x y : EuclideanSpace ℝ (Fin d)) :
     infNorm (x - y) = infNorm (y - x) := by
   rw [← infNorm_neg (y - x), neg_sub]
