@@ -32,9 +32,10 @@ hypothesis `f ∈ H^{α/2}(B*)`, which reduces §3.2 to the single qualitative
 statement `H_k(B*) ⊆ H^{α/2}(B*)`. Theorem 1.1 itself is recorded as
 a type-checked `Prop`, together with the enlarged-ball form
 (`QFS.TheoremOneOneBall`) that §3.2 alone would give; its last step, from a ball
-`B*` down to `B`, is an appendix lemma the paper quotes from a Whitney
-decomposition and from Dyda's inequality (13) rather than proving. See *Not
-attempted*.
+`B*` down to `B`, is Lemma 7.1, whose chain (6.14) is proved here with the
+Whitney family and Dyda's inequality (13) — the two things the paper quotes
+rather than proves — as explicit hypotheses. Theorem 1.4 for `Ω = ℝ^d` is
+proved granted Theorem 1.1. See *Not attempted*.
 
 Two results carry hypotheses the paper does not: Proposition 3.5 and Corollary
 3.6 need `d ≥ 2`, because Lemma 3.3 is false in dimension one, and they take as
@@ -75,14 +76,15 @@ and the rest are gaps or slips repaired silently:
 ## Coverage: every numbered result in the paper
 
 One row per numbered statement, including the ones not attempted. ✅ proved,
-❗ disproved as printed, ⚪ prose remark with nothing to prove, ❌ out of scope.
+❗ disproved as printed, ⚪ prose remark with nothing to prove, 🚧 partly done or
+blocked on a recorded gap, ❌ out of scope.
 
 | # | Kind | Label | State |
 | --- | --- | --- | --- |
 | 1.1 | Theorem | main comparability, continuous | ⚪ statement recorded (`QFS.TheoremOneOne`), not proved |
 | 1.2 | Remark | strength of the hypotheses | ⚪ (condition (M) is `QFS.CondM`) |
 | 1.3 | Theorem | main comparability, discrete | ✅ **proved** (`QFS.theoremOneThree`) |
-| 1.4 | Theorem | `H_k(Ω) = H^{α/2}(Ω)` | ❌ out of scope |
+| 1.4 | Theorem | `H_k(Ω) = H^{α/2}(Ω)` | 🚧 the case `Ω = ℝ^d` **proved** granted Theorem 1.1 (`QFS.theoremOneFourUniv_of_theoremOneOne`); the Lipschitz-domain case needs Lemma 7.1, the density assertions are quoted from [DeDe12] |
 | 1.5 | Corollary | regular Dirichlet form | ❌ out of scope |
 | 1.6 | Corollary | Harnack / Hölder regularity | ❌ out of scope (quoted from [DyKa15]) |
 | 2.1 | Definition | cones, half-cones, configurations | ✅ |
@@ -98,7 +100,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 3.4 | Lemma | `\|s−t\|` vs `\|x−y\|` | ✅ for `hℤ^d`; ❗ **false as printed** |
 | 3.5 | Proposition | test-function bound | ✅ **proved** for `d ≥ 2` (`QFS.prop_test_fct`), with `QFS.CondMeas` as hypothesis |
 | 3.6 | Corollary | the rescaled kernel | ✅ **proved** for `d ≥ 2` (`QFS.cor_rescaled_kernel`), with `QFS.CondMeas` as hypothesis |
-| 3.7 | Lemma | `H_k` on balls | ❌ out of scope |
+| 3.7 | Lemma | comparability on a ball, `\|·\|_{H^{α/2}(B)} ≤ c\|·\|_{H_k(B)}` | 🚧 the target of §3.2; blocked on §3.2's remaining inclusion and on Lemma 7.1 |
 | 4.1 | Theorem | **connectivity of `G[U]`** | ✅ **proved** |
 | 4.2 | Definition | type of a point | ✅ |
 | 4.3 | Lemma | same type ⟹ path of length ≤ 2 | ✅ |
@@ -121,7 +123,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 5.14 | Proposition | renormalisation | ✅ |
 | 5.15 | Theorem | path properties | ✅ **proved** (`QFS.path_props`) |
 | 5.16 | Lemma | the first jump | ✅ |
-| 7.1 | Lemma | auxiliary integral estimate | ❌ out of scope |
+| 7.1 | Lemma | from balls to a bounded Lipschitz domain | 🚧 its chain (6.14) **proved** (`QFS.lemma_ball_to_domain`), including the finite-overlap step (`QFS.tsum_setLIntegral_le_of_overlap`); the Whitney family and Dyda's inequality (13) are hypotheses, as in the paper |
 | 7.2 | Lemma | a Lebesgue differentiation argument | ✅ **proved** (`QFS.lemma_lebesgue_diff`) |
 
 Sections 2, 4, 5 and 6 are formalised completely, apart from one remark of
@@ -197,6 +199,10 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **Generalized (Vitali) dominated convergence, dominants allowed to move** | §3.2 | `QFS.limsup_lintegral_le_of_dominant` | ✅ **proved** |
 | **A Lipschitz function has finite `H^{α/2}` seminorm on a ball (`α < 2`)** | §3.2 | `QFS.formHs_lt_top_of_lipschitzOn`, `QFS.lintegral_ball_rpow_lt_top` | ✅ **proved** |
 | **Granted Theorem 1.1, an approximation bounded on `H^{α/2}` is bounded on `H_k`** — the circularity in the mollification route | §3.2 | `QFS.form_le_of_theoremOneOneBall` | ✅ **proved** |
+| **The form on `ℝ^d` as a supremum over balls** | Thm. 1.4 | `QFS.lintegral_univ_prod_eq_iSup`, `QFS.form_univ_eq_iSup` | ✅ **proved** |
+| **Theorem 1.4 for `Ω = ℝ^d`**, granted Theorem 1.1 | Thm. 1.4 | `QFS.TheoremOneFourUniv`, `QFS.theoremOneFourUniv_of_theoremOneOne`, `QFS.form_univ_le_formHs_univ` | ✅ **proved** |
+| **The finite-overlap estimate** of (6.14) | Lem. 7.1 | `QFS.tsum_setLIntegral_le_of_overlap`, `QFS.tsum_setLIntegral_le_of_overlap_sq` | ✅ **proved** |
+| **The chain (6.14)**, with the Whitney family and Dyda's inequality as hypotheses | Lem. 7.1 | `QFS.lemma_ball_to_domain` | ✅ **proved** |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
 | The lattice is closed under negation | (new) | `QFS.neg_mem_lattice` | ✅ proved |
@@ -691,6 +697,24 @@ Each departure from the paper, and why.
     through the lower Lebesgue integral and never needs it — a weaker hypothesis,
     hence a stronger result.
 
+21. **Lemma 7.1's overlap constant can be `M`, not `M²`.** Display (6.14) bounds
+    `∑_{B∈ℬ} ∫_{B*×B*} … ≤ M² ∫_{Ω×Ω} …` from the finite-overlap property
+    "each point of `Ω` belongs to at most `M` balls `B*`". One factor suffices: a
+    pair `(x,y)` lies in `B* × B*` only for those `B` with `x ∈ B*`, of which
+    there are at most `M`. `QFS.tsum_setLIntegral_le_of_overlap` proves the sharper
+    form and `QFS.tsum_setLIntegral_le_of_overlap_sq` the printed one. Nothing
+    downstream depends on the difference.
+
+22. **Two rows of this README were mislabelled, and are corrected.** The coverage
+    table described Lemma 7.1 as an "auxiliary integral estimate" and marked
+    Lemma 3.7 "out of scope". Re-reading the source with the numbering settled
+    (`\newtheorem{theorem}{Theorem}[section]`, one counter per section) shows that
+    **Lemma 7.1 is `lem:new6.9`**, the passage from balls to a bounded Lipschitz
+    domain, and **Lemma 3.7 is `lem:H-are-equal-on-balls`**, the same-ball
+    comparability that §3.2 exists to prove — not an out-of-scope aside but the
+    section's target. Both rows now say so. The prose elsewhere in this file had
+    the dependency right; only the table was wrong.
+
 ## Not attempted
 
 Recorded here rather than silently omitted. What is not formalised is the
@@ -701,8 +725,11 @@ together with the results the paper itself quotes from elsewhere.
 | --- | --- | --- |
 | Comparability on balls, continuous | Thm. 1.1 | Needs §3's discrete kernel and limiting argument, and a final step the paper quotes from a Whitney decomposition and Dyda's inequality (13). Statement recorded as `QFS.TheoremOneOne`. |
 | `H_k(Ω) = H^{α/2}(Ω)`, density | Thm. 1.4 | Depends on Thm. 1.1 and on Lipschitz-domain extension theory not in scope. |
-| Regular Dirichlet form; Markov process | Cor. 1.5 | Depends on Thm. 1.1 and on Dirichlet-form theory (Fukushima–Oshima–Takeda) absent from Mathlib. |
+| Regular Dirichlet form; Markov process | Cor. 1.5 | Depends on Thm. 1.1 and on Dirichlet-form theory (Fukushima–Oshima–Takeda) absent from Mathlib. This is the one result here whose obstacle is the library rather than the paper. |
 | Weak Harnack, Hölder regularity | Cor. 1.6 | Quoted from Dyda–Kassmann; not proved in the paper. |
+| The Whitney decomposition of a bounded Lipschitz domain | Lem. 7.1 | Asserted, not proved: "The Whitney decomposition technique provides a family `ℬ` of balls with the following properties." Carried as the hypotheses of `QFS.lemma_ball_to_domain`. |
+| Dyda's inequality (13) | Lem. 7.1 | Quoted from [Dyda06, proof of Thm. 1]; carried as the hypothesis `hdyda` of `QFS.lemma_ball_to_domain`. |
+| Density of `C^∞(Ω̄)` and `C_c^∞(ℝ^d)` in `H^{α/2}` | Thm. 1.4 | Quoted from [DeDe12, Props. 4.52 and 4.27]. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
 | `{x | V ⊆ Γ(x)}` is Lebesgue measurable | §2 (after Cor. 2.4) | The paper does not prove it — "This implication is due to [Debreu67, Thm. 4.4]". It is what makes the sets `A_h^m(u)` measurable, which Proposition 3.5 integrates over, so it is carried there as the explicit hypothesis `QFS.CondMeas`. |
 | Auxiliary integral estimate | Lem. 7.1 | An integral computation feeding the appendix lemma, which is itself quoted rather than proved. |
@@ -1222,6 +1249,7 @@ printed statement where one exists.
 | `RefCones` | Lemma 2.2 and Corollary 2.4: finitely many reference cones |
 | `Section3` | lattices, Lemmas 3.2 and 3.4, cube volumes, the tiling |
 | `Section32` | §3.2: the moving dominant, generalized dominated convergence, Lipschitz functions in `H^{α/2}`, and the circularity of the mollification route |
+| `Section7` | Theorem 1.4 on `ℝ^d`, and the finite-overlap chain (6.14) of Lemma 7.1 |
 | `ThinCones` | Lemma 3.3 for `d ≥ 2` |
 | `Section4` | the continuous prelude; Theorem 4.1 |
 | `Section5` | Lemmas 5.1–5.7, Corollary 5.8 |
