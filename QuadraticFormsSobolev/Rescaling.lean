@@ -221,4 +221,72 @@ lemma preimage_smul_ball {h : ℝ} (hh : 0 < h) (x₀ : EuclideanSpace ℝ (Fin 
   rw [lt_div_iff₀ hh]
   constructor <;> intro H <;> linarith
 
+/-! ## Corollary 3.1 -/
+
+lemma discreteFormOn_congr (L S : Set (EuclideanSpace ℝ (Fin d))) (R₀ : ℝ)
+    {ω₁ ω₂ : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (h : ∀ x y, ω₁ x y = ω₂ x y) (f : EuclideanSpace ℝ (Fin d) → ℝ) :
+    discreteFormOn L S R₀ ω₁ f = discreteFormOn L S R₀ ω₂ f :=
+  tsum_congr fun p => by rw [h]
+
+/-- **Corollary 3.1** of Bux–Kassmann–Schulze: the `hℤ^d` version of Theorem 1.3,
+with the *same* constants `κ` and `c` — in particular independent of `h`, as the
+paper asserts.
+
+The paper writes the inequality with the constant on the left (`c Σ ≤ Σ`); it is
+stated here in the same orientation as Theorem 1.3 (`Σ ≤ c Σ`), which is the
+same assertion with `c` replaced by `c⁻¹`. -/
+theorem corollaryThreeOne (ϑ Λ α R₀ : ℝ) (hϑ : 0 < ϑ) (hΛ : 1 ≤ Λ) (hα : 0 < α)
+    (hα2 : α < 2) (hR₀ : 0 < R₀) :
+    ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ →
+      ∀ h : ℝ, 0 < h →
+      ∀ ω, DiscreteKernelBounds Γ α Λ (R₀ * h) ω →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ) (f : EuclideanSpace ℝ (Fin d) → ℝ),
+        0 < R →
+        discreteFormOn (scaledLattice d h) (ball x₀ R) (R₀ * h) (jumpKernel d α) f
+          ≤ ENNReal.ofReal c *
+            discreteFormOn (scaledLattice d h) (ball x₀ (κ * R)) (R₀ * h) ω f := by
+  obtain ⟨κ, c, hκ, hc, hmain⟩ := theoremOneThree (d := d) ϑ Λ α R₀ hϑ hΛ hα hα2 hR₀
+  refine ⟨κ, c, hκ, hc, ?_⟩
+  intro Γ hΓ h hh ω hω x₀ R f hR
+  have hΓh : IsBounded (fun x => Γ (h • x)) ϑ := ⟨hΓ.1, fun x => hΓ.2 _⟩
+  have hmain' := hmain (fun x => Γ (h • x)) hΓh _ (discreteKernelBounds_rescale hh hω)
+    (h⁻¹ • x₀) (R / h) (fun x => f (h • x)) (by positivity)
+  rw [discreteForm_eq_discreteFormOn, discreteForm_eq_discreteFormOn] at hmain'
+  -- the two sides, transported to `ℤ^d`
+  have hL : discreteFormOn (scaledLattice d h) (ball x₀ R) (R₀ * h) (jumpKernel d α) f
+      = ENNReal.ofReal (h ^ (-(d:ℝ) - α)) *
+        discreteFormOn (lattice d) (ball (h⁻¹ • x₀) (R / h)) R₀ (jumpKernel d α)
+          (fun x => f (h • x)) := by
+    rw [discreteFormOn_smul hh, preimage_smul_ball hh,
+      discreteFormOn_congr _ _ _ (fun x y => jumpKernel_smul hh α x y) _,
+      discreteFormOn_const_mul]
+  have hR' : discreteFormOn (scaledLattice d h) (ball x₀ (κ * R)) (R₀ * h) ω f
+      = ENNReal.ofReal (h ^ (-(d:ℝ) - α)) *
+        discreteFormOn (lattice d) (ball (h⁻¹ • x₀) (κ * (R / h))) R₀
+          (fun x y => ENNReal.ofReal (h ^ ((d:ℝ) + α)) * ω (h • x) (h • y))
+          (fun x => f (h • x)) := by
+    have hmul : ∀ x y : EuclideanSpace ℝ (Fin d), ω (h • x) (h • y)
+        = ENNReal.ofReal (h ^ (-(d:ℝ) - α)) *
+          (ENNReal.ofReal (h ^ ((d:ℝ) + α)) * ω (h • x) (h • y)) := by
+      intro x y
+      rw [← mul_assoc, ← ENNReal.ofReal_mul (Real.rpow_nonneg hh.le _), ← Real.rpow_add hh]
+      norm_num
+    rw [discreteFormOn_smul hh, preimage_smul_ball hh,
+      discreteFormOn_congr _ _ _ hmul _, discreteFormOn_const_mul,
+      show κ * R / h = κ * (R / h) by ring]
+  rw [hL, hR']
+  calc ENNReal.ofReal (h ^ (-(d:ℝ) - α)) *
+        discreteFormOn (lattice d) (ball (h⁻¹ • x₀) (R / h)) R₀ (jumpKernel d α)
+          (fun x => f (h • x))
+      ≤ ENNReal.ofReal (h ^ (-(d:ℝ) - α)) * (ENNReal.ofReal c *
+          discreteFormOn (lattice d) (ball (h⁻¹ • x₀) (κ * (R / h))) R₀
+            (fun x y => ENNReal.ofReal (h ^ ((d:ℝ) + α)) * ω (h • x) (h • y))
+            (fun x => f (h • x))) := mul_le_mul' le_rfl hmain'
+    _ = ENNReal.ofReal c * (ENNReal.ofReal (h ^ (-(d:ℝ) - α)) *
+          discreteFormOn (lattice d) (ball (h⁻¹ • x₀) (κ * (R / h))) R₀
+            (fun x y => ENNReal.ofReal (h ^ ((d:ℝ) + α)) * ω (h • x) (h • y))
+            (fun x => f (h • x))) := by ring
+
 end QFS

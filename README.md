@@ -64,7 +64,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 2.5 | Definition | cubes | ✅ |
 | 2.6 | Remark | half-closed cubes used once | ⚪ |
 | 2.7 | Lemma | cone in intersection | ✅ |
-| 3.1 | Corollary | `hℤ^d` rescaling | ❌ out of scope |
+| 3.1 | Corollary | `hℤ^d` rescaling | ✅ **proved** (`QFS.corollaryThreeOne`) |
 | 3.2 | Lemma | the indicator inequality | ✅ |
 | 3.3 | Lemma | small cone inside `V^m_r` | ❗ false for `d = 1`; ✅ **proved for `d ≥ 2`** (`QFS.lemma_new_config`) |
 | 3.4 | Lemma | `\|s−t\|` vs `\|x−y\|` | ✅ for `hℤ^d`; ❗ **false as printed** |
@@ -147,6 +147,12 @@ is available.
 | `A_h^m(u)`; `h`-favoured index by majority | §2 (prose before Lem. 2.7) | `QFS.cubeCone`, `QFS.IsFavoured` | ✅ defined |
 | `A_h(u) = ⋃_i A_h^i(u)` | §2 | `QFS.cube_eq_biUnion_cubeCone` | ✅ proved |
 | `λ_d(A_h^m(u)) ≥ L⁻¹ λ_d(A_h(u))` | §3 | `QFS.volume_cube_le_card_mul` | ✅ proved |
+| The discrete form over an arbitrary lattice | Cor. 3.1 | `QFS.discreteFormOn`, `QFS.discreteForm_eq_discreteFormOn`, `QFS.discreteFormOn_congr`, `QFS.discreteFormOn_const_mul` | ✅ defined |
+| `hℤ^d` as the image of `ℤ^d`; scaling as an equivalence | Cor. 3.1 | `QFS.smul_mem_scaledLattice`, `QFS.inv_smul_mem_lattice`, `QFS.smulEquiv` | ✅ proved |
+| Cones are invariant under positive scaling | Cor. 3.1 | `QFS.smul_mem_doubleCone`, `QFS.smul_mem_doubleCone_iff` | ✅ proved |
+| **The form and the kernel under `x ↦ hx`** | Cor. 3.1 | `QFS.discreteFormOn_smul`, `QFS.jumpKernel_smul`, `QFS.ofReal_rpow_mul_jumpKernel`, `QFS.preimage_smul_ball` | ✅ **proved** |
+| **"every `ω ∈ M` is `h^{-d-α} ω̃(h⁻¹·, h⁻¹·)`"** | Cor. 3.1 | `QFS.discreteKernelBounds_rescale`, `QFS.indE_congr` | ✅ **proved** |
+| **Corollary 3.1** | Cor. 3.1 | `QFS.corollaryThreeOne` | ✅ **proved** |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
 | The lattice is closed under negation | (new) | `QFS.neg_mem_lattice` | ✅ proved |
@@ -642,7 +648,6 @@ together with the results the paper itself quotes from elsewhere.
 | `H_k(Ω) = H^{α/2}(Ω)`, density | Thm. 1.4 | Depends on Thm. 1.1 and on Lipschitz-domain extension theory not in scope. |
 | Regular Dirichlet form; Markov process | Cor. 1.5 | Depends on Thm. 1.1 and on Dirichlet-form theory (Fukushima–Oshima–Takeda) absent from Mathlib. |
 | Weak Harnack, Hölder regularity | Cor. 1.6 | Quoted from Dyda–Kassmann; not proved in the paper. |
-| `hℤ^d` rescaling | Cor. 3.1 | A rescaling of Theorem 1.3; the rescaled discrete setting is not set up here. |
 | Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integrating the kernel over pairs of cubes; the measure-theoretic scaffolding is not set up here. Its three "tailor-made" inputs — Lemmas 3.2, 3.3 (for `d ≥ 2`) and 3.4 — **are** proved. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
 | `{x | V ⊆ Γ(x)}` is Lebesgue measurable | §2 (after Cor. 2.4) | The paper does not prove it — "This implication is due to [Debreu67, Thm. 4.4]". It is what would make the sets `A_h^m(u)` measurable for Proposition 3.5; `QFS.volume_cube_le_card_mul` avoids needing it. |
