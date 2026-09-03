@@ -298,4 +298,183 @@ theorem formHs_lt_top_of_lipschitzOn (hd : 0 < d) {α : ℝ} (hα2 : α < 2)
         exact ENNReal.mul_lt_top ENNReal.ofReal_lt_top
           (ENNReal.mul_lt_top hfin measure_ball_lt_top)
 
+/-! ## Reducing the open statement to a modulus of continuity
+
+The obstruction in §3.2 is the a priori hypothesis `f ∈ H^{α/2}(B*)`. It can be
+weakened substantially, and the weakening is worth recording because it replaces
+a singular double integral by a quantity with no singularity at all.
+
+Decompose the difference of two cube averages as
+`f_h(x) − f_h(y) = (f_h(x) − f(s)) + (f(s) − f(t)) + (f(t) − f_h(y))`, multiply by
+`k(s,t)` and integrate over `Ã_h(x) × Ã_h(y)`. Summing over the pairs, the middle
+term contributes `|f|²_{H_k(B*)}`, and each outer term contributes
+`‖f − E_h f‖²_{L²(B*)}` times `sup_s ∫_{|s−t| > h/2} k(s,t) dt = O(Λ h^{-α})`:
+
+  `∫∫ g_h ≤ 9 |f|²_{H_k(B*)} + C(d,α,Λ) · A_h`,   `A_h := h^{-α}‖f − E_h f‖²_{L²(B*)}`.
+
+Fatou on the left of `(discret)` then gives `|f|_{H^{α/2}(B)} < ∞` as soon as
+`liminf_{h→0} A_h < ∞` — no dominated convergence and no limit on the right at
+all. So:
+
+> **It suffices that `liminf_{h→0} h^{-α}‖f − E_h f‖²_{L²(B*)} < ∞`.**
+
+`A_h` is an `L²` modulus of continuity at a single scale — a Besov `B^{α/2}_{2,∞}`
+quantity, strictly weaker than the `B^{α/2}_{2,2} = H^{α/2}` membership the paper's
+argument assumes.
+
+And `A_h` splits into a cone part and an off-cone part, of which **the cone part
+is already bounded, uniformly in `h`** — that is `oscillation_same_tile_le_form`
+below. The residual is the off-cone oscillation inside single tiles: for `s,t` in
+one cube of side `h` with `t ∉ V^Γ[s]`, the difference `f(s) − f(t)` must be
+recovered by chaining through cone pairs. That is exactly what §§4–6 do, but in
+the discrete setting, where the tiles are points and the within-tile oscillation
+is invisible. -/
+
+/-- The set of pairs each of which sees the other's cone: where the lower bound
+of (1.4) has force. -/
+def coneSet (Γ : Configuration (EuclideanSpace ℝ (Fin d))) :
+    Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) :=
+  {p | p.2 ∈ coneAt Γ p.1 ∨ p.1 ∈ coneAt Γ p.2}
+
+/-- The set of pairs lying in a common tile of the `h`-tiling. -/
+def sameTile (d : ℕ) (h : ℝ) :
+    Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) :=
+  {p | stepIndex d h p.1 = stepIndex d h p.2}
+
+lemma norm_sub_le_of_sameTile {h : ℝ} (hh : 0 < h)
+    {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)} (hp : p ∈ sameTile d h) :
+    ‖p.1 - p.2‖ ≤ Real.sqrt d * h := by
+  have h1 := mem_halfClosedCube_stepIndex hh p.1
+  have h2 := mem_halfClosedCube_stepIndex hh p.2
+  rw [show stepIndex d h p.2 = stepIndex d h p.1 from hp.symm] at h2
+  have hcoord : ∀ i, |(p.1 - p.2) i| ≤ h := by
+    intro i
+    have a1 := h1 i
+    have a2 := h2 i
+    rw [Set.mem_Ico] at a1 a2
+    have : (p.1 - p.2) i = p.1 i - p.2 i := by simp
+    rw [this, abs_le]
+    constructor <;> linarith [a1.1, a1.2, a2.1, a2.2]
+  exact le_trans (norm_le_sqrt_dim_mul_infNorm _)
+    (mul_le_mul_of_nonneg_left (infNorm_le hh.le hcoord) (Real.sqrt_nonneg _))
+
+/-- **The cone-restricted oscillation at scale `r`.** If every pair of `A` is at
+distance at most `r` and lies in the cone set, the plain `L²` oscillation over
+`A` is at most `Λ r^{d+α}` times the `H_k` energy over `A`.
+
+This is the lower bound of (1.4) used in the one direction that costs nothing:
+on a *bounded* set of pairs the singular kernel is bounded **below**, so it
+dominates the flat measure. -/
+theorem lintegral_sq_le_form_of_close {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {α Λ : ℝ} {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hα : 0 ≤ α) {r : ℝ} (hr : 0 < r)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ)
+    {A : Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d))} (hAm : MeasurableSet A)
+    (hA : ∀ p ∈ A, ‖p.1 - p.2‖ ≤ r ∧ p ∈ coneSet Γ) :
+    ∫⁻ p in A, ENNReal.ofReal ((f p.2 - f p.1) ^ 2)
+      ≤ ENNReal.ofReal (Λ * r ^ ((d : ℝ) + α)) *
+        ∫⁻ p in A, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2 := by
+  have hΛ : (0 : ℝ) < Λ := lt_of_lt_of_le zero_lt_one hk.one_le
+  have hexp : (-(d : ℝ) - α) ≤ 0 := by
+    have : (0 : ℝ) ≤ (d : ℝ) := Nat.cast_nonneg d
+    linarith
+  rw [← lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+  refine lintegral_mono_ae ?_
+  filter_upwards [ae_restrict_mem hAm] with p hp
+  obtain ⟨hclose, hcone⟩ := hA p hp
+  rcases eq_or_ne p.1 p.2 with heq | hne
+  · simp [heq]
+  have hn : 0 < ‖p.1 - p.2‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hne
+  -- on the cone set the indicators sum to at least one
+  have hind : (1 : ℝ≥0∞) ≤ indE (coneAt Γ p.1) p.2 + indE (coneAt Γ p.2) p.1 := by
+    rcases hcone with h | h
+    · have h1 : indE (coneAt Γ p.1) p.2 = 1 := by simp [indE, Set.indicator_of_mem h]
+      rw [h1]; exact le_self_add
+    · have h1 : indE (coneAt Γ p.2) p.1 = 1 := by simp [indE, Set.indicator_of_mem h]
+      rw [h1]; exact le_add_self
+  -- hence the kernel is bounded below by the flat lower bound
+  have hklow : ENNReal.ofReal (Λ⁻¹ * ‖p.1 - p.2‖ ^ (-(d : ℝ) - α)) ≤ k p.1 p.2 := by
+    have h0 : ENNReal.ofReal (Λ⁻¹ * ‖p.1 - p.2‖ ^ (-(d : ℝ) - α))
+        = ENNReal.ofReal Λ⁻¹ * jumpKernel d α p.1 p.2 := by
+      rw [ENNReal.ofReal_mul (le_of_lt (inv_pos.mpr hΛ))]; rfl
+    rw [h0]
+    refine le_trans (mul_le_mul' le_rfl ?_) (hk.lower p.1 p.2)
+    calc jumpKernel d α p.1 p.2 = 1 * jumpKernel d α p.1 p.2 := (one_mul _).symm
+      _ ≤ (indE (coneAt Γ p.1) p.2 + indE (coneAt Γ p.2) p.1) * jumpKernel d α p.1 p.2 :=
+          mul_le_mul' hind le_rfl
+  -- and `Λ r^{d+α}` times that lower bound is at least one
+  have hgeone : (1 : ℝ≥0∞) ≤ ENNReal.ofReal (Λ * r ^ ((d : ℝ) + α)) *
+      ENNReal.ofReal (Λ⁻¹ * ‖p.1 - p.2‖ ^ (-(d : ℝ) - α)) := by
+    rw [← ENNReal.ofReal_mul (by positivity), ENNReal.one_le_ofReal]
+    have hpow : r ^ (-(d : ℝ) - α) ≤ ‖p.1 - p.2‖ ^ (-(d : ℝ) - α) :=
+      Real.rpow_le_rpow_of_nonpos hn hclose hexp
+    have hrpow : r ^ ((d : ℝ) + α) * r ^ (-(d : ℝ) - α) = 1 := by
+      rw [← Real.rpow_add hr]; norm_num
+    have hrp : (0 : ℝ) < r ^ ((d : ℝ) + α) := Real.rpow_pos_of_pos hr _
+    calc (1 : ℝ) = r ^ ((d : ℝ) + α) * r ^ (-(d : ℝ) - α) := hrpow.symm
+      _ ≤ r ^ ((d : ℝ) + α) * ‖p.1 - p.2‖ ^ (-(d : ℝ) - α) :=
+          mul_le_mul_of_nonneg_left hpow hrp.le
+      _ = Λ * r ^ ((d : ℝ) + α) * (Λ⁻¹ * ‖p.1 - p.2‖ ^ (-(d : ℝ) - α)) := by
+          rw [show Λ * r ^ ((d : ℝ) + α) * (Λ⁻¹ * ‖p.1 - p.2‖ ^ (-(d : ℝ) - α))
+              = (Λ * Λ⁻¹) * (r ^ ((d : ℝ) + α) * ‖p.1 - p.2‖ ^ (-(d : ℝ) - α)) from by ring,
+            mul_inv_cancel₀ (ne_of_gt hΛ), one_mul]
+  calc ENNReal.ofReal ((f p.2 - f p.1) ^ 2)
+      = ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * 1 := (mul_one _).symm
+    _ ≤ ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+          (ENNReal.ofReal (Λ * r ^ ((d : ℝ) + α)) * k p.1 p.2) :=
+        mul_le_mul' le_rfl (le_trans hgeone (mul_le_mul' le_rfl hklow))
+    _ = ENNReal.ofReal (Λ * r ^ ((d : ℝ) + α)) *
+          (ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) := by ring
+
+
+/-- Two points share a tile exactly when they lie in a common half-closed cube. -/
+theorem sameTile_eq_iUnion {h : ℝ} (hh : 0 < h) :
+    sameTile d h = ⋃ n : Fin d → ℤ,
+      halfClosedCube h (latticePt d h n) ×ˢ halfClosedCube h (latticePt d h n) := by
+  ext p
+  constructor
+  · intro hp
+    refine Set.mem_iUnion.mpr ⟨fun i => round (p.1 i / h), ?_, ?_⟩
+    · exact mem_halfClosedCube_stepIndex hh p.1
+    · have : latticePt d h (fun i => round (p.1 i / h)) = stepIndex d h p.2 := by
+        rw [show latticePt d h (fun i => round (p.1 i / h)) = stepIndex d h p.1 from rfl, hp]
+      rw [this]
+      exact mem_halfClosedCube_stepIndex hh p.2
+  · intro hp
+    obtain ⟨n, hn⟩ := Set.mem_iUnion.mp hp
+    have h1 := stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h n) hn.1
+    have h2 := stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h n) hn.2
+    exact h1.trans h2.symm
+
+theorem measurableSet_sameTile {h : ℝ} (hh : 0 < h) : MeasurableSet (sameTile d h) := by
+  rw [sameTile_eq_iUnion hh]
+  exact MeasurableSet.iUnion fun n =>
+    (measurableSet_halfClosedCube h _).prod (measurableSet_halfClosedCube h _)
+
+/-- **The cone part of the modulus `A_h` is bounded uniformly in `h`.**
+
+For any measurable set `A` of pairs lying in a common tile of the `h`-tiling and
+seeing each other's cones, the flat `L²` oscillation over `A` is at most
+`Λ d^{(d+α)/2} h^{d+α}` times `|f|²_{H_k}`. Dividing by `h^d` (the tile volume)
+and by `h^α` leaves a bound independent of `h`: the quantity
+
+  `h^{-α}‖f − E_h f‖²_{L²(B*)}`
+
+is, in its cone-restricted part, already controlled by `|f|²_{H_k(B*)}`. What the
+open statement needs is the same for the off-cone part — the oscillation inside a
+single tile between points that do not see each other's cones. -/
+theorem oscillation_sameTile_le_form {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {α Λ : ℝ} {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hα : 0 ≤ α) (hd : 0 < d) {h : ℝ} (hh : 0 < h)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) (Ω : Set (EuclideanSpace ℝ (Fin d)))
+    {A : Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d))} (hAm : MeasurableSet A)
+    (hA : A ⊆ sameTile d h ∩ coneSet Γ ∩ Ω ×ˢ Ω) :
+    ∫⁻ p in A, ENNReal.ofReal ((f p.2 - f p.1) ^ 2)
+      ≤ ENNReal.ofReal (Λ * (Real.sqrt d * h) ^ ((d : ℝ) + α)) * form Ω k f := by
+  have hsd : 0 < Real.sqrt d := Real.sqrt_pos.mpr (by exact_mod_cast hd)
+  refine le_trans (lintegral_sq_le_form_of_close hk hα (mul_pos hsd hh) f hAm ?_) ?_
+  · intro p hp
+    exact ⟨norm_sub_le_of_sameTile hh (hA hp).1.1, (hA hp).1.2⟩
+  · exact mul_le_mul' le_rfl (lintegral_mono_set (fun p hp => (hA hp).2))
+
 end QFS
