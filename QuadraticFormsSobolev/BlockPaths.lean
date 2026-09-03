@@ -334,4 +334,51 @@ noncomputable def scaleData_of_blockData {Γ : Configuration (EuclideanSpace ℝ
   rintro ⟨x, y⟩ ⟨h, he⟩
   exact ⟨h.left, h.right, hrev x y h e he⟩
 
+/-! ## Block separation
+
+The `sep` field: the cubes of a town have side `ℓ` and centres `h` apart in the
+maximum norm, so points of distinct blocks are at distance at least `h − ℓ`. With
+`h = Δ^{m+1}` and `ℓ = Δ^m` and `Δ ≥ 2` that is at least `Δ^m`, which is Step 5's
+lower bound on an interior edge. -/
+
+/-- Distinct centres of the index lattice are `h` apart in the maximum norm. -/
+theorem infNorm_smul_sub_lattice {h : ℝ} (hh : 0 < h)
+    {w₁ w₂ : EuclideanSpace ℝ (Fin d)} (h₁ : w₁ ∈ lattice d) (h₂ : w₂ ∈ lattice d)
+    (hne : w₁ ≠ w₂) : h ≤ infNorm (h • w₁ - h • w₂) := by
+  obtain ⟨i, hi⟩ : ∃ i, w₁ i ≠ w₂ i := by
+    by_contra hc
+    exact hne (euclidean_ext (fun i => not_not.mp (fun hi => hc ⟨i, hi⟩)))
+  obtain ⟨n, hn⟩ := (mem_lattice_iff.mp h₁) i
+  obtain ⟨k, hk⟩ := (mem_lattice_iff.mp h₂) i
+  have hnk : n ≠ k := by
+    intro hcon
+    exact hi (by rw [hn, hk, hcon])
+  have hone : (1:ℝ) ≤ |(n : ℝ) - (k : ℝ)| := by
+    have : (1:ℤ) ≤ |n - k| := Int.one_le_abs (sub_ne_zero.mpr hnk)
+    calc (1:ℝ) = ((1 : ℤ) : ℝ) := by norm_num
+      _ ≤ ((|n - k| : ℤ) : ℝ) := by exact_mod_cast this
+      _ = |(n : ℝ) - (k : ℝ)| := by push_cast [Int.cast_abs]; ring_nf
+  have hcoord : (h • w₁ - h • w₂) i = h * ((n : ℝ) - (k : ℝ)) := by
+    have e1 : (h • w₁ - h • w₂) i = h * w₁ i - h * w₂ i := by simp
+    rw [e1, hn, hk]; ring
+  refine le_trans ?_ (le_infNorm (h • w₁ - h • w₂) i)
+  rw [hcoord, abs_mul, abs_of_pos hh]
+  nlinarith
+
+/-- **Block separation.** Points of blocks at distinct centres are at least
+`h − ℓ` apart. -/
+theorem block_sep {h ℓ : ℝ} {c₁ c₂ : EuclideanSpace ℝ (Fin d)}
+    (hc : h ≤ infNorm (c₁ - c₂)) {p q : EuclideanSpace ℝ (Fin d)}
+    (hp : p ∈ block ℓ c₁) (hq : q ∈ block ℓ c₂) : h - ℓ ≤ ‖p - q‖ := by
+  have h1 : infNorm (p - c₁) ≤ ℓ / 2 := hp.2
+  have h2 : infNorm (q - c₂) ≤ ℓ / 2 := hq.2
+  have hdec : c₁ - c₂ = (c₁ - p) + ((p - q) + (q - c₂)) := by abel
+  have hb1 : infNorm (c₁ - c₂) ≤ infNorm (c₁ - p) + infNorm ((p - q) + (q - c₂)) := by
+    rw [hdec]; exact infNorm_add_le _ _
+  have hb2 : infNorm ((p - q) + (q - c₂)) ≤ infNorm (p - q) + infNorm (q - c₂) :=
+    infNorm_add_le _ _
+  have hcp : infNorm (c₁ - p) = infNorm (p - c₁) := infNorm_sub_comm _ _
+  have hle : infNorm (p - q) ≤ ‖p - q‖ := infNorm_le_norm _
+  linarith
+
 end QFS

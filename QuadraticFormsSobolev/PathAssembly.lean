@@ -34,14 +34,19 @@ noncomputable def edgeLen : Sym2 (EuclideanSpace ℝ (Fin d)) → ℝ :=
 @[simp] lemma edgeLen_mk (a b : EuclideanSpace ℝ (Fin d)) :
     edgeLen s(a, b) = ‖a - b‖ := rfl
 
-@[simp] lemma edgeLen_dart_edge {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
-    (D : (latticeGraph Γ).Dart) :
+@[simp] lemma edgeLen_dart_edge {G : SimpleGraph (EuclideanSpace ℝ (Fin d))} (D : G.Dart) :
     edgeLen D.edge = ‖D.toProd.1 - D.toProd.2‖ := rfl
 
-lemma dart_edge_mem_edges {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
-    {x y : EuclideanSpace ℝ (Fin d)} {w : (latticeGraph Γ).Walk x y}
-    {D : (latticeGraph Γ).Dart} (hD : D ∈ w.darts) : D.edge ∈ w.edges :=
+lemma dart_edge_mem_edges {G : SimpleGraph (EuclideanSpace ℝ (Fin d))}
+    {x y : EuclideanSpace ℝ (Fin d)} {w : G.Walk x y} {D : G.Dart} (hD : D ∈ w.darts) :
+    D.edge ∈ w.edges :=
   List.mem_map_of_mem hD
+
+/-- Conversely, every edge of a walk comes from a dart. -/
+lemma exists_dart_edge {G : SimpleGraph (EuclideanSpace ℝ (Fin d))}
+    {x y : EuclideanSpace ℝ (Fin d)} {w : G.Walk x y}
+    {e : Sym2 (EuclideanSpace ℝ (Fin d))} (he : e ∈ w.edges) :
+    ∃ D ∈ w.darts, D.edge = e := List.mem_map.mp he
 
 /-! ## The pairs handled at a given scale and centre
 
@@ -143,6 +148,41 @@ theorem ScaleData.fibre_le_latticePt (D : ScaleData Γ Δ R t K m z)
         rw [← hqe]
         exact hq
     _ ≤ (K : ℕ∞) := D.fibre_le e
+
+/-! ## Shrinking the configuration
+
+Theorem 5.15 is proved for a configuration with boundedly many types, obtained
+from `ref_config_uniform`; since that configuration's cones sit inside the
+original's, its graph is a subgraph and its walks are walks of the original. -/
+
+/-- A pointwise smaller configuration has a smaller graph. -/
+theorem latticeGraph_mono {Γ Γ' : Configuration (EuclideanSpace ℝ (Fin d))}
+    (hsub : ∀ x, (Γ' x).carrier ⊆ (Γ x).carrier) : latticeGraph Γ' ≤ latticeGraph Γ :=
+  fun _ _ h => ⟨h.1, h.2.1, h.2.2.imp (fun hc => hsub _ hc) (fun hc => hsub _ hc)⟩
+
+/-- **Theorem 5.15 transfers upwards along `Γ' ≤ Γ`.** -/
+theorem PathProps.mono_config {Γ Γ' : Configuration (EuclideanSpace ℝ (Fin d))}
+    (hsub : ∀ x, (Γ' x).carrier ⊆ (Γ x).carrier) {N M : ℕ} {lam : ℝ}
+    (h : PathProps Γ' N M lam) : PathProps Γ N M lam := by
+  obtain ⟨p, hlen, hfib, hdart⟩ := h
+  have hle := latticeGraph_mono hsub
+  have hedge : ∀ x y : LatticePt d, ∀ e ∈ (p x y).edges, e ∈ (latticeGraph Γ).edgeSet :=
+    fun x y e he => SimpleGraph.edgeSet_mono hle ((p x y).edges_subset_edgeSet he)
+  refine ⟨fun x y => (p x y).transfer (latticeGraph Γ) (hedge x y), fun x y => ?_,
+    fun e => ?_, fun x y D hD => ?_⟩
+  · rw [SimpleGraph.Walk.length_transfer]; exact hlen x y
+  · refine le_trans (le_of_eq ?_) (hfib e)
+    congr 1
+    ext q
+    simp only [Set.mem_ofPred_eq, SimpleGraph.Walk.edges_transfer]
+  · have hDe : D.edge ∈ (p x y).edges := by
+      rw [← SimpleGraph.Walk.edges_transfer (p x y) (hedge x y)]
+      exact dart_edge_mem_edges hD
+    obtain ⟨D', hD', hD'e⟩ := exists_dart_edge hDe
+    have hnorm : ‖D.toProd.1 - D.toProd.2‖ = ‖D'.toProd.1 - D'.toProd.2‖ := by
+      rw [← edgeLen_dart_edge D, ← edgeLen_dart_edge D', hD'e]
+    rw [hnorm]
+    exact hdart x y D' hD'
 
 /-! ## Steps 3–6: the assembly
 
