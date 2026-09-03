@@ -241,6 +241,42 @@ def IsFavoured (F : RefFamily Γ θ) (h : ℝ) (u v : EuclideanSpace ℝ (Fin d)
   v ∈ F.axes ∧ ∀ w ∈ F.axes,
     volume (cubeCone Γ (F.cone w) h u) ≤ volume (cubeCone Γ (F.cone v) h u)
 
+/-- The volume of a cube: `λ_d(A_h(u)) = h^d`. Proposition 3.5's constant
+`1/((2√d)^{d+2}L²)` rests on `λ_d(A_1(u)) = 1`. -/
+theorem volume_cube {h : ℝ} (hh : 0 < h) (u : EuclideanSpace ℝ (Fin d)) :
+    volume (cube h u) = ENNReal.ofReal (h ^ d) := by
+  have hbox : cube h u
+      = (WithLp.ofLp : EuclideanSpace ℝ (Fin d) → (Fin d → ℝ)) ⁻¹'
+        (Set.pi Set.univ (fun i => Ioo (u i - h / 2) (u i + h / 2))) := by
+    ext x
+    simp only [Set.mem_preimage, Set.mem_univ_pi, Set.mem_Ioo, mem_cube_iff]
+    constructor
+    · intro hx i
+      have h1 : |(x - u) i| ≤ infNorm (x - u) := le_infNorm _ i
+      have h2 : (x - u) i = x i - u i := by simp
+      rw [h2] at h1
+      have h3 := abs_lt.mp (lt_of_le_of_lt h1 hx)
+      constructor <;> [linarith [h3.1]; linarith [h3.2]]
+    · intro hx
+      rcases isEmpty_or_nonempty (Fin d) with hd | hd
+      · simp only [infNorm, Real.iSup_of_isEmpty]
+        linarith
+      · obtain ⟨i, hi⟩ := exists_infNorm_eq (x - u)
+        rw [hi]
+        have h2 : (x - u) i = x i - u i := by simp
+        rw [h2, abs_lt]
+        obtain ⟨ha, hb⟩ := hx i
+        constructor <;> linarith
+  rw [hbox, MeasurePreserving.measure_preimage (PiLp.volume_preserving_ofLp (Fin d))
+    (MeasurableSet.univ_pi (fun _ => measurableSet_Ioo)).nullMeasurableSet, volume_pi_pi]
+  have hfac : ∀ i : Fin d, volume (Ioo (u i - h / 2) (u i + h / 2)) = ENNReal.ofReal h := by
+    intro i
+    rw [Real.volume_Ioo]
+    congr 1
+    ring
+  rw [Finset.prod_congr rfl (fun i _ => hfac i), Finset.prod_const, Finset.card_univ,
+    Fintype.card_fin, ← ENNReal.ofReal_pow hh.le]
+
 /-- `λ_d(A_h^m(u)) ≥ L⁻¹ λ_d(A_h(u))` for every `h`-favoured index `m` at `u`
 (Section 3, the remark following the definition). -/
 theorem volume_cube_le_card_mul (F : RefFamily Γ θ) {h : ℝ}
