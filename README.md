@@ -45,7 +45,8 @@ the statement as printed is false:
 ## Coverage: every numbered result in the paper
 
 One row per numbered statement, including the ones not attempted. ✅ proved,
-❗ disproved as printed, ⚪ prose remark with nothing to prove, ❌ out of scope.
+❗ disproved as printed, ⚪ prose remark with nothing to prove, 🚧 partially
+proved with the remainder named, ❌ out of scope.
 
 | # | Kind | Label | State |
 | --- | --- | --- | --- |
@@ -89,7 +90,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 5.12 | Remark | the favored cone is not unique | ⚪ (reflected in the design, see below) |
 | 5.13 | Definition | the favored graph | ✅ |
 | 5.14 | Proposition | renormalisation | ✅ |
-| 5.15 | Theorem | path properties | ⚪ statement recorded (`QFS.PathPropsHolds`), not proved |
+| 5.15 | Theorem | path properties | 🚧 Steps 3–6 proved; reduced to Steps 1–2 (`QFS.pathPropsHolds_of_scaleData`) |
 | 5.16 | Lemma | the first jump | ✅ |
 | 7.1 | Lemma | auxiliary integral estimate | ❌ out of scope |
 | 7.2 | Lemma | a Lebesgue differentiation argument | ❌ out of scope |
@@ -100,8 +101,10 @@ the machinery of Sections 5 and 6 (Lemma 3.3, which Proposition 3.5 needs, is
 false as stated). From Section 1, the function-space definitions, assumption
 (1.4), the reverse inequality and equation (1.6) are proved, and Theorems 1.1
 and 1.3 are recorded as type-checked `Prop`s so the remaining target is precise.
-Theorem 5.15 (recorded as a statement) and Section 6 remain a project in their
-own right.
+Theorem 5.15 is reduced to Steps 1–2: its Steps 3–6 are proved, so the theorem
+follows from the local path family at each scale and centre
+(`QFS.pathPropsHolds_of_scaleData`). Section 6 remains a project in its own
+right.
 
 ## What is proved, in detail
 
@@ -218,7 +221,8 @@ own right.
 | The scale step `Δ`; towns at scale are sparse | §5.3 setup | `QFS.ScaleStep`, `QFS.exists_scaleStep`, `QFS.sparselyPopulated_of_scaleStep` | ✅ proved |
 | **Lemma 5.16**: the first jump | Lem. 5.16 | `QFS.connect_first_jump` | ✅ **proved** |
 | `G` as a `SimpleGraph`, with walks | §5.3 | `QFS.latticeGraph`, `QFS.LatticePt` | ✅ defined |
-| Statement of Theorem 5.15 | Thm. 5.15 | `QFS.PathProps`, `QFS.PathPropsHolds` | ⚪ stated, not proved |
+| Statement of Theorem 5.15 | Thm. 5.15 | `QFS.PathProps`, `QFS.PathPropsHolds` | ✅ stated |
+| **Theorem 5.15, Steps 3–6** | Thm. 5.15 | `QFS.pathProps_of_scaleData`, `QFS.pathPropsHolds_of_scaleData` | 🚧 **proved from Steps 1–2** |
 | Coordinates determine a point; rounding is injective | (new) | `QFS.euclidean_ext`, `QFS.round_injOn_lattice` | ✅ proved |
 | **`#(B_M ∩ ℤ^d) ≤ (2⌈M⌉+1)^d`, uniformly in the centre** | Thm. 5.15, Steps 1–2 | `QFS.encard_lattice_inter_closedBall_le` | ✅ **proved** |
 | **A block of side `ℓ` has `≥ ℓ^d` lattice points** | Thm. 5.15, Step 2 | `QFS.le_encard_block` | ✅ **proved** |
@@ -246,6 +250,17 @@ own right.
 | **Proposition 5.14 for the choice graph** | Prop. 5.14 (refined) | `QFS.ChoiceConn`, `QFS.renormalization_choice` | ✅ **proved** |
 | Step 1 for the choice graph | Thm. 5.15, Step 1 | `QFS.exists_choiceWalk_covering`, `QFS.exists_choiceWalk_of_choiceConn` | ✅ proved |
 | `#(B_R ∩ ℤ^d)` in `ncard` form | Thm. 5.15 | `QFS.ncard_lattice_inter_ball_le` | ✅ proved |
+| Centres containing an edge: finitely many | Thm. 5.15, Step 6 | `QFS.lattice_scaled_ball_subset`, `QFS.lattice_scaled_ball_finite` | ✅ proved |
+| **Scale selection**: `L ≥ 1` lies in one window | Thm. 5.15, Step 3 | `QFS.exists_scale` | ✅ **proved** |
+| Centre selection: `x` is near `sℤ^d` | Thm. 5.15, Step 3 | `QFS.exists_centre` | ✅ proved |
+| **Step 3 of Theorem 5.15** | Thm. 5.15, Step 3 | `QFS.exists_scale_of_lattice`, `QFS.exists_scale_and_centre`, `QFS.exists_admissible` | ✅ **proved** |
+| The length of an unoriented edge | Thm. 5.15, claim (4) | `QFS.edgeLen`, `QFS.edgeLen_mk`, `QFS.dart_edge_mem_edges` | ✅ defined |
+| The admissible pairs `A` of Step 2 | Thm. 5.15, Step 2 | `QFS.Admissible` | ✅ defined |
+| **The local data of Steps 1–2** | Thm. 5.15, Steps 1–2 | `QFS.ScaleData` | ✅ **defined** |
+| Step 5's upper bound, from `edge_near` | Thm. 5.15, Step 5 | `QFS.ScaleData.edgeLen_lt` | ✅ proved |
+| The fibre bound on the lattice as a type | Thm. 5.15, Step 6 | `QFS.ScaleData.fibre_le_latticePt` | ✅ proved |
+| **Steps 3–6: the assembly** | Thm. 5.15, Steps 3–6 | `QFS.pathProps_of_scaleData` | ✅ **proved** |
+| **Theorem 5.15 from Steps 1–2** | Thm. 5.15 | `QFS.pathPropsHolds_of_scaleData` | ✅ **proved** |
 
 ## Deviations
 
@@ -543,7 +558,9 @@ so the two cases fit together.
 
 ## Theorem 5.15
 
-`QFS.PathPropsHolds` records the statement; the proof is not formalised. Its four
+`QFS.PathPropsHolds` records the statement, and **Steps 3–6 of its proof are
+formalised**: `QFS.pathPropsHolds_of_scaleData` derives the theorem from the
+local path family of Steps 1–2. Its four
 claims count and measure edges, which the `Relation.ReflTransGen` used up to this
 point cannot express — that records only that a path exists, not which one. So
 the paths are Mathlib `SimpleGraph.Walk`s in `QFS.latticeGraph`, which carry a
@@ -657,10 +674,81 @@ What the proof of 5.15 still needs, beyond what is here:
    scale and the centre, and `K` the fibre bound of `φ_z`, this is Step 6.
 
 All four items are discharged, Step 1 is proved outright, and the assembly of
-Step 2 is built (see below). What remains is to package the result as
-`PathPropsHolds`: choosing the representatives `ρ` explicitly from the majority
-sets, and deriving claims (3) and (4) from `card_le_mul_of_fiber_le`,
-`cyclic_pair_injective` and `scale_separation`. Section 6 sits on top.
+Step 2 is built.
+
+### Steps 3–6 are proved: `pathPropsHolds_of_scaleData`
+
+Steps 1 and 2 are *local*: they fix a logarithmic scale and a centre
+`z ∈ Δⁿℤ^d` and produce one walk per admissible pair near `z`. Steps 3–6 are the
+global assembly, and they are now formalised, so the whole of Theorem 5.15
+follows from that local data.
+
+`QFS.ScaleData Γ Δ R t K m z` is the local package — exactly the output of Steps
+1–2 at one scale and one centre:
+
+| Field | The paper |
+| --- | --- |
+| `path` | a walk in `G` for every pair of `A` (Step 2) |
+| `length_le` | at most `t` edges, `t ≍ r^d R^d` (Step 1) |
+| `edge_lb` | every edge is at least `Δ^m` long (Step 5's lower bound) |
+| `edge_near` | every endpoint lies in `B_{Δ^{m+1}R}(Δ^{m+1}z)` (Steps 1, 6) |
+| `fibre_le` | at most `K` pairs share a walk through a given edge (`φ_z`) |
+
+`QFS.Admissible` is the paper's set `A` — lattice pairs in
+`B_{2√d Δⁿ}(z)` at distance in `[Δ^{n-1}, Δⁿ)`, with the paper's `n` being
+`m + 1`. Then `QFS.pathProps_of_scaleData` proves
+
+```
+PathProps Γ t ((2C+1)(2⌈R⌉+1)^d K) (2ΔR)
+```
+
+whenever `Δ ≥ 2`, `R ≥ 1` and `2^C ≥ 2ΔR`, and
+`QFS.pathPropsHolds_of_scaleData` wraps that into `PathPropsHolds`. The four
+steps:
+
+* **Step 3** is `QFS.exists_scale_and_centre`. `QFS.exists_scale` puts every
+  `L ≥ 1` in exactly one window `[Δ^m, Δ^{m+1})` (`Nat.findGreatest` on
+  `Δ^k ≤ L`, which is where Archimedeanity enters), and `QFS.exists_centre`
+  puts every point within `(s/2)√d` of `sℤ^d`. Distinct lattice points are at
+  distance at least `1 = Δ⁰` (`QFS.one_le_norm_sub_of_lattice`), so the scale
+  exists; `y` is then a further `< Δⁿ` from the centre, and `√d/2 + 1 ≤ 2√d`
+  for every `d ≥ 1` is what makes the paper's radius `2√d Δⁿ` sufficient.
+* **Step 4** is `length_le` verbatim.
+* **Step 5** turns the absolute edge bounds into bounds relative to `‖x − y‖`.
+  Since `Δ^m ≤ ‖x − y‖ < Δ^{m+1}` and every edge has length in
+  `[Δ^m, 2Δ^{m+1}R)`, both comparisons hold with `λ = 2ΔR` — the paper's
+  constant. The upper bound is not an extra hypothesis:
+  `QFS.ScaleData.edgeLen_lt` derives `2Δ^{m+1}R` from `edge_near` alone, since
+  both endpoints sit in a ball of that diameter, which is how the paper gets it
+  too.
+* **Step 6** is the multiplicity count, and it is the only step where the paper
+  is terser than a proof. For a fixed edge `e`, `QFS.scale_separation` confines
+  the scales that can carry `e` to an interval of `2C + 1` values around the
+  scale of any one pair using it; `QFS.ncard_lattice_scaled_ball_le` (with the
+  new `QFS.lattice_scaled_ball_finite`) bounds the centres at each scale by
+  `(2⌈R⌉+1)^d`; and `fibre_le` bounds each `(scale, centre)` cell by `K`. The
+  three multiply through `Finset.set_encard_biUnion_le`, giving
+  `M = (2C+1)(2⌈R⌉+1)^d K`.
+
+  The paper writes "according to step 5, it is enough to prove the third claim
+  for one fixed logarithmic scale", which drops the `2C + 1`; the formalisation
+  keeps it, so `M` is explicit.
+
+Claims (1)–(4) are all four discharged, and the reduction is not vacuous:
+`QFS.exists_admissible` shows every pair of distinct lattice points really is
+admissible at some scale and centre, so `ScaleData` is obliged to supply the
+walk that `PathProps` then returns.
+
+### What is left
+
+Only Steps 1–2 as a single statement: `∃ ScaleData Γ Δ R t K m z` for every
+scale `m` and centre `z`. Every ingredient is present —
+`QFS.exists_choiceWalk_covering` (Step 1 for the choice graph),
+`QFS.renormalization_choice`, `QFS.exists_alternating_walk`,
+`QFS.exists_scheme_assignment` and `QFS.connect_first_jump` — and what remains
+is the bookkeeping the paper's own "WLOG" hides: indexing each majority set by
+`ZMod a`, cutting the covering walk between the two blocks a pair is assigned
+to, and grafting the two first jumps onto the ends. Section 6 sits on top.
 
 ## A gap in Definition 5.13
 

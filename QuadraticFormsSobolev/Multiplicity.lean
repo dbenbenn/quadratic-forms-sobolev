@@ -50,26 +50,41 @@ theorem scale_separation {Δ R L : ℝ} (hΔ : 2 ≤ Δ) (hR : 0 < R) {C : ℕ}
 
 variable {d : ℕ}
 
+/-- The centres of the index lattice whose ball of radius `sR` contains a given
+point all lie in a fixed ball of the lattice. -/
+theorem lattice_scaled_ball_subset {s R : ℝ} (hs : 0 < s)
+    (u : EuclideanSpace ℝ (Fin d)) :
+    {w : EuclideanSpace ℝ (Fin d) | w ∈ lattice d ∧ ‖s • w - u‖ < s * R}
+      ⊆ ball (s⁻¹ • u) R ∩ lattice d := by
+  rintro w ⟨hwlat, hw⟩
+  refine ⟨?_, hwlat⟩
+  rw [mem_ball, dist_eq_norm]
+  have he : w - s⁻¹ • u = s⁻¹ • (s • w - u) := by
+    rw [smul_sub, smul_smul, inv_mul_cancel₀ (ne_of_gt hs), one_smul]
+  rw [he, norm_smul, Real.norm_eq_abs, abs_of_pos (by positivity)]
+  rw [inv_mul_lt_iff₀ hs]
+  linarith
+
+/-- Hence there are only finitely many such centres. Step 6 needs this as well as
+the count, since `Set.ncard` is `0` on infinite sets. -/
+theorem lattice_scaled_ball_finite {s R : ℝ} (hs : 0 < s)
+    (u : EuclideanSpace ℝ (Fin d)) :
+    {w : EuclideanSpace ℝ (Fin d) | w ∈ lattice d ∧ ‖s • w - u‖ < s * R}.Finite :=
+  Set.Finite.subset
+    ((lattice_inter_closedBall_finite (s⁻¹ • u) R).subset
+      (fun _p hp => ⟨hp.2, ball_subset_closedBall hp.1⟩))
+    (lattice_scaled_ball_subset hs u)
+
 /-- **Centre count.** At a fixed scale `s`, only `(2⌈R⌉+1)^d` centres of the index
 lattice have their ball of radius `sR` containing a given point. -/
 theorem ncard_lattice_scaled_ball_le {s R : ℝ} (hs : 0 < s)
     (u : EuclideanSpace ℝ (Fin d)) :
     {w : EuclideanSpace ℝ (Fin d) | w ∈ lattice d ∧ ‖s • w - u‖ < s * R}.ncard
-      ≤ (2 * ⌈R⌉₊ + 1) ^ d := by
-  have hsub : {w : EuclideanSpace ℝ (Fin d) | w ∈ lattice d ∧ ‖s • w - u‖ < s * R}
-      ⊆ ball (s⁻¹ • u) R ∩ lattice d := by
-    rintro w ⟨hwlat, hw⟩
-    refine ⟨?_, hwlat⟩
-    rw [mem_ball, dist_eq_norm]
-    have he : w - s⁻¹ • u = s⁻¹ • (s • w - u) := by
-      rw [smul_sub, smul_smul, inv_mul_cancel₀ (ne_of_gt hs), one_smul]
-    rw [he, norm_smul, Real.norm_eq_abs, abs_of_pos (by positivity)]
-    rw [inv_mul_lt_iff₀ hs]
-    linarith
-  have hfin : (ball (s⁻¹ • u) R ∩ lattice d).Finite :=
-    (lattice_inter_closedBall_finite (s⁻¹ • u) R).subset
-      (fun p hp => ⟨hp.2, ball_subset_closedBall hp.1⟩)
-  exact le_trans (Set.ncard_le_ncard hsub hfin) (ncard_lattice_inter_ball_le _ R)
+      ≤ (2 * ⌈R⌉₊ + 1) ^ d :=
+  le_trans (Set.ncard_le_ncard (lattice_scaled_ball_subset hs u)
+    ((lattice_inter_closedBall_finite (s⁻¹ • u) R).subset
+      (fun _p hp => ⟨hp.2, ball_subset_closedBall hp.1⟩)))
+    (ncard_lattice_inter_ball_le _ R)
 
 /-! ## Combining the three bounds -/
 

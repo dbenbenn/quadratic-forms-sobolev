@@ -15,3 +15,4 @@ import QuadraticFormsSobolev.Paths
 import QuadraticFormsSobolev.CyclicScheme
 import QuadraticFormsSobolev.Multiplicity
 import QuadraticFormsSobolev.Assembly
+import QuadraticFormsSobolev.PathAssembly
