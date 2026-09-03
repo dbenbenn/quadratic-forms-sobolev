@@ -98,7 +98,8 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 
 Sections 2 and 4 are formalised completely, as is Section 5's auxiliary
 subsection (Lemmas 5.1–5.5). Of Section 3, everything that does not need the
-kernel `ω^k_h` is formalised, Lemma 3.3 for `d ≥ 2` included. From Section 1, the function-space definitions, assumption
+kernel `ω^k_h` is formalised, Lemma 3.3 for `d ≥ 2` included. From Section 1,
+the function-space definitions, assumption
 (1.4), the reverse inequality and equation (1.6) are proved, and Theorems 1.1
 and 1.3 are recorded as type-checked `Prop`s so the remaining target is precise.
 **Section 5 is formalised completely**, Theorem 5.15 included
