@@ -193,4 +193,132 @@ theorem lemma_ball_to_domain {ι : Type} [Countable ι]
     _ ≤ (M : ℝ≥0∞) * form Ω k f :=
         tsum_setLIntegral_le_of_overlap hS'm hΩ hsub hM hF
 
+
+/-! ## The last link: from the enlarged ball to Theorem 1.1
+
+Section 3.2 ends by applying Lemma 7.1 with `Ω = B` a ball, turning the
+enlarged-ball comparability `|f|_{H^{α/2}(B)} ≲ |f|_{H_k(B*)}` into the
+same-ball one. That step is proved here, so the only unproved links in the
+chain from the discrete theory to Theorem 1.1 are the ones the paper does not
+prove either — plus §3.2's remaining inclusion. -/
+
+/-- The input Lemma 7.1 quotes, specialised to `Ω` a ball: a countable Whitney
+family whose `κ`-enlargements lie inside the ball and overlap at most
+`overlapBound` times, together with the constant of Dyda's inequality (13). The
+paper proves none of this — the family is produced by "the Whitney decomposition
+technique" and the inequality is quoted from [Dyda06] — so it is carried as data
+rather than derived. -/
+structure WhitneyBallData (d : ℕ) (α κ : ℝ) where
+  /-- The index set of the family; a Whitney family is countable. -/
+  idx : Type
+  /-- Countability of the index set. -/
+  countable : Countable idx
+  /-- The bound `M` of the finite-overlap property (iii). -/
+  overlapBound : ℕ
+  /-- A nonempty family overlaps at least once. -/
+  overlapBound_pos : 0 < overlapBound
+  /-- The constant of Dyda's inequality (13). -/
+  dydaConst : ℝ
+  /-- Dyda's constant is positive. -/
+  dydaConst_pos : 0 < dydaConst
+  /-- The centres of the Whitney balls for the ball `B_R(x₀)`. -/
+  ctr : EuclideanSpace ℝ (Fin d) → ℝ → idx → EuclideanSpace ℝ (Fin d)
+  /-- The radii of the Whitney balls for the ball `B_R(x₀)`. -/
+  rad : EuclideanSpace ℝ (Fin d) → ℝ → idx → ℝ
+  /-- Property (ii): the enlarged balls stay inside `Ω`. -/
+  enlarged_subset : ∀ x₀ R, 0 < R → ∀ i,
+    ball (ctr x₀ R i) (κ * rad x₀ R i) ⊆ ball x₀ R
+  /-- Property (iii): the enlarged balls overlap at most `overlapBound` times. -/
+  overlap : ∀ x₀ R, 0 < R → ∀ y,
+    {i | y ∈ ball (ctr x₀ R i) (κ * rad x₀ R i)}.encard ≤ (overlapBound : ℕ∞)
+  /-- Inequality (13) of [Dyda06], as used in the last step of (6.14). -/
+  dyda : ∀ x₀ R, 0 < R → ∀ f, ENNReal.ofReal dydaConst * formHs (ball x₀ R) α f
+    ≤ ∑' i, formHs (ball (ctr x₀ R i) (rad x₀ R i)) α f
+
+/-- **Theorem 1.1 from its enlarged-ball form**, by Lemma 7.1 applied to a ball.
+
+The measurability hypothesis on the integrand is where the paper's assumption
+that `k` be measurable — which `QFS.KernelBounds` drops, see Deviation 20 — is
+actually needed: without it the family of integrals over the Whitney balls
+cannot be summed. -/
+theorem formHs_le_form_of_theoremOneOneBall (h : TheoremOneOneBall d)
+    {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+    (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ)) :
+    ∃ c : ℝ, 0 < c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsAdmissible Γ ϑ →
+      ∀ k, KernelBounds Γ α Λ k →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
+        (∀ (y₀ : EuclideanSpace ℝ (Fin d)) (S : ℝ), 0 < S →
+          MemLp f 2 (volume.restrict (ball y₀ S))) →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+        ENNReal.ofReal c * formHs (ball x₀ R) α f ≤ form (ball x₀ R) k f := by
+  obtain ⟨κ, c₀, hκ, hc₀, H⟩ := h ϑ Λ α hϑ hΛ hα hα2
+  obtain ⟨W⟩ := hW κ hκ
+  have hcount := W.countable
+  have hc₀pos : (0 : ℝ) < c₀ := lt_of_lt_of_le zero_lt_one hc₀
+  have hMR : (0 : ℝ) < (W.overlapBound : ℝ) := by exact_mod_cast W.overlapBound_pos
+  refine ⟨c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ),
+    div_pos (mul_pos (inv_pos.mpr hc₀pos) W.dydaConst_pos) hMR, ?_⟩
+  intro Γ hΓ k hk f hf hFmeas x₀ R hR
+  have hM0 : W.overlapBound ≠ 0 := by have := W.overlapBound_pos; omega
+  have hMne : ((W.overlapBound : ℕ) : ℝ≥0∞) ≠ 0 := by simpa using hM0
+  have hMtop : ((W.overlapBound : ℕ) : ℝ≥0∞) ≠ ∞ := ENNReal.natCast_ne_top _
+  -- the enlarged-ball comparability, renormalised so the constant sits on the left
+  have hball : ∀ i, ENNReal.ofReal c₀⁻¹ * formHs (ball (W.ctr x₀ R i) (W.rad x₀ R i)) α f
+      ≤ form (ball (W.ctr x₀ R i) (κ * W.rad x₀ R i)) k f := by
+    intro i
+    by_cases hri : 0 < W.rad x₀ R i
+    · have h2 := H Γ hΓ k hk (W.ctr x₀ R i) (W.rad x₀ R i) hri f
+        (hf _ _ (by positivity))
+      calc ENNReal.ofReal c₀⁻¹ * formHs (ball (W.ctr x₀ R i) (W.rad x₀ R i)) α f
+          ≤ ENNReal.ofReal c₀⁻¹ * (ENNReal.ofReal c₀ *
+              form (ball (W.ctr x₀ R i) (κ * W.rad x₀ R i)) k f) := mul_le_mul' le_rfl h2
+        _ = form (ball (W.ctr x₀ R i) (κ * W.rad x₀ R i)) k f := by
+            rw [← mul_assoc, ← ENNReal.ofReal_mul (le_of_lt (inv_pos.mpr hc₀pos)),
+              inv_mul_cancel₀ (ne_of_gt hc₀pos), ENNReal.ofReal_one, one_mul]
+    · have hempty : ball (W.ctr x₀ R i) (W.rad x₀ R i) = ∅ :=
+        ball_eq_empty.mpr (not_lt.mp hri)
+      simp [formHs, form, hempty]
+  -- the chain (6.14)
+  have hchain := lemma_ball_to_domain (S := fun i => ball (W.ctr x₀ R i) (W.rad x₀ R i))
+    (S' := fun i => ball (W.ctr x₀ R i) (κ * W.rad x₀ R i)) (Ω := ball x₀ R)
+    (M := W.overlapBound) (α := α) (c := c₀⁻¹) (c' := W.dydaConst) (k := k) (f := f)
+    (fun i => measurableSet_ball) measurableSet_ball
+    (W.enlarged_subset x₀ R hR) (W.overlap x₀ R hR) hFmeas hball (W.dyda x₀ R hR f)
+  -- divide by the overlap bound
+  have hdiv := mul_le_mul' (le_refl (((W.overlapBound : ℕ) : ℝ≥0∞)⁻¹)) hchain
+  have hRHS : ((W.overlapBound : ℕ) : ℝ≥0∞)⁻¹ *
+      (((W.overlapBound : ℕ) : ℝ≥0∞) * form (ball x₀ R) k f) = form (ball x₀ R) k f := by
+    rw [← mul_assoc, ENNReal.inv_mul_cancel hMne hMtop, one_mul]
+  rw [hRHS] at hdiv
+  refine le_trans (le_of_eq ?_) hdiv
+  rw [ENNReal.ofReal_div_of_pos hMR, ENNReal.ofReal_mul (le_of_lt (inv_pos.mpr hc₀pos)),
+    ENNReal.ofReal_natCast, div_eq_mul_inv]
+  ring
+
+
+/-- **The Whitney data is satisfiable**, so the theorem above is not vacuous: for
+`κ = 1` the one-element family consisting of the ball itself has all the required
+properties, with overlap `1` and Dyda constant `1`.
+
+For `κ > 1` a genuine Whitney decomposition is needed, and that is precisely what
+the paper quotes rather than proves. -/
+noncomputable def whitneyBallData_one (d : ℕ) (α : ℝ) : WhitneyBallData d α 1 where
+  idx := Unit
+  countable := inferInstance
+  overlapBound := 1
+  overlapBound_pos := one_pos
+  dydaConst := 1
+  dydaConst_pos := one_pos
+  ctr := fun x₀ _ _ => x₀
+  rad := fun _ R _ => R
+  enlarged_subset := by intro x₀ R _ i; simp
+  overlap := by
+    intro x₀ R _ y
+    refine le_trans (Set.encard_le_encard (Set.subset_univ _)) ?_
+    simp [Set.encard_univ]
+  dyda := by intro x₀ R _ f; simp
+
 end QFS
