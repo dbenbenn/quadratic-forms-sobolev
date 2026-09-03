@@ -100,7 +100,7 @@ blocked on a recorded gap, ❌ out of scope.
 | 3.4 | Lemma | `\|s−t\|` vs `\|x−y\|` | ✅ for `hℤ^d`; ❗ **false as printed** |
 | 3.5 | Proposition | test-function bound | ✅ **proved** for `d ≥ 2` (`QFS.prop_test_fct`), with `QFS.CondMeas` as hypothesis |
 | 3.6 | Corollary | the rescaled kernel | ✅ **proved** for `d ≥ 2` (`QFS.cor_rescaled_kernel`), with `QFS.CondMeas` as hypothesis |
-| 3.7 | Lemma | comparability on a ball, `\|·\|_{H^{α/2}(B)} ≤ c\|·\|_{H_k(B)}` | 🚧 the target of §3.2; blocked on §3.2's remaining inclusion and on Lemma 7.1 |
+| 3.7 | Lemma | comparability on a ball, `\|·\|_{H^{α/2}(B)} ≤ c\|·\|_{H_k(B)}` | 🚧 the target of §3.2. Its **final step is proved** (`QFS.formHs_le_form_of_theoremOneOneBall`): granted the enlarged-ball form and Lemma 7.1's quoted input, the same-ball form follows. What is missing is the enlarged-ball form, i.e. §3.2's remaining inclusion |
 | 4.1 | Theorem | **connectivity of `G[U]`** | ✅ **proved** |
 | 4.2 | Definition | type of a point | ✅ |
 | 4.3 | Lemma | same type ⟹ path of length ≤ 2 | ✅ |
@@ -203,6 +203,8 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **Theorem 1.4 for `Ω = ℝ^d`**, granted Theorem 1.1 | Thm. 1.4 | `QFS.TheoremOneFourUniv`, `QFS.theoremOneFourUniv_of_theoremOneOne`, `QFS.form_univ_le_formHs_univ` | ✅ **proved** |
 | **The finite-overlap estimate** of (6.14) | Lem. 7.1 | `QFS.tsum_setLIntegral_le_of_overlap`, `QFS.tsum_setLIntegral_le_of_overlap_sq` | ✅ **proved** |
 | **The chain (6.14)**, with the Whitney family and Dyda's inequality as hypotheses | Lem. 7.1 | `QFS.lemma_ball_to_domain` | ✅ **proved** |
+| **The quoted Whitney/Dyda input for a ball**, and that it is satisfiable | Lem. 7.1 | `QFS.WhitneyBallData`, `QFS.whitneyBallData_one` | ✅ **stated, non-vacuous** |
+| **Enlarged ball ⟹ same ball**: the last step of §3.2 | §3.2, Lem. 7.1 | `QFS.formHs_le_form_of_theoremOneOneBall` | ✅ **proved** |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
 | The lattice is closed under negation | (new) | `QFS.neg_mem_lattice` | ✅ proved |
@@ -695,7 +697,10 @@ Each departure from the paper, and why.
     `α`, which is what the proof supports. And Proposition 3.5 assumes `k`
     measurable; `QFS.KernelBounds` does not, because the argument runs entirely
     through the lower Lebesgue integral and never needs it — a weaker hypothesis,
-    hence a stronger result.
+    hence a stronger result. That omission does bite once, and only once:
+    `QFS.formHs_le_form_of_theoremOneOneBall` carries measurability of the
+    integrand as an explicit hypothesis, because summing the forms over a Whitney
+    family goes through `lintegral_tsum`, which needs it.
 
 21. **Lemma 7.1's overlap constant can be `M`, not `M²`.** Display (6.14) bounds
     `∑_{B∈ℬ} ∫_{B*×B*} … ≤ M² ∫_{Ω×Ω} …` from the finite-overlap property
@@ -714,6 +719,35 @@ Each departure from the paper, and why.
     comparability that §3.2 exists to prove — not an out-of-scope aside but the
     section's target. Both rows now say so. The prose elsewhere in this file had
     the dependency right; only the table was wrong.
+
+## What remains
+
+The repository now proves every link in the chain from the discrete theory to
+Theorem 1.1 except one, and that one is a single statement:
+
+> **Open.** Every `f ∈ H_k(B*)` already lies in `H^{α/2}(B*)`.
+
+The chain, with each link's status:
+
+| Step | Status |
+| --- | --- |
+| Theorem 1.3 (discrete comparability) | ✅ `QFS.theoremOneThree` |
+| Corollary 3.1 (rescaled to `hℤ^d`) | ✅ `QFS.corollaryThreeOne` |
+| Proposition 3.5, Corollary 3.6 (the discrete kernel `ω^k_h`) | ✅ `QFS.prop_test_fct`, `QFS.cor_rescaled_kernel` (`d ≥ 2`, with `QFS.CondMeas`) |
+| §3.2: the step functions and their convergence | ✅ `QFS.tendsto_avg_stepIndex`, `QFS.lintegral_stepFun` |
+| §3.2: Fatou on the left of `(discret)` | ✅ available (`lintegral_liminf_le`) |
+| §3.2: dominated convergence on the right, **for `f ∈ H^{α/2}(B*)`** | ✅ `QFS.lintegral_tileAvg`, `QFS.limsup_lintegral_le_of_dominant` |
+| §3.2: removing that hypothesis | ❌ **the open statement above** |
+| Enlarged ball ⟹ same ball (Lemma 7.1 for a ball) | ✅ `QFS.formHs_le_form_of_theoremOneOneBall`, modulo the quoted `QFS.WhitneyBallData` |
+| Lemma 3.7, Theorem 1.1 | follows from the two lines above |
+| Theorem 1.4 on `ℝ^d` | ✅ `QFS.theoremOneFourUniv_of_theoremOneOne` |
+| Theorem 1.4 on a Lipschitz domain | follows from Lemma 7.1 for domains (`QFS.lemma_ball_to_domain`) |
+
+Everything else outstanding is an input the paper itself quotes — Debreu's
+measurability, the Whitney decomposition, Dyda's inequality (13), the density
+results of [DeDe12], the regularity results of [DyKa15] — each carried here as a
+named hypothesis rather than assumed silently, or Corollary 1.5, which needs
+Dirichlet-form theory that Mathlib does not have.
 
 ## Not attempted
 
