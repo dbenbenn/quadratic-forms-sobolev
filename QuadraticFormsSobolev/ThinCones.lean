@@ -235,12 +235,12 @@ cone getting its own axis. A smaller apex angle only shrinks the cone, so the
 common `θ` is the least of the angles the single-cone version returns. -/
 theorem lemma_new_config (hd : 2 ≤ d) {r : ℝ} (hr : 0 < r) {ϑ : ℝ} (hϑ : 0 < ϑ)
     (hϑ' : ϑ ≤ π / 2) (A : Finset (EuclideanSpace ℝ (Fin d))) (hA : ∀ u ∈ A, ‖u‖ = 1) :
-    ∃ θ : ℝ, 0 < θ ∧ ∀ u ∈ A, ∃ v : EuclideanSpace ℝ (Fin d), ‖v‖ = 1 ∧
+    ∃ θ : ℝ, 0 < θ ∧ θ ≤ π / 2 ∧ ∀ u ∈ A, ∃ v : EuclideanSpace ℝ (Fin d), ‖v‖ = 1 ∧
       doubleCone v θ ∩ lattice d ⊆ shrink (doubleCone u ϑ) r ∩ lattice d := by
   classical
   have hpi := pi_pos
   have hex : ∀ u : EuclideanSpace ℝ (Fin d), ∃ p : EuclideanSpace ℝ (Fin d) × ℝ,
-      0 < p.2 ∧ p.2 ≤ π ∧ (‖u‖ = 1 → ‖p.1‖ = 1 ∧
+      0 < p.2 ∧ p.2 ≤ π / 2 ∧ (‖u‖ = 1 → ‖p.1‖ = 1 ∧
         doubleCone p.1 p.2 ∩ lattice d ⊆ shrink (doubleCone u ϑ) r ∩ lattice d) := by
     intro u
     by_cases h : ‖u‖ = 1
@@ -249,11 +249,12 @@ theorem lemma_new_config (hd : 2 ≤ d) {r : ℝ} (hr : 0 < r) {ϑ : ℝ} (hϑ :
     · exact ⟨(0, 1), one_pos, by linarith [Real.pi_gt_three], fun hc => absurd hc h⟩
   choose F hFpos hFle hFprop using hex
   rcases A.eq_empty_or_nonempty with rfl | hAne
-  · exact ⟨1, one_pos, by simp⟩
+  · exact ⟨1, one_pos, by linarith [Real.pi_gt_three], by simp⟩
   obtain ⟨u₀, hu₀, hmin⟩ := Finset.exists_min_image A (fun u => (F u).2) hAne
-  refine ⟨(F u₀).2, hFpos u₀, fun u hu => ?_⟩
+  refine ⟨(F u₀).2, hFpos u₀, hFle u₀, fun u hu => ?_⟩
   obtain ⟨hv, hsub⟩ := hFprop u (hA u hu)
   refine ⟨(F u).1, hv, subset_trans (Set.inter_subset_inter ?_ Set.Subset.rfl) hsub⟩
-  exact doubleCone_mono (hFpos u₀).le (hFle u) (hmin u hu)
+  exact doubleCone_mono (hFpos u₀).le (by linarith [hFle u, Real.pi_gt_three])
+    (hmin u hu)
 
 end QFS
