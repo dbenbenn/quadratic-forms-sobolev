@@ -52,13 +52,19 @@ lemma Conn.mono (h : U' ⊆ U) {x y : E} (hxy : Conn Γ U' x y) : Conn Γ U x y 
       refine Conn.trans ih (Relation.ReflTransGen.single ?_)
       exact hstep.imp (fun e => ⟨h e.1, e.2⟩) (fun e => ⟨h e.1, e.2⟩)
 
-/-! ## Definition 4.2 and Lemma 4.3 -/
+/-! ## Definition 4.2 and Lemma 4.3
+
+Definition 4.2 calls `x` and `y` *of the same type* when `Γ(x) = Γ(y)` as
+elements of `𝒱 = (0, π/2] × ℙ^{d-1}`. Our `DCone` carries a unit axis rather than
+a point of projective space, so equality of `DCone`s is finer than equality of
+the double cones they name; the lemmas below therefore ask only for equality of
+the underlying sets, which is the paper's notion. -/
 
 /-- **Lemma 4.3**: two points of `U` of the same type are joined by an edge path
 of length at most two in `G[U]`; the middle vertex is a point of
 `Γ(x)[x] ∩ Γ(x)[y]`, which may lie outside `U`. -/
-theorem connect_two_of_same_type {x y : E} (hx : x ∈ U) (hy : y ∈ U) (h : Γ x = Γ y) :
-    Conn Γ U x y := by
+theorem connect_two_of_same_type {x y : E} (hx : x ∈ U) (hy : y ∈ U)
+    (h : (Γ x).carrier = (Γ y).carrier) : Conn Γ U x y := by
   obtain ⟨z, hzx, hzy⟩ := shift_inter_shift_nonempty (Γ x) x y
   have e₁ : Edge Γ U x z := ⟨hx, hzx⟩
   have e₂ : Edge Γ U y z := ⟨hy, by rw [mem_coneAt, ← h]; exact hzy⟩
@@ -131,13 +137,15 @@ exists in `G[U]` only when `z ∈ U`. Theorem 4.1 applies the lemma to a point o
 (The hypothesis `x ∈ U` that the paper states is in fact not needed: the two
 edges used issue from `z` and from `y`. It is retained for fidelity.) -/
 theorem ueber_bande {x y z : E} (_hx : x ∈ U) (hy : y ∈ U) (hz : z ∈ U)
-    (htype : Γ z = Γ y) (hzx : z ∈ shift (Γ y).carrier x) : Conn Γ U x y := by
+    (htype : (Γ z).carrier = (Γ y).carrier) (hzx : z ∈ shift (Γ y).carrier x) :
+    Conn Γ U x y := by
   -- `z ∈ V[x]` gives `x ∈ V[z] = V^Γ[z]`, an edge from `z` to `x`.
   have hxz : x ∈ coneAt Γ z := by
-    rw [mem_coneAt, htype]
-    have : x - z = -(z - x) := by abel
-    rw [this]
-    exact neg_mem_doubleCone_iff.mpr hzx
+    rw [mem_coneAt]
+    have h1 : z - x ∈ (Γ z).carrier := by rw [htype]; exact hzx
+    have h2 : x - z = -(z - x) := by abel
+    rw [h2]
+    exact neg_mem_doubleCone_iff.mpr h1
   have e : Edge Γ U z x := ⟨hz, hxz⟩
   exact Conn.trans (Conn.of_edge e).symm (connect_two_of_same_type hz hy htype)
 
@@ -271,7 +279,7 @@ theorem conn_of_isPreconnected_of_finite (hfin : (Set.range Γ).Finite)
       set V := Γ y' with hVdef
       by_cases hA : ∃ z, z ∈ U ∧ z ∈ shift V.carrier w ∧ Γ z = V
       · obtain ⟨z, hzU, hzw, hzt⟩ := hA
-        exact ueber_bande hw hy'U hzU hzt hzw
+        exact ueber_bande hw hy'U hzU (congrArg DCone.carrier hzt) hzw
       · have hA' : ∀ z, z ∈ U → z ∈ shift V.carrier w → Γ z ≠ V := by
           intro z hzU hzw hzt
           exact hA ⟨z, hzU, hzw, hzt⟩
@@ -341,9 +349,12 @@ theorem conn_of_isPreconnected_of_finite (hfin : (Set.range Γ).Finite)
 /-- **Theorem 4.1** of Bux–Kassmann–Schulze: for a `ϑ`-bounded configuration and
 any preconnected open `U ⊆ ℝ^d`, all points of `U` lie in one connected component
 of `G[U]`. -/
-theorem cont_connectivity [FiniteDimensional ℝ E] {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
-    (hΓ : IsBounded Γ ϑ) {U : Set E} (hU : IsOpen U) (hUc : IsPreconnected U)
+theorem cont_connectivity [FiniteDimensional ℝ E] {ϑ : ℝ} (hΓ : IsBounded Γ ϑ)
+    {U : Set E} (hU : IsOpen U) (hUc : IsPreconnected U)
     {x y : E} (hx : x ∈ U) (hy : y ∈ U) : Conn Γ U x y := by
+  have hϑ : 0 < ϑ := hΓ.1
+  -- `ϑ ≤ π/2` is automatic: it is a lower bound for apex angles, which are `≤ π/2`.
+  have hϑ' : ϑ ≤ π / 2 := le_trans (hΓ.2 0) (Γ 0).apex_le
   obtain ⟨Γ', hfin, hsubc, hapex, hb'⟩ := ref_config hϑ hϑ' Γ hΓ
   refine Conn.mono_config hsubc ?_
   exact conn_of_isPreconnected_of_finite hfin (by positivity : (0:ℝ) < ϑ / 3)

@@ -203,6 +203,15 @@ Each departure from the paper, and why.
    well-connected the connectivity classes are open, so a preconnected `U` is a
    single class.
 
+10. **`DCone` carries a unit axis, not a point of projective space.** The paper's
+    family `𝒱` is `(0, π/2] × ℙ^{d-1}`, so a double cone is named by a *line*.
+    `QFS.DCone` bundles a unit vector instead, which is a 2:1 cover of `𝒱`:
+    the axes `v` and `−v` give different `DCone`s with the same underlying set.
+    Wherever the paper speaks of two points having the *same type*
+    (Definition 4.2, Lemmas 4.3 and 4.6), the Lean statements therefore ask for
+    equality of the underlying double cones — `(Γ x).carrier = (Γ y).carrier` —
+    which is the paper's notion, rather than the finer `Γ x = Γ y`.
+
 ## Not attempted
 
 Recorded here rather than silently omitted. The paper's two main theorems and
@@ -223,6 +232,22 @@ formalised is the geometric and graph-theoretic layer they are built on.
 | Chaining and renormalisation | §5 (Lems. 5.1–5.16) | The technical heart of the paper; a formalisation project in its own right. |
 | Proof of Theorem 1.3 | §6 | As above. |
 | Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §§3 and 6. |
+
+## Verification
+
+Every commit is checked with
+
+```
+lake build                                  # no errors, no warnings
+grep -rn 'sorry' --include='*.lean' .       # no occurrences
+#print axioms <headline theorem>            # [propext, Classical.choice, Quot.sound]
+```
+
+for each headline theorem, and the Lean names appearing in the status table above
+are checked to resolve (`#check`). The paper's constants and hypotheses are
+matched literally; where they could not be (Lemmas 3.3, 3.4, 4.6, Theorem 4.1)
+the discrepancy is recorded under *Deviations*, with a Lean disproof of the
+printed statement where one exists.
 
 ## Building
 
