@@ -88,10 +88,11 @@ both indices, and hence — once `α` and `β` are chosen as `f(y) + g(x)` and
 theorem exists_alternating_walk {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
     {W : ConeChoice d} {a : ℕ}
     (ρ : Set (EuclideanSpace ℝ (Fin d)) → ZMod a → EuclideanSpace ℝ (Fin d))
-    (hρ : ∀ B i, ρ B i ∈ blockFibre Γ B (W B))
-    (hρlat : ∀ B i, ρ B i ∈ lattice d) :
-    ∀ {B B' : Set (EuclideanSpace ℝ (Fin d))} (Wk : (choiceGraph Γ W).Walk B B')
-      (α β : ZMod a),
+    {S : Set (Set (EuclideanSpace ℝ (Fin d)))}
+    (hρ : ∀ B ∈ S, ∀ i, ρ B i ∈ blockFibre Γ B (W B))
+    (hρlat : ∀ B ∈ S, ∀ i, ρ B i ∈ lattice d) :
+    ∀ {B B' : Set (EuclideanSpace ℝ (Fin d))} (Wk : (choiceGraph Γ W).Walk B B'),
+      (∀ C ∈ Wk.support, C ∈ S) → ∀ α β : ZMod a,
       ∃ w : (latticeGraph Γ).Walk (ρ B α)
         (ρ B' (if Even Wk.length then α else β)), w.length = Wk.length ∧
         ∀ e ∈ w.edges, ∃ B₁ ∈ Wk.support, ∃ B₂ ∈ Wk.support,
@@ -99,12 +100,16 @@ theorem exists_alternating_walk {Γ : Configuration (EuclideanSpace ℝ (Fin d))
   intro B B' Wk
   induction Wk with
   | nil =>
-      intro α _
+      intro _ α _
       simp only [SimpleGraph.Walk.length_nil]
       exact ⟨SimpleGraph.Walk.nil, rfl, by simp⟩
-  | cons hadj Wk' ih =>
-      intro α β
-      obtain ⟨w', hw', hwe⟩ := ih β α
+  | @cons u v w hadj Wk' ih =>
+      intro hsup α β
+      have hsup' : ∀ C ∈ Wk'.support, C ∈ S := fun C hC =>
+        hsup C (by rw [SimpleGraph.Walk.support_cons]; exact List.mem_cons_of_mem _ hC)
+      have hSB : u ∈ S := hsup u (by rw [SimpleGraph.Walk.support_cons]; exact List.mem_cons_self)
+      have hSm : v ∈ S := hsup' v (SimpleGraph.Walk.start_mem_support Wk')
+      obtain ⟨w', hw', hwe⟩ := ih hsup' β α
       have hidx : (if Even (Wk'.length + 1) then α else β)
           = (if Even Wk'.length then β else α) := by
         by_cases he : Even Wk'.length
@@ -112,7 +117,8 @@ theorem exists_alternating_walk {Γ : Configuration (EuclideanSpace ℝ (Fin d))
         · rw [if_pos (by simp [Nat.even_add_one, he]), if_neg he]
       rw [SimpleGraph.Walk.length_cons, hidx]
       refine ⟨SimpleGraph.Walk.cons ?_ w', ?_, ?_⟩
-      · exact latticeAdj_of_choiceAdj hadj (hρlat _ _) (hρ _ _) (hρlat _ _) (hρ _ _)
+      · exact latticeAdj_of_choiceAdj hadj (hρlat _ hSB _) (hρ _ hSB _)
+          (hρlat _ hSm _) (hρ _ hSm _)
       · rw [SimpleGraph.Walk.length_cons, hw']
       · intro e he
         rw [SimpleGraph.Walk.edges_cons, List.mem_cons] at he

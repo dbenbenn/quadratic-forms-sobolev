@@ -219,8 +219,8 @@ structure BlockData (Γ : Configuration (EuclideanSpace ℝ (Fin d))) (Δ R : �
   jmp_sub : Jmp ⊆ Blk
   /-- The `a` indexed representatives of each block's majority set. -/
   rep : Set (EuclideanSpace ℝ (Fin d)) → ZMod a → EuclideanSpace ℝ (Fin d)
-  rep_mem : ∀ B i, rep B i ∈ blockFibre Γ B (W B)
-  rep_lat : ∀ B i, rep B i ∈ lattice d
+  rep_mem : ∀ B ∈ Blk, ∀ i, rep B i ∈ blockFibre Γ B (W B)
+  rep_lat : ∀ B ∈ Blk, ∀ i, rep B i ∈ lattice d
   /-- The index, recoverable from the representative. -/
   idx : EuclideanSpace ℝ (Fin d) → ZMod a
   idx_rep : ∀ B ∈ Blk, ∀ i, idx (rep B i) = i
@@ -275,12 +275,13 @@ noncomputable def scaleData_of_blockData {Γ : Configuration (EuclideanSpace ℝ
     have hByB : By ∈ D.Blk := D.jmp_sub hByJ
     obtain ⟨Wk, hWklen, hWksup⟩ := D.walk Bx hBxJ By hByJ
     obtain ⟨lift, hliftlen, hlifte⟩ :=
-      exists_alternating_walk D.rep D.rep_mem D.rep_lat Wk (D.hf y + D.hg x) (D.hg x)
+      exists_alternating_walk D.rep D.rep_mem D.rep_lat Wk hWksup
+        (D.hf y + D.hg x) (D.hg x)
     have hax : (latticeGraph Γ).Adj x (D.rep Bx (D.hf y + D.hg x)) :=
-      (hBx _ (D.rep_mem Bx _).1).1
+      (hBx _ (D.rep_mem Bx hBxB _).1).1
     have hay : (latticeGraph Γ).Adj
         (D.rep By (if Even Wk.length then D.hf y + D.hg x else D.hg x)) y :=
-      ((hBy _ (D.rep_mem By _).1).1).symm
+      ((hBy _ (D.rep_mem By hByB _).1).1).symm
     refine ⟨(SimpleGraph.Walk.cons hax lift).concat hay, ?_, ?_, ?_, ?_⟩
     · rw [SimpleGraph.Walk.length_concat, SimpleGraph.Walk.length_cons, hliftlen]
       omega
@@ -292,27 +293,27 @@ noncomputable def scaleData_of_blockData {Γ : Configuration (EuclideanSpace ℝ
     · -- every edge is at least `Δ^m` long
       rcases he with rfl | he | rfl
       · rw [edgeLen_mk, norm_sub_rev]
-        exact (hBx _ (D.rep_mem Bx _).1).2
+        exact (hBx _ (D.rep_mem Bx hBxB _).1).2
       · obtain ⟨B₁, hB₁, B₂, hB₂, hne, rfl⟩ := hlifte e he
         rw [edgeLen_mk]
-        exact D.sep B₁ (hWksup B₁ hB₁) B₂ (hWksup B₂ hB₂) hne _ (D.rep_mem B₁ _).1
-          _ (D.rep_mem B₂ _).1
+        exact D.sep B₁ (hWksup B₁ hB₁) B₂ (hWksup B₂ hB₂) hne
+          _ (D.rep_mem B₁ (hWksup B₁ hB₁) _).1 _ (D.rep_mem B₂ (hWksup B₂ hB₂) _).1
       · rw [edgeLen_mk]
-        exact (hBy _ (D.rep_mem By _).1).2
+        exact (hBy _ (D.rep_mem By hByB _).1).2
     · -- every endpoint is near the centre
       rcases he with rfl | he | rfl
       · intro u hu
         rcases Sym2.mem_iff.mp hu with rfl | rfl
         · exact hnearpt u hadm.left
-        · exact D.near Bx hBxB _ (D.rep_mem Bx _).1
+        · exact D.near Bx hBxB _ (D.rep_mem Bx hBxB _).1
       · obtain ⟨B₁, hB₁, B₂, hB₂, -, rfl⟩ := hlifte e he
         intro u hu
         rcases Sym2.mem_iff.mp hu with rfl | rfl
-        · exact D.near B₁ (hWksup B₁ hB₁) _ (D.rep_mem B₁ _).1
-        · exact D.near B₂ (hWksup B₂ hB₂) _ (D.rep_mem B₂ _).1
+        · exact D.near B₁ (hWksup B₁ hB₁) _ (D.rep_mem B₁ (hWksup B₁ hB₁) _).1
+        · exact D.near B₂ (hWksup B₂ hB₂) _ (D.rep_mem B₂ (hWksup B₂ hB₂) _).1
       · intro u hu
         rcases Sym2.mem_iff.mp hu with rfl | rfl
-        · exact D.near By hByB _ (D.rep_mem By _).1
+        · exact D.near By hByB _ (D.rep_mem By hByB _).1
         · exact hnearpt u hadm.right
     · -- every edge reveals the hashes
       rcases he with rfl | he | rfl
