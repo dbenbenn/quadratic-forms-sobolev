@@ -160,7 +160,8 @@ is available.
 | **The pointwise estimate of Prop. 3.5** | Prop. 3.5 | `QFS.discreteKernel_integrand_ge` | ✅ **proved** |
 | Debreu's measurability, as a hypothesis | §2, Prop. 3.5 | `QFS.CondMeas`, `QFS.measurableSet_cubeCone` | ✅ stated |
 | Integrating the estimate; the `1/L` share | Prop. 3.5 | `QFS.discreteKernel_ge_volume`, `QFS.inv_card_le_volume_cubeCone` | ✅ proved |
-| **Proposition 3.5** | Prop. 3.5 | `QFS.prop_test_fct` | ✅ **proved** (`d ≥ 2`) |
+| **Proposition 3.5**, with the paper's `α`-free constant | Prop. 3.5 | `QFS.prop_test_fct` | ✅ **proved** (`d ≥ 2`) |
+| The upper bound with an `α`-free constant | Prop. 3.5, Cor. 3.6 | `QFS.discreteKernel_le'` | ✅ proved |
 | Lemma 3.2 and the cube step, at scale `h` | Cor. 3.6 | `QFS.cube_subset_of_mem_shift_shrink_scaled`, `QFS.lemma_min_dist_scaled`, `QFS.lemma_min_dist_E_scaled` | ✅ proved |
 | Shrinking commutes with scaling; Lemma 3.3 on `hℤ^d` | Cor. 3.6 | `QFS.mem_shrink_smul`, `QFS.thin_cone_subset_scaled`, `QFS.sub_mem_scaledLattice` | ✅ proved |
 | Proposition 3.5's estimate at scale `h` | Cor. 3.6 | `QFS.discreteKernel_integrand_ge_scaled`, `QFS.discreteKernel_ge_volume_scaled`, `QFS.inv_card_le_volume_cubeCone_scaled` | ✅ proved |

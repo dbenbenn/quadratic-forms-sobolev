@@ -109,6 +109,34 @@ theorem discreteKernel_le {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {α 
           ring]
         rw [ofReal_inv_pow_mul hh, one_mul]
 
+/-- The upper bound with an `α`-free constant, which is what the paper's remark
+that "for `0 < α₀ ≤ α < 2` the constant depends on `α₀` but not on `α`" needs. -/
+theorem discreteKernel_le' {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {α Λ : ℝ}
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hα : 0 < α) (hα2 : α ≤ 2) {h : ℝ} (hh : 0 < h)
+    {x y : EuclideanSpace ℝ (Fin d)} (hx : x ∈ scaledLattice d h)
+    (hy : y ∈ scaledLattice d h) (hxy : Real.sqrt d * h < ‖x - y‖) :
+    discreteKernel d k h x y
+      ≤ ENNReal.ofReal (Λ * (2 * Real.sqrt d) ^ ((d:ℝ) + 2)) * jumpKernel d α x y := by
+  refine le_trans (discreteKernel_le hk hα hh hx hy hxy) (mul_le_mul' ?_ le_rfl)
+  refine ENNReal.ofReal_le_ofReal ?_
+  have hd : 0 < d := by
+    rcases Nat.eq_zero_or_pos d with rfl | hd
+    · exfalso
+      have h0 : ‖x - y‖ = 0 := by simp [EuclideanSpace.norm_eq]
+      rw [h0] at hxy
+      simp at hxy
+    · exact hd
+  have hbase : (1:ℝ) ≤ 2 * Real.sqrt d := by
+    have h1 : (1:ℝ) ≤ Real.sqrt d := by
+      rw [show (1:ℝ) = Real.sqrt 1 by simp]
+      exact Real.sqrt_le_sqrt (by exact_mod_cast hd)
+    linarith
+  have hΛ0 : (0:ℝ) < Λ := lt_of_lt_of_le zero_lt_one hk.one_le
+  have hmono : (2 * Real.sqrt d) ^ ((d:ℝ) + α) ≤ (2 * Real.sqrt d) ^ ((d:ℝ) + 2) :=
+    Real.rpow_le_rpow_of_exponent_le hbase (by linarith)
+  nlinarith
+
 /-! ## Towards the lower bound of Proposition 3.5 -/
 
 /-- Every point has a `h`-favoured index. -/
@@ -297,7 +325,7 @@ no further dependence on `Γ`"). `CondMeas` is what the paper draws from conditi
 (M) by quoting Debreu's theorem; see the README. Dimension `d ≥ 2` is inherited
 from Lemma 3.3, which is false in dimension one. -/
 theorem prop_test_fct {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd : 2 ≤ d) {α : ℝ}
-    (hα : 0 < α) :
+    (hα : 0 < α) (hα2 : α ≤ 2) :
     ∃ C θ' : ℝ, 0 < C ∧ 0 < θ' ∧ θ' ≤ π / 2 ∧
       ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
       ∀ (Λ : ℝ) (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞),
@@ -327,7 +355,7 @@ theorem prop_test_fct {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd : 2 �
     exact ⟨v, by rw [hSdef]; exact hv⟩
   -- Lemma 3.3, applied to the reference cones at radius `√d`
   obtain ⟨θ', hθ'0, hθ'le, hthin⟩ := lemma_new_config hd hsd hθ0 hθle S hSnorm
-  refine ⟨(2 * Real.sqrt d) ^ (-(d:ℝ) - α) * ((S.card : ℝ)⁻¹ * (S.card : ℝ)⁻¹), θ',
+  refine ⟨(2 * Real.sqrt d) ^ (-(d:ℝ) - 2) * ((S.card : ℝ)⁻¹ * (S.card : ℝ)⁻¹), θ',
     by positivity, hθ'0, hθ'le, ?_⟩
   intro Γ hΓ hmeas Λ k hk
   obtain ⟨F, hFdef⟩ : ∃ F : RefFamily Γ (ϑ / 3), F = refFamily hϑ hϑ' Γ hΓ := ⟨_, rfl⟩
@@ -384,6 +412,25 @@ theorem prop_test_fct {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd : 2 �
       ENNReal.ofReal_mul (by positivity : (0:ℝ) ≤ (2 * Real.sqrt d) ^ (-(d:ℝ) - α)),
       ENNReal.ofReal_mul (by positivity : (0:ℝ) ≤ ((S.card : ℝ))⁻¹)]
     ring
+  -- the paper's constant is `α`-free, using `α ≤ 2`
+  have hconst : ENNReal.ofReal ((2 * Real.sqrt d) ^ (-(d:ℝ) - 2) *
+        ((S.card : ℝ)⁻¹ * (S.card : ℝ)⁻¹) * Λ⁻¹)
+      ≤ ENNReal.ofReal ((2 * Real.sqrt d) ^ (-(d:ℝ) - α) *
+        ((S.card : ℝ)⁻¹ * (S.card : ℝ)⁻¹) * Λ⁻¹) := by
+    refine ENNReal.ofReal_le_ofReal ?_
+    have hbase : (1:ℝ) ≤ 2 * Real.sqrt d := by
+      have h1 : (1:ℝ) ≤ Real.sqrt d := by
+        rw [show (1:ℝ) = Real.sqrt 1 by simp]
+        exact Real.sqrt_le_sqrt (by exact_mod_cast (show 1 ≤ d by omega))
+      linarith
+    have hmono : (2 * Real.sqrt d) ^ (-(d:ℝ) - 2) ≤ (2 * Real.sqrt d) ^ (-(d:ℝ) - α) :=
+      Real.rpow_le_rpow_of_exponent_le hbase (by linarith)
+    have hΛpos : (0:ℝ) < Λ⁻¹ := by
+      have := lt_of_lt_of_le zero_lt_one hk.one_le
+      positivity
+    have hL2 : (0:ℝ) < (S.card : ℝ)⁻¹ * (S.card : ℝ)⁻¹ := by positivity
+    nlinarith [mul_le_mul_of_nonneg_right hmono hL2.le]
+  refine le_trans (mul_le_mul' hconst le_rfl) ?_
   rw [hsplit]
   exact mul_le_mul' (mul_le_mul' le_rfl (mul_le_mul'
     (add_le_add (hind x y hx hy) (hind y x hy hx)) le_rfl))
@@ -572,7 +619,7 @@ discrete kernel `ω^k_h` satisfies assumption (1.7) on `hℤ^d`, for a configura
 `Γ^h` whose apex angles are bounded below by a `ϑ'` independent of `h`, with a
 constant `C` independent of `h`. -/
 theorem cor_rescaled_kernel {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd : 2 ≤ d)
-    {α : ℝ} (hα : 0 < α) :
+    {α : ℝ} (hα : 0 < α) (hα2 : α ≤ 2) :
     ∃ θ' : ℝ, 0 < θ' ∧ θ' ≤ π / 2 ∧
       ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
       ∀ (Λ : ℝ) (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞),
@@ -611,7 +658,7 @@ theorem cor_rescaled_kernel {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd
   obtain ⟨C₀, hC₀def⟩ : ∃ C : ℝ,
       C = (2 * Real.sqrt d) ^ (-(d:ℝ) - α) * ((S.card : ℝ)⁻¹ * (S.card : ℝ)⁻¹) := ⟨_, rfl⟩
   have hC₀0 : (0:ℝ) < C₀ := by rw [hC₀def]; positivity
-  refine ⟨max (Λ * (2 * Real.sqrt d) ^ ((d:ℝ) + α)) (C₀ * Λ⁻¹)⁻¹,
+  refine ⟨max (Λ * (2 * Real.sqrt d) ^ ((d:ℝ) + 2)) (C₀ * Λ⁻¹)⁻¹,
     lt_of_lt_of_le (by positivity) (le_max_left _ _), ?_⟩
   intro h hh
   obtain ⟨F, hFdef⟩ : ∃ F : RefFamily Γ (ϑ / 3), F = refFamily hϑ hϑ' Γ hΓ := ⟨_, rfl⟩
@@ -633,7 +680,7 @@ theorem cor_rescaled_kernel {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd
   intro x hx y hy hxy
   refine ⟨?_, ?_⟩
   swap
-  · exact le_trans (discreteKernel_le hk hα hh hx hy hxy)
+  · exact le_trans (discreteKernel_le' hk hα hα2 hh hx hy hxy)
       (mul_le_mul' (ENNReal.ofReal_le_ofReal (le_max_left _ _)) le_rfl)
   -- the lower bound
   have hind : ∀ u w : EuclideanSpace ℝ (Fin d), u ∈ scaledLattice d h →
@@ -653,7 +700,7 @@ theorem cor_rescaled_kernel {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd
     (fav x) (fav y))
   have hLinv : ENNReal.ofReal ((S.card : ℝ)⁻¹) = ((F.axes.card : ℝ≥0∞))⁻¹ := by
     rw [hFaxes, ← ENNReal.ofReal_natCast S.card, ← ENNReal.ofReal_inv_of_pos hLpos]
-  have hCle : ENNReal.ofReal (max (Λ * (2 * Real.sqrt d) ^ ((d:ℝ) + α)) (C₀ * Λ⁻¹)⁻¹)⁻¹
+  have hCle : ENNReal.ofReal (max (Λ * (2 * Real.sqrt d) ^ ((d:ℝ) + 2)) (C₀ * Λ⁻¹)⁻¹)⁻¹
       ≤ ENNReal.ofReal (C₀ * Λ⁻¹) := by
     refine ENNReal.ofReal_le_ofReal ?_
     rw [inv_le_comm₀ (by positivity) (by positivity)]
