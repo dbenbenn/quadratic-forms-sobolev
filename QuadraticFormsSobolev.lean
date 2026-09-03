@@ -6,6 +6,7 @@ import QuadraticFormsSobolev.Cubes
 import QuadraticFormsSobolev.RefCones
 import QuadraticFormsSobolev.Section1
 import QuadraticFormsSobolev.Section3
+import QuadraticFormsSobolev.LebesgueDiff
 import QuadraticFormsSobolev.ThinCones
 import QuadraticFormsSobolev.Section3Kernel
 import QuadraticFormsSobolev.Nonvacuous

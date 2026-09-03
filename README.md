@@ -118,7 +118,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 5.15 | Theorem | path properties | ✅ **proved** (`QFS.path_props`) |
 | 5.16 | Lemma | the first jump | ✅ |
 | 7.1 | Lemma | auxiliary integral estimate | ❌ out of scope |
-| 7.2 | Lemma | a Lebesgue differentiation argument | ❌ out of scope |
+| 7.2 | Lemma | a Lebesgue differentiation argument | ✅ **proved** (`QFS.lemma_lebesgue_diff`) |
 
 Sections 2, 4, 5 and 6 are formalised completely, apart from one remark of
 Section 2 that the paper itself quotes rather than proves (see *Not attempted*).
@@ -180,6 +180,9 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | Shrinking commutes with scaling; Lemma 3.3 on `hℤ^d` | Cor. 3.6 | `QFS.mem_shrink_smul`, `QFS.thin_cone_subset_scaled`, `QFS.sub_mem_scaledLattice` | ✅ proved |
 | Proposition 3.5's estimate at scale `h` | Cor. 3.6 | `QFS.discreteKernel_integrand_ge_scaled`, `QFS.discreteKernel_ge_volume_scaled`, `QFS.inv_card_le_volume_cubeCone_scaled` | ✅ proved |
 | **Corollary 3.6** | Cor. 3.6 | `QFS.cor_rescaled_kernel` | ✅ **proved** (`d ≥ 2`) |
+| Cubes are closed / open; a cube containing `x` lies in `B̄_{h√d}(x)` | Lem. 7.2 | `QFS.continuous_coord`, `QFS.isClosed_closedCube`, `QFS.isOpen_cube`, `QFS.closedCube_subset_closedBall_of_mem` | ✅ proved |
+| **The Vitali family of cubes** | Lem. 7.2 | `QFS.unitBallVol`, `QFS.volume_closedBall_eq`, `QFS.cubeVitaliConst`, `QFS.cubeVitali_doubling`, `QFS.cubeVitali`, `QFS.closedCube_mem_setsAt`, `QFS.tendsto_closedCube_filterAt` | ✅ **proved** |
+| **Lemma 7.2**: differentiation along cubes | Lem. 7.2 | `QFS.lemma_lebesgue_diff` | ✅ **proved** |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
 | The lattice is closed under negation | (new) | `QFS.neg_mem_lattice` | ✅ proved |
@@ -688,7 +691,7 @@ together with the results the paper itself quotes from elsewhere.
 | Weak Harnack, Hölder regularity | Cor. 1.6 | Quoted from Dyda–Kassmann; not proved in the paper. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
 | `{x | V ⊆ Γ(x)}` is Lebesgue measurable | §2 (after Cor. 2.4) | The paper does not prove it — "This implication is due to [Debreu67, Thm. 4.4]". It is what makes the sets `A_h^m(u)` measurable, which Proposition 3.5 integrates over, so it is carried there as the explicit hypothesis `QFS.CondMeas`. |
-| Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §3 and to the continuous half. |
+| Auxiliary integral estimate | Lem. 7.1 | An integral computation feeding the appendix lemma, which is itself quoted rather than proved. |
 
 ## Lemma 5.7
 
