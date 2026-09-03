@@ -266,6 +266,49 @@ theorem cube_eq_preimage {h : ℝ} (hh : 0 < h) (u : EuclideanSpace ℝ (Fin d))
         obtain ⟨ha, hb⟩ := hx i
         constructor <;> linarith
 
+/-- The closed cube as a box. -/
+theorem closedCube_eq_preimage {h : ℝ} (hh : 0 ≤ h) (u : EuclideanSpace ℝ (Fin d)) :
+    closedCube h u = (WithLp.ofLp : EuclideanSpace ℝ (Fin d) → (Fin d → ℝ)) ⁻¹'
+        (Set.pi Set.univ (fun i => Icc (u i - h / 2) (u i + h / 2))) := by
+  ext x
+  simp only [Set.mem_preimage, Set.mem_univ_pi, Set.mem_Icc, closedCube, Set.mem_ofPred_eq]
+  constructor
+  · intro hx i
+    have h1 : |(x - u) i| ≤ infNorm (x - u) := le_infNorm _ i
+    have h2 : (x - u) i = x i - u i := by simp
+    rw [h2] at h1
+    have h3 := abs_le.mp (le_trans h1 hx)
+    constructor <;> [linarith [h3.1]; linarith [h3.2]]
+  · intro hx
+    rcases isEmpty_or_nonempty (Fin d) with hd | hd
+    · simp only [infNorm, Real.iSup_of_isEmpty]
+      linarith
+    · obtain ⟨i, hi⟩ := exists_infNorm_eq (x - u)
+      rw [hi]
+      have h2 : (x - u) i = x i - u i := by simp
+      rw [h2, abs_le]
+      obtain ⟨ha, hb⟩ := hx i
+      constructor <;> linarith
+
+theorem measurableSet_closedCube {h : ℝ} (hh : 0 ≤ h) (u : EuclideanSpace ℝ (Fin d)) :
+    MeasurableSet (closedCube h u) := by
+  rw [closedCube_eq_preimage hh]
+  exact (PiLp.volume_preserving_ofLp (Fin d)).measurable
+    (MeasurableSet.univ_pi (fun _ => measurableSet_Icc))
+
+theorem volume_closedCube {h : ℝ} (hh : 0 ≤ h) (u : EuclideanSpace ℝ (Fin d)) :
+    volume (closedCube h u) = ENNReal.ofReal (h ^ d) := by
+  rw [closedCube_eq_preimage hh, MeasurePreserving.measure_preimage
+    (PiLp.volume_preserving_ofLp (Fin d))
+    (MeasurableSet.univ_pi (fun _ => measurableSet_Icc)).nullMeasurableSet, volume_pi_pi]
+  have hfac : ∀ i : Fin d, volume (Icc (u i - h / 2) (u i + h / 2)) = ENNReal.ofReal h := by
+    intro i
+    rw [Real.volume_Icc]
+    congr 1
+    ring
+  rw [Finset.prod_congr rfl (fun i _ => hfac i), Finset.prod_const, Finset.card_univ,
+    Fintype.card_fin, ← ENNReal.ofReal_pow hh]
+
 /-- Cubes are measurable. -/
 theorem measurableSet_cube {h : ℝ} (hh : 0 < h) (u : EuclideanSpace ℝ (Fin d)) :
     MeasurableSet (cube h u) := by
