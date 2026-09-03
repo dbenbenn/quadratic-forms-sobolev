@@ -228,6 +228,10 @@ own right.
 | **A walk in a finite set shortens to length `< #S`** | Thm. 5.15, Step 1 | `QFS.exists_walk_length_lt`, `QFS.exists_walk_of_reflTransGen_lt` | ✅ **proved** |
 | **Concatenation through way-points** | Thm. 5.15, Step 1 | `QFS.exists_walk_through_list`, `QFS.exists_walk_covering` | ✅ **proved** |
 | The bridge for `G`; walks from `RRConnected` | Thm. 5.15, Step 1 | `QFS.exists_walk_of_connWithin`, `QFS.exists_walk_of_rrConnected` | ✅ proved |
+| **The favored graph as a `SimpleGraph`** | Def. 5.13 | `QFS.favoredAdj`, `QFS.favoredGraph`, `QFS.not_favoredEdge_self` | ✅ **defined** |
+| The bridge for the favored graph | Thm. 5.15, Step 1 | `QFS.exists_favoredWalk_of_favoredConn`, `QFS.FavoredConn.mono` | ✅ proved |
+| Town-balls: finite, counted, monotone | Thm. 5.15, Step 1 | `QFS.townBall_finite`, `QFS.ncard_townBall_le`, `QFS.townBall_mono` | ✅ proved |
+| **Step 1 of Theorem 5.15** | Thm. 5.15, Step 1 | `QFS.exists_favoredWalk_covering` | ✅ **proved** |
 | `#(B_R ∩ ℤ^d)` in `ncard` form | Thm. 5.15 | `QFS.ncard_lattice_inter_ball_le` | ✅ proved |
 
 ## Deviations
@@ -580,10 +584,19 @@ What the proof of 5.15 still needs, beyond what is here:
    lattice point of its `r`-ball by a walk of length less than `(2⌈R⌉+1)^d`, which
    is where the counting of item 1 enters.
 
-   What remains for Step 1 proper is the instantiation: applying
-   `exists_walk_covering` with `T` the blocks of `T_n` inside `B_{Δⁿr}(z)` and the
-   walks supplied by Proposition 5.14 — routine, but it needs the favored graph
-   presented as a `SimpleGraph` on blocks, which `QFS.FavoredConn` is not yet.
+   **Step 1 itself is now proved**, as `QFS.exists_favoredWalk_covering`: in a
+   `ϑ`-sparsely populated town, every centre `z` of the index lattice admits one
+   walk in the favored graph that visits every block indexed within `r` of `z`,
+   never leaves the blocks indexed within `R`, and has length at most
+   `(2⌈r⌉+1)^d · (2⌈R⌉+1)^d` — the paper's `t ≤ #(B_r∩ℤ^d) · #(B_R∩ℤ^d)`,
+   with its properties (1), (2) and (3).
+
+   This needed the favored graph as an actual `SimpleGraph` (`QFS.favoredGraph`).
+   Its adjacency carries an explicit `Q ≠ P`, because `FavoredEdge Γ ∅ ∅` holds
+   vacuously — the empty block is "adjacent to itself", which no `SimpleGraph`
+   allows. On nonempty blocks the guard is free
+   (`QFS.not_favoredEdge_self`: `FavoredEdge Γ Q Q` would put `0` in a cone), so
+   nothing of the paper's Definition 5.13 is lost.
 3. **The cyclic scheme** of Step 2 — the `a²` paths through the majority sets,
    and an assignment `φ_z` of pairs to paths with fibres bounded by a constant.
    The paper's justification is that `a` and `#A` are comparable; making that

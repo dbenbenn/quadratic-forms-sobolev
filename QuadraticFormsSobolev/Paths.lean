@@ -177,4 +177,138 @@ theorem exists_walk_of_rrConnected {Γ : Configuration (EuclideanSpace ℝ (Fin 
 
 end Lattice
 
+
+/-! ## Step 1 of Theorem 5.15: one walk through all the blocks of a ball -/
+
+section Step1
+
+variable {d : ℕ}
+
+lemma ncard_lattice_inter_closedBall_le' (a : EuclideanSpace ℝ (Fin d)) (M : ℝ) :
+    (lattice d ∩ closedBall a M).ncard ≤ (2 * ⌈M⌉₊ + 1) ^ d := by
+  have hfin := lattice_inter_closedBall_finite a M
+  have hle := encard_lattice_inter_closedBall_le a M
+  rw [← hfin.cast_ncard_eq] at hle
+  exact_mod_cast hle
+
+lemma townBall_eq_image (h ℓ : ℝ) (z : EuclideanSpace ℝ (Fin d)) (R : ℝ) :
+    townBall h ℓ z R = (fun p => townIndex h ℓ p) '' (lattice d ∩ ball z R) := by
+  have hset : {p : EuclideanSpace ℝ (Fin d) | p ∈ lattice d ∧ ‖p - z‖ < R}
+      = lattice d ∩ ball z R := by
+    ext p
+    rw [Set.mem_ofPred_eq, Set.mem_inter_iff, mem_ball, dist_eq_norm]
+  rw [townBall, hset]
+
+lemma townBall_finite (h ℓ : ℝ) (z : EuclideanSpace ℝ (Fin d)) (R : ℝ) :
+    (townBall h ℓ z R).Finite := by
+  rw [townBall_eq_image]
+  exact Set.Finite.image _ ((lattice_inter_closedBall_finite z R).subset
+    (fun p hp => ⟨hp.1, ball_subset_closedBall hp.2⟩))
+
+lemma ncard_townBall_le (h ℓ : ℝ) (z : EuclideanSpace ℝ (Fin d)) (R : ℝ) :
+    (townBall h ℓ z R).ncard ≤ (2 * ⌈R⌉₊ + 1) ^ d := by
+  have hfin : (lattice d ∩ ball z R).Finite :=
+    (lattice_inter_closedBall_finite z R).subset
+      (fun p hp => ⟨hp.1, ball_subset_closedBall hp.2⟩)
+  rw [townBall_eq_image]
+  refine le_trans (Set.ncard_image_le hfin) (le_trans (Set.ncard_le_ncard ?_
+    (lattice_inter_closedBall_finite z R)) (ncard_lattice_inter_closedBall_le' z R))
+  exact fun p hp => ⟨hp.1, ball_subset_closedBall hp.2⟩
+
+lemma townBall_mono (h ℓ : ℝ) (z : EuclideanSpace ℝ (Fin d)) {R R' : ℝ} (hRR : R ≤ R') :
+    townBall h ℓ z R ⊆ townBall h ℓ z R' := by
+  rintro _ ⟨p, ⟨hplat, hpR⟩, rfl⟩
+  exact ⟨p, ⟨hplat, lt_of_lt_of_le hpR hRR⟩, rfl⟩
+
+lemma FavoredConn.mono {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {T T' : Set (Set (EuclideanSpace ℝ (Fin d)))} (hTT : T ⊆ T')
+    {Q P : Set (EuclideanSpace ℝ (Fin d))} (h : FavoredConn Γ T Q P) :
+    FavoredConn Γ T' Q P := by
+  induction h with
+  | refl => exact FavoredConn.refl _ _ _
+  | tail _ hstep ih =>
+      exact FavoredConn.trans ih
+        (Relation.ReflTransGen.single ⟨hTT hstep.1, hTT hstep.2.1, hstep.2.2⟩)
+
+/-- **The bridge for the favored graph.** -/
+theorem exists_favoredWalk_of_favoredConn {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {T : Set (Set (EuclideanSpace ℝ (Fin d)))} (hTfin : T.Finite)
+    {Q P : Set (EuclideanSpace ℝ (Fin d))} (hQ : Q ∈ T) (h : FavoredConn Γ T Q P) :
+    ∃ w : (favoredGraph Γ).Walk Q P, (∀ B ∈ w.support, B ∈ T) ∧ w.length < T.ncard := by
+  classical
+  refine exists_walk_of_reflTransGen_lt hTfin (fun A B hAB => ?_)
+    (fun A B hAB => ⟨hAB.1, hAB.2.1⟩) hQ h
+  by_cases hEq : A = B
+  · exact Or.inl hEq
+  · exact Or.inr ⟨hEq, hAB.2.2⟩
+
+/-- **Step 1 of the proof of Theorem 5.15.** In a `ϑ`-sparsely populated town,
+for every centre `z` of the index lattice there is a single walk in the favored
+graph which visits every block whose index lies within `r` of `z`, never leaves
+the blocks whose index lies within `R`, and has length at most
+`(2⌈r⌉+1)^d · (2⌈R⌉+1)^d` — the paper's `t ≤ #(B_r∩ℤ^d) · #(B_R∩ℤ^d)`. -/
+theorem exists_favoredWalk_covering {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
+    {r : ℝ} (hr : 0 < r) :
+    ∃ R : ℝ, r < R ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ →
+      ∀ h ℓ : ℝ, 0 < h → 0 < ℓ → SparselyPopulated d ϑ h ℓ →
+      ∀ z ∈ lattice d,
+        ∃ (Q P : Set (EuclideanSpace ℝ (Fin d))) (w : (favoredGraph Γ).Walk Q P),
+          (∀ B ∈ w.support, B ∈ townBall h ℓ z R) ∧
+          w.length ≤ (2 * ⌈r⌉₊ + 1) ^ d * (2 * ⌈R⌉₊ + 1) ^ d ∧
+          (∀ x ∈ lattice d, ‖x - z‖ ≤ r → townIndex h ℓ x ∈ w.support) := by
+  classical
+  obtain ⟨R₀, hR₀r, hprop⟩ := renormalization (d := d) hϑ hϑ' hr
+  refine ⟨R₀ + 1, by linarith, ?_⟩
+  intro Γ hΓ h ℓ hh hℓ hsp z hz
+  set R : ℝ := R₀ + 1 with hRdef
+  have hrR : r < R := by rw [hRdef]; linarith
+  -- the way-points: blocks indexed within `r` of `z`
+  obtain ⟨T, hTdef⟩ : ∃ T : Set (Set (EuclideanSpace ℝ (Fin d))),
+      T = (fun p => townIndex h ℓ p) '' {p | p ∈ lattice d ∧ ‖p - z‖ ≤ r} := ⟨_, rfl⟩
+  have hsrcfin : {p : EuclideanSpace ℝ (Fin d) | p ∈ lattice d ∧ ‖p - z‖ ≤ r}.Finite :=
+    (lattice_inter_closedBall_finite z r).subset (fun p hp =>
+      ⟨hp.1, by rw [Metric.mem_closedBall, dist_eq_norm]; exact hp.2⟩)
+  have hTfin : T.Finite := by rw [hTdef]; exact hsrcfin.image _
+  have hTne : T.Nonempty := by
+    refine ⟨townIndex h ℓ z, ?_⟩
+    rw [hTdef]
+    exact ⟨z, ⟨hz, by rw [sub_self, norm_zero]; exact hr.le⟩, rfl⟩
+  have hTcard : T.ncard ≤ (2 * ⌈r⌉₊ + 1) ^ d := by
+    have h1 : T.ncard
+        ≤ {p : EuclideanSpace ℝ (Fin d) | p ∈ lattice d ∧ ‖p - z‖ ≤ r}.ncard := by
+      rw [hTdef]
+      exact Set.ncard_image_le hsrcfin
+    have h2 : {p : EuclideanSpace ℝ (Fin d) | p ∈ lattice d ∧ ‖p - z‖ ≤ r}
+        ⊆ lattice d ∩ closedBall z r :=
+      fun p hp => ⟨hp.1, by rw [Metric.mem_closedBall, dist_eq_norm]; exact hp.2⟩
+    have h3 := Set.ncard_le_ncard h2 (lattice_inter_closedBall_finite z r)
+    exact le_trans h1 (le_trans h3 (ncard_lattice_inter_closedBall_le' z r))
+  have hTsub : T ⊆ townBall h ℓ z R := by
+    rw [hTdef]
+    rintro _ ⟨p, ⟨hplat, hpr⟩, rfl⟩
+    exact ⟨p, ⟨hplat, by linarith⟩, rfl⟩
+  -- any two way-points are joined inside the big ball, with a length bound
+  have hconn : ∀ A ∈ T, ∀ B ∈ T, ∃ w : (favoredGraph Γ).Walk A B,
+      (∀ C ∈ w.support, C ∈ townBall h ℓ z R) ∧
+        w.length ≤ (2 * ⌈R⌉₊ + 1) ^ d := by
+    intro A hA B hB
+    rw [hTdef] at hA hB
+    obtain ⟨x, ⟨hxlat, hxr⟩, rfl⟩ := hA
+    obtain ⟨y, ⟨hylat, hyr⟩, rfl⟩ := hB
+    have hconn0 := hprop Γ hΓ h ℓ hh hℓ hsp z hz x hxlat y hylat hxr hyr
+    have hconn1 : FavoredConn Γ (townBall h ℓ z R) (townIndex h ℓ x) (townIndex h ℓ y) :=
+      FavoredConn.mono (townBall_mono h ℓ z (by rw [hRdef]; linarith)) hconn0
+    obtain ⟨w, hwS, hwlen⟩ :=
+      exists_favoredWalk_of_favoredConn (townBall_finite h ℓ z R)
+        (hTsub (by rw [hTdef]; exact ⟨x, ⟨hxlat, hxr⟩, rfl⟩)) hconn1
+    exact ⟨w, hwS, le_of_lt (lt_of_lt_of_le hwlen (ncard_townBall_le h ℓ z R))⟩
+  obtain ⟨Q, P, w, hQT, hPT, hwS, hwlen, hwcov⟩ :=
+    exists_walk_covering (G := favoredGraph Γ) hTfin hTne hconn
+  refine ⟨Q, P, w, hwS, le_trans hwlen (Nat.mul_le_mul hTcard (le_refl ((2 * ⌈R⌉₊ + 1) ^ d))), ?_⟩
+  intro x hxlat hxr
+  exact hwcov _ (by rw [hTdef]; exact ⟨x, ⟨hxlat, hxr⟩, rfl⟩)
+
+end Step1
+
 end QFS

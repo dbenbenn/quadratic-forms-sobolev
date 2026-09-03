@@ -241,6 +241,38 @@ lemma FavoredConn.symm {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
         (Relation.ReflTransGen.single ⟨hstep.2.1, hstep.1, hstep.2.2.symm⟩) ih
 
 
+/-! ## The favored graph as a simple graph
+
+`FavoredEdge Γ ∅ ∅` holds vacuously, so the edge relation is reflexive at the
+empty block and cannot be a `SimpleGraph` adjacency as it stands; the graph
+therefore carries an explicit `Q ≠ P`. On nonempty blocks this changes nothing,
+since `FavoredEdge Γ Q Q` would put `0` in a cone. -/
+
+/-- Adjacency in the favored graph. -/
+def favoredAdj (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    (Q P : Set (EuclideanSpace ℝ (Fin d))) : Prop :=
+  Q ≠ P ∧ (FavoredEdge Γ Q P ∨ FavoredEdge Γ P Q)
+
+instance favoredAdj_symm (Γ : Configuration (EuclideanSpace ℝ (Fin d))) :
+    Std.Symm (favoredAdj Γ) := ⟨fun _ _ h => ⟨h.1.symm, h.2.symm⟩⟩
+
+instance favoredAdj_irrefl (Γ : Configuration (EuclideanSpace ℝ (Fin d))) :
+    Std.Irrefl (favoredAdj Γ) := ⟨fun _ h => h.1 rfl⟩
+
+/-- The **favored graph** of Definition 5.13, as a simple graph on blocks. -/
+def favoredGraph (Γ : Configuration (EuclideanSpace ℝ (Fin d))) :
+    SimpleGraph (Set (EuclideanSpace ℝ (Fin d))) :=
+  ⟨favoredAdj Γ, favoredAdj_symm Γ, favoredAdj_irrefl Γ⟩
+
+/-- A nonempty block is never adjacent to itself even before the guard. -/
+lemma not_favoredEdge_self {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {Q : Set (EuclideanSpace ℝ (Fin d))} (hQ : Q.Nonempty) : ¬ FavoredEdge Γ Q Q := by
+  rintro ⟨V, -, hV⟩
+  obtain ⟨x, hx⟩ := hQ
+  have := hV x hx x hx
+  rw [mem_shift, sub_self] at this
+  exact V.zero_notMem this
+
 /-! ## Proposition 5.14 -/
 
 /-- The blocks of the town whose index lies within `R` of `z`; the paper's blocks
