@@ -232,6 +232,10 @@ own right.
 | The bridge for the favored graph | Thm. 5.15, Step 1 | `QFS.exists_favoredWalk_of_favoredConn`, `QFS.FavoredConn.mono` | ✅ proved |
 | Town-balls: finite, counted, monotone | Thm. 5.15, Step 1 | `QFS.townBall_finite`, `QFS.ncard_townBall_le`, `QFS.townBall_mono` | ✅ proved |
 | **Step 1 of Theorem 5.15** | Thm. 5.15, Step 1 | `QFS.exists_favoredWalk_covering` | ✅ **proved** |
+| **A favored edge lifts to `G` on the majority set** | Thm. 5.15, Step 2 | `QFS.majority_adj_of_favoredEdge` | ✅ **proved** |
+| `≥ #Q/L` points of `Q` adjacent to all of `P` | Thm. 5.15, Step 2 | `QFS.exists_large_adj_of_favoredEdge` | ✅ proved |
+| The cyclic indices determine the scheme | Thm. 5.15, Step 2 | `QFS.cyclic_pair_injective` | ✅ proved |
+| **The assignment `φ_z`, with bounded fibres** | Thm. 5.15, Step 2 | `QFS.exists_fun_fiber_le`, `QFS.exists_scheme_assignment` | ✅ **proved** |
 | `#(B_R ∩ ℤ^d)` in `ncard` form | Thm. 5.15 | `QFS.ncard_lattice_inter_ball_le` | ✅ proved |
 
 ## Deviations
@@ -597,10 +601,33 @@ What the proof of 5.15 still needs, beyond what is here:
    allows. On nonempty blocks the guard is free
    (`QFS.not_favoredEdge_self`: `FavoredEdge Γ Q Q` would put `0` in a cone), so
    nothing of the paper's Definition 5.13 is lost.
-3. **The cyclic scheme** of Step 2 — the `a²` paths through the majority sets,
-   and an assignment `φ_z` of pairs to paths with fibres bounded by a constant.
-   The paper's justification is that `a` and `#A` are comparable; making that
-   precise is where the counting of item 1 is used.
+3. ~~**The cyclic scheme.**~~ **Its three ingredients are done.**
+
+   *The lift.* `QFS.majority_adj_of_favoredEdge`: if `Q` and `P` are joined by a
+   favored edge, every point of the majority set of `Q` — for the cone that
+   witnesses the edge — is adjacent in `G` to *every* point of `P`. This is why
+   the block walk of Step 1 becomes walks in `G`, and why any of the `a` majority
+   points may be used at each step. With the pigeonhole of item 1,
+   `QFS.exists_large_adj_of_favoredEdge` says at least `#Q/L` points of `Q` have
+   this property.
+
+   *The cyclic indexing.* The scheme reads indices in `ZMod a`, using `q^k_i` at
+   odd `k` and `q^k_{i+j}` at even `k`. A consecutive pair of indices is
+   `(i, i+j)`, and `QFS.cyclic_pair_injective` says that determines `(i, j)` —
+   which is exactly why the `a²` walks do not share an edge at any position, the
+   fact Step 6's multiplicity count rests on.
+
+   *The assignment.* `QFS.exists_fun_fiber_le` is a balanced partition: if
+   `#A ≤ K · #M` and `M ≠ ∅`, the elements of `A` can be assigned to `M` with no
+   fibre exceeding `K`. `QFS.exists_scheme_assignment` is the instance with `M`
+   the `a²` index pairs, giving the paper's `φ_z` with `#φ_z⁻¹(p) ≤ K`. The
+   paper's remark that "`a` and `#A` are comparable" is made precise by the
+   counting of item 1: `#A ≲ Δ^{2nd}` while `a² ≳ Δ^{2d(n-1)}/L²`, a ratio of
+   `Δ^{2d}L²`.
+
+   What is left is assembly: building the `a²` walks as `SimpleGraph.Walk`s along
+   the Step 1 block walk with alternating representatives, which needs the
+   majority sets indexed by `ZMod a` — bookkeeping rather than new mathematics.
 4. **The edge-multiplicity count** of Step 6, which bounds how many scales and
    how many centres `z` a given edge can serve.
 
