@@ -177,6 +177,11 @@ right.
 | The descent principle | Lem. 5.6, "I.e." clause | `QFS.Jump`, `QFS.exists_min_of_jump` | ✅ proved |
 | **Lemma 5.6 in full**, chain down to the tip | Lem. 5.6 | `QFS.exists_min_chain_in_cone` | ✅ **proved** |
 | Points of large gap lie in the shrunk cone `Ṽ_ρ` | (new; needed by Lem. 5.7) | `QFS.mem_shrink_cone_of_lt_coneGap` | ✅ proved |
+| **`Ṽ_ρ` is a half-cone with apex moved `ρ/sin ϑ` along the axis** | (new) | `QFS.coneGap_gt_eq_shift_cone`, `QFS.shift_cone_subset_shrink` | ✅ **proved** |
+| Unconditional descent step toward the apex | (new; strengthens Lem. 5.6) | `QFS.exists_lattice_step_toward_apex` | ✅ proved |
+| **Lemma 5.6 for a half-cone with arbitrary apex** | Lem. 5.6 (shifted) | `QFS.exists_closer_lattice_nearby_shift` | ✅ **proved** |
+| Descent chain to the apex | Lem. 5.6, "I.e." (shifted) | `QFS.exists_chain_to_apex` | ✅ proved |
+| **The jump statement and chain for a shrunk half-cone** | Lem. 5.7, step (2) | `QFS.exists_chain_to_apex_shrunk`, `QFS.shift_cone_apex_subset_shift_shrink` | ✅ **proved** |
 | Cone types realised at the lattice points of a set | §5.2 | `QFS.typesIn` | ✅ defined |
 | Statement of Lemma 5.7 | Lem. 5.7 | `QFS.CoreInduction` | ⚪ stated, not proved |
 | **Lemma 5.7, base case `k = 1`** | Lem. 5.7 | `QFS.core_induction_base` | ✅ **proved** |
@@ -361,15 +366,22 @@ here. The other case needs four things that are not yet formalised:
    types of `B_{ρ_k}(x)` and exclude `V`. Bookkeeping with `Set.encard`, given
    `ρ_k > S + ŝ + ρ_{k−1}`; routine but fiddly.
 
-2. **Descent inside a translated, shrunk half-cone.** The paper's "since
-   `r_{k−1} > δ`, all these well-connected balls overlap and are therefore
-   connected to a lattice point near the tip" is Lemma 5.6 iterated inside
-   `x̂ + Ṽ_{ρ_{k−1}}` rather than inside a cone with apex at the origin. The
-   descent principle `QFS.exists_min_of_jump` is general enough to consume it,
-   but the *local* jump statement — Lemma 5.6 for a shrunk half-cone with a
-   displaced tip — has to be proved. `QFS.coneGap` should make this tractable:
-   `Ṽ_ρ` is the closed cone with the same axis and angle translated along the
-   axis by `ρ / sin ϑ`, since `coneGap v ϑ (p − a·v) = coneGap v ϑ p − a sin ϑ`.
+2. ~~**Descent inside a translated, shrunk half-cone.**~~ **Done.**
+   `QFS.coneGap_gt_eq_shift_cone` shows that the points of gap more than `ρ` are
+   exactly the half-cone with the same axis and angle whose apex has moved
+   `ρ / sin ϑ` along the axis, so `Ṽ_ρ` contains such a half-cone
+   (`QFS.shift_cone_subset_shrink`). Lemma 5.6 for a half-cone with an arbitrary
+   apex is `QFS.exists_closer_lattice_nearby_shift`, and the paper's "connected
+   to a lattice point near the tip" is `QFS.exists_chain_to_apex_shrunk`: from
+   any lattice point of `c + Ṽ_ρ` the chain of jumps of length less than `δ`
+   reaches a lattice point within `t₀` of the displaced apex, with `δ` and `t₀`
+   depending only on `ϑ` and `d` — not on the apex, and not on `ρ`.
+
+   The construction turned out not to need the hypothesis that a closer lattice
+   point exists: outside a ball of radius `t₀` about the apex one can *always*
+   step at least `1` closer (`QFS.exists_lattice_step_toward_apex`). That is what
+   makes the descent terminate on `⌈‖x − c‖⌉₊`, with no appeal to finiteness of
+   the lattice in a bounded region, and it strengthens Lemma 5.6 as stated.
 
 3. **Assembling paths across different balls.** The conclusion is a `ConnWithin`
    inside `B_{R_k}(x)`, built from paths inside `B_{R_{k−1}}(p)` for various `p`,
@@ -382,8 +394,9 @@ here. The other case needs four things that are not yet formalised:
    interleaved sequences; the paper's monotonicity `r_i < r_{i+1}` etc. is then
    not needed, only the invariant `δ < r_k`.
 
-Nothing here looks false — unlike Lemmas 3.3 and 3.4 — but it is a substantial
-piece of work, and Lemmas 5.8–5.16 and Section 6 sit on top of it.
+Of these, item 2 is now done; items 1, 3 and 4 remain. Nothing here looks false —
+unlike Lemmas 3.3 and 3.4 — but it is still a substantial piece of work, and
+Lemmas 5.8–5.16 and Section 6 sit on top of it.
 
 ## Verification
 

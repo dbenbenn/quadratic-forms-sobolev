@@ -171,4 +171,34 @@ lemma mem_shrink_cone_of_lt_coneGap {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ :
   rw [mem_cone_iff_coneGap_pos hv hϑ hϑ']
   linarith
 
+
+/-- Translating along the axis shifts the gap: `coneGap v ϑ (p − a·v) = gap p − a sin ϑ`. -/
+lemma coneGap_sub_smul_axis {v : E} (hv : ‖v‖ = 1) (ϑ : ℝ) (p : E) (a : ℝ) :
+    coneGap v ϑ (p - a • v) = coneGap v ϑ p - a * Real.sin ϑ := by
+  have h := coneGap_add_smul_axis hv ϑ p (-a)
+  rw [show p + (-a) • v = p - a • v by rw [neg_smul]; abel] at h
+  rw [h]
+  ring
+
+/-- **The `ρ`-shrunk half-cone is a half-cone with a displaced apex.** The points
+of gap more than `ρ` are exactly the half-cone with the same axis and angle whose
+apex has been moved `ρ / sin ϑ` along the axis. -/
+theorem coneGap_gt_eq_shift_cone {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) (ρ : ℝ) :
+    {p : E | ρ < coneGap v ϑ p} = shift (cone v ϑ) ((ρ / Real.sin ϑ) • v) := by
+  have hs0 : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [pi_pos])
+  ext p
+  rw [Set.mem_ofPred_eq, mem_shift, mem_cone_iff_coneGap_pos hv hϑ hϑ',
+    coneGap_sub_smul_axis hv, div_mul_cancel₀ _ (ne_of_gt hs0)]
+  constructor <;> intro h <;> linarith
+
+/-- Consequently the displaced half-cone lies inside the paper's shrunk cone
+`Ṽ_ρ`. -/
+theorem shift_cone_subset_shrink {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) {ρ : ℝ} (hρ : 0 ≤ ρ) :
+    shift (cone v ϑ) ((ρ / Real.sin ϑ) • v) ⊆ shrink (cone v ϑ) ρ := by
+  rw [← coneGap_gt_eq_shift_cone hv hϑ hϑ']
+  intro p hp
+  exact mem_shrink_cone_of_lt_coneGap hv hϑ hϑ' hρ hp
+
 end QFS

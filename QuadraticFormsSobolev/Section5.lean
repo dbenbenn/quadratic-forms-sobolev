@@ -590,4 +590,209 @@ theorem core_induction_base (hϑ : 0 < ϑ) (hb : ∀ z, ϑ ≤ (Γ z).apex) {δ 
     exact discr_connect_two_of_same_type hϑ hb hx hylat htype
       (by rw [norm_sub_rev]; exact hy) (by linarith)
 
+
+/-! ## Lemma 5.6 for a shrunk half-cone
+
+The induction of Lemma 5.7 descends inside `x̂ + Ṽ_ρ`, a *shrunk* double half-cone
+rather than a cone with apex at the origin. By `coneGap_gt_eq_shift_cone` such a
+set contains the half-cone with the same axis and angle whose apex has been moved
+`ρ / sin ϑ` along the axis, so what is needed is Lemma 5.6 for a half-cone with an
+arbitrary apex. The constants below still depend only on `ϑ` and `d`, and in
+particular not on the apex or on `ρ`.
+
+The construction turns out not to need the hypothesis that a closer lattice point
+exists: outside a ball of radius `t₀` about the apex one can *always* step at
+least `1` closer. That unconditional form is what makes the descent terminate,
+without any appeal to finiteness of the lattice in a bounded region. -/
+
+/-- **The descent step for a half-cone with arbitrary apex.** Outside the ball of
+radius `t₀` about the apex `c`, every lattice point of the half-cone has a
+lattice point of the half-cone at least `1` closer to `c`, within distance `δ`.
+Both constants depend only on `ϑ` and `d`. -/
+theorem exists_lattice_step_toward_apex {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
+    ∃ δ t₀ : ℝ, 0 < δ ∧ 0 < t₀ ∧
+      ∀ (v : EuclideanSpace ℝ (Fin d)) (ϑV : ℝ), ‖v‖ = 1 → ϑ ≤ ϑV → ϑV ≤ π / 2 →
+      ∀ c : EuclideanSpace ℝ (Fin d), ∀ x ∈ lattice d, x ∈ shift (cone v ϑV) c →
+        t₀ < ‖x - c‖ →
+        ∃ y ∈ lattice d, y ∈ shift (cone v ϑV) c ∧ ‖y - c‖ ≤ ‖x - c‖ - 1 ∧
+          ‖y - x‖ < δ := by
+  have hs0 : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [pi_pos])
+  have hqnn : (0:ℝ) ≤ Real.sqrt d / 2 := by positivity
+  have hb₀0 : 0 < (Real.sqrt d / 2 + 1) / Real.sin ϑ := div_pos (by linarith) hs0
+  refine ⟨Real.sqrt d / 2 + ((Real.sqrt d / 2 + 1) / Real.sin ϑ + Real.sqrt d / 2 + 1)
+      + (Real.sqrt d / 2 + 1) / Real.sin ϑ + 1,
+    (Real.sqrt d / 2 + 1) / Real.sin ϑ + Real.sqrt d / 2 + 1, by linarith, by linarith, ?_⟩
+  intro v ϑV hv hϑV hϑV' c x hxlat hxc hbig
+  set q : ℝ := Real.sqrt d / 2 with hqdef
+  set b₀ : ℝ := (q + 1) / Real.sin ϑ with hb₀def
+  set t₀ : ℝ := b₀ + q + 1 with ht₀def
+  have ht₀0 : 0 < t₀ := by rw [ht₀def]; linarith
+  have hϑV0 : 0 < ϑV := lt_of_lt_of_le hϑ hϑV
+  have hsV : Real.sin ϑ ≤ Real.sin ϑV :=
+    Real.strictMonoOn_sin.monotoneOn ⟨by linarith [pi_pos], by linarith⟩
+      ⟨by linarith [pi_pos], hϑV'⟩ hϑV
+  have hsV0 : 0 < Real.sin ϑV := lt_of_lt_of_le hs0 hsV
+  have hgapx : 0 < coneGap v ϑV (x - c) := (mem_cone_iff_coneGap_pos hv hϑV0 hϑV' _).mp hxc
+  have hR0 : 0 < ‖x - c‖ := lt_trans ht₀0 hbig
+  have hxn : ‖x - c‖ ≠ 0 := ne_of_gt hR0
+  set b : ℝ := (q + 1) / Real.sin ϑV with hbdef
+  have hb0 : 0 < b := div_pos (by linarith) hsV0
+  have hbb₀ : b ≤ b₀ := by
+    rw [hbdef, hb₀def]
+    exact div_le_div_of_nonneg_left (by linarith) hs0 hsV
+  set t : ℝ := b + q + 1 with htdef
+  have ht0 : 0 < t := by rw [htdef]; linarith
+  have htt₀ : t ≤ t₀ := by rw [htdef, ht₀def]; linarith
+  have htR : t < ‖x - c‖ := lt_of_le_of_lt htt₀ hbig
+  obtain ⟨lam, hlamdef⟩ : ∃ l : ℝ, l = 1 - t / ‖x - c‖ := ⟨_, rfl⟩
+  have hlam0 : 0 < lam := by rw [hlamdef, sub_pos, div_lt_one hR0]; exact htR
+  obtain ⟨p, hpdef⟩ : ∃ w : EuclideanSpace ℝ (Fin d),
+      w = c + (lam • (x - c) + b • v) := ⟨_, rfl⟩
+  have hpc : p - c = lam • (x - c) + b • v := by rw [hpdef]; abel
+  have hnu : ‖lam • (x - c)‖ = ‖x - c‖ - t := by
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos hlam0, hlamdef]
+    field_simp
+  have hdu : ‖lam • (x - c) - (x - c)‖ = t := by
+    have hcoef : lam - 1 = -(t / ‖x - c‖) := by rw [hlamdef]; ring
+    have he : lam • (x - c) - (x - c) = (lam - 1) • (x - c) := by rw [sub_smul, one_smul]
+    rw [he, hcoef, norm_smul, Real.norm_eq_abs, abs_neg, abs_of_pos (div_pos ht0 hR0)]
+    field_simp
+  have hbv : ‖b • v‖ = b := by
+    rw [norm_smul, hv, Real.norm_eq_abs, abs_of_pos hb0, mul_one]
+  have hgap1 : 0 ≤ coneGap v ϑV (lam • (x - c)) := by
+    rw [coneGap_smul v ϑV hlam0.le]
+    positivity
+  have hgapp : coneGap v ϑV (p - c) = coneGap v ϑV (lam • (x - c)) + (q + 1) := by
+    rw [hpc, coneGap_add_smul_axis hv, hbdef]
+    field_simp
+  obtain ⟨y, hylat, hyp⟩ := exists_lattice_mem_closedBall p
+  rw [← hqdef] at hyp
+  have hgapy : 0 < coneGap v ϑV (y - c) := by
+    have hlip := coneGap_sub_le hv hϑV0 hϑV' (p - c) (y - c)
+    have he : ‖p - c - (y - c)‖ = ‖y - p‖ := by
+      rw [show p - c - (y - c) = -(y - p) by abel, norm_neg]
+    rw [he] at hlip
+    linarith
+  have hyc : y ∈ shift (cone v ϑV) c := (mem_cone_iff_coneGap_pos hv hϑV0 hϑV' _).mpr hgapy
+  have hpnorm : ‖p - c‖ ≤ (‖x - c‖ - t) + b := by
+    calc ‖p - c‖ = ‖lam • (x - c) + b • v‖ := by rw [hpc]
+      _ ≤ ‖lam • (x - c)‖ + ‖b • v‖ := norm_add_le _ _
+      _ = (‖x - c‖ - t) + b := by rw [hnu, hbv]
+  have hpx : ‖p - x‖ ≤ t + b := by
+    calc ‖p - x‖ = ‖(lam • (x - c) - (x - c)) + b • v‖ := by rw [hpdef]; congr 1; abel
+      _ ≤ ‖lam • (x - c) - (x - c)‖ + ‖b • v‖ := norm_add_le _ _
+      _ = t + b := by rw [hdu, hbv]
+  refine ⟨y, hylat, hyc, ?_, ?_⟩
+  · calc ‖y - c‖ = ‖(y - p) + (p - c)‖ := by congr 1; abel
+      _ ≤ ‖y - p‖ + ‖p - c‖ := norm_add_le _ _
+      _ ≤ q + ((‖x - c‖ - t) + b) := by linarith
+      _ = ‖x - c‖ - 1 := by rw [htdef]; ring
+  · calc ‖y - x‖ = ‖(y - p) + (p - x)‖ := by congr 1; abel
+      _ ≤ ‖y - p‖ + ‖p - x‖ := norm_add_le _ _
+      _ ≤ q + (t + b) := by linarith
+      _ < q + t₀ + b₀ + 1 := by linarith
+
+/-- **Lemma 5.6 for a half-cone with an arbitrary apex `c`**, in the same shape
+as `exists_closer_lattice_nearby`: near the apex use the given closer point, far
+from it use the descent step. -/
+theorem exists_closer_lattice_nearby_shift {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
+    ∃ δ : ℝ, 0 < δ ∧
+      ∀ (v : EuclideanSpace ℝ (Fin d)) (ϑV : ℝ), ‖v‖ = 1 → ϑ ≤ ϑV → ϑV ≤ π / 2 →
+      ∀ c : EuclideanSpace ℝ (Fin d), ∀ x ∈ lattice d, x ∈ shift (cone v ϑV) c →
+        (∃ z ∈ lattice d, z ∈ shift (cone v ϑV) c ∧ ‖z - c‖ < ‖x - c‖) →
+        ∃ y ∈ lattice d, y ∈ shift (cone v ϑV) c ∧ ‖y - c‖ < ‖x - c‖ ∧ ‖y - x‖ < δ := by
+  obtain ⟨δ, t₀, hδ0, ht₀0, hstep⟩ := exists_lattice_step_toward_apex (d := d) hϑ hϑ'
+  refine ⟨2 * t₀ + δ, by linarith, ?_⟩
+  rintro v ϑV hv hϑV hϑV' c x hxlat hxc ⟨z, hzlat, hzc, hzx⟩
+  by_cases hcase : ‖x - c‖ ≤ t₀
+  · refine ⟨z, hzlat, hzc, hzx, ?_⟩
+    calc ‖z - x‖ = ‖(z - c) - (x - c)‖ := by congr 1; abel
+      _ ≤ ‖z - c‖ + ‖x - c‖ := norm_sub_le _ _
+      _ < 2 * t₀ := by linarith
+      _ < 2 * t₀ + δ := by linarith
+  · rw [not_le] at hcase
+    obtain ⟨y, hylat, hyc, hyd, hyx⟩ := hstep v ϑV hv hϑV hϑV' c x hxlat hxc hcase
+    exact ⟨y, hylat, hyc, by linarith, by linarith⟩
+
+
+/-- **The chain of bounded jumps for a half-cone with an arbitrary apex.** From
+any lattice point of the half-cone, jumps of length less than `δ` staying in the
+half-cone and strictly decreasing the distance to the apex reach a lattice point
+within `t₀` of the apex — the paper's "lattice point near the tip".
+
+The descent terminates because each step gains at least `1`, so `⌈‖x − c‖⌉₊`
+strictly decreases; no finiteness of the lattice in a bounded region is needed. -/
+theorem exists_chain_to_apex {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
+    ∃ δ t₀ : ℝ, 0 < δ ∧ 0 < t₀ ∧
+      ∀ (v : EuclideanSpace ℝ (Fin d)) (ϑV : ℝ), ‖v‖ = 1 → ϑ ≤ ϑV → ϑV ≤ π / 2 →
+      ∀ c : EuclideanSpace ℝ (Fin d), ∀ x ∈ lattice d, x ∈ shift (cone v ϑV) c →
+        ∃ y ∈ lattice d, y ∈ shift (cone v ϑV) c ∧ ‖y - c‖ ≤ t₀ ∧
+          Relation.ReflTransGen (Jump (shift (cone v ϑV) c) c δ) x y := by
+  obtain ⟨δ, t₀, hδ0, ht₀0, hstep⟩ := exists_lattice_step_toward_apex (d := d) hϑ hϑ'
+  refine ⟨δ, t₀, hδ0, ht₀0, fun v ϑV hv h1 h2 c => ?_⟩
+  have key : ∀ n : ℕ, ∀ x, x ∈ lattice d → x ∈ shift (cone v ϑV) c →
+      ⌈‖x - c‖⌉₊ ≤ n →
+      ∃ y ∈ lattice d, y ∈ shift (cone v ϑV) c ∧ ‖y - c‖ ≤ t₀ ∧
+        Relation.ReflTransGen (Jump (shift (cone v ϑV) c) c δ) x y := by
+    intro n
+    induction n using Nat.strong_induction_on with
+    | _ n ih =>
+      intro x hxlat hxc hxn
+      by_cases hsmall : ‖x - c‖ ≤ t₀
+      · exact ⟨x, hxlat, hxc, hsmall, Relation.ReflTransGen.refl⟩
+      · rw [not_le] at hsmall
+        obtain ⟨y, hylat, hyc, hyd, hyx⟩ := hstep v ϑV hv h1 h2 c x hxlat hxc hsmall
+        have hpos : 0 < ⌈‖x - c‖⌉₊ := Nat.ceil_pos.mpr (by linarith)
+        have hceil : ⌈‖y - c‖⌉₊ < ⌈‖x - c‖⌉₊ := by
+          have hle : ⌈‖y - c‖⌉₊ ≤ ⌈‖x - c‖⌉₊ - 1 := by
+            rw [Nat.ceil_le]
+            have hcast : ((⌈‖x - c‖⌉₊ - 1 : ℕ) : ℝ) = (⌈‖x - c‖⌉₊ : ℝ) - 1 := by
+              have h1' : 1 ≤ ⌈‖x - c‖⌉₊ := hpos
+              push_cast [Nat.cast_sub h1']
+              ring
+            rw [hcast]
+            have := Nat.le_ceil ‖x - c‖
+            linarith
+          omega
+        obtain ⟨z, hzlat, hzc, hzt, hchain⟩ :=
+          ih ⌈‖y - c‖⌉₊ (lt_of_lt_of_le hceil hxn) y hylat hyc le_rfl
+        refine ⟨z, hzlat, hzc, hzt, Relation.ReflTransGen.head ?_ hchain⟩
+        exact ⟨⟨hxc, hxlat⟩, ⟨hyc, hylat⟩, by linarith, hyx⟩
+  exact fun x hxlat hxc => key ⌈‖x - c‖⌉₊ x hxlat hxc le_rfl
+
+/-- **The local jump statement and the descent chain for a shrunk half-cone**, in
+the form Lemma 5.7 uses. The region `c + Ṽ_ρ` of the paper contains the half-cone
+with apex `c + (ρ/sin ϑ_V)·v`; inside it, every lattice point reaches, by jumps of
+length less than `δ`, a lattice point within `t₀` of that apex — and the whole
+chain stays inside `c + Ṽ_ρ`. -/
+theorem exists_chain_to_apex_shrunk {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
+    ∃ δ t₀ : ℝ, 0 < δ ∧ 0 < t₀ ∧
+      ∀ (v : EuclideanSpace ℝ (Fin d)) (ϑV : ℝ), ‖v‖ = 1 → ϑ ≤ ϑV → ϑV ≤ π / 2 →
+      ∀ ρ : ℝ, 0 ≤ ρ → ∀ c : EuclideanSpace ℝ (Fin d),
+        -- the displaced apex of the shrunk half-cone
+        ∀ x ∈ lattice d, x ∈ shift (cone v ϑV) (c + (ρ / Real.sin ϑV) • v) →
+          ∃ y ∈ lattice d,
+            y ∈ shift (cone v ϑV) (c + (ρ / Real.sin ϑV) • v) ∧
+            ‖y - (c + (ρ / Real.sin ϑV) • v)‖ ≤ t₀ ∧
+            Relation.ReflTransGen
+              (Jump (shift (cone v ϑV) (c + (ρ / Real.sin ϑV) • v))
+                (c + (ρ / Real.sin ϑV) • v) δ) x y := by
+  obtain ⟨δ, t₀, hδ0, ht₀0, hchain⟩ := exists_chain_to_apex (d := d) hϑ hϑ'
+  exact ⟨δ, t₀, hδ0, ht₀0, fun v ϑV hv h1 h2 ρ _hρ c =>
+    hchain v ϑV hv h1 h2 (c + (ρ / Real.sin ϑV) • v)⟩
+
+/-- The half-cone used above really does sit inside the paper's `c + Ṽ_ρ`, so the
+whole descent takes place in the shrunk double half-cone. -/
+theorem shift_cone_apex_subset_shift_shrink {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1)
+    {ϑV : ℝ} (hϑV : 0 < ϑV) (hϑV' : ϑV ≤ π / 2) {ρ : ℝ} (hρ : 0 ≤ ρ)
+    (c : EuclideanSpace ℝ (Fin d)) :
+    shift (cone v ϑV) (c + (ρ / Real.sin ϑV) • v) ⊆ shift (shrink (cone v ϑV) ρ) c := by
+  have he : shift (cone v ϑV) (c + (ρ / Real.sin ϑV) • v)
+      = shift (shift (cone v ϑV) ((ρ / Real.sin ϑV) • v)) c := by
+    rw [shift_shift]
+    congr 1
+    abel
+  rw [he]
+  exact shift_mono (shift_cone_subset_shrink hv hϑV hϑV' hρ) c
+
 end QFS
