@@ -11,12 +11,6 @@ namespace QFS
 
 variable {d : ℕ}
 
-/-- Coordinates determine a point of `ℝ^d`. -/
-lemma euclidean_ext {x y : EuclideanSpace ℝ (Fin d)} (h : ∀ i, x i = y i) : x = y := by
-  have he : WithLp.ofLp x = WithLp.ofLp y := funext h
-  have := congrArg (WithLp.toLp (2 : ENNReal)) he
-  simpa using this
-
 /-- The coordinate map `x ↦ (round (x i))ᵢ` is injective on the lattice. -/
 lemma round_injOn_lattice :
     Set.InjOn (fun (x : EuclideanSpace ℝ (Fin d)) (i : Fin d) => round (x i)) (lattice d) := by

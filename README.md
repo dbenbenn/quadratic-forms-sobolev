@@ -183,6 +183,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | Cubes are closed / open; a cube containing `x` lies in `B̄_{h√d}(x)` | Lem. 7.2 | `QFS.continuous_coord`, `QFS.isClosed_closedCube`, `QFS.isOpen_cube`, `QFS.closedCube_subset_closedBall_of_mem` | ✅ proved |
 | **The Vitali family of cubes** | Lem. 7.2 | `QFS.unitBallVol`, `QFS.volume_closedBall_eq`, `QFS.cubeVitaliConst`, `QFS.cubeVitali_doubling`, `QFS.cubeVitali`, `QFS.closedCube_mem_setsAt`, `QFS.tendsto_closedCube_filterAt` | ✅ **proved** |
 | **Lemma 7.2**: differentiation along cubes | Lem. 7.2 | `QFS.lemma_lebesgue_diff` | ✅ **proved** |
+| **The half-closed cubes tile `ℝ^d`** | §3.2 | `QFS.existsUnique_mem_halfClosedCube` | ✅ **proved** |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
 | The lattice is closed under negation | (new) | `QFS.neg_mem_lattice` | ✅ proved |

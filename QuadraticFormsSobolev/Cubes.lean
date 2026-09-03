@@ -11,6 +11,12 @@ namespace QFS
 
 variable {d : ℕ}
 
+/-- Points of `ℝ^d` are determined by their coordinates. -/
+lemma euclidean_ext {x y : EuclideanSpace ℝ (Fin d)} (h : ∀ i, x i = y i) : x = y := by
+  have he : WithLp.ofLp x = WithLp.ofLp y := funext h
+  have := congrArg (WithLp.toLp (2 : ENNReal)) he
+  simpa using this
+
 /-- The maximum norm `‖x‖_∞` on `ℝ^d`, used in Definition 2.5. -/
 noncomputable def infNorm (x : EuclideanSpace ℝ (Fin d)) : ℝ := ⨆ i, |x i|
 

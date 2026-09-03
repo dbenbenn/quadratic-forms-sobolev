@@ -91,6 +91,53 @@ lemma two_mul_le_infNorm_sub [Nonempty (Fin d)] {h : ℝ} (hh : 0 < h)
   have h4 : (2 : ℝ) ≤ ((|n - m| : ℤ) : ℝ) := by exact_mod_cast h3
   nlinarith
 
+/-! ## The half-closed cubes tile `ℝ^d`
+
+"For technical reasons, we need the property that every `x` in `ℝ^d` is
+contained in some cube. Therefore we consider half-closed cubes." The cubes
+`Ã_h(x)`, `x ∈ hℤ^d`, do tile: every point lies in exactly one. -/
+
+/-- Every point of `ℝ^d` lies in exactly one half-closed cube `Ã_h(x)` with
+`x ∈ hℤ^d`. -/
+theorem existsUnique_mem_halfClosedCube {h : ℝ} (hh : 0 < h)
+    (s : EuclideanSpace ℝ (Fin d)) :
+    ∃! x : EuclideanSpace ℝ (Fin d), x ∈ scaledLattice d h ∧ s ∈ halfClosedCube h x := by
+  have key : ∀ (t : ℝ) (m : ℤ),
+      ((m : ℝ) * h - h / 2 ≤ t ∧ t < (m : ℝ) * h + h / 2) ↔ m = round (t / h) := by
+    intro t m
+    rw [round_eq]
+    constructor
+    · rintro ⟨h1, h2⟩
+      refine (Int.floor_eq_iff.mpr ⟨?_, ?_⟩).symm
+      · have hkey : ((m:ℝ) - 1 / 2) ≤ t / h := by
+          rw [le_div_iff₀ hh]
+          nlinarith [h1]
+        linarith
+      · have hkey : t / h < (m:ℝ) + 1 / 2 := by
+          rw [div_lt_iff₀ hh]
+          nlinarith [h2]
+        linarith
+    · rintro rfl
+      have h1 : ((⌊t / h + 1 / 2⌋ : ℤ) : ℝ) ≤ t / h + 1 / 2 := Int.floor_le _
+      have h2 : t / h + 1 / 2 < (⌊t / h + 1 / 2⌋ : ℤ) + 1 := Int.lt_floor_add_one _
+      have h3 : t = (t / h) * h := by field_simp
+      constructor <;> nlinarith [h1, h2, h3.le, h3.ge]
+  refine ⟨WithLp.toLp 2 (fun i => (round (s i / h) : ℝ) * h), ⟨fun i => ⟨round (s i / h), rfl⟩,
+    fun i => ?_⟩, ?_⟩
+  · have hc : (WithLp.toLp 2 (fun i => (round (s i / h) : ℝ) * h) :
+        EuclideanSpace ℝ (Fin d)) i = (round (s i / h) : ℝ) * h := rfl
+    rw [Set.mem_Ico, hc]
+    exact (key (s i) (round (s i / h))).mpr rfl
+  · rintro y ⟨hylat, hymem⟩
+    refine euclidean_ext (fun i => ?_)
+    obtain ⟨m, hm⟩ := hylat i
+    have hc : (WithLp.toLp 2 (fun i => (round (s i / h) : ℝ) * h) :
+        EuclideanSpace ℝ (Fin d)) i = (round (s i / h) : ℝ) * h := rfl
+    rw [hc, hm]
+    have hmem := hymem i
+    rw [Set.mem_Ico, hm] at hmem
+    rw [(key (s i) m).mp hmem]
+
 /-! ## Lemma 3.4 -/
 
 /-- **Lemma 3.4** of Bux–Kassmann–Schulze. For `x, y` in the lattice `hℤ^d` at
