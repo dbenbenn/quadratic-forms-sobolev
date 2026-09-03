@@ -24,3 +24,4 @@ import QuadraticFormsSobolev.BlockPaths
 import QuadraticFormsSobolev.Section6
 import QuadraticFormsSobolev.Rescaling
 import QuadraticFormsSobolev.Section32
+import QuadraticFormsSobolev.Section7
