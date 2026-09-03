@@ -35,7 +35,9 @@ the statement as printed is false:
   which is what its own "follows by scaling" argument gives
   (`QFS.lemma_cubes_literal_false`).
 * **Lemma 3.3** is false in dimension one at the radius `r = √d` at which
-  Proposition 3.5 uses it (`QFS.lemma_new_config_false_dim_one`).
+  Proposition 3.5 uses it (`QFS.lemma_new_config_false_dim_one`); for `d ≥ 2` it
+  is true, and proved here (`QFS.lemma_new_config`), by an argument the paper
+  does not give.
 * **Lemma 4.6** needs a hypothesis `z ∈ U` that is not stated.
 * **Theorem 4.1**'s induction is applied to a set that need not be connected;
   the repair is to run it on `B_r(x) ∩ Ṽ[x]` with the half-cone.
@@ -64,7 +66,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 2.7 | Lemma | cone in intersection | ✅ |
 | 3.1 | Corollary | `hℤ^d` rescaling | ❌ out of scope |
 | 3.2 | Lemma | the indicator inequality | ✅ |
-| 3.3 | Lemma | small cone inside `V^m_r` | ❗ **false for `d = 1`, `r = √d`** |
+| 3.3 | Lemma | small cone inside `V^m_r` | ❗ false for `d = 1`; ✅ **proved for `d ≥ 2`** (`QFS.lemma_new_config`) |
 | 3.4 | Lemma | `\|s−t\|` vs `\|x−y\|` | ✅ for `hℤ^d`; ❗ **false as printed** |
 | 3.5 | Proposition | test-function bound | ❌ out of scope (uses 3.3) |
 | 3.6 | Corollary | the rescaled kernel | ❌ out of scope |
@@ -95,18 +97,19 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 7.2 | Lemma | a Lebesgue differentiation argument | ❌ out of scope |
 
 Sections 2 and 4 are formalised completely, as is Section 5's auxiliary
-subsection (Lemmas 5.1–5.5). Section 3 is formalised as far as it can be without
-the machinery of Sections 5 and 6 (Lemma 3.3, which Proposition 3.5 needs, is
-false as stated). From Section 1, the function-space definitions, assumption
+subsection (Lemmas 5.1–5.5). Of Section 3, everything that does not need the
+kernel `ω^k_h` is formalised, Lemma 3.3 for `d ≥ 2` included. From Section 1, the function-space definitions, assumption
 (1.4), the reverse inequality and equation (1.6) are proved, and Theorems 1.1
 and 1.3 are recorded as type-checked `Prop`s so the remaining target is precise.
 **Section 5 is formalised completely**, Theorem 5.15 included
 (`QFS.path_props`); its Step 2 needed a repair, recorded as Deviation 16.
 **Section 6 is formalised**, so Theorem 1.3 — the paper's main discrete
 theorem — is proved (`QFS.theoremOneThree`). Its Section 6 needed a repair too:
-see Deviation 17. What is left is the continuous half, Theorem 1.1, which needs
-Section 3's discrete approximation and hence Lemma 3.3, false as stated (see
-Deviation 7).
+see Deviation 17. What is left is the continuous half, Theorem 1.1: it needs Section 3's
+discrete kernel `ω^k_h` and the limiting argument of §3.2, and its final step —
+from a ball `B*` down to `B` — is the appendix lemma the paper itself quotes
+from a Whitney decomposition and from Dyda's inequality (13), neither of which
+is available.
 
 ## What is proved, in detail
 
@@ -143,6 +146,12 @@ Deviation 7).
 | `λ_d(A_h^m(u)) ≥ L⁻¹ λ_d(A_h(u))` | §3 | `QFS.volume_cube_le_card_mul` | ✅ proved |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
+| The lattice is closed under negation | (new) | `QFS.neg_mem_lattice` | ✅ proved |
+| Only finitely many lattice points in a ball | §3, §5.2 | `QFS.lattice_inter_closedBall_finite` | ✅ proved |
+| **An orthogonal unit vector, for `d ≥ 2`** | Lem. 3.3 | `QFS.exists_orthogonal_unit` | ✅ **proved** |
+| Rotating the axis inside the cone | Lem. 3.3 | `QFS.rotAxis`, `QFS.inner_rotAxis`, `QFS.norm_rotAxis`, `QFS.angle_rotAxis` | ✅ proved |
+| **Lemma 3.3 for `d ≥ 2`, one cone** | Lem. 3.3 | `QFS.exists_thin_cone_subset` | ✅ **proved** |
+| **Lemma 3.3 for `d ≥ 2`, the paper's form** | Lem. 3.3 | `QFS.lemma_new_config` | ✅ **proved** |
 | Ball inside a cone: `‖u − tv‖ < t sin ϑ ⟹ u ∈ Ṽ` | §4–5 (implicit) | `QFS.mem_cone_of_norm_sub_lt` | ✅ proved |
 | Cones of apex `≤ π/2` are convex | (new; used for §4) | `QFS.convex_cone` | ✅ proved |
 | `V[x] ∩ V[y] ≠ ∅` for one double cone | Lem. 4.3 proof | `QFS.shift_inter_shift_nonempty` | ✅ proved |
@@ -357,10 +366,32 @@ Each departure from the paper, and why.
 
    This is a defect in the statement, not in the paper's results: for `d = 1`
    there is only one double cone, so `V^Γ[x] = ℝ \ {x}` and Theorems 1.1 and
-   1.3 hold trivially. For `d ≥ 2` the lemma is true but not obvious — one must
-   choose the axis `v(m)` to avoid the finitely many lines through the lattice
-   points of norm below `r / sin(θ_m/2)`, and only then shrink `θ`. That
-   argument is not in the paper and is not formalised here.
+   1.3 hold trivially.
+
+   **For `d ≥ 2` the lemma is true, and it is proved here** — but not obviously,
+   and the argument is not in the paper. `QFS.exists_thin_cone_subset` is the
+   single-cone version and `QFS.lemma_new_config` the paper's form, with one
+   apex angle for the whole family. The construction:
+
+   * `V^m_r` omits every point within `r` of the boundary of `V^m`, in
+     particular every point of norm at most `r/sin θ_m`. Only finitely many
+     lattice points are that short (`QFS.lattice_inter_closedBall_finite`), so
+     the axis must avoid their directions.
+   * `QFS.exists_orthogonal_unit` produces a unit vector orthogonal to the axis.
+     **This is the only place `d ≥ 2` is used**, and it is exactly what fails in
+     `d = 1`: with no orthogonal direction the cone cannot be made thin.
+   * `QFS.rotAxis u w t = cos t · u + sin t · w` rotates the axis inside the
+     cone, with `angle u (rotAxis u w t) = t` (`QFS.angle_rotAxis`). Each short
+     lattice point is parallel to at most one rotation, because a rotation is
+     determined by its angle to `u`; an interval of rotations is infinite
+     (`Set.Ioo_infinite`) while the short lattice points are finite, so some
+     rotation avoids all of them.
+   * The apex angle is then taken below the least of the resulting angles. A
+     lattice point of the resulting thin cone is therefore *long* — longer than
+     `r/sin(ϑ/4)` — and *nearly parallel* to `u`, and
+     `QFS.coneGap_eq_norm_mul_sin` turns that into a gap of more than `r` to the
+     boundary of `V^m`, which is membership in `V^m_r`
+     (`QFS.closedBall_subset_cone`).
 
 8. **Lemma 4.6 needs `z ∈ U`, which the paper does not state.** The lemma reads
    "Assume that the translated double cone `V[x]` contains a point `z` of type
@@ -567,13 +598,12 @@ together with the results the paper itself quotes from elsewhere.
 
 | Result | Paper | Why not |
 | --- | --- | --- |
-| Comparability on balls, continuous | Thm. 1.1 | Needs §3's discrete approximation, hence Lemma 3.3, which is false as stated (Deviation 7). Statement recorded as `QFS.TheoremOneOne`. |
+| Comparability on balls, continuous | Thm. 1.1 | Needs §3's discrete kernel and limiting argument, and a final step the paper quotes from a Whitney decomposition and Dyda's inequality (13). Statement recorded as `QFS.TheoremOneOne`. |
 | `H_k(Ω) = H^{α/2}(Ω)`, density | Thm. 1.4 | Depends on Thm. 1.1 and on Lipschitz-domain extension theory not in scope. |
 | Regular Dirichlet form; Markov process | Cor. 1.5 | Depends on Thm. 1.1 and on Dirichlet-form theory (Fukushima–Oshima–Takeda) absent from Mathlib. |
 | Weak Harnack, Hölder regularity | Cor. 1.6 | Quoted from Dyda–Kassmann; not proved in the paper. |
 | `hℤ^d` rescaling | Cor. 3.1 | A rescaling of Theorem 1.3; the rescaled discrete setting is not set up here. |
-| Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Lemma 3.3 (see Deviation 7). |
-| Lemma 3.3 for `d ≥ 2` | Lem. 3.3 | True but needs an argument the paper does not give; see Deviations 7. |
+| Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integrating the kernel over pairs of cubes; the measure-theoretic scaffolding is not set up here. Its three "tailor-made" inputs — Lemmas 3.2, 3.3 (for `d ≥ 2`) and 3.4 — **are** proved. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
 | Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §3 and to the continuous half. |
 
