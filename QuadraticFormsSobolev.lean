@@ -3,6 +3,7 @@ import QuadraticFormsSobolev.Defs
 import QuadraticFormsSobolev.ConeGeometry
 import QuadraticFormsSobolev.Cubes
 import QuadraticFormsSobolev.RefCones
+import QuadraticFormsSobolev.Section1
 import QuadraticFormsSobolev.Section3
 import QuadraticFormsSobolev.Section4
 import QuadraticFormsSobolev.Section5

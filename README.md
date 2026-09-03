@@ -16,11 +16,15 @@ in the discrete setting.
 
 The paper's main theorems rest on a long chaining-and-renormalisation argument
 (Sections 5 and 6) on top of a layer of point-set geometry and graph theory
-(Sections 2, 3 and 4). **This repository formalises that lower layer**: the full
-definitional set-up of Section 2, the geometric lemmas of Sections 2 and 3, and
-the whole of Section 4 — the paper's "continuous prelude", whose main result,
-**Theorem 4.1**, is proved here (`QFS.cont_connectivity`). See *Not attempted*
-below for what is deliberately left out.
+(Sections 2, 3 and 4). **This repository formalises that lower layer**: the
+function-space set-up of Section 1 (including equation (1.6)), the full
+definitional set-up of Section 2, the geometric lemmas of Sections 2 and 3, the
+whole of Section 4 — the paper's "continuous prelude", whose main result,
+**Theorem 4.1**, is proved here (`QFS.cont_connectivity`) — and Section 5's
+auxiliary results, Lemmas 5.1–5.5, the quantitative discrete counterparts of the
+Section 4 lemmas. The paper's main theorems (1.1 and 1.3) are recorded as
+type-checked `Prop`s, so what remains to be proved is stated precisely. See
+*Not attempted* below for what is deliberately left out.
 
 Along the way the formalisation turned up four defects in the paper; all are
 recorded under *Deviations*, and two of them are accompanied by Lean proofs that
@@ -42,9 +46,9 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 
 | # | Kind | Label | State |
 | --- | --- | --- | --- |
-| 1.1 | Theorem | main comparability, continuous | ❌ out of scope |
+| 1.1 | Theorem | main comparability, continuous | ⚪ statement recorded (`QFS.TheoremOneOne`), not proved |
 | 1.2 | Remark | strength of the hypotheses | ⚪ (condition (M) is `QFS.CondM`) |
-| 1.3 | Theorem | main comparability, discrete | ❌ out of scope |
+| 1.3 | Theorem | main comparability, discrete | ⚪ statement recorded (`QFS.TheoremOneThree`), not proved |
 | 1.4 | Theorem | `H_k(Ω) = H^{α/2}(Ω)` | ❌ out of scope |
 | 1.5 | Corollary | regular Dirichlet form | ❌ out of scope |
 | 1.6 | Corollary | Harnack / Hölder regularity | ❌ out of scope (quoted from [DyKa15]) |
@@ -68,11 +72,11 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 4.4 | Definition | well-connected in `U` | ✅ |
 | 4.5 | Lemma | three observations | ✅ (all three parts) |
 | 4.6 | Lemma | "über Bande" | ✅ (needs an unstated `z ∈ U`) |
-| 5.1 | Lemma | lattice points in cones | ❌ out of scope |
-| 5.2 | Corollary | discrete same-type | ❌ out of scope |
-| 5.3 | Definition | `r`-`R`-connected | ❌ out of scope |
-| 5.4 | Lemma | density, discrete | ❌ out of scope |
-| 5.5 | Lemma | "über Bande", discrete | ❌ out of scope |
+| 5.1 | Lemma | lattice points in cones | ✅ |
+| 5.2 | Corollary | discrete same-type | ✅ |
+| 5.3 | Definition | `r`-`R`-connected | ✅ |
+| 5.4 | Lemma | density, discrete | ✅ |
+| 5.5 | Lemma | "über Bande", discrete | ✅ |
 | 5.6 | Lemma | the jump constant `δ` | ❌ out of scope |
 | 5.7 | Lemma | the core induction | ❌ out of scope |
 | 5.8 | Corollary | discrete template | ❌ out of scope |
@@ -87,10 +91,15 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 7.1 | Lemma | auxiliary integral estimate | ❌ out of scope |
 | 7.2 | Lemma | a Lebesgue differentiation argument | ❌ out of scope |
 
-Sections 2 and 4 are formalised completely. Section 3 is formalised as far as it
-can be without the machinery of Sections 5 and 6 (Lemma 3.3, which Proposition
-3.5 needs, is false as stated). Sections 5, 6 and 7 are a formalisation project
-in their own right.
+Sections 2 and 4 are formalised completely, as is Section 5's auxiliary
+subsection (Lemmas 5.1–5.5). Section 3 is formalised as far as it can be without
+the machinery of Sections 5 and 6 (Lemma 3.3, which Proposition 3.5 needs, is
+false as stated). From Section 1, the function-space definitions, assumption
+(1.4), the reverse inequality and equation (1.6) are proved, and Theorems 1.1
+and 1.3 are recorded as type-checked `Prop`s so the remaining target is precise.
+Lemma 5.7 (the core induction, 185 lines of dense argument), the renormalisation
+machinery of Lemmas 5.8–5.16, and Section 6 remain a project in their own
+right.
 
 ## What is proved, in detail
 
@@ -143,6 +152,20 @@ in their own right.
 | Open classes + preconnected `U` ⟹ one class | Thm. 4.1, last step | `QFS.conn_of_wellConnected_of_isPreconnected` | ✅ proved |
 | The induction on the number of cone types | Thm. 4.1 proof | `QFS.conn_of_isPreconnected_of_finite` | ✅ proved |
 | **Theorem 4.1**: connectivity of `G[U]` | Thm. 4.1 | `QFS.cont_connectivity` | ✅ **proved** |
+| Kernel `\|x−y\|^{-d-α}`; the quadratic form | §1 | `QFS.jumpKernel`, `QFS.form`, `QFS.formHs` | ✅ defined |
+| Assumption (1.4) on `k`; discrete (1.7) on `ω` | eq. (1.4), (1.7) | `QFS.KernelBounds`, `QFS.DiscreteKernelBounds` | ✅ defined |
+| `H_k(Ω)`, `H^{α/2}(Ω)` | §1 | `QFS.Hk`, `QFS.Hs` | ✅ defined |
+| The "trivially true" reverse inequality of (1.5) | §1, after Thm. 1.1 | `QFS.form_le_formHs` | ✅ proved |
+| **Equation (1.6)**: `H^{α/2}(Ω) ⊆ H_k(Ω)` | eq. (1.6) | `QFS.Hs_subset_Hk` | ✅ **proved** |
+| Statement of Theorem 1.1 (with the `α`-uniform form) | Thm. 1.1 | `QFS.TheoremOneOne`, `QFS.TheoremOneOneUniform` | ⚪ stated, not proved |
+| Statement of Theorem 1.3 | Thm. 1.3 | `QFS.discreteForm`, `QFS.TheoremOneThree` | ⚪ stated, not proved |
+| Every `√d/2`-ball holds a lattice point | §5.1 preamble | `QFS.exists_lattice_mem_closedBall` | ✅ proved |
+| Paths not leaving a set | Def. 5.3 | `QFS.ConnWithin` | ✅ defined |
+| **Lemma 5.1 (1), (2)**: lattice points in cones | Lem. 5.1 | `QFS.exists_lattice_mem_cone`, `QFS.exists_lattice_mem_inter` | ✅ **proved** |
+| **Corollary 5.2**: discrete same type | Cor. 5.2 | `QFS.discr_connect_two_of_same_type` | ✅ **proved** |
+| `r`-`R`-connected | Def. 5.3 | `QFS.RRConnected` | ✅ defined |
+| **Lemma 5.4**: discrete density | Lem. 5.4 | `QFS.exists_rrConnected` | ✅ **proved** |
+| **Lemma 5.5**: discrete "über Bande" | Lem. 5.5 | `QFS.discr_ueber_bande` | ✅ **proved** |
 
 ## Deviations
 
@@ -278,8 +301,8 @@ formalised is the geometric and graph-theoretic layer they are built on.
 
 | Result | Paper | Why not |
 | --- | --- | --- |
-| Comparability on balls, continuous | Thm. 1.1 | Needs the whole of §§3, 5, 6. |
-| Comparability on balls, discrete | Thm. 1.3 | The paper's main theorem; needs §§5–6. |
+| Comparability on balls, continuous | Thm. 1.1 | Needs the whole of §§3, 5, 6. Statement recorded as `QFS.TheoremOneOne`. |
+| Comparability on balls, discrete | Thm. 1.3 | The paper's main theorem; needs §§5–6. Statement recorded as `QFS.TheoremOneThree`. |
 | `H_k(Ω) = H^{α/2}(Ω)`, density | Thm. 1.4 | Depends on Thm. 1.3 and on Lipschitz-domain extension theory not in scope. |
 | Regular Dirichlet form; Markov process | Cor. 1.5 | Depends on Thm. 1.1 and on Dirichlet-form theory (Fukushima–Oshima–Takeda) absent from Mathlib. |
 | Weak Harnack, Hölder regularity | Cor. 1.6 | Quoted from Dyda–Kassmann; not proved in the paper. |
@@ -287,7 +310,7 @@ formalised is the geometric and graph-theoretic layer they are built on.
 | Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Thm. 1.3's setting, and on Lemma 3.3 (see Deviations 7). |
 | Lemma 3.3 for `d ≥ 2` | Lem. 3.3 | True but needs an argument the paper does not give; see Deviations 7. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
-| Chaining and renormalisation | §5 (Lems. 5.1–5.16) | The technical heart of the paper; a formalisation project in its own right. |
+| Core induction; renormalisation | §5 (Lems. 5.6–5.16) | Lemma 5.7 alone is 185 lines of dense argument; 5.8–5.16 build the "town" and scale machinery. A project in its own right. (Lemmas 5.1–5.5 **are** formalised.) |
 | Proof of Theorem 1.3 | §6 | As above. |
 | Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §§3 and 6. |
 
