@@ -239,6 +239,12 @@ own right.
 | **Scale separation**: a length pins the scale | Thm. 5.15, Step 6 | `QFS.scale_separation` | ✅ **proved** |
 | **Centre count** at a fixed scale | Thm. 5.15, Step 6 | `QFS.ncard_lattice_scaled_ball_le` | ✅ **proved** |
 | **The multiplicity bound** from the three labels | Thm. 5.15, Step 6 | `QFS.card_le_mul_of_fiber_le` | ✅ **proved** |
+| Blocks are nonempty and pairwise distinct | Thm. 5.15, Step 2 | `QFS.block_nonempty`, `QFS.townIndex_ne` | ✅ proved |
+| **The favored graph relative to a cone choice** | Def. 5.13 (repaired) | `QFS.ConeChoice`, `QFS.choiceAdj`, `QFS.choiceGraph`, `QFS.favoredAdj_of_choiceAdj` | ✅ **defined** |
+| **The both-majority lift** | Thm. 5.15, Step 2 | `QFS.latticeAdj_of_choiceAdj` | ✅ **proved** |
+| **The alternating walk of the scheme** | Thm. 5.15, Step 2 | `QFS.exists_alternating_walk` | ✅ **proved** |
+| **Proposition 5.14 for the choice graph** | Prop. 5.14 (refined) | `QFS.ChoiceConn`, `QFS.renormalization_choice` | ✅ **proved** |
+| Step 1 for the choice graph | Thm. 5.15, Step 1 | `QFS.exists_choiceWalk_covering`, `QFS.exists_choiceWalk_of_choiceConn` | ✅ proved |
 | `#(B_R ∩ ℤ^d)` in `ncard` form | Thm. 5.15 | `QFS.ncard_lattice_inter_ball_le` | ✅ proved |
 
 ## Deviations
@@ -650,12 +656,41 @@ What the proof of 5.15 still needs, beyond what is here:
    elements, the set has at most `#S · #C · K` elements. With the labels the
    scale and the centre, and `K` the fibre bound of `φ_z`, this is Step 6.
 
-All four items are now discharged, and Step 1 is proved outright. What remains
-for Theorem 5.15 is assembly: constructing the `a²` walks as `SimpleGraph.Walk`s
-along the Step 1 block walk with alternating representatives (which needs the
-majority sets indexed by `ZMod a`), then reading off the four claims from the
-lemmas above. That is bookkeeping over the pieces rather than new mathematics,
-but it is a substantial amount of it. Section 6 sits on top.
+All four items are discharged, Step 1 is proved outright, and the assembly of
+Step 2 is built (see below). What remains is to package the result as
+`PathPropsHolds`: choosing the representatives `ρ` explicitly from the majority
+sets, and deriving claims (3) and (4) from `card_le_mul_of_fiber_le`,
+`cyclic_pair_injective` and `scale_separation`. Section 6 sits on top.
+
+## A gap in Definition 5.13
+
+Definition 5.13 puts an edge between blocks `Q` and `P` when **some** cone favored
+in `Q` contains `P` based at `Q`. That is too weak for Step 2. The scheme picks
+*one* representative per block and runs it along the whole block walk, so a block
+sitting between two edges must be a majority point for both witnessing cones at
+once — and different edges may be witnessed by different favored cones, a block
+having several only when there is a tie.
+
+The paper's own Step 2 repairs this in passing — "choose for every block in
+(bigpath) a favored cone" — so the object actually needed is the favored graph
+*relative to a choice of cones*, `QFS.choiceGraph`. It is a subgraph of
+Definition 5.13's (`QFS.favoredAdj_of_choiceAdj`), and Proposition 5.14 produces
+it: the proof already fixes a favored cone per block before anything else, and
+only the statement discarded that. `QFS.renormalization_choice` records the
+stronger conclusion, and `QFS.exists_choiceWalk_covering` is Step 1 in that graph.
+
+With the choice fixed, `QFS.latticeAdj_of_choiceAdj` gives the **both-majority
+lift**: a majority point of `Q` and a majority point of `P` are adjacent in `G`
+whichever way the favored edge points — so one representative per block does
+serve both incident edges. `QFS.exists_alternating_walk` then lifts a block walk
+to a walk in `G` of the same length, alternating between two indices of `ZMod a`
+and ending at the index determined by the parity of the length, which is exactly
+the paper's `q^k_i` at odd `k` and `q^k_{i+j}` at even `k`.
+
+The `Q ≠ P` in `choiceAdj` needs blocks at distinct centres to be distinct:
+`QFS.block_nonempty` (a cube of side `≥ 1` holds a lattice point) and
+`QFS.townIndex_ne`, where sparse population is used again — it gives
+`h > √d ℓ`, so distinct centres have disjoint cubes.
 
 ## Verification
 
