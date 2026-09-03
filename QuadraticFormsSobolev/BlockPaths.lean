@@ -200,4 +200,138 @@ theorem encard_reveals_le {a K₁ : ℕ} (f g idx : EuclideanSpace ℝ (Fin d) �
       ≤ ((8 * K₁ : ℕ) : ℕ∞) * ((9 * K₁ : ℕ) : ℕ∞) := mul_le_mul' hX hY
     _ = ((72 * K₁ * K₁ : ℕ) : ℕ∞) := by push_cast; ring
 
+/-! ## The local data of Steps 1 and 2, packaged
+
+Everything the assembly consumes, at one scale `m` and one centre `z`. Each field
+is supplied by a result already proved: `walk` by Proposition 5.14 for the choice
+graph, `jump` by Lemma 5.16, `rep`/`idx` by `exists_indexed_rep` and the
+pigeonhole of Step 2, and `hf`/`hg` by `exists_hash`. -/
+
+/-- The output of Steps 1 and 2 at one scale and one centre, before assembly. -/
+structure BlockData (Γ : Configuration (EuclideanSpace ℝ (Fin d))) (Δ R : ℝ)
+    (a K₁ N₀ m : ℕ) (z : EuclideanSpace ℝ (Fin d)) where
+  /-- The cone chosen in each block. -/
+  W : ConeChoice d
+  /-- The blocks in play. -/
+  Blk : Set (Set (EuclideanSpace ℝ (Fin d)))
+  /-- The blocks a point may jump into. -/
+  Jmp : Set (Set (EuclideanSpace ℝ (Fin d)))
+  jmp_sub : Jmp ⊆ Blk
+  /-- The `a` indexed representatives of each block's majority set. -/
+  rep : Set (EuclideanSpace ℝ (Fin d)) → ZMod a → EuclideanSpace ℝ (Fin d)
+  rep_mem : ∀ B i, rep B i ∈ blockFibre Γ B (W B)
+  rep_lat : ∀ B i, rep B i ∈ lattice d
+  /-- The index, recoverable from the representative. -/
+  idx : EuclideanSpace ℝ (Fin d) → ZMod a
+  idx_rep : ∀ B ∈ Blk, ∀ i, idx (rep B i) = i
+  /-- **Step 1.** Two blocks a point may jump into are joined in the choice graph
+  by a walk of at most `N₀` edges through blocks in play. -/
+  walk : ∀ B ∈ Jmp, ∀ B' ∈ Jmp, ∃ Wk : (choiceGraph Γ W).Walk B B',
+    Wk.length ≤ N₀ ∧ ∀ C ∈ Wk.support, C ∈ Blk
+  /-- **Lemma 5.16.** Every admissible point is joined in `G` to every point of
+  some block it may jump into, by an edge at least `Δ^m` long. -/
+  jump : ∀ x, AdmissiblePt Δ m z x → ∃ B ∈ Jmp,
+    ∀ q ∈ B, (latticeGraph Γ).Adj x q ∧ Δ ^ m ≤ ‖q - x‖
+  /-- Distinct blocks in play are at least `Δ^m` apart. -/
+  sep : ∀ B ∈ Blk, ∀ B' ∈ Blk, B ≠ B' → ∀ p ∈ B, ∀ q ∈ B', Δ ^ m ≤ ‖p - q‖
+  /-- Every point of every block in play lies in `B_{Δ^{m+1}R}(Δ^{m+1}z)`. -/
+  near : ∀ B ∈ Blk, ∀ q ∈ B, ‖Δ ^ (m + 1) • z - q‖ < Δ ^ (m + 1) * R
+  /-- The hash of `y`, which chooses the scheme's `i`. -/
+  hf : EuclideanSpace ℝ (Fin d) → ZMod a
+  /-- The hash of `x`, which chooses the scheme's `i + j`. -/
+  hg : EuclideanSpace ℝ (Fin d) → ZMod a
+  hf_bal : ∀ γ, {y | AdmissiblePt Δ m z y ∧ hf y = γ}.encard ≤ (K₁ : ℕ∞)
+  hg_bal : ∀ γ, {x | AdmissiblePt Δ m z x ∧ hg x = γ}.encard ≤ (K₁ : ℕ∞)
+
+/-! ## Step 2: the assembly
+
+For an admissible pair, jump `x` into a block, run the alternating lift of a
+block walk with `α = f y + g x` and `β = g x`, and jump out to `y`. -/
+
+/-- **Steps 1 and 2 assembled.** The local data produces the `ScaleData` that
+`pathProps_of_scaleData` consumes. -/
+noncomputable def scaleData_of_blockData {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {Δ R : ℝ} {a K₁ N₀ m : ℕ} [NeZero a] {z : EuclideanSpace ℝ (Fin d)}
+    (hΔ : 0 < Δ) (hR : 2 * Real.sqrt d < R) (D : BlockData Γ Δ R a K₁ N₀ m z) :
+    ScaleData Γ Δ R (N₀ + 2) (72 * K₁ * K₁) m z := by
+  classical
+  have hΔm : (0:ℝ) < Δ ^ (m + 1) := pow_pos hΔ _
+  -- an admissible point is itself well inside the ball
+  have hnearpt : ∀ p : EuclideanSpace ℝ (Fin d), AdmissiblePt Δ m z p →
+      ‖Δ ^ (m + 1) • z - p‖ < Δ ^ (m + 1) * R := by
+    intro p hp
+    rw [norm_sub_rev]
+    calc ‖p - Δ ^ (m + 1) • z‖ ≤ 2 * Real.sqrt d * Δ ^ (m + 1) := hp.2
+      _ < Δ ^ (m + 1) * R := by nlinarith
+  have key : ∀ x y : EuclideanSpace ℝ (Fin d), Admissible Δ m z x y →
+      ∃ w : (latticeGraph Γ).Walk x y, w.length ≤ N₀ + 2 ∧
+        (∀ e ∈ w.edges, Δ ^ m ≤ edgeLen e) ∧
+        (∀ e ∈ w.edges, ∀ u ∈ e, ‖Δ ^ (m + 1) • z - u‖ < Δ ^ (m + 1) * R) ∧
+        (∀ e ∈ w.edges, Reveals D.hf D.hg D.idx e x y) := by
+    intro x y hadm
+    obtain ⟨Bx, hBxJ, hBx⟩ := D.jump x hadm.left
+    obtain ⟨By, hByJ, hBy⟩ := D.jump y hadm.right
+    have hBxB : Bx ∈ D.Blk := D.jmp_sub hBxJ
+    have hByB : By ∈ D.Blk := D.jmp_sub hByJ
+    obtain ⟨Wk, hWklen, hWksup⟩ := D.walk Bx hBxJ By hByJ
+    obtain ⟨lift, hliftlen, hlifte⟩ :=
+      exists_alternating_walk D.rep D.rep_mem D.rep_lat Wk (D.hf y + D.hg x) (D.hg x)
+    have hax : (latticeGraph Γ).Adj x (D.rep Bx (D.hf y + D.hg x)) :=
+      (hBx _ (D.rep_mem Bx _).1).1
+    have hay : (latticeGraph Γ).Adj
+        (D.rep By (if Even Wk.length then D.hf y + D.hg x else D.hg x)) y :=
+      ((hBy _ (D.rep_mem By _).1).1).symm
+    refine ⟨(SimpleGraph.Walk.cons hax lift).concat hay, ?_, ?_, ?_, ?_⟩
+    · rw [SimpleGraph.Walk.length_concat, SimpleGraph.Walk.length_cons, hliftlen]
+      omega
+    all_goals
+      intro e he
+      rw [SimpleGraph.Walk.edges_concat, SimpleGraph.Walk.edges_cons,
+        List.concat_eq_append, List.cons_append, List.mem_cons, List.mem_append,
+        List.mem_singleton] at he
+    · -- every edge is at least `Δ^m` long
+      rcases he with rfl | he | rfl
+      · rw [edgeLen_mk, norm_sub_rev]
+        exact (hBx _ (D.rep_mem Bx _).1).2
+      · obtain ⟨B₁, hB₁, B₂, hB₂, hne, rfl⟩ := hlifte e he
+        rw [edgeLen_mk]
+        exact D.sep B₁ (hWksup B₁ hB₁) B₂ (hWksup B₂ hB₂) hne _ (D.rep_mem B₁ _).1
+          _ (D.rep_mem B₂ _).1
+      · rw [edgeLen_mk]
+        exact (hBy _ (D.rep_mem By _).1).2
+    · -- every endpoint is near the centre
+      rcases he with rfl | he | rfl
+      · intro u hu
+        rcases Sym2.mem_iff.mp hu with rfl | rfl
+        · exact hnearpt u hadm.left
+        · exact D.near Bx hBxB _ (D.rep_mem Bx _).1
+      · obtain ⟨B₁, hB₁, B₂, hB₂, -, rfl⟩ := hlifte e he
+        intro u hu
+        rcases Sym2.mem_iff.mp hu with rfl | rfl
+        · exact D.near B₁ (hWksup B₁ hB₁) _ (D.rep_mem B₁ _).1
+        · exact D.near B₂ (hWksup B₂ hB₂) _ (D.rep_mem B₂ _).1
+      · intro u hu
+        rcases Sym2.mem_iff.mp hu with rfl | rfl
+        · exact D.near By hByB _ (D.rep_mem By _).1
+        · exact hnearpt u hadm.right
+    · -- every edge reveals the hashes
+      rcases he with rfl | he | rfl
+      · exact Or.inl ⟨x, Sym2.mem_mk_left _ _, _, Sym2.mem_mk_right _ _, rfl,
+          (D.idx_rep Bx hBxB _).symm⟩
+      · obtain ⟨B₁, hB₁, B₂, hB₂, -, rfl⟩ := hlifte e he
+        exact Or.inr (Or.inr ⟨_, Sym2.mem_mk_left _ _, _, Sym2.mem_mk_right _ _,
+          (D.idx_rep B₂ (hWksup B₂ hB₂) _).symm,
+          (D.idx_rep B₁ (hWksup B₁ hB₁) _).symm⟩)
+      · refine Or.inr (Or.inl ⟨y, Sym2.mem_mk_right _ _, _, Sym2.mem_mk_left _ _, rfl, ?_⟩)
+        rw [D.idx_rep By hByB]
+        by_cases hev : Even Wk.length
+        · exact Or.inr (by rw [if_pos hev])
+        · exact Or.inl (by rw [if_neg hev])
+  choose path hlen hlb hnear hrev using key
+  refine ⟨path, hlen, hlb, hnear, fun e => ?_⟩
+  refine le_trans (Set.encard_le_encard ?_)
+    (encard_reveals_le D.hf D.hg D.idx (AdmissiblePt Δ m z) D.hf_bal D.hg_bal e)
+  rintro ⟨x, y⟩ ⟨h, he⟩
+  exact ⟨h.left, h.right, hrev x y h e he⟩
+
 end QFS
