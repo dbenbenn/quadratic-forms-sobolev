@@ -197,7 +197,8 @@ pairs. -/
 scale and centre, assembles into the global path family of Theorem 5.15. -/
 theorem pathProps_of_scaleData {C : ℕ} (hd : 1 ≤ d) (hΔ : 2 ≤ Δ) (hR : 1 ≤ R)
     (hC : 2 * Δ * R ≤ 2 ^ C)
-    (data : ∀ (m : ℕ) (z : EuclideanSpace ℝ (Fin d)), ScaleData Γ Δ R t K m z) :
+    (data : ∀ (m : ℕ) (z : EuclideanSpace ℝ (Fin d)), z ∈ lattice d →
+      ScaleData Γ Δ R t K m z) :
     PathProps Γ t ((2 * C + 1) * (2 * ⌈R⌉₊ + 1) ^ d * K) (2 * Δ * R) := by
   classical
   have hΔ1 : (1:ℝ) < Δ := by linarith
@@ -213,8 +214,8 @@ theorem pathProps_of_scaleData {C : ℕ} (hd : 1 ≤ d) (hΔ : 2 ≤ Δ) (hR : 1
         (∀ u ∈ e, ‖Δ ^ (mz.1 + 1) • mz.2 - u‖ < Δ ^ (mz.1 + 1) * R) ∧
         mz.2 ∈ lattice d ∧
         Δ ^ mz.1 ≤ ‖x.1 - y.1‖ ∧ ‖x.1 - y.1‖ < Δ ^ (mz.1 + 1) ∧
-        (∃ h : Admissible Δ mz.1 mz.2 x.1 y.1,
-          e ∈ ((data mz.1 mz.2).path x.1 y.1 h).edges) := by
+        (∃ (hz : mz.2 ∈ lattice d) (h : Admissible Δ mz.1 mz.2 x.1 y.1),
+          e ∈ ((data mz.1 mz.2 hz).path x.1 y.1 h).edges) := by
     intro x y
     by_cases hxy : x.1 = y.1
     · refine ⟨(0, 0), (SimpleGraph.Walk.nil (u := x.1)).copy rfl hxy, ?_, ?_⟩
@@ -222,12 +223,13 @@ theorem pathProps_of_scaleData {C : ℕ} (hd : 1 ≤ d) (hΔ : 2 ≤ Δ) (hR : 1
       · intro e he
         simp [SimpleGraph.Walk.edges_copy] at he
     · obtain ⟨m, z, hzlat, hadm⟩ := exists_admissible hΔ1 hd x.2 y.2 hxy
-      refine ⟨(m, z), (data m z).path x.1 y.1 hadm, (data m z).length_le _ _ _, ?_⟩
+      refine ⟨(m, z), (data m z hzlat).path x.1 y.1 hadm,
+        (data m z hzlat).length_le _ _ _, ?_⟩
       intro e he
-      exact ⟨(data m z).edge_lb _ _ _ e he,
-        (data m z).edgeLen_lt _ _ _ e he,
-        (data m z).edge_near _ _ _ e he, hzlat,
-        hadm.2.2.1, hadm.2.2.2.1, ⟨hadm, he⟩⟩
+      exact ⟨(data m z hzlat).edge_lb _ _ _ e he,
+        (data m z hzlat).edgeLen_lt _ _ _ e he,
+        (data m z hzlat).edge_near _ _ _ e he, hzlat,
+        hadm.2.2.1, hadm.2.2.2.1, ⟨hzlat, hadm, he⟩⟩
   choose sel p hlen hedge using key
   refine ⟨p, hlen, ?_, ?_⟩
   · -- **Step 6: the multiplicity bound.**
@@ -245,8 +247,9 @@ theorem pathProps_of_scaleData {C : ℕ} (hd : 1 ≤ d) (hΔ : 2 ≤ Δ) (hR : 1
         ⋃ n ∈ Finset.Icc ((sel q₀.1 q₀.2).1 - C) ((sel q₀.1 q₀.2).1 + C),
           ⋃ w ∈ (lattice_scaled_ball_finite (s := Δ ^ (n + 1)) (R := R)
               (pow_pos hΔ0 _) a).toFinset,
-            {q : LatticePt d × LatticePt d | ∃ h : Admissible Δ n w q.1.1 q.2.1,
-              s(a, b) ∈ ((data n w).path q.1.1 q.2.1 h).edges})) ?_
+            {q : LatticePt d × LatticePt d | ∃ (hw : w ∈ lattice d)
+              (h : Admissible Δ n w q.1.1 q.2.1),
+              s(a, b) ∈ ((data n w hw).path q.1.1 q.2.1 h).edges})) ?_
     · -- Every pair using the edge is indexed by its own scale and centre.
       rintro q hq
       obtain ⟨hlb, hub, hnear, hwlat, -, -, hex⟩ := hedge q.1 q.2 s(a, b) hq
@@ -268,20 +271,28 @@ theorem pathProps_of_scaleData {C : ℕ} (hd : 1 ≤ d) (hΔ : 2 ≤ Δ) (hR : 1
       calc (⋃ n ∈ Finset.Icc ((sel q₀.1 q₀.2).1 - C) ((sel q₀.1 q₀.2).1 + C),
               ⋃ w ∈ (lattice_scaled_ball_finite (s := Δ ^ (n + 1)) (R := R)
                   (pow_pos hΔ0 _) a).toFinset,
-                {q : LatticePt d × LatticePt d | ∃ h : Admissible Δ n w q.1.1 q.2.1,
-                  s(a, b) ∈ ((data n w).path q.1.1 q.2.1 h).edges}).encard
+                {q : LatticePt d × LatticePt d | ∃ (hw : w ∈ lattice d)
+                  (h : Admissible Δ n w q.1.1 q.2.1),
+                  s(a, b) ∈ ((data n w hw).path q.1.1 q.2.1 h).edges}).encard
           ≤ ∑ n ∈ Finset.Icc ((sel q₀.1 q₀.2).1 - C) ((sel q₀.1 q₀.2).1 + C),
               (⋃ w ∈ (lattice_scaled_ball_finite (s := Δ ^ (n + 1)) (R := R)
                   (pow_pos hΔ0 _) a).toFinset,
-                {q : LatticePt d × LatticePt d | ∃ h : Admissible Δ n w q.1.1 q.2.1,
-                  s(a, b) ∈ ((data n w).path q.1.1 q.2.1 h).edges}).encard :=
+                {q : LatticePt d × LatticePt d | ∃ (hw : w ∈ lattice d)
+                  (h : Admissible Δ n w q.1.1 q.2.1),
+                  s(a, b) ∈ ((data n w hw).path q.1.1 q.2.1 h).edges}).encard :=
             Finset.set_encard_biUnion_le _ _
         _ ≤ ∑ n ∈ Finset.Icc ((sel q₀.1 q₀.2).1 - C) ((sel q₀.1 q₀.2).1 + C),
               ∑ _w ∈ (lattice_scaled_ball_finite (s := Δ ^ (n + 1)) (R := R)
                   (pow_pos hΔ0 _) a).toFinset, (K : ℕ∞) := by
             refine Finset.sum_le_sum (fun n _ => ?_)
             refine le_trans (Finset.set_encard_biUnion_le _ _) (Finset.sum_le_sum ?_)
-            exact fun w _ => (data n w).fibre_le_latticePt _
+            intro w hw
+            have hwlat : w ∈ lattice d :=
+              ((Set.Finite.mem_toFinset _).mp hw).1
+            refine le_trans (Set.encard_le_encard ?_)
+              ((data n w hwlat).fibre_le_latticePt s(a, b))
+            rintro q ⟨hw', h, hq⟩
+            exact ⟨h, hq⟩
         _ = ∑ n ∈ Finset.Icc ((sel q₀.1 q₀.2).1 - C) ((sel q₀.1 q₀.2).1 + C),
               (((lattice_scaled_ball_finite (s := Δ ^ (n + 1)) (R := R)
                 (pow_pos hΔ0 _) a).toFinset.card * K : ℕ) : ℕ∞) := by
@@ -324,7 +335,8 @@ theorem pathPropsHolds_of_scaleData {ϑ R₀ : ℝ} {C : ℕ} (hd : 1 ≤ d) (h�
     (hR : 1 ≤ R) (hC : 2 * Δ * R ≤ 2 ^ C) (ht : 0 < t) (hK : 0 < K)
     (hR₀ : R₀ ≤ 2 * Δ * R)
     (data : ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ →
-      ∀ (m : ℕ) (z : EuclideanSpace ℝ (Fin d)), ScaleData Γ Δ R t K m z) :
+      ∀ (m : ℕ) (z : EuclideanSpace ℝ (Fin d)), z ∈ lattice d →
+        ScaleData Γ Δ R t K m z) :
     PathPropsHolds d ϑ R₀ := by
   refine ⟨t, (2 * C + 1) * (2 * ⌈R⌉₊ + 1) ^ d * K, 2 * Δ * R, ht, ?_, hR₀,
     fun Γ hΓ => pathProps_of_scaleData hd hΔ hR hC (data Γ hΓ)⟩

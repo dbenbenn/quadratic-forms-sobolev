@@ -780,4 +780,47 @@ theorem exists_blockData {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd : 
       hf_bal := hbal hfun hfbal
       hg_bal := hbal gfun hgbal }
 
+/-! ## Theorem 5.15
+
+Steps 1–2 (`exists_blockData`), Step 2's assembly (`scaleData_of_blockData`) and
+Steps 3–6 (`pathProps_of_scaleData`) compose. The reduction to boundedly many
+types is Corollary 2.4: `ref_config_uniform` replaces `Γ` by a configuration with
+at most `L` types whose cones sit inside `Γ`'s, and `PathProps.mono_config`
+carries the conclusion back. -/
+
+/-- **Theorem 5.15** of Bux–Kassmann–Schulze. -/
+theorem path_props (hd : 1 ≤ d) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (R₀ : ℝ) :
+    PathPropsHolds d ϑ R₀ := by
+  classical
+  have hϑ3 : (0:ℝ) < ϑ / 3 := by positivity
+  have hϑ3' : ϑ / 3 ≤ π / 2 := by linarith [pi_pos]
+  obtain ⟨L, href⟩ := ref_config_uniform (E := EuclideanSpace ℝ (Fin d)) hϑ hϑ'
+  obtain ⟨Δ, R, K₁, N₀, hΔ2, hΔR₀, hRd, hK₁, hbd⟩ :=
+    exists_blockData (d := d) hϑ3 hϑ3' hd (L := max L 1) (by omega) R₀
+  have hsd1 : (1:ℝ) ≤ Real.sqrt d := by
+    rw [show (1:ℝ) = Real.sqrt 1 by simp]
+    exact Real.sqrt_le_sqrt (by exact_mod_cast hd)
+  have hR1 : (1:ℝ) ≤ R := by linarith
+  have hΔ2R : (2:ℝ) ≤ (Δ:ℝ) := by exact_mod_cast hΔ2
+  have hΔ0 : (0:ℝ) < (Δ:ℝ) := by linarith
+  obtain ⟨C, hC⟩ : ∃ C : ℕ, 2 * (Δ:ℝ) * R ≤ 2 ^ C := by
+    obtain ⟨C, hC⟩ := pow_unbounded_of_one_lt (2 * (Δ:ℝ) * R) (by norm_num : (1:ℝ) < 2)
+    exact ⟨C, hC.le⟩
+  refine ⟨N₀ + 2, (2 * C + 1) * (2 * ⌈R⌉₊ + 1) ^ d * (72 * K₁ * K₁), 2 * (Δ:ℝ) * R,
+    by omega, ?_, by nlinarith, fun Γ hΓ => ?_⟩
+  · exact Nat.mul_pos (Nat.mul_pos (by omega) (Nat.pow_pos (by omega)))
+      (Nat.mul_pos (Nat.mul_pos (by omega) hK₁) hK₁)
+  -- pass to a configuration with at most `L` types
+  obtain ⟨Γ', hrange, hsubc, -, hΓ'⟩ := href Γ hΓ
+  refine PathProps.mono_config hsubc ?_
+  have hfin : (Set.range Γ').Finite := Set.finite_of_encard_le_coe hrange
+  have htypes : ∀ B : Set (EuclideanSpace ℝ (Fin d)), (Γ' '' B).ncard ≤ max L 1 := by
+    intro B
+    refine le_trans (le_trans (Set.ncard_le_ncard (Set.image_subset_range _ _) hfin) ?_)
+      (le_max_left L 1)
+    rw [← hfin.cast_ncard_eq] at hrange
+    exact_mod_cast hrange
+  exact pathProps_of_scaleData hd hΔ2R hR1 hC (fun m z hz =>
+    scaleData_of_blockData hΔ0 hRd (Classical.choice (hbd Γ' hΓ' htypes m z hz)))
+
 end QFS
