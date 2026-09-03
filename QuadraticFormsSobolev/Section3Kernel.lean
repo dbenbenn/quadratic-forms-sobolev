@@ -389,4 +389,310 @@ theorem prop_test_fct {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd : 2 �
     (add_le_add (hind x y hx hy) (hind y x hy hx)) le_rfl))
     (mul_le_mul' hvolx hvoly)
 
+/-! ## Corollary 3.6: the same at scale `h`
+
+Everything in Proposition 3.5's proof is scale-covariant, so rather than
+transporting the *integral* along `x ↦ hx` — which would need the change of
+variables for Lebesgue measure — the estimate is proved at scale `h` directly.
+The `h`'s cancel exactly: the prefactor `h^{-2d}` of `ω^k_h` against the two cube
+volumes `h^d`, so the constant `C` is the same as at scale `1`, which is the
+content of the paper's rescaling argument. -/
+
+lemma sub_mem_scaledLattice {h : ℝ} {x y : EuclideanSpace ℝ (Fin d)}
+    (hx : x ∈ scaledLattice d h) (hy : y ∈ scaledLattice d h) :
+    x - y ∈ scaledLattice d h := by
+  intro i
+  obtain ⟨n, hn⟩ := hx i
+  obtain ⟨m, hm⟩ := hy i
+  refine ⟨n - m, ?_⟩
+  have he : (x - y) i = x i - y i := by simp
+  rw [he, hn, hm]
+  push_cast
+  ring
+
+/-- Shrinking commutes with scaling, for a set closed under positive scaling. -/
+lemma mem_shrink_smul {V : Set (EuclideanSpace ℝ (Fin d))}
+    (hV : ∀ t : ℝ, 0 < t → ∀ p, p ∈ V → t • p ∈ V) {h : ℝ} (hh : 0 < h) {r : ℝ}
+    {p : EuclideanSpace ℝ (Fin d)} (hp : p ∈ shrink V r) : h • p ∈ shrink V (h * r) := by
+  refine ⟨hV h hh p hp.1, fun z hz => ?_⟩
+  rw [Metric.mem_closedBall, dist_eq_norm] at hz
+  have hzz : h⁻¹ • z ∈ closedBall p r := by
+    rw [Metric.mem_closedBall, dist_eq_norm]
+    have he : h⁻¹ • z - p = h⁻¹ • (z - h • p) := by
+      rw [smul_sub, smul_smul, inv_mul_cancel₀ (ne_of_gt hh), one_smul]
+    rw [he, norm_smul, Real.norm_eq_abs, abs_of_pos (by positivity)]
+    rw [inv_mul_le_iff₀ hh]
+    linarith
+  have := hV h hh _ (hp.2 hzz)
+  rwa [smul_smul, mul_inv_cancel₀ (ne_of_gt hh), one_smul] at this
+
+/-- **Lemma 3.3 at scale `h`**: the thin cone's points of `hℤ^d` lie in the
+`h√d`-shrinking. -/
+lemma thin_cone_subset_scaled {V : Set (EuclideanSpace ℝ (Fin d))}
+    (hV : ∀ t : ℝ, 0 < t → ∀ p, p ∈ V → t • p ∈ V) {w : EuclideanSpace ℝ (Fin d)}
+    (hw : ‖w‖ = 1) {θ' : ℝ} (hθ0 : 0 < θ') (hθle : θ' ≤ π / 2) {h : ℝ} (hh : 0 < h)
+    (hsub : doubleCone w θ' ∩ lattice d ⊆ shrink V (Real.sqrt d) ∩ lattice d) :
+    doubleCone w θ' ∩ scaledLattice d h ⊆ shrink V (h * Real.sqrt d) := by
+  rintro p ⟨hpc, hplat⟩
+  have h1 : h⁻¹ • p ∈ lattice d := inv_smul_mem_lattice (ne_of_gt hh) hplat
+  have h2 : h⁻¹ • p ∈ doubleCone w θ' :=
+    smul_mem_doubleCone hw hθ0 hθle (by positivity) hpc
+  have h4 := mem_shrink_smul hV hh (hsub ⟨h2, h1⟩).1
+  rwa [smul_smul, mul_inv_cancel₀ (ne_of_gt hh), one_smul] at h4
+
+/-- **Lemma 3.2** in `ℝ≥0∞`, at scale `h`. -/
+theorem lemma_min_dist_E_scaled {V W : Set (EuclideanSpace ℝ (Fin d))} {h : ℝ}
+    {x y s t : EuclideanSpace ℝ (Fin d)} (hs : s ∈ cube h x) (ht : t ∈ cube h y) :
+    indE (shift (shrink V (h * Real.sqrt d)) x) y
+        + indE (shift (shrink W (h * Real.sqrt d)) y) x
+      ≤ indE (shift (shrink V (h / 2 * Real.sqrt d)) x) t
+        + indE (shift (shrink W (h / 2 * Real.sqrt d)) y) s := by
+  refine add_le_add (indE_le_indE (fun hy => ?_)) (indE_le_indE (fun hx => ?_))
+  · exact cube_subset_of_mem_shift_shrink_scaled hy ht
+  · exact cube_subset_of_mem_shift_shrink_scaled hx hs
+
+/-- **The pointwise estimate of Proposition 3.5**, at scale `h`. -/
+theorem discreteKernel_integrand_ge_scaled
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {α Λ : ℝ}
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hα : 0 < α) {θ : ℝ} (F : RefFamily Γ θ) {h : ℝ}
+    (hh : 0 < h) {x y : EuclideanSpace ℝ (Fin d)} (hx : x ∈ scaledLattice d h)
+    (hy : y ∈ scaledLattice d h) (hxy : Real.sqrt d * h < ‖x - y‖)
+    {m n s t : EuclideanSpace ℝ (Fin d)} (hs : s ∈ cubeCone Γ (F.cone m) h x)
+    (ht : t ∈ cubeCone Γ (F.cone n) h y) :
+    ENNReal.ofReal Λ⁻¹ *
+        ((indE (F.shrunkAt m (h * Real.sqrt d) x) y
+          + indE (F.shrunkAt n (h * Real.sqrt d) y) x)
+          * ENNReal.ofReal ((2 * Real.sqrt d) ^ (-(d:ℝ) - α) * ‖x - y‖ ^ (-(d:ℝ) - α)))
+      ≤ k s t := by
+  have hd : 0 < d := by
+    rcases Nat.eq_zero_or_pos d with rfl | hd
+    · exfalso
+      have h0 : ‖x - y‖ = 0 := by simp [EuclideanSpace.norm_eq]
+      rw [h0] at hxy
+      simp at hxy
+    · exact hd
+  have hsd : (0:ℝ) < Real.sqrt d := Real.sqrt_pos.mpr (by exact_mod_cast hd)
+  have hxy0 : (0:ℝ) < ‖x - y‖ := lt_trans (by positivity) hxy
+  have hexp : (-(d:ℝ) - α) ≤ 0 := by
+    have : (0:ℝ) ≤ (d:ℝ) := Nat.cast_nonneg d
+    linarith
+  have hs1 : s ∈ cube h x := hs.1
+  have ht1 : t ∈ cube h y := ht.1
+  have hbr1 : indE (shift (shrink (F.cone m) (h / 2 * Real.sqrt d)) x) t
+      ≤ indE (coneAt Γ s) t := by
+    refine indE_le_indE (fun hmem => ?_)
+    rw [mem_coneAt]
+    exact hs.2 ((cone_in_intersection (F.cone m) hh.le x hs1).2 hmem)
+  have hbr2 : indE (shift (shrink (F.cone n) (h / 2 * Real.sqrt d)) y) s
+      ≤ indE (coneAt Γ t) s := by
+    refine indE_le_indE (fun hmem => ?_)
+    rw [mem_coneAt]
+    exact ht.2 ((cone_in_intersection (F.cone n) hh.le y ht1).2 hmem)
+  have hker : ENNReal.ofReal ((2 * Real.sqrt d) ^ (-(d:ℝ) - α) * ‖x - y‖ ^ (-(d:ℝ) - α))
+      ≤ jumpKernel d α s t := by
+    obtain ⟨hlow, hup⟩ := lemma_cubes hh hx hy hxy hs1 ht1
+    have hst0 : (0:ℝ) < ‖s - t‖ := lt_trans (by positivity) hlow
+    have h1 : ‖s - t‖ ^ (-(d:ℝ) - α) ≥ (2 * Real.sqrt d * ‖x - y‖) ^ (-(d:ℝ) - α) :=
+      Real.rpow_le_rpow_of_nonpos hst0 hup.le hexp
+    have h2 : (2 * Real.sqrt d * ‖x - y‖) ^ (-(d:ℝ) - α)
+        = (2 * Real.sqrt d) ^ (-(d:ℝ) - α) * ‖x - y‖ ^ (-(d:ℝ) - α) :=
+      Real.mul_rpow (by positivity) (norm_nonneg _)
+    rw [jumpKernel]
+    refine ENNReal.ofReal_le_ofReal ?_
+    linarith [h1, h2.le, h2.ge]
+  refine le_trans (mul_le_mul' le_rfl (mul_le_mul' ?_ hker)) (hk.lower s t)
+  exact le_trans (lemma_min_dist_E_scaled hs1 ht1) (add_le_add hbr1 hbr2)
+
+/-- A favoured sub-cube fills at least a `1/L` share of the cube, at scale `h`. -/
+lemma inv_card_le_volume_cubeCone_scaled
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {θ : ℝ} (F : RefFamily Γ θ)
+    (hne : F.axes.Nonempty) {h : ℝ} (hh : 0 < h) {x v : EuclideanSpace ℝ (Fin d)}
+    (hv : IsFavoured F h x v) :
+    ENNReal.ofReal (h ^ d) * ((F.axes.card : ℝ≥0∞))⁻¹
+      ≤ volume (cubeCone Γ (F.cone v) h x) := by
+  have hL : (F.axes.card : ℝ≥0∞) ≠ 0 := by
+    simp only [ne_eq, Nat.cast_eq_zero, Finset.card_eq_zero]
+    exact Finset.nonempty_iff_ne_empty.mp hne
+  have hLt : (F.axes.card : ℝ≥0∞) ≠ ⊤ := ENNReal.natCast_ne_top _
+  have h1 : ENNReal.ofReal (h ^ d)
+      ≤ (F.axes.card : ℝ≥0∞) * volume (cubeCone Γ (F.cone v) h x) := by
+    have h := volume_cube_le_card_mul F hv
+    rwa [volume_cube hh] at h
+  calc ENNReal.ofReal (h ^ d) * ((F.axes.card : ℝ≥0∞))⁻¹
+      ≤ ((F.axes.card : ℝ≥0∞) * volume (cubeCone Γ (F.cone v) h x))
+        * ((F.axes.card : ℝ≥0∞))⁻¹ := mul_le_mul' h1 le_rfl
+    _ = volume (cubeCone Γ (F.cone v) h x) := by
+        rw [mul_comm ((F.axes.card : ℝ≥0∞)) _, mul_assoc,
+          ENNReal.mul_inv_cancel hL hLt, mul_one]
+
+/-- **The lower bound of Proposition 3.5 at scale `h`**, before the constants are
+collected. -/
+theorem discreteKernel_ge_volume_scaled
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {α Λ : ℝ}
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hα : 0 < α) {θ : ℝ} (F : RefFamily Γ θ)
+    (hmeas : CondMeas Γ) {h : ℝ} (hh : 0 < h) {x y : EuclideanSpace ℝ (Fin d)}
+    (hx : x ∈ scaledLattice d h) (hy : y ∈ scaledLattice d h)
+    (hxy : Real.sqrt d * h < ‖x - y‖) (m n : EuclideanSpace ℝ (Fin d)) :
+    ENNReal.ofReal ((h ^ (2 * d))⁻¹) *
+        (ENNReal.ofReal Λ⁻¹ *
+          ((indE (F.shrunkAt m (h * Real.sqrt d) x) y
+            + indE (F.shrunkAt n (h * Real.sqrt d) y) x)
+            * ENNReal.ofReal ((2 * Real.sqrt d) ^ (-(d:ℝ) - α) * ‖x - y‖ ^ (-(d:ℝ) - α)))
+          * (volume (cubeCone Γ (F.cone m) h x) * volume (cubeCone Γ (F.cone n) h y)))
+      ≤ discreteKernel d k h x y := by
+  refine mul_le_mul' le_rfl ?_
+  have hsub : cubeCone Γ (F.cone m) h x ×ˢ cubeCone Γ (F.cone n) h y
+      ⊆ cube h x ×ˢ cube h y :=
+    Set.prod_mono (cubeCone_subset_cube _ _ _ _) (cubeCone_subset_cube _ _ _ _)
+  calc ENNReal.ofReal Λ⁻¹ *
+        ((indE (F.shrunkAt m (h * Real.sqrt d) x) y
+          + indE (F.shrunkAt n (h * Real.sqrt d) y) x)
+          * ENNReal.ofReal ((2 * Real.sqrt d) ^ (-(d:ℝ) - α) * ‖x - y‖ ^ (-(d:ℝ) - α)))
+        * (volume (cubeCone Γ (F.cone m) h x) * volume (cubeCone Γ (F.cone n) h y))
+      = ∫⁻ _ in cubeCone Γ (F.cone m) h x ×ˢ cubeCone Γ (F.cone n) h y,
+          ENNReal.ofReal Λ⁻¹ *
+            ((indE (F.shrunkAt m (h * Real.sqrt d) x) y
+              + indE (F.shrunkAt n (h * Real.sqrt d) y) x)
+              * ENNReal.ofReal ((2 * Real.sqrt d) ^ (-(d:ℝ) - α)
+                * ‖x - y‖ ^ (-(d:ℝ) - α))) := by
+        rw [setLIntegral_const, Measure.volume_eq_prod, Measure.prod_prod]
+    _ ≤ ∫⁻ p in cubeCone Γ (F.cone m) h x ×ˢ cubeCone Γ (F.cone n) h y, k p.1 p.2 := by
+        refine lintegral_mono_ae (ae_restrict_of_forall_mem
+          ((measurableSet_cubeCone hmeas _ hh x).prod
+            (measurableSet_cubeCone hmeas _ hh y)) ?_)
+        rintro ⟨s, t⟩ ⟨hs, ht⟩
+        exact discreteKernel_integrand_ge_scaled hk hα F hh hx hy hxy hs ht
+    _ ≤ ∫⁻ p in cube h x ×ˢ cube h y, k p.1 p.2 :=
+        lintegral_mono' (Measure.restrict_mono hsub le_rfl) le_rfl
+
+/-- **Corollary 3.6** of Bux–Kassmann–Schulze, for `d ≥ 2`: for every `h > 0` the
+discrete kernel `ω^k_h` satisfies assumption (1.7) on `hℤ^d`, for a configuration
+`Γ^h` whose apex angles are bounded below by a `ϑ'` independent of `h`, with a
+constant `C` independent of `h`. -/
+theorem cor_rescaled_kernel {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd : 2 ≤ d)
+    {α : ℝ} (hα : 0 < α) :
+    ∃ θ' : ℝ, 0 < θ' ∧ θ' ≤ π / 2 ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ (Λ : ℝ) (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞),
+        KernelBounds Γ α Λ k →
+      ∃ C : ℝ, 0 < C ∧
+      ∀ h : ℝ, 0 < h →
+      ∃ Γ' : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ' θ' ∧
+        ∀ x ∈ scaledLattice d h, ∀ y ∈ scaledLattice d h, Real.sqrt d * h < ‖x - y‖ →
+          ENNReal.ofReal C⁻¹ *
+              ((indE (coneAt Γ' x) y + indE (coneAt Γ' y) x) * jumpKernel d α x y)
+            ≤ discreteKernel d k h x y ∧
+          discreteKernel d k h x y ≤ ENNReal.ofReal C * jumpKernel d α x y := by
+  classical
+  have hd1 : 0 < d := by omega
+  have hsd : (0:ℝ) < Real.sqrt d := Real.sqrt_pos.mpr (by exact_mod_cast hd1)
+  have hθ0 : (0:ℝ) < ϑ / 3 := by positivity
+  have hθle : ϑ / 3 ≤ π / 2 := by linarith [pi_pos]
+  obtain ⟨S, hSdef⟩ : ∃ S : Finset (EuclideanSpace ℝ (Fin d)),
+      S = (ref_cones (E := EuclideanSpace ℝ (Fin d)) hϑ hϑ').choose := ⟨_, rfl⟩
+  have hSnorm : ∀ v ∈ S, ‖v‖ = 1 := by
+    rw [hSdef]; exact (ref_cones (E := EuclideanSpace ℝ (Fin d)) hϑ hϑ').choose_spec.1
+  obtain ⟨e, he⟩ : ∃ e : EuclideanSpace ℝ (Fin d), ‖e‖ = 1 := by
+    refine ⟨EuclideanSpace.single (⟨0, hd1⟩ : Fin d) (1:ℝ), ?_⟩
+    simp
+  have hSne : S.Nonempty := by
+    obtain ⟨v, hv, -⟩ :=
+      (ref_cones (E := EuclideanSpace ℝ (Fin d)) hϑ hϑ').choose_spec.2
+        (fun _ => ⟨e, he, ϑ, hϑ, hϑ'⟩) ⟨hϑ, fun _ => le_rfl⟩ 0
+    exact ⟨v, by rw [hSdef]; exact hv⟩
+  obtain ⟨θ', hθ'0, hθ'le, hthin⟩ := lemma_new_config hd hsd hθ0 hθle S hSnorm
+  refine ⟨θ', hθ'0, hθ'le, ?_⟩
+  intro Γ hΓ hmeas Λ k hk
+  have hΛ1 := hk.one_le
+  have hΛ0 : (0:ℝ) < Λ := lt_of_lt_of_le zero_lt_one hΛ1
+  have hLpos : (0:ℝ) < (S.card : ℝ) := by exact_mod_cast Finset.card_pos.mpr hSne
+  obtain ⟨C₀, hC₀def⟩ : ∃ C : ℝ,
+      C = (2 * Real.sqrt d) ^ (-(d:ℝ) - α) * ((S.card : ℝ)⁻¹ * (S.card : ℝ)⁻¹) := ⟨_, rfl⟩
+  have hC₀0 : (0:ℝ) < C₀ := by rw [hC₀def]; positivity
+  refine ⟨max (Λ * (2 * Real.sqrt d) ^ ((d:ℝ) + α)) (C₀ * Λ⁻¹)⁻¹,
+    lt_of_lt_of_le (by positivity) (le_max_left _ _), ?_⟩
+  intro h hh
+  obtain ⟨F, hFdef⟩ : ∃ F : RefFamily Γ (ϑ / 3), F = refFamily hϑ hϑ' Γ hΓ := ⟨_, rfl⟩
+  have hFaxes : F.axes = S := by rw [hFdef, hSdef]; rfl
+  choose fav hfav using (fun u => exists_isFavoured F h u)
+  have haxex : ∀ u : EuclideanSpace ℝ (Fin d), ∃ w : EuclideanSpace ℝ (Fin d), ‖w‖ = 1 ∧
+      (u ∈ S → doubleCone w θ' ∩ lattice d
+        ⊆ shrink (doubleCone u (ϑ / 3)) (Real.sqrt d) ∩ lattice d) := by
+    intro u
+    by_cases hu : u ∈ S
+    · obtain ⟨w, hw, hsub⟩ := hthin u hu
+      exact ⟨w, hw, fun _ => hsub⟩
+    · exact ⟨e, he, fun hc => absurd hc hu⟩
+  choose ax hax haxsub using haxex
+  obtain ⟨G, hG⟩ : ∃ G : Configuration (EuclideanSpace ℝ (Fin d)),
+      G = fun u => (⟨ax (fav u), hax (fav u), θ', hθ'0, hθ'le⟩ :
+        DCone (EuclideanSpace ℝ (Fin d))) := ⟨_, rfl⟩
+  refine ⟨G, ⟨hθ'0, fun u => by rw [hG]⟩, ?_⟩
+  intro x hx y hy hxy
+  refine ⟨?_, ?_⟩
+  swap
+  · exact le_trans (discreteKernel_le hk hα hh hx hy hxy)
+      (mul_le_mul' (ENNReal.ofReal_le_ofReal (le_max_left _ _)) le_rfl)
+  -- the lower bound
+  have hind : ∀ u w : EuclideanSpace ℝ (Fin d), u ∈ scaledLattice d h →
+      w ∈ scaledLattice d h →
+      indE (coneAt G u) w ≤ indE (F.shrunkAt (fav u) (h * Real.sqrt d) u) w := by
+    intro u w hu hw
+    refine indE_le_indE (fun hmem => ?_)
+    rw [hG] at hmem
+    refine thin_cone_subset_scaled ?_ (hax (fav u)) hθ'0 hθ'le hh
+      (haxsub (fav u) (by rw [← hFaxes]; exact (hfav u).1))
+      ⟨hmem, sub_mem_scaledLattice hw hu⟩
+    exact fun t ht p hp => smul_mem_doubleCone (F.norm_axes _
+      (by rw [hFaxes, ← hFaxes]; exact (hfav u).1)) hθ0 hθle ht hp
+  have hvolx := inv_card_le_volume_cubeCone_scaled F (by rw [hFaxes]; exact hSne) hh (hfav x)
+  have hvoly := inv_card_le_volume_cubeCone_scaled F (by rw [hFaxes]; exact hSne) hh (hfav y)
+  refine le_trans ?_ (discreteKernel_ge_volume_scaled hk hα F hmeas hh hx hy hxy
+    (fav x) (fav y))
+  have hLinv : ENNReal.ofReal ((S.card : ℝ)⁻¹) = ((F.axes.card : ℝ≥0∞))⁻¹ := by
+    rw [hFaxes, ← ENNReal.ofReal_natCast S.card, ← ENNReal.ofReal_inv_of_pos hLpos]
+  have hCle : ENNReal.ofReal (max (Λ * (2 * Real.sqrt d) ^ ((d:ℝ) + α)) (C₀ * Λ⁻¹)⁻¹)⁻¹
+      ≤ ENNReal.ofReal (C₀ * Λ⁻¹) := by
+    refine ENNReal.ofReal_le_ofReal ?_
+    rw [inv_le_comm₀ (by positivity) (by positivity)]
+    exact le_max_right _ _
+  refine le_trans (mul_le_mul' hCle le_rfl) ?_
+  obtain ⟨B, hB⟩ : ∃ B : ℝ≥0∞, B = indE (coneAt G x) y + indE (coneAt G y) x := ⟨_, rfl⟩
+  obtain ⟨B', hB'⟩ : ∃ B' : ℝ≥0∞, B' = indE (F.shrunkAt (fav x) (h * Real.sqrt d) x) y
+      + indE (F.shrunkAt (fav y) (h * Real.sqrt d) y) x := ⟨_, rfl⟩
+  obtain ⟨J, hJ⟩ : ∃ J : ℝ≥0∞, J = ENNReal.ofReal ((2 * Real.sqrt d) ^ (-(d:ℝ) - α)
+      * ‖x - y‖ ^ (-(d:ℝ) - α)) := ⟨_, rfl⟩
+  rw [← hB, ← hB', ← hJ]
+  have hcancel := ofReal_inv_pow_mul (d := d) hh
+  have hJeq : ENNReal.ofReal (C₀ * Λ⁻¹) * (B * jumpKernel d α x y)
+      = ENNReal.ofReal Λ⁻¹ * (B * J)
+        * (ENNReal.ofReal ((S.card : ℝ)⁻¹) * ENNReal.ofReal ((S.card : ℝ)⁻¹)) := by
+    rw [hJ, hC₀def, jumpKernel,
+      ENNReal.ofReal_mul (by positivity : (0:ℝ) ≤ (2 * Real.sqrt d) ^ (-(d:ℝ) - α)),
+      ENNReal.ofReal_mul (by positivity : (0:ℝ) ≤ (2 * Real.sqrt d) ^ (-(d:ℝ) - α) *
+        ((S.card : ℝ)⁻¹ * (S.card : ℝ)⁻¹)),
+      ENNReal.ofReal_mul (by positivity : (0:ℝ) ≤ (2 * Real.sqrt d) ^ (-(d:ℝ) - α)),
+      ENNReal.ofReal_mul (by positivity : (0:ℝ) ≤ ((S.card : ℝ))⁻¹)]
+    ring
+  calc ENNReal.ofReal (C₀ * Λ⁻¹) * (B * jumpKernel d α x y)
+      = ENNReal.ofReal Λ⁻¹ * (B * J)
+          * (ENNReal.ofReal ((S.card : ℝ)⁻¹) * ENNReal.ofReal ((S.card : ℝ)⁻¹)) := hJeq
+    _ = (ENNReal.ofReal ((h ^ (2 * d))⁻¹) *
+          (ENNReal.ofReal (h ^ d) * ENNReal.ofReal (h ^ d))) *
+        (ENNReal.ofReal Λ⁻¹ * (B * J)
+          * (((F.axes.card : ℝ≥0∞))⁻¹ * ((F.axes.card : ℝ≥0∞))⁻¹)) := by
+        rw [hcancel, one_mul, hLinv]
+    _ = ENNReal.ofReal ((h ^ (2 * d))⁻¹) * (ENNReal.ofReal Λ⁻¹ * (B * J)
+          * ((ENNReal.ofReal (h ^ d) * ((F.axes.card : ℝ≥0∞))⁻¹)
+            * (ENNReal.ofReal (h ^ d) * ((F.axes.card : ℝ≥0∞))⁻¹))) := by ring
+    _ ≤ ENNReal.ofReal ((h ^ (2 * d))⁻¹) * (ENNReal.ofReal Λ⁻¹ * (B' * J)
+          * (volume (cubeCone Γ (F.cone (fav x)) h x)
+            * volume (cubeCone Γ (F.cone (fav y)) h y))) := by
+        refine mul_le_mul' le_rfl (mul_le_mul' (mul_le_mul' le_rfl (mul_le_mul' ?_ le_rfl))
+          (mul_le_mul' hvolx hvoly))
+        rw [hB, hB']
+        exact add_le_add (hind x y hx hy) (hind y x hy hx)
+
 end QFS

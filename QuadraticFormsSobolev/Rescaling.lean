@@ -8,75 +8,13 @@ observation that "every `ω ∈ M` is of the form `h^{-d-α} ω̃(h^{-1}x, h^{-1
 for some `ω̃ ∈ N`" is `QFS.discreteKernelBounds_rescale` below.
 -/
 import QuadraticFormsSobolev.Section6
+import QuadraticFormsSobolev.ThinCones
 
 open Real Set Metric ENNReal
 
 namespace QFS
 
 variable {d : ℕ}
-
-/-! ## The scaled lattice as an image of `ℤ^d` -/
-
-lemma smul_mem_scaledLattice {h : ℝ} {x : EuclideanSpace ℝ (Fin d)}
-    (hx : x ∈ lattice d) : h • x ∈ scaledLattice d h := by
-  intro i
-  obtain ⟨n, hn⟩ := (mem_lattice_iff.mp hx) i
-  refine ⟨n, ?_⟩
-  have he : (h • x) i = h * x i := by simp
-  rw [he, hn]
-  ring
-
-lemma inv_smul_mem_lattice {h : ℝ} (hh : h ≠ 0) {y : EuclideanSpace ℝ (Fin d)}
-    (hy : y ∈ scaledLattice d h) : h⁻¹ • y ∈ lattice d := by
-  rw [mem_lattice_iff]
-  intro i
-  obtain ⟨n, hn⟩ := hy i
-  refine ⟨n, ?_⟩
-  have he : (h⁻¹ • y) i = h⁻¹ * y i := by simp
-  rw [he, hn]
-  field_simp
-
-/-- Scaling by `h > 0` as an equivalence of `ℝ^d`. -/
-noncomputable def smulEquiv {h : ℝ} (hh : h ≠ 0) :
-    EuclideanSpace ℝ (Fin d) ≃ EuclideanSpace ℝ (Fin d) where
-  toFun x := h⁻¹ • x
-  invFun y := h • y
-  left_inv x := by
-    simp only []
-    rw [smul_smul, mul_inv_cancel₀ hh, one_smul]
-  right_inv y := by
-    simp only []
-    rw [smul_smul, inv_mul_cancel₀ hh, one_smul]
-
-@[simp] lemma smulEquiv_apply {h : ℝ} (hh : h ≠ 0) (x : EuclideanSpace ℝ (Fin d)) :
-    smulEquiv hh x = h⁻¹ • x := rfl
-
-@[simp] lemma smulEquiv_symm_apply {h : ℝ} (hh : h ≠ 0) (y : EuclideanSpace ℝ (Fin d)) :
-    (smulEquiv hh).symm y = h • y := rfl
-
-/-! ## Cones are invariant under positive scaling -/
-
-lemma smul_mem_doubleCone {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1) {ϑ : ℝ}
-    (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {t : ℝ} (ht : 0 < t)
-    {p : EuclideanSpace ℝ (Fin d)} (hp : p ∈ doubleCone v ϑ) :
-    t • p ∈ doubleCone v ϑ := by
-  rw [mem_doubleCone_iff] at hp ⊢
-  rcases hp with hc | hc
-  · exact Or.inl (smul_mem_cone hv hϑ hϑ' ht hc)
-  · refine Or.inr ?_
-    have he : -(t • p) = t • (-p) := by rw [smul_neg]
-    rw [he]
-    exact smul_mem_cone hv hϑ hϑ' ht hc
-
-lemma smul_mem_doubleCone_iff {h : ℝ} (hh : 0 < h) {v : EuclideanSpace ℝ (Fin d)}
-    (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
-    (p : EuclideanSpace ℝ (Fin d)) :
-    h • p ∈ doubleCone v ϑ ↔ p ∈ doubleCone v ϑ := by
-  constructor
-  · intro hp
-    have := smul_mem_doubleCone hv hϑ hϑ' (t := h⁻¹) (by positivity) hp
-    rwa [smul_smul, inv_mul_cancel₀ (ne_of_gt hh), one_smul] at this
-  · exact fun hp => smul_mem_doubleCone hv hϑ hϑ' hh hp
 
 /-! ## The discrete form over an arbitrary lattice -/
 

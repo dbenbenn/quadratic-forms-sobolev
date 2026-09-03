@@ -325,6 +325,29 @@ lemma ind_le_ind {S T : Set E} {x y : E} (h : x ∈ S → y ∈ T) : ind S x ≤
 
 end Indicator
 
+/-- The scaled form of the previous step: if `y ∈ V_{h√d}[x]` then the whole cube
+`A_h(y)` lies in `V_{(h/2)√d}[x]`. -/
+lemma cube_subset_of_mem_shift_shrink_scaled {S : Set (EuclideanSpace ℝ (Fin d))} {h : ℝ}
+    {x y : EuclideanSpace ℝ (Fin d)}
+    (hy : y ∈ shift (shrink S (h * Real.sqrt d)) x) :
+    cube h y ⊆ shift (shrink S (h / 2 * Real.sqrt d)) x := by
+  rw [← shrink_shift] at hy ⊢
+  have h2 : h * Real.sqrt d = 2 * (h / 2 * Real.sqrt d) := by ring
+  rw [h2] at hy
+  exact (cube_subset_closedBall y).trans (closedBall_subset_shrink hy)
+
+/-- **Lemma 3.2** at scale `h`. -/
+theorem lemma_min_dist_scaled {V W : Set (EuclideanSpace ℝ (Fin d))} {h : ℝ}
+    {x y s t : EuclideanSpace ℝ (Fin d)} (hs : s ∈ cube h x)
+    (ht : t ∈ cube h y) :
+    ind (shift (shrink V (h / 2 * Real.sqrt d)) x) t
+        + ind (shift (shrink W (h / 2 * Real.sqrt d)) y) s
+      ≥ ind (shift (shrink V (h * Real.sqrt d)) x) y
+        + ind (shift (shrink W (h * Real.sqrt d)) y) x := by
+  refine add_le_add (ind_le_ind (fun hy => ?_)) (ind_le_ind (fun hx => ?_))
+  · exact cube_subset_of_mem_shift_shrink_scaled hy ht
+  · exact cube_subset_of_mem_shift_shrink_scaled hx hs
+
 /-- The content of the proof of Lemma 3.2: if `y ∈ V_{√d}[x]`, then
 `B̄_{√d/2}(y) ⊆ V_{√d/2}[x]`, and hence the whole unit cube `A_1(y)` lies in
 `V_{√d/2}[x]`. -/
