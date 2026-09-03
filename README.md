@@ -693,6 +693,33 @@ together with the results the paper itself quotes from elsewhere.
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
 | `{x | V ⊆ Γ(x)}` is Lebesgue measurable | §2 (after Cor. 2.4) | The paper does not prove it — "This implication is due to [Debreu67, Thm. 4.4]". It is what makes the sets `A_h^m(u)` measurable, which Proposition 3.5 integrates over, so it is carried there as the explicit hypothesis `QFS.CondMeas`. |
 | Auxiliary integral estimate | Lem. 7.1 | An integral computation feeding the appendix lemma, which is itself quoted rather than proved. |
+| The limiting argument | §3.2 | Not formalised; see the note below. Its two inputs **are** proved: Lemma 7.2 (`QFS.lemma_lebesgue_diff`) and the tiling by half-closed cubes (`QFS.existsUnique_mem_halfClosedCube`), as are the discrete estimates it feeds on (Corollaries 3.1 and 3.6). |
+
+### A note on §3.2's dominated convergence
+
+Section 3.2 passes from the discrete inequality to the continuous one by letting
+`h → 0`. On the left it uses Fatou, which needs nothing extra. On the right it
+writes
+
+> For the right hand side in (discret) this implies with help of dominated
+> convergence … `∫ g_h → ∫ g`
+
+without exhibiting a dominating function, and supplying one is not routine. Two
+natural candidates fail:
+
+* bounding `f_h(x)` by the Hardy–Littlewood maximal function `Mf` gives the
+  dominant `(Mf(s) + Mf(t))² k(s,t)`, whose integral over `B* × B*` need not be
+  finite — the factor does not vanish on the diagonal, where `k` is not
+  integrable;
+* applying Jensen to `(f_h(x) − f_h(y))²` and using Lemma 3.4 leads back to
+  `|f|_{H^{α/2}(B*)}`, which is exactly the quantity being bounded and is not
+  known finite a priori — that is what the theorem is proving.
+
+For Lipschitz `f` a dominant does exist, since
+`(f(s) − f(t))²|s − t|^{-d-α} ≤ L²|s − t|^{2-d-α}` is integrable for `α < 2`;
+whether one may reduce to that case is not addressed. This is recorded as an
+obstacle encountered in formalising the step, not as a claim that the step is
+wrong.
 
 ## Lemma 5.7
 
@@ -1092,6 +1119,31 @@ are checked to resolve (`#check`). The paper's constants and hypotheses are
 matched literally; where they could not be (Lemmas 3.3, 3.4, 4.6, Theorem 4.1)
 the discrepancy is recorded under *Deviations*, with a Lean disproof of the
 printed statement where one exists.
+
+## The files
+
+| File | Contents |
+| --- | --- |
+| `Translate` | shifting and shrinking sets; the steps (⋆) and (✝) of Lemma 2.7 |
+| `Defs` | Definition 2.1: cones, double cones, configurations, condition (M) |
+| `ConeGap`, `ConeGeometry` | the signed distance `coneGap` to a cone's boundary |
+| `Cubes` | the maximum norm, cubes, Lemma 2.7 |
+| `RefCones` | Lemma 2.2 and Corollary 2.4: finitely many reference cones |
+| `Section3` | lattices, Lemmas 3.2 and 3.4, cube volumes, the tiling |
+| `ThinCones` | Lemma 3.3 for `d ≥ 2` |
+| `Section4` | the continuous prelude; Theorem 4.1 |
+| `Section5` | Lemmas 5.1–5.7, Corollary 5.8 |
+| `Renormalization` | Lemmas 5.9–5.10, Definitions 5.11/5.13, Proposition 5.14 |
+| `Counting`, `Paths`, `CyclicScheme`, `Multiplicity`, `Assembly` | the ingredients of Theorem 5.15's Steps 1, 2 and 6 |
+| `FirstJump` | the scale step, Lemma 5.16, the statement of Theorem 5.15 |
+| `PathAssembly` | Steps 3–6 of Theorem 5.15 |
+| `BlockPaths` | Steps 1–2, and Theorem 5.15 |
+| `Section1` | the quadratic forms and function spaces; the statements of Theorems 1.1 and 1.3 |
+| `Section6` | Theorem 1.3 |
+| `Rescaling` | Corollary 3.1 |
+| `Section3Kernel` | the discrete kernel, Proposition 3.5, Corollary 3.6 |
+| `LebesgueDiff` | Lemma 7.2 |
+| `Nonvacuous` | witnesses that the hypotheses are satisfiable |
 
 ## Building
 
