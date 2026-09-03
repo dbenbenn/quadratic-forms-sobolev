@@ -63,11 +63,14 @@ the underlying sets, which is the paper's notion. -/
 /-- **Lemma 4.3**: two points of `U` of the same type are joined by an edge path
 of length at most two in `G[U]`; the middle vertex is a point of
 `Γ(x)[x] ∩ Γ(x)[y]`, which may lie outside `U`. -/
+theorem connect_two_of_same_type_two {x y : E} (hx : x ∈ U) (hy : y ∈ U)
+    (h : (Γ x).carrier = (Γ y).carrier) : ∃ z, Edge Γ U x z ∧ Edge Γ U y z := by
+  obtain ⟨z, hzx, hzy⟩ := shift_inter_shift_nonempty (Γ x) x y
+  exact ⟨z, ⟨hx, hzx⟩, ⟨hy, by rw [mem_coneAt, ← h]; exact hzy⟩⟩
+
 theorem connect_two_of_same_type {x y : E} (hx : x ∈ U) (hy : y ∈ U)
     (h : (Γ x).carrier = (Γ y).carrier) : Conn Γ U x y := by
-  obtain ⟨z, hzx, hzy⟩ := shift_inter_shift_nonempty (Γ x) x y
-  have e₁ : Edge Γ U x z := ⟨hx, hzx⟩
-  have e₂ : Edge Γ U y z := ⟨hy, by rw [mem_coneAt, ← h]; exact hzy⟩
+  obtain ⟨z, e₁, e₂⟩ := connect_two_of_same_type_two hx hy h
   exact Conn.trans (Conn.of_edge e₁) (Conn.of_edge e₂).symm
 
 /-! ## Definition 4.4 and Lemma 4.5 -/

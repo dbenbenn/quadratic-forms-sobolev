@@ -3,9 +3,9 @@ Section 1 of Bux–Kassmann–Schulze: the quadratic forms, the function spaces
 `H_k(Ω)` and `H^{α/2}(Ω)`, assumption (1.4) on the kernel, the reverse
 inequality of Theorem 1.1 (which "trivially holds"), and the inclusion (1.6).
 
-The two main theorems are also *stated* here, as `Prop`s that type-check but are
-not asserted; they need Sections 5 and 6, which are out of scope. Recording them
-pins down precisely what would have to be proved.
+The two main theorems are also *stated* here, as `Prop`s, so that the targets
+are precise and type-checked. `QFS.TheoremOneThree` is proved in `Section6`;
+`QFS.TheoremOneOne` is not, and the README records what it still needs.
 -/
 import QuadraticFormsSobolev.Section5
 
@@ -109,7 +109,10 @@ theorem Hs_subset_Hk {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {α Λ : 
 /-! ## The statements of Theorems 1.1 and 1.3
 
 These are recorded as `Prop`s so that the targets are precise and type-checked.
-They are *not* proved here: both need Sections 5 and 6. See the README. -/
+`QFS.TheoremOneThree` is proved as `QFS.theoremOneThree` in `Section6`, on top
+of Theorem 5.15. `QFS.TheoremOneOne` is not proved: it needs Section 3's
+discrete kernel and limiting argument, and a final step the paper quotes from a
+Whitney decomposition. See the README. -/
 
 /-- The statement of **Theorem 1.1**. The constant `c` is quantified before `Γ`
 and `k`, which is the paper's assertion that it depends only on `Λ`, `d` and

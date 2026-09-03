@@ -96,7 +96,9 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 7.1 | Lemma | auxiliary integral estimate | ❌ out of scope |
 | 7.2 | Lemma | a Lebesgue differentiation argument | ❌ out of scope |
 
-Sections 2 and 4 are formalised completely, as is Section 5's auxiliary
+Sections 2 and 4 are formalised completely — apart from one remark of Section 2
+that the paper itself quotes rather than proves, see *Not attempted* — as is
+Section 5's auxiliary
 subsection (Lemmas 5.1–5.5). Of Section 3, everything that does not need the
 kernel `ω^k_h` is formalised, Lemma 3.3 for `d ≥ 2` included. From Section 1,
 the function-space definitions, assumption
@@ -142,8 +144,8 @@ is available.
 | `‖x−y‖_∞ > h` ⟹ `≥ 2h` on `hℤ^d` | Lem. 3.4 proof | `QFS.two_mul_le_infNorm_sub` | ✅ proved |
 | **Lemma 3.4**: `|s−t|` vs `|x−y|` | Lem. 3.4 | `QFS.lemma_cubes` | ✅ **proved** (corrected, see below) |
 | Lemma 3.4 as literally stated is false | Lem. 3.4 | `QFS.lemma_cubes_literal_false` | ✅ **disproved** |
-| `A_h^m(u)`; `h`-favoured index by majority | §3 | `QFS.cubeCone`, `QFS.IsFavoured` | ✅ defined |
-| `A_h(u) = ⋃_i A_h^i(u)` | §3 | `QFS.cube_eq_biUnion_cubeCone` | ✅ proved |
+| `A_h^m(u)`; `h`-favoured index by majority | §2 (prose before Lem. 2.7) | `QFS.cubeCone`, `QFS.IsFavoured` | ✅ defined |
+| `A_h(u) = ⋃_i A_h^i(u)` | §2 | `QFS.cube_eq_biUnion_cubeCone` | ✅ proved |
 | `λ_d(A_h^m(u)) ≥ L⁻¹ λ_d(A_h(u))` | §3 | `QFS.volume_cube_le_card_mul` | ✅ proved |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
@@ -158,7 +160,7 @@ is available.
 | `V[x] ∩ V[y] ≠ ∅` for one double cone | Lem. 4.3 proof | `QFS.shift_inter_shift_nonempty` | ✅ proved |
 | The graph `G[U]`; undirected connectivity | §4 | `QFS.Edge`, `QFS.Conn` | ✅ defined |
 | Type of a point | Def. 4.2 | `Γ x = Γ y` | ✅ defined |
-| **Lemma 4.3**: same type ⟹ path of length ≤ 2 | Lem. 4.3 | `QFS.connect_two_of_same_type` | ✅ **proved** |
+| **Lemma 4.3**: same type ⟹ path of length ≤ 2 | Lem. 4.3 | `QFS.connect_two_of_same_type_two` (with the length bound), `QFS.connect_two_of_same_type` | ✅ **proved** |
 | Well-connected in `U` | Def. 4.4 | `QFS.WellConnected` | ✅ defined |
 | **Lemma 4.5 (1)** | Lem. 4.5 | `QFS.wellConnected_of_mem_coneAt` | ✅ **proved** |
 | **Lemma 4.5 (2)** | Lem. 4.5 | `QFS.wellConnected_mono`, `QFS.Conn.mono` | ✅ **proved** |
@@ -190,7 +192,7 @@ is available.
 | Every `√d/2`-ball holds a lattice point | §5.1 preamble | `QFS.exists_lattice_mem_closedBall` | ✅ proved |
 | Paths not leaving a set | Def. 5.3 | `QFS.ConnWithin` | ✅ defined |
 | **Lemma 5.1 (1), (2)**: lattice points in cones | Lem. 5.1 | `QFS.exists_lattice_mem_cone`, `QFS.exists_lattice_mem_inter` | ✅ **proved** |
-| **Corollary 5.2**: discrete same type | Cor. 5.2 | `QFS.discr_connect_two_of_same_type` | ✅ **proved** |
+| **Corollary 5.2**: discrete same type | Cor. 5.2 | `QFS.discr_connect_two_of_same_type_two` (two edges, each shorter than `R`), `QFS.discr_connect_two_of_same_type` | ✅ **proved** |
 | `r`-`R`-connected | Def. 5.3 | `QFS.RRConnected` | ✅ defined |
 | **Lemma 5.4**: discrete density | Lem. 5.4 | `QFS.exists_rrConnected` | ✅ **proved** |
 | **Lemma 5.5**: discrete "über Bande" | Lem. 5.5 | `QFS.discr_ueber_bande` | ✅ **proved** |
@@ -591,6 +593,43 @@ Each departure from the paper, and why.
     `QFS.path_props_long` proves it; `QFS.PathPropsLong.toPathProps` forgets the
     clause, so `QFS.path_props` still records exactly the paper's statement.
 
+18. **The `λ`-observation in the proof of Theorem 4.1 is false as printed.** The
+    proof opens the case `#Γ(U) > 1` with
+
+    > There is a constant `λ > 0` depending only on the minimum apex angle `ϑ`
+    > such that for **any double cone `V ∈ 𝒱`** and any two points `x, y ∈ ℝ^d`
+    > of distance `|x − y| < λ`, the intersection `V[x] ∩ V[y]` contains a point
+    > in `B_1(x)`.
+
+    But `𝒱 = (0, π/2] × ℙ^{d-1}` contains cones of arbitrarily small apex, and
+    for a cone of apex `ε` the points of `V[x] ∩ V[y]` are at distance about
+    `|x − y| / (2 sin ε)` from `x`. With `λ` fixed in advance by `ϑ`, no such
+    `λ` works for all `V ∈ 𝒱`. The observation is only ever *applied* to
+    `V = Γ(y)`, whose apex is at least `ϑ`, so the repair is to say so:
+    `QFS.exists_mem_ball_inter_shift` carries `ϑ ≤ V.apex`, and with it the
+    paper's constant `λ = (sin ϑ)/2` is correct.
+
+19. **Four smaller slips in printed statements, each repaired silently.**
+
+    * **Definition 2.3** writes `V^m_r = {u ∈ V^m | B̄_r ⊂ V^m}` — the ball has
+      no centre, so read literally `V^m_r` is `V^m` or `∅`. Definition 2.1
+      writes the same condition correctly as `B̄_r(y) ⊂ V`.
+      `QFS.RefFamily.shrunk` uses the centred version.
+    * **Lemma 5.9** says "there is a constant `δ = δ(ϑ)`", but its own value
+      `3√d/(2 sin ϑ)` depends on `d` as well. `QFS.apexShrinkConst d ϑ` takes
+      both, as it must.
+    * **Proposition 5.14** says "there exists `R ≥ r` depending only on `ϑ` and
+      `d`", but `R ≥ r` cannot be independent of `r`. `QFS.renormalization`
+      takes `r` first, as Corollary 5.8 correctly states.
+    * **Definition 5.3** restricts to `r ≤ R` and `x ∈ ℤ^d`; `QFS.RRConnected`
+      imposes neither, which only widens the definition and is never used.
+
+    Two more definitional notes, neither a defect: `QFS.CondM` asks for
+    measurability with respect to the ambient `MeasurableSpace` instance, which
+    for `EuclideanSpace ℝ (Fin d)` is the Borel σ-algebra the paper names; and
+    `QFS.RefFamily` does not constrain its apex angle `θ` to `(0, π/2]`, which
+    only weakens the hypothesis of everything proved from it.
+
 ## Not attempted
 
 Recorded here rather than silently omitted. What is not formalised is the
@@ -606,6 +645,7 @@ together with the results the paper itself quotes from elsewhere.
 | `hℤ^d` rescaling | Cor. 3.1 | A rescaling of Theorem 1.3; the rescaled discrete setting is not set up here. |
 | Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integrating the kernel over pairs of cubes; the measure-theoretic scaffolding is not set up here. Its three "tailor-made" inputs — Lemmas 3.2, 3.3 (for `d ≥ 2`) and 3.4 — **are** proved. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
+| `{x | V ⊆ Γ(x)}` is Lebesgue measurable | §2 (after Cor. 2.4) | The paper does not prove it — "This implication is due to [Debreu67, Thm. 4.4]". It is what would make the sets `A_h^m(u)` measurable for Proposition 3.5; `QFS.volume_cube_le_card_mul` avoids needing it. |
 | Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §3 and to the continuous half. |
 
 ## Lemma 5.7

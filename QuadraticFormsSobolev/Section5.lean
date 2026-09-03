@@ -177,6 +177,22 @@ variable {ϑ : ℝ}
 lemma cone_subset_carrier (V : DCone (EuclideanSpace ℝ (Fin d))) :
     cone V.axis V.apex ⊆ V.carrier := Set.subset_union_left
 
+/-- **Corollary 5.2** with the paper's quantitative conclusion: two lattice
+points of the same type at distance less than `r` are "connected via a path of
+two edges of length less than `R = (r + √d)/sin ϑ + r`" — the two edges being
+`x → z` and `y → z` for a single intermediate lattice point `z`. -/
+theorem discr_connect_two_of_same_type_two (hϑ : 0 < ϑ) (hb : ∀ z, ϑ ≤ (Γ z).apex)
+    {r R : ℝ} {x y : EuclideanSpace ℝ (Fin d)}
+    (htype : (Γ x).carrier = (Γ y).carrier) (hxy : ‖x - y‖ < r)
+    (hR : (r + Real.sqrt d) / Real.sin ϑ + r < R) :
+    ∃ z ∈ lattice d, ‖z - x‖ < R ∧ ‖z - y‖ < R ∧
+      z ∈ coneAt Γ x ∧ z ∈ coneAt Γ y := by
+  have hr : 0 < r := lt_of_le_of_lt (norm_nonneg _) hxy
+  obtain ⟨z, hzlat, hzx, hzy, hzcx, hzcy⟩ :=
+    exists_lattice_mem_inter (v := (Γ x).axis) (Γ x).norm_axis hϑ (hb x) (Γ x).apex_le hxy hR
+  exact ⟨z, hzlat, by linarith, hzy, cone_subset_carrier _ hzcx,
+    by rw [mem_coneAt, ← htype]; exact cone_subset_carrier _ hzcy⟩
+
 /-- **Corollary 5.2**, the quantitative form of Lemma 4.3: two lattice points of
 the same type at distance less than `r` are joined by a path of two edges inside
 `B_R(x)`, for `R > (r + √d)/sin ϑ + r`. -/
@@ -191,7 +207,7 @@ theorem discr_connect_two_of_same_type (hϑ : 0 < ϑ) (hb : ∀ z, ϑ ≤ (Γ z)
   have hpos : 0 < (r + Real.sqrt d) / Real.sin ϑ := by positivity
   have hrR : r < R := by linarith
   obtain ⟨z, hzlat, hzx, hzy, hzcx, hzcy⟩ :=
-    exists_lattice_mem_inter (v := (Γ x).axis) (Γ x).norm_axis hϑ (hb x) (Γ x).apex_le hxy hR
+    discr_connect_two_of_same_type_two hϑ hb htype hxy hR
   have hxb : x ∈ ball x R ∩ lattice d := ⟨mem_ball_self (by linarith), hx⟩
   have hyb : y ∈ ball x R ∩ lattice d := by
     refine ⟨?_, hy⟩
@@ -199,9 +215,8 @@ theorem discr_connect_two_of_same_type (hϑ : 0 < ϑ) (hb : ∀ z, ϑ ≤ (Γ z)
   have hzb : z ∈ ball x R ∩ lattice d := by
     refine ⟨?_, hzlat⟩
     rw [mem_ball, dist_eq_norm]; linarith
-  refine ConnWithin.trans (ConnWithin.of_edge hxb hzb ?_) (ConnWithin.of_edge hyb hzb ?_).symm
-  · rw [mem_coneAt]; exact cone_subset_carrier _ hzcx
-  · rw [mem_coneAt, ← htype]; exact cone_subset_carrier _ hzcy
+  exact ConnWithin.trans (ConnWithin.of_edge hxb hzb hzcx)
+    (ConnWithin.of_edge hyb hzb hzcy).symm
 
 /-- **Definition 5.3**: a lattice point `x` is *`r`-`R`-connected* when every
 lattice point of `B_r(x)` is joined to `x` by an undirected edge path that does

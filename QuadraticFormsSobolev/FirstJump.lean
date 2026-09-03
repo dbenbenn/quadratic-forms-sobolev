@@ -219,8 +219,9 @@ def PathProps (Γ : Configuration (EuclideanSpace ℝ (Fin d))) (N M : ℕ) (lam
       lam⁻¹ * ‖x.1 - y.1‖ ≤ ‖e.toProd.1 - e.toProd.2‖ ∧
         ‖e.toProd.1 - e.toProd.2‖ ≤ lam * ‖x.1 - y.1‖)
 
-/-- **Theorem 5.15** of Bux–Kassmann–Schulze, as a statement. Not proved here:
-see the README for what its proof needs. -/
+/-- **Theorem 5.15** of Bux–Kassmann–Schulze, as a statement. It is proved as
+`QFS.path_props` in `BlockPaths`, at the end of the chain
+`exists_blockData → scaleData_of_blockData → pathPropsLong_of_scaleData`. -/
 def PathPropsHolds (d : ℕ) (ϑ R₀ : ℝ) : Prop :=
   ∃ (N M : ℕ) (lam : ℝ), 0 < N ∧ 0 < M ∧ R₀ ≤ lam ∧
     ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → PathProps Γ N M lam
