@@ -45,6 +45,11 @@ Theorem 4.1). See *Not attempted* below for what is deliberately left out.
 | **Lemma 2.2**: finitely many reference cones | Lem. 2.2 | `QFS.ref_cones` | ✅ **proved** |
 | Family of reference cones, `V^m_r`, `V^m_r[x]` | Def. 2.3 | `QFS.RefFamily`, `.shrunk`, `.shrunkAt` | ✅ defined |
 | **Corollary 2.4**: finite-image subconfiguration | Cor. 2.4 | `QFS.ref_config` | ✅ **proved** |
+| Lattices `ℤ^d`, `hℤ^d` | §3 | `QFS.lattice`, `QFS.scaledLattice` | ✅ defined |
+| `‖·‖_∞` triangle inequality, sup attained | eq. (3.1) | `QFS.infNorm_add_le`, `QFS.exists_infNorm_eq` | ✅ proved |
+| `‖x−y‖_∞ > h` ⟹ `≥ 2h` on `hℤ^d` | Lem. 3.4 proof | `QFS.two_mul_le_infNorm_sub` | ✅ proved |
+| **Lemma 3.4**: `|s−t|` vs `|x−y|` | Lem. 3.4 | `QFS.lemma_cubes` | ✅ **proved** (corrected, see below) |
+| Lemma 3.4 as literally stated is false | Lem. 3.4 | `QFS.lemma_cubes_literal_false` | ✅ **disproved** |
 
 ## Deviations
 
@@ -77,6 +82,23 @@ Each departure from the paper, and why.
    proof takes the equivalent and cleaner route of choosing, for each `x`, some
    index with `V^m ⊆ Γ(x)`; the paper's `M_i` are exactly the fibres of that
    choice.
+
+5. **Lemma 3.4 is stated with `ℤ^d` but proved for `hℤ^d` — the literal
+   statement is false.** The lemma reads "For every `h > 0`, all `x, y ∈ ℤ^d`
+   with `|x − y| > √d·h` …". Its proof, however, treats the case `h = 1` and
+   closes with "The general case for arbitrary `h > 0` follows by scaling" —
+   and scaling `ℤ^d` by `h` produces `hℤ^d`, not `ℤ^d`. With `x, y` ranging
+   over `ℤ^d` for arbitrary `h` the lower bound genuinely fails:
+
+   > `d = 1`, `h = 3/2`, `x = 0`, `y = 2`, `s = 7/10`, `t = 13/10`.
+   > Then `|x − y| = 2 > 3/2 = √d·h`, `s ∈ A_h(x)` and `t ∈ A_h(y)` (both
+   > coordinates are within `h/2 = 3/4` of their centres), yet
+   > `|s − t| = 3/5` while `(2√d)⁻¹|x − y| = 1`.
+
+   `QFS.lemma_cubes_literal_false` is a Lean proof of exactly this. The
+   corrected statement — `x, y ∈ hℤ^d`, which is what the paper's own scaling
+   argument yields and what the applications (Proposition 3.5 with `h = 1`,
+   Corollary 3.6 on `hℤ^d`) actually use — is `QFS.lemma_cubes`.
 
 ## Not attempted
 

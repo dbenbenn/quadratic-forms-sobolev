@@ -58,6 +58,27 @@ lemma norm_le_sqrt_dim_mul_infNorm (x : EuclideanSpace ℝ (Fin d)) :
     _ = Real.sqrt d * infNorm x := by
         rw [Real.sqrt_mul (by positivity), Real.sqrt_sq (infNorm_nonneg x)]
 
+/-- `‖·‖_∞` is symmetric under negation. -/
+@[simp] lemma infNorm_neg (x : EuclideanSpace ℝ (Fin d)) : infNorm (-x) = infNorm x := by
+  simp [infNorm]
+
+/-- The triangle inequality for `‖·‖_∞`. -/
+lemma infNorm_add_le (x y : EuclideanSpace ℝ (Fin d)) :
+    infNorm (x + y) ≤ infNorm x + infNorm y := by
+  refine infNorm_le (add_nonneg (infNorm_nonneg x) (infNorm_nonneg y)) (fun i => ?_)
+  have h1 : |(x + y) i| = |x i + y i| := by simp
+  rw [h1]
+  exact (abs_add_le _ _).trans (add_le_add (le_infNorm x i) (le_infNorm y i))
+
+/-- On a nonempty index set the supremum defining `‖·‖_∞` is attained. -/
+lemma exists_infNorm_eq [Nonempty (Fin d)] (x : EuclideanSpace ℝ (Fin d)) :
+    ∃ i, infNorm x = |x i| := by
+  obtain ⟨i₀, -, hi₀⟩ :=
+    Finset.exists_max_image Finset.univ (fun i => |x i|)
+      ⟨Classical.arbitrary _, Finset.mem_univ _⟩
+  exact ⟨i₀, le_antisymm (infNorm_le (abs_nonneg _) (fun i => hi₀ i (Finset.mem_univ i)))
+    (le_infNorm x i₀)⟩
+
 /-! ## Definition 2.5: cubes -/
 
 /-- The open cube `A_h(u)` with centre `u` and side length `h` (Definition 2.5). -/
