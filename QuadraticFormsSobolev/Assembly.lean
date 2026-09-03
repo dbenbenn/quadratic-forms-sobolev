@@ -94,7 +94,8 @@ theorem exists_alternating_walk {Γ : Configuration (EuclideanSpace ℝ (Fin d))
       (α β : ZMod a),
       ∃ w : (latticeGraph Γ).Walk (ρ B α)
         (ρ B' (if Even Wk.length then α else β)), w.length = Wk.length ∧
-        ∀ e ∈ w.edges, ∃ B₁ B₂, e = s(ρ B₁ α, ρ B₂ β) := by
+        ∀ e ∈ w.edges, ∃ B₁ ∈ Wk.support, ∃ B₂ ∈ Wk.support,
+          B₁ ≠ B₂ ∧ e = s(ρ B₁ α, ρ B₂ β) := by
   intro B B' Wk
   induction Wk with
   | nil =>
@@ -115,10 +116,14 @@ theorem exists_alternating_walk {Γ : Configuration (EuclideanSpace ℝ (Fin d))
       · rw [SimpleGraph.Walk.length_cons, hw']
       · intro e he
         rw [SimpleGraph.Walk.edges_cons, List.mem_cons] at he
+        rw [SimpleGraph.Walk.support_cons]
         rcases he with rfl | he
-        · exact ⟨_, _, rfl⟩
-        · obtain ⟨B₁, B₂, hB⟩ := hwe e he
-          exact ⟨B₂, B₁, by rw [hB, Sym2.eq_swap]⟩
+        · exact ⟨_, List.mem_cons_self,
+            _, List.mem_cons_of_mem _ (SimpleGraph.Walk.start_mem_support Wk'),
+            hadj.1, rfl⟩
+        · obtain ⟨B₁, hB₁, B₂, hB₂, hne, hB⟩ := hwe e he
+          exact ⟨B₂, List.mem_cons_of_mem _ hB₂, B₁, List.mem_cons_of_mem _ hB₁,
+            hne.symm, by rw [hB, Sym2.eq_swap]⟩
 
 
 /-! ## Blocks at distinct centres are distinct

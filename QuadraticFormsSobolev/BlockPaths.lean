@@ -84,4 +84,120 @@ theorem exists_indexed_rep {α : Type*} {a : ℕ} [NeZero a] {S : Set α}
     exact e1.injective (e2.injective (Subtype.ext hij))
   · exact hTS (hTfin.mem_toFinset.mp (e2 (e1 i)).2)
 
+/-! ## The one-point part of admissibility -/
+
+/-- A lattice point in the ball `B_{2√d Δ^{m+1}}(Δ^{m+1}z)` — the condition each
+of `x` and `y` satisfies separately in `Admissible`. -/
+def AdmissiblePt (Δ : ℝ) (m : ℕ) (z x : EuclideanSpace ℝ (Fin d)) : Prop :=
+  x ∈ lattice d ∧ ‖x - Δ ^ (m + 1) • z‖ ≤ 2 * Real.sqrt d * Δ ^ (m + 1)
+
+lemma Admissible.left {Δ : ℝ} {m : ℕ} {z x y : EuclideanSpace ℝ (Fin d)}
+    (h : Admissible Δ m z x y) : AdmissiblePt Δ m z x := ⟨h.1, h.2.2.2.2.1⟩
+
+lemma Admissible.right {Δ : ℝ} {m : ℕ} {z x y : EuclideanSpace ℝ (Fin d)}
+    (h : Admissible Δ m z x y) : AdmissiblePt Δ m z y := ⟨h.2.1, h.2.2.2.2.2⟩
+
+/-! ## What an edge reveals
+
+An edge of the assembled walk is the first jump, the last jump, or an interior
+edge of the lift. In each case it pins down enough of `g x` and `f y` for the
+multiplicity count. -/
+
+/-- The information an edge of the assembled walk carries about the pair that
+used it: it is the first jump (an endpoint *is* `x`, and the other endpoint's
+index is `α = f y + g x`), the last jump (an endpoint is `y`, and the other
+endpoint's index is `α` or `β = g x`), or an interior edge (one endpoint's index
+is `β` and the other's is `α`). -/
+def Reveals {a : ℕ} (f g idx : EuclideanSpace ℝ (Fin d) → ZMod a)
+    (e : Sym2 (EuclideanSpace ℝ (Fin d))) (x y : EuclideanSpace ℝ (Fin d)) : Prop :=
+  (∃ p ∈ e, ∃ q ∈ e, p = x ∧ f y + g x = idx q) ∨
+  (∃ p ∈ e, ∃ q ∈ e, p = y ∧ (g x = idx q ∨ f y + g x = idx q)) ∨
+  (∃ p ∈ e, ∃ q ∈ e, g x = idx q ∧ f y + g x = idx p)
+
+/-- **Step 6's input.** Whatever an edge reveals, it confines `g x` to one of
+eight values and `f y` to one of nine, all computed from the edge alone. So if
+`f` and `g` have fibres of size at most `K₁` on the admissible points, at most
+`72 K₁²` admissible pairs can have used the edge. -/
+theorem encard_reveals_le {a K₁ : ℕ} (f g idx : EuclideanSpace ℝ (Fin d) → ZMod a)
+    (P : EuclideanSpace ℝ (Fin d) → Prop)
+    (hf : ∀ γ, {y | P y ∧ f y = γ}.encard ≤ (K₁ : ℕ∞))
+    (hg : ∀ γ, {x | P x ∧ g x = γ}.encard ≤ (K₁ : ℕ∞))
+    (e : Sym2 (EuclideanSpace ℝ (Fin d))) :
+    {q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+      P q.1 ∧ P q.2 ∧ Reveals f g idx e q.1 q.2}.encard ≤ ((72 * K₁ * K₁ : ℕ) : ℕ∞) := by
+  classical
+  induction e using Sym2.ind with
+  | _ u v =>
+  set G : Finset (ZMod a) :=
+    {g u, g v, idx u, idx v, idx u - f u, idx u - f v, idx v - f u, idx v - f v} with hG
+  set F : Finset (ZMod a) :=
+    {f u, f v, idx u - g u, idx u - g v, idx v - g u, idx v - g v, 0,
+      idx u - idx v, idx v - idx u} with hF
+  have hGcard : G.card ≤ 8 := by
+    rw [hG]
+    exact le_trans (Finset.card_insert_le _ _) (by
+      refine Nat.succ_le_succ (le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ ?_))
+      refine le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ ?_)
+      refine le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ ?_)
+      refine le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ ?_)
+      refine le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ ?_)
+      exact le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ (by simp)))
+  have hFcard : F.card ≤ 9 := by
+    rw [hF]
+    refine le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ ?_)
+    refine le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ ?_)
+    refine le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ ?_)
+    refine le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ ?_)
+    refine le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ ?_)
+    refine le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ ?_)
+    refine le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ ?_)
+    exact le_trans (Finset.card_insert_le _ _) (Nat.succ_le_succ (by simp))
+  -- what the edge reveals, read off as membership in `G` and `F`
+  have hkey : ∀ x y : EuclideanSpace ℝ (Fin d), Reveals f g idx s(u, v) x y →
+      g x ∈ G ∧ f y ∈ F := by
+    intro x y hrev
+    rcases hrev with ⟨p, hp, q, hq, hpx, hfy⟩ | ⟨p, hp, q, hq, hpy, hgx⟩ |
+      ⟨p, hp, q, hq, hgx, hfy⟩
+    · rw [Sym2.mem_iff] at hp hq
+      rw [hpx] at hp
+      have hfy' : f y = idx q - g x := eq_sub_of_add_eq hfy
+      rcases hp with rfl | rfl <;> rcases hq with rfl | rfl <;>
+        rw [hG, hF] <;> rw [hfy'] <;> simp
+    · rw [Sym2.mem_iff] at hp hq
+      rw [hpy] at hp
+      refine ⟨?_, ?_⟩
+      · rcases hgx with hgx | hgx
+        · rcases hq with rfl | rfl <;> rw [hG, hgx] <;> simp
+        · have : g x = idx q - f y := by rw [← hgx]; ring
+          rcases hp with rfl | rfl <;> rcases hq with rfl | rfl <;> rw [hG, this] <;> simp
+      · rcases hp with rfl | rfl <;> rw [hF] <;> simp
+    · rw [Sym2.mem_iff] at hp hq
+      have hfy' : f y = idx p - idx q := by
+        rw [← hfy, hgx]; ring
+      refine ⟨?_, ?_⟩
+      · rcases hq with rfl | rfl <;> rw [hG, hgx] <;> simp
+      · rcases hp with rfl | rfl <;> rcases hq with rfl | rfl <;> rw [hF, hfy'] <;> simp
+  -- the pairs sit in a product of two small unions of fibres
+  have hsub : {q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+      P q.1 ∧ P q.2 ∧ Reveals f g idx s(u, v) q.1 q.2} ⊆
+      (⋃ c ∈ G, {x | P x ∧ g x = c}) ×ˢ (⋃ c ∈ F, {y | P y ∧ f y = c}) := by
+    rintro ⟨x, y⟩ ⟨hPx, hPy, hrev⟩
+    obtain ⟨hgG, hfF⟩ := hkey x y hrev
+    exact ⟨Set.mem_biUnion hgG ⟨hPx, rfl⟩, Set.mem_biUnion hfF ⟨hPy, rfl⟩⟩
+  refine le_trans (Set.encard_le_encard hsub) ?_
+  rw [Set.encard_prod]
+  have hX : (⋃ c ∈ G, {x | P x ∧ g x = c}).encard ≤ ((8 * K₁ : ℕ) : ℕ∞) := by
+    refine le_trans (Finset.set_encard_biUnion_le G _) ?_
+    refine le_trans (Finset.sum_le_sum (fun c _ => hg c)) ?_
+    rw [Finset.sum_const, nsmul_eq_mul]
+    exact_mod_cast Nat.mul_le_mul hGcard (le_refl K₁)
+  have hY : (⋃ c ∈ F, {y | P y ∧ f y = c}).encard ≤ ((9 * K₁ : ℕ) : ℕ∞) := by
+    refine le_trans (Finset.set_encard_biUnion_le F _) ?_
+    refine le_trans (Finset.sum_le_sum (fun c _ => hf c)) ?_
+    rw [Finset.sum_const, nsmul_eq_mul]
+    exact_mod_cast Nat.mul_le_mul hFcard (le_refl K₁)
+  calc (⋃ c ∈ G, {x | P x ∧ g x = c}).encard * (⋃ c ∈ F, {y | P y ∧ f y = c}).encard
+      ≤ ((8 * K₁ : ℕ) : ℕ∞) * ((9 * K₁ : ℕ) : ℕ∞) := mul_le_mul' hX hY
+    _ = ((72 * K₁ * K₁ : ℕ) : ℕ∞) := by push_cast; ring
+
 end QFS
