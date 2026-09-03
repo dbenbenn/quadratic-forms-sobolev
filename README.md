@@ -89,8 +89,8 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 5.12 | Remark | the favored cone is not unique | ⚪ (reflected in the design, see below) |
 | 5.13 | Definition | the favored graph | ✅ |
 | 5.14 | Proposition | renormalisation | ✅ |
-| 5.15 | Theorem | path properties | ❌ out of scope |
-| 5.16 | Lemma | the first jump | ❌ out of scope |
+| 5.15 | Theorem | path properties | ⚪ statement recorded (`QFS.PathPropsHolds`), not proved |
+| 5.16 | Lemma | the first jump | ✅ |
 | 7.1 | Lemma | auxiliary integral estimate | ❌ out of scope |
 | 7.2 | Lemma | a Lebesgue differentiation argument | ❌ out of scope |
 
@@ -100,7 +100,8 @@ the machinery of Sections 5 and 6 (Lemma 3.3, which Proposition 3.5 needs, is
 false as stated). From Section 1, the function-space definitions, assumption
 (1.4), the reverse inequality and equation (1.6) are proved, and Theorems 1.1
 and 1.3 are recorded as type-checked `Prop`s so the remaining target is precise.
-Theorem 5.15, Lemma 5.16 and Section 6 remain a project in their own right.
+Theorem 5.15 (recorded as a statement) and Section 6 remain a project in their
+own right.
 
 ## What is proved, in detail
 
@@ -214,6 +215,10 @@ Theorem 5.15, Lemma 5.16 and Section 6 remain a project in their own right.
 | Distinct lattice points are `≥ 1` apart | Prop. 5.14 proof | `QFS.one_le_norm_sub_of_lattice` | ✅ proved |
 | Blocks within `R` of a point | Prop. 5.14 | `QFS.townBall` | ✅ defined |
 | **Proposition 5.14**: renormalisation | Prop. 5.14 | `QFS.renormalization` | ✅ **proved** |
+| The scale step `Δ`; towns at scale are sparse | §5.3 setup | `QFS.ScaleStep`, `QFS.exists_scaleStep`, `QFS.sparselyPopulated_of_scaleStep` | ✅ proved |
+| **Lemma 5.16**: the first jump | Lem. 5.16 | `QFS.connect_first_jump` | ✅ **proved** |
+| `G` as a `SimpleGraph`, with walks | §5.3 | `QFS.latticeGraph`, `QFS.LatticePt` | ✅ defined |
+| Statement of Theorem 5.15 | Thm. 5.15 | `QFS.PathProps`, `QFS.PathPropsHolds` | ⚪ stated, not proved |
 
 ## Deviations
 
@@ -428,7 +433,7 @@ formalised is the geometric and graph-theoretic layer they are built on.
 | Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Thm. 1.3's setting, and on Lemma 3.3 (see Deviations 7). |
 | Lemma 3.3 for `d ≥ 2` | Lem. 3.3 | True but needs an argument the paper does not give; see Deviations 7. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
-| Path properties | §5 (Thm. 5.15, Lem. 5.16) | The quantitative path estimates and the first jump. (Results 5.1–5.14 **are** formalised.) |
+| Path properties | §5 (Thm. 5.15) | The quantitative path estimates; statement recorded as `QFS.PathPropsHolds`. See below. (Results 5.1–5.14 and 5.16 **are** formalised.) |
 | Proof of Theorem 1.3 | §6 | As above. |
 | Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §§3 and 6. |
 
@@ -508,6 +513,44 @@ cone *realised at a point of the block* rather than merely one of maximal fibre.
 A maximal-fibre cone that is not realised would carry no information about its
 apex angle. The block is nonempty exactly when the edge condition is non-vacuous,
 so the two cases fit together.
+
+## Theorem 5.15
+
+`QFS.PathPropsHolds` records the statement; the proof is not formalised. Its four
+claims count and measure edges, which the `Relation.ReflTransGen` used up to this
+point cannot express — that records only that a path exists, not which one. So
+the paths are Mathlib `SimpleGraph.Walk`s in `QFS.latticeGraph`, which carry a
+length, a list of darts and a list of edges: claim (1) is the walk's type, (2)
+bounds `length`, (3) bounds the number of pairs whose walk contains a given edge,
+and (4) compares each dart's length to `‖x − y‖`.
+
+Its prerequisite **Lemma 5.16 is proved** (`QFS.connect_first_jump`), together
+with the scale-step setup: `QFS.ScaleStep` is the paper's even `Δ` exceeding
+`max(δ, R₀)` and divisible by `L`, `QFS.exists_scaleStep` shows one exists, and
+`QFS.sparselyPopulated_of_scaleStep` checks that every town `T(Δⁿ⁺¹, Δⁿ)` is then
+sparsely populated. The proof of 5.16 uses one point the paper leaves implicit:
+Lemma 5.1(1) produces a lattice point *whose `ρ`-ball* lies in the cone, and that
+forces the point to be at distance more than `ρ` from the apex — which is exactly
+the lower bound Lemma 5.9 needs, and which a bare "the cone contains a lattice
+point" would not give.
+
+What the proof of 5.15 still needs, beyond what is here:
+
+1. **Lattice-point counting.** `#(B_r ∩ ℤ^d) ≍ r^d`, both bounds. The upper bound
+   is close to `QFS.lattice_inter_closedBall_finite`; the lower bound is new, and
+   the sizes of blocks and majority sets (`Δ^{d(n-1)}/L`) depend on `Δ` being an
+   even integer.
+2. **Concatenating favored-graph paths** across all blocks of a ball into the
+   single path `P^n_z` of Step 1, with the bound `t ≤ #(B_r∩ℤ^d)·#(B_R∩ℤ^d)`.
+3. **The cyclic scheme** of Step 2 — the `a²` paths through the majority sets,
+   and an assignment `φ_z` of pairs to paths with fibres bounded by a constant.
+   The paper's justification is that `a` and `#A` are comparable; making that
+   precise is where the counting of item 1 is used.
+4. **The edge-multiplicity count** of Step 6, which bounds how many scales and
+   how many centres `z` a given edge can serve.
+
+Nothing here looks false, but it is a larger project than any single result so
+far, and Section 6 sits on top of it.
 
 ## Verification
 
