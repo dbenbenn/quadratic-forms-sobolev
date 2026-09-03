@@ -34,6 +34,20 @@ def shift (S : Set E) (x : E) : Set E := {y | y - x ∈ S}
 
 @[simp] lemma mem_shift {S : Set E} {x y : E} : y ∈ shift S x ↔ y - x ∈ S := Iff.rfl
 
+lemma isOpen_shift {S : Set E} (hS : IsOpen S) (x : E) : IsOpen (shift S x) :=
+  hS.preimage (continuous_id.sub continuous_const)
+
+lemma convex_shift {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F] {S : Set F}
+    (hS : Convex ℝ S) (x : F) : Convex ℝ (shift S x) := by
+  rintro p hp q hq a b ha hb hab
+  simp only [mem_shift] at hp hq ⊢
+  have he : a • p + b • q - x = a • (p - x) + b • (q - x) := by
+    rw [smul_sub, smul_sub]
+    rw [show a • p - a • x + (b • q - b • x) = a • p + b • q - (a • x + b • x) by abel]
+    rw [← add_smul, hab, one_smul]
+  rw [he]
+  exact hS hp hq ha hb hab
+
 /-- `shift` really is translation: `S[x] = S + x`. -/
 lemma shift_eq_image (S : Set E) (x : E) : shift S x = (fun h => x + h) '' S := by
   ext y

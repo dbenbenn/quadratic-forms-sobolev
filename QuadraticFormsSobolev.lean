@@ -1,5 +1,7 @@
 import QuadraticFormsSobolev.Translate
 import QuadraticFormsSobolev.Defs
+import QuadraticFormsSobolev.ConeGeometry
 import QuadraticFormsSobolev.Cubes
 import QuadraticFormsSobolev.RefCones
 import QuadraticFormsSobolev.Section3
+import QuadraticFormsSobolev.Section4

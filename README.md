@@ -18,8 +18,22 @@ The paper's main theorems rest on a long chaining-and-renormalisation argument
 (Sections 5 and 6) on top of a layer of point-set geometry and graph theory
 (Sections 2, 3 and 4). **This repository formalises that lower layer**: the full
 definitional set-up of Section 2, the geometric lemmas of Sections 2 and 3, and
-the whole of Section 4 (the paper's "continuous prelude", whose main result is
-Theorem 4.1). See *Not attempted* below for what is deliberately left out.
+the whole of Section 4 — the paper's "continuous prelude", whose main result,
+**Theorem 4.1**, is proved here (`QFS.cont_connectivity`). See *Not attempted*
+below for what is deliberately left out.
+
+Along the way the formalisation turned up four defects in the paper; all are
+recorded under *Deviations*, and two of them are accompanied by Lean proofs that
+the statement as printed is false:
+
+* **Lemma 3.4** is stated for `x, y ∈ ℤ^d` but is only true for `x, y ∈ hℤ^d`,
+  which is what its own "follows by scaling" argument gives
+  (`QFS.lemma_cubes_literal_false`).
+* **Lemma 3.3** is false in dimension one at the radius `r = √d` at which
+  Proposition 3.5 uses it (`QFS.lemma_new_config_false_dim_one`).
+* **Lemma 4.6** needs a hypothesis `z ∈ U` that is not stated.
+* **Theorem 4.1**'s induction is applied to a set that need not be connected;
+  the repair is to run it on `B_r(x) ∩ Ṽ[x]` with the half-cone.
 
 ## Status
 
@@ -55,6 +69,22 @@ Theorem 4.1). See *Not attempted* below for what is deliberately left out.
 | `λ_d(A_h^m(u)) ≥ L⁻¹ λ_d(A_h(u))` | §3 | `QFS.volume_cube_le_card_mul` | ✅ proved |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
+| Ball inside a cone: `‖u − tv‖ < t sin ϑ ⟹ u ∈ Ṽ` | §4–5 (implicit) | `QFS.mem_cone_of_norm_sub_lt` | ✅ proved |
+| Cones of apex `≤ π/2` are convex | (new; used for §4) | `QFS.convex_cone` | ✅ proved |
+| `V[x] ∩ V[y] ≠ ∅` for one double cone | Lem. 4.3 proof | `QFS.shift_inter_shift_nonempty` | ✅ proved |
+| The graph `G[U]`; undirected connectivity | §4 | `QFS.Edge`, `QFS.Conn` | ✅ defined |
+| Type of a point | Def. 4.2 | `Γ x = Γ y` | ✅ defined |
+| **Lemma 4.3**: same type ⟹ path of length ≤ 2 | Lem. 4.3 | `QFS.connect_two_of_same_type` | ✅ **proved** |
+| Well-connected in `U` | Def. 4.4 | `QFS.WellConnected` | ✅ defined |
+| **Lemma 4.5 (1)** | Lem. 4.5 | `QFS.wellConnected_of_mem_coneAt` | ✅ **proved** |
+| **Lemma 4.5 (2)** | Lem. 4.5 | `QFS.wellConnected_mono`, `QFS.Conn.mono` | ✅ **proved** |
+| **Lemma 4.5 (3)**: existence and density | Lem. 4.5 | `QFS.exists_wellConnected`, `QFS.wellConnected_dense` | ✅ **proved** |
+| **Lemma 4.6** ("über Bande") | Lem. 4.6 | `QFS.ueber_bande` | ✅ **proved** |
+| The constant `λ = (sin ϑ)/2` | Thm. 4.1 proof | `QFS.exists_mem_ball_inter_shift`, `'` | ✅ proved |
+| Connectivity is monotone in `Γ` | Thm. 4.1 proof (WLOG) | `QFS.Conn.mono_config` | ✅ proved |
+| Open classes + preconnected `U` ⟹ one class | Thm. 4.1, last step | `QFS.conn_of_wellConnected_of_isPreconnected` | ✅ proved |
+| The induction on the number of cone types | Thm. 4.1 proof | `QFS.conn_of_isPreconnected_of_finite` | ✅ proved |
+| **Theorem 4.1**: connectivity of `G[U]` | Thm. 4.1 | `QFS.cont_connectivity` | ✅ **proved** |
 
 ## Deviations
 
@@ -127,6 +157,51 @@ Each departure from the paper, and why.
    choose the axis `v(m)` to avoid the finitely many lines through the lattice
    points of norm below `r / sin(θ_m/2)`, and only then shrink `θ`. That
    argument is not in the paper and is not formalised here.
+
+8. **Lemma 4.6 needs `z ∈ U`, which the paper does not state.** The lemma reads
+   "Assume that the translated double cone `V[x]` contains a point `z` of type
+   `V`. Then `x` and `y` are connected." The proof uses the edge from `z` to
+   `x`, which exists in `G[U]` only if `z ∈ U`. `QFS.ueber_bande` therefore
+   takes `z ∈ U` as a hypothesis. This costs nothing: Theorem 4.1 applies the
+   lemma to a point of `U ∩ V[x]`. (Conversely, the hypothesis `x ∈ U` that the
+   paper does state is not needed; it is kept for fidelity.)
+
+9. **Theorem 4.1: the induction is run on a different open set.** The paper's
+   induction is on the number of cone types realised in `U`, and in the
+   inductive step it applies the inductive hypothesis to
+
+   > `U' = U ∩ V[x]`, concluding "all points in `U'` are mutually connected in
+   > `G[U']`".
+
+   But `V[x]` is a *double* cone — the disjoint union of two open half-cones —
+   so `U'` is in general not connected, while the inductive hypothesis is
+   Theorem 4.1, a statement about *connected* open sets. As stated the step does
+   not go through.
+
+   The formalisation repairs this by running the induction on
+
+   > `U'' = B_r(x) ∩ Ṽ[x]`, with the *half*-cone `Ṽ`,
+
+   which does everything the argument needs and is connected:
+
+   - `U''` is convex, hence preconnected (`QFS.convex_cone` shows a cone of apex
+     angle at most `π/2` is convex — the "ice cream cone");
+   - `U'' ⊆ U ∩ V[x]`, so the cone type `V` is still not realised in `U''` and
+     the induction still descends (`Set.ncard_lt_ncard`);
+   - the point supplied by the `λ`-observation is `x + (r/2)·v`, which lies in
+     the *half*-cone, hence in `U''` (this is why
+     `QFS.exists_mem_ball_inter_shift` is stated with `cone` rather than
+     `doubleCone`; `QFS.exists_mem_ball_inter_shift'` is the paper's weaker
+     form);
+   - `U''` contains the points `x + t·v` for all small `t > 0`, hence points
+     arbitrarily close to `x`, which is what the appeal to well-connectedness of
+     `x` needs.
+
+   The paper's closing sentence — "density of well-connected points implies that
+   `U` is covered by overlapping open well-connected subsets" — is made precise
+   as `QFS.conn_of_wellConnected_of_isPreconnected`: once every point of `U` is
+   well-connected the connectivity classes are open, so a preconnected `U` is a
+   single class.
 
 ## Not attempted
 

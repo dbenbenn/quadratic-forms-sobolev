@@ -30,6 +30,54 @@ lemma mem_doubleCone_iff {v h : E} {ϑ : ℝ} :
     h ∈ doubleCone v ϑ ↔ h ∈ cone v ϑ ∨ -h ∈ cone v ϑ := by
   simp [doubleCone, Set.mem_neg]
 
+/-- The defining inequality of a cone, cleared of the division. -/
+lemma mem_cone_iff_mul {v h : E} {ϑ : ℝ} :
+    h ∈ cone v ϑ ↔ h ≠ 0 ∧ Real.cos ϑ * ‖h‖ < ⟪v, h⟫ := by
+  constructor
+  · rintro ⟨hne, hlt⟩
+    have hn : 0 < ‖h‖ := norm_pos_iff.mpr hne
+    rw [lt_div_iff₀ hn] at hlt
+    exact ⟨hne, hlt⟩
+  · rintro ⟨hne, hlt⟩
+    have hn : 0 < ‖h‖ := norm_pos_iff.mpr hne
+    exact ⟨hne, by rwa [lt_div_iff₀ hn]⟩
+
+/-- A cone of apex angle at most `π/2` is convex — the "ice cream cone". This is
+what makes the sets `B_r(x) ∩ Ṽ[x]` used in Theorem 4.1 connected. -/
+lemma convex_cone (v : E) {ϑ : ℝ} (hϑ : ϑ ≤ π / 2) (hϑ₀ : 0 ≤ ϑ) : Convex ℝ (cone v ϑ) := by
+  have hc0 : 0 ≤ Real.cos ϑ := Real.cos_nonneg_of_mem_Icc ⟨by linarith, hϑ⟩
+  rintro h₁ hh₁ h₂ hh₂ a b ha hb hab
+  rw [mem_cone_iff_mul] at hh₁ hh₂ ⊢
+  have h1 := hh₁.2
+  have h2 := hh₂.2
+  have hinner : ⟪v, a • h₁ + b • h₂⟫ = a * ⟪v, h₁⟫ + b * ⟪v, h₂⟫ := by
+    rw [inner_add_right, real_inner_smul_right, real_inner_smul_right]
+  have hnorm : ‖a • h₁ + b • h₂‖ ≤ a * ‖h₁‖ + b * ‖h₂‖ := by
+    refine (norm_add_le _ _).trans ?_
+    rw [norm_smul, norm_smul, Real.norm_eq_abs, Real.norm_eq_abs, abs_of_nonneg ha,
+      abs_of_nonneg hb]
+  have hpos : Real.cos ϑ * (a * ‖h₁‖ + b * ‖h₂‖) < a * ⟪v, h₁⟫ + b * ⟪v, h₂⟫ := by
+    rcases lt_or_eq_of_le ha with ha' | ha'
+    · rcases lt_or_eq_of_le hb with hb' | hb'
+      · nlinarith
+      · rw [← hb']; nlinarith
+    · rw [← ha']
+      have hb1 : b = 1 := by rw [← ha'] at hab; linarith
+      rw [hb1]; nlinarith
+  have hne : a • h₁ + b • h₂ ≠ 0 := by
+    intro hz
+    rw [hz] at hinner
+    simp only [inner_zero_right] at hinner
+    have : (0:ℝ) ≤ Real.cos ϑ * (a * ‖h₁‖ + b * ‖h₂‖) := by
+      have : 0 ≤ a * ‖h₁‖ + b * ‖h₂‖ := by positivity
+      positivity
+    linarith [hinner ▸ hpos]
+  refine ⟨hne, ?_⟩
+  calc Real.cos ϑ * ‖a • h₁ + b • h₂‖ ≤ Real.cos ϑ * (a * ‖h₁‖ + b * ‖h₂‖) :=
+        mul_le_mul_of_nonneg_left hnorm hc0
+    _ < a * ⟪v, h₁⟫ + b * ⟪v, h₂⟫ := hpos
+    _ = ⟪v, a • h₁ + b • h₂⟫ := hinner.symm
+
 lemma zero_notMem_cone (v : E) (ϑ : ℝ) : (0 : E) ∉ cone v ϑ := by
   simp [cone]
 
