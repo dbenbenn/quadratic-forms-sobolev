@@ -543,8 +543,11 @@ Lemma 5.7 asserts the existence of constants `r_k ≤ ρ_k ≤ R_k`, depending o
 `r_k`-`R_k`-connected as soon as at most `k` cone types are realised at the
 lattice points of `B_{ρ_k}(x)`.
 
-The statement is recorded below as `CoreInduction`, and the base case `k = 1` is
-proved. The induction step is not formalised; see the README for what it needs. -/
+The statement is recorded below as `CoreInduction` and proved, in the stronger
+form in which the constants are produced before the configuration is mentioned —
+the paper's assertion that they depend only on `ϑ` and `d`. See `core_induction`
+and `coreInduction_holds`; `core_induction_base` is the base case `k = 1` on its
+own. -/
 
 /-- The set of cone types realised at the lattice points of `S`. A "type" is the
 double cone itself, as in Definition 4.2. -/
@@ -552,16 +555,18 @@ def typesIn (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
     (S : Set (EuclideanSpace ℝ (Fin d))) : Set (Set (EuclideanSpace ℝ (Fin d))) :=
   (fun p => (Γ p).carrier) '' (S ∩ lattice d)
 
-/-- The statement of **Lemma 5.7**. Recorded so that the remaining target is
-precise; only the case `k ≤ 1` is proved (`core_induction_base`). -/
+/-- The statement of **Lemma 5.7**, for a fixed configuration. Proved as
+`coreInduction_holds`; `core_induction` is the stronger form with the
+configuration quantified after the constants. -/
 def CoreInduction (Γ : Configuration (EuclideanSpace ℝ (Fin d))) (δ : ℝ) : Prop :=
   ∀ k : ℕ, ∃ r ρ R : ℝ, δ < r ∧ r ≤ ρ ∧ ρ ≤ R ∧
     ∀ x ∈ lattice d, Set.encard (typesIn Γ (ball x ρ)) ≤ (k : ℕ∞) →
       RRConnected Γ r R x
 
-/-- **Lemma 5.7, the base case `k = 1`.** If only one cone type is realised at the
-lattice points of `B_ρ(x)`, then `x` is `r`-`R`-connected; this is Corollary 5.2
-applied to `x` and each lattice point of `B_r(x)`. -/
+/-- **Lemma 5.7, the base case `k = 1`**, on its own: if only one cone type is
+realised at the lattice points of `B_ρ(x)`, then `x` is `r`-`R`-connected, by
+Corollary 5.2 applied to `x` and each lattice point of `B_r(x)`. (The full
+induction, `core_induction`, starts instead from the vacuous case `k = 0`.) -/
 theorem core_induction_base (hϑ : 0 < ϑ) (hb : ∀ z, ϑ ≤ (Γ z).apex) {δ : ℝ} (hδ : 0 < δ) :
     ∃ r ρ R : ℝ, δ < r ∧ r ≤ ρ ∧ ρ ≤ R ∧
       ∀ x ∈ lattice d, Set.encard (typesIn Γ (ball x ρ)) ≤ 1 → RRConnected Γ r R x := by
@@ -860,26 +865,6 @@ lemma RRConnected.conn {r R : ℝ} {c : EuclideanSpace ℝ (Fin d)} (h : RRConne
     ConnWithin Γ (ball c R ∩ lattice d) p q :=
   (h p hp hplat).symm.trans (h q hq hqlat)
 
-/-- **The paper's "all these well-connected balls overlap".** A descent chain
-whose jumps are shorter than `r` becomes an edge path, as soon as every lattice
-point of the region is `r`-`R`-connected; the path is delivered inside any ball
-`B_{Rb}(b)` containing all the balls `B_R(p)`. -/
-theorem connWithin_of_chain {W : Set (EuclideanSpace ℝ (Fin d))}
-    {c b : EuclideanSpace ℝ (Fin d)} {δ r R Rb : ℝ} (hδr : δ ≤ r)
-    (hconn : ∀ p ∈ W ∩ lattice d, RRConnected Γ r R p)
-    (hsub : ∀ p ∈ W ∩ lattice d, R + dist p b ≤ Rb)
-    {x y : EuclideanSpace ℝ (Fin d)} (hchain : Relation.ReflTransGen (Jump W c δ) x y) :
-    ConnWithin Γ (ball b Rb ∩ lattice d) x y := by
-  induction hchain with
-  | refl => exact ConnWithin.refl _
-  | tail _ hstep ih =>
-      obtain ⟨hp, hq, -, hlen⟩ := hstep
-      refine ih.trans (ConnWithin.mono_ball (hsub _ hp) ?_)
-      refine (hconn _ hp) _ ?_ hq.2
-      rw [mem_ball, dist_eq_norm]
-      exact lt_of_lt_of_le hlen hδr
-
-
 /-- A descent chain never moves further from the base point than it started, so
 it stays inside the region on which the inductive hypothesis was invoked. -/
 lemma Jump.chain_dist_le {W : Set (EuclideanSpace ℝ (Fin d))}
@@ -897,5 +882,264 @@ lemma Jump.chain_mem {W : Set (EuclideanSpace ℝ (Fin d))}
   induction h with
   | refl => exact hx
   | tail _ hstep _ => exact hstep.2.1
+
+/-- **The paper's "all these well-connected balls overlap".** A descent chain
+whose jumps are shorter than `r` becomes an edge path, as soon as every lattice
+point of the region *reachable from `x`* is `r`-`R`-connected; the path is
+delivered inside any ball `B_{Rb}(b)` containing the corresponding balls `B_R(p)`.
+
+The hypotheses are guarded by `‖p − c‖ ≤ ‖x − c‖`, which by `Jump.chain_dist_le`
+holds along the chain: the region `W` is an unbounded cone, so the unguarded form
+would be far too strong to apply. -/
+theorem connWithin_of_chain {W : Set (EuclideanSpace ℝ (Fin d))}
+    {c b : EuclideanSpace ℝ (Fin d)} {δ r R Rb : ℝ} (hδr : δ ≤ r)
+    {x y : EuclideanSpace ℝ (Fin d)}
+    (hconn : ∀ p ∈ W ∩ lattice d, ‖p - c‖ ≤ ‖x - c‖ → RRConnected Γ r R p)
+    (hsub : ∀ p ∈ W ∩ lattice d, ‖p - c‖ ≤ ‖x - c‖ → R + dist p b ≤ Rb)
+    (hchain : Relation.ReflTransGen (Jump W c δ) x y) :
+    ConnWithin Γ (ball b Rb ∩ lattice d) x y := by
+  induction hchain with
+  | refl => exact ConnWithin.refl _
+  | tail hpre hstep ih =>
+      obtain ⟨hp, hq, -, hlen⟩ := hstep
+      have hpd := Jump.chain_dist_le hpre
+      refine ih.trans (ConnWithin.mono_ball (hsub _ hp hpd) ?_)
+      refine (hconn _ hp hpd) _ ?_ hq.2
+      rw [mem_ball, dist_eq_norm]
+      exact lt_of_lt_of_le hlen hδr
+
+
+/-! ## The induction step of Lemma 5.7 -/
+
+/-- **The induction step of Lemma 5.7.** Given constants for `k` cone types,
+produce constants for `k+1`.
+
+Following the paper: pick an `s`-`S`-connected lattice point `x̂` near `x`
+(Lemma 5.4) and set `r = S`; for `y ∈ B_r(x)` of type `V`, produce a lattice
+point `z` in `B_ŝ(x̂) ∩ (x̂ + Ṽ_{ρ'}) ∩ V[y]` (Lemma 5.1(2), applied at the
+*displaced* apex so that `z` lands in the shrunk cone), and split on whether the
+type `V` occurs in `B_{ŝ₂}(x̂) ∩ V[x̂]`. If it does not, the region realises at most
+`k` types, the inductive hypothesis makes every lattice point of it
+`r'`-`R'`-connected, and the descent chain from `z` to the tip glues these
+together and up to `x̂`. If it does, Lemma 5.5 applies directly. -/
+theorem core_induction_step (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
+    {δ t₀ : ℝ} (hδ0 : 0 < δ) (ht₀0 : 0 < t₀)
+    (hchain : ∀ (v : EuclideanSpace ℝ (Fin d)) (ϑV : ℝ), ‖v‖ = 1 → ϑ ≤ ϑV → ϑV ≤ π / 2 →
+      ∀ c : EuclideanSpace ℝ (Fin d), ∀ x ∈ lattice d, x ∈ shift (cone v ϑV) c →
+        ∃ y ∈ lattice d, y ∈ shift (cone v ϑV) c ∧ ‖y - c‖ ≤ t₀ ∧
+          Relation.ReflTransGen (Jump (shift (cone v ϑV) c) c δ) x y)
+    {k : ℕ} {r' ρ' R' : ℝ} (hδr' : δ < r') (hrρ' : r' ≤ ρ') (hρR' : ρ' ≤ R')
+    (IH : ∀ G : Configuration (EuclideanSpace ℝ (Fin d)), (∀ z, ϑ ≤ (G z).apex) →
+      ∀ p ∈ lattice d, (typesIn G (ball p ρ')).encard ≤ (k : ℕ∞) →
+        RRConnected G r' R' p) :
+    ∃ r ρ R : ℝ, δ < r ∧ r ≤ ρ ∧ ρ ≤ R ∧
+      ∀ G : Configuration (EuclideanSpace ℝ (Fin d)), (∀ z, ϑ ≤ (G z).apex) →
+      ∀ x ∈ lattice d, (typesIn G (ball x ρ)).encard ≤ ((k + 1 : ℕ) : ℕ∞) →
+        RRConnected G r R x := by
+  have hσ0 : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [pi_pos])
+  have hσ1 : Real.sin ϑ ≤ 1 := Real.sin_le_one ϑ
+  have hD : (0:ℝ) ≤ Real.sqrt d := Real.sqrt_nonneg _
+  have hρ'0 : 0 < ρ' := lt_of_lt_of_le (lt_trans hδ0 hδr') hrρ'
+  have hR'0 : 0 < R' := lt_of_lt_of_le hρ'0 hρR'
+  have hdivρ : ρ' ≤ ρ' / Real.sin ϑ := by rw [le_div_iff₀ hσ0]; nlinarith
+  have hdivρ0 : 0 < ρ' / Real.sin ϑ := div_pos hρ'0 hσ0
+  obtain ⟨s, hs⟩ : ∃ t : ℝ, t = ρ' / Real.sin ϑ + t₀ + 1 := ⟨_, rfl⟩
+  have hs0' : 0 < s := by linarith
+  have hdivS : Real.sqrt d + s ≤ (Real.sqrt d + s) / Real.sin ϑ := by
+    rw [le_div_iff₀ hσ0]; nlinarith
+  obtain ⟨S, hS⟩ : ∃ t : ℝ, t = (Real.sqrt d + s) / Real.sin ϑ + 1 := ⟨_, rfl⟩
+  have hS0 : 0 < S := by linarith
+  have hSs : s < S := by linarith
+  obtain ⟨m, hm⟩ : ∃ t : ℝ, t = ρ' / Real.sin ϑ + 2 * S := ⟨_, rfl⟩
+  have hm0 : 0 < m := by linarith
+  have hdivsh : 0 < (m + Real.sqrt d) / Real.sin ϑ := div_pos (by linarith) hσ0
+  obtain ⟨sh, hsh⟩ : ∃ t : ℝ, t = (m + Real.sqrt d) / Real.sin ϑ + m + 1 := ⟨_, rfl⟩
+  have hsh0 : 0 < sh := by linarith
+  have hshm : m < sh := by linarith
+  obtain ⟨s2, hs2⟩ : ∃ t : ℝ, t = sh + ρ' / Real.sin ϑ + ρ' := ⟨_, rfl⟩
+  have hs20 : 0 < s2 := by linarith
+  have hs2sh : sh < s2 := by linarith
+  have h2Ss2 : 2 * S < s2 := by linarith
+  obtain ⟨ρ, hρ⟩ : ∃ t : ℝ, t = s2 + S + 1 := ⟨_, rfl⟩
+  have hρ0 : 0 < ρ := by linarith
+  have hdivR3 : 0 < (2 * s2 + Real.sqrt d) / Real.sin ϑ := div_pos (by linarith) hσ0
+  obtain ⟨R3, hR3⟩ : ∃ t : ℝ, t = s2 + (2 * s2 + Real.sqrt d) / Real.sin ϑ + 1 := ⟨_, rfl⟩
+  have hR30 : 0 < R3 := by linarith
+  obtain ⟨R, hR⟩ : ∃ t : ℝ, t = R' + s2 + S + R3 + ρ + 2 * S + sh + 1 := ⟨_, rfl⟩
+  refine ⟨S, ρ, R, by linarith, by linarith, by linarith, ?_⟩
+  intro G hb x hxlat hcard
+  obtain ⟨xh, hxhlat, hxhx, hxhconn⟩ :=
+    exists_rrConnected (Γ := G) (r := s) (R := S) hϑ hb (le_of_lt hs0') (by linarith) hxlat
+  have claim : ∀ y ∈ ball x S, y ∈ lattice d → ConnWithin G (ball x R ∩ lattice d) xh y := by
+    intro y hy hylat
+    rw [mem_ball, dist_eq_norm] at hy
+    have htri1 : ‖(xh - x) - (y - x)‖ ≤ ‖xh - x‖ + ‖y - x‖ := norm_sub_le _ _
+    have hxhy : ‖xh - y‖ < 2 * S := by
+      have he : xh - y = (xh - x) - (y - x) := by abel
+      rw [he]; linarith
+    have hv : ‖(G y).axis‖ = 1 := (G y).norm_axis
+    have hϑV : ϑ ≤ (G y).apex := hb y
+    have hϑV0 : 0 < (G y).apex := (G y).apex_pos
+    have hϑV' : (G y).apex ≤ π / 2 := (G y).apex_le
+    have hσV : Real.sin ϑ ≤ Real.sin (G y).apex :=
+      Real.strictMonoOn_sin.monotoneOn ⟨by linarith [pi_pos], by linarith⟩
+        ⟨by linarith [pi_pos], hϑV'⟩ hϑV
+    have hσV0 : 0 < Real.sin (G y).apex := lt_of_lt_of_le hσ0 hσV
+    have hdivV : ρ' / Real.sin (G y).apex ≤ ρ' / Real.sin ϑ :=
+      div_le_div_of_nonneg_left (le_of_lt hρ'0) hσ0 hσV
+    have hdivV0 : 0 < ρ' / Real.sin (G y).apex := div_pos hρ'0 hσV0
+    obtain ⟨a, ha⟩ : ∃ w : EuclideanSpace ℝ (Fin d),
+        w = xh + (ρ' / Real.sin (G y).apex) • (G y).axis := ⟨_, rfl⟩
+    have haxh : ‖a - xh‖ = ρ' / Real.sin (G y).apex := by
+      have he : a - xh = (ρ' / Real.sin (G y).apex) • (G y).axis := by rw [ha]; abel
+      rw [he, norm_smul, hv, Real.norm_eq_abs, abs_of_pos hdivV0, mul_one]
+    have hay : ‖a - y‖ < m := by
+      have he : a - y = (a - xh) + (xh - y) := by abel
+      have h1 : ‖(a - xh) + (xh - y)‖ ≤ ‖a - xh‖ + ‖xh - y‖ := norm_add_le _ _
+      rw [he]; rw [haxh] at h1; linarith
+    obtain ⟨z, hzlat, hza, hzy, hzca, hzcy⟩ :=
+      exists_lattice_mem_inter (v := (G y).axis) (R := sh) hv hϑ hϑV hϑV' hay (by linarith)
+    have hedge : z ∈ coneAt G y := by
+      rw [mem_coneAt]; exact cone_subset_carrier _ hzcy
+    have hzx : ‖z - x‖ < s2 + S := by
+      have he : z - x = (z - a) + ((a - xh) + (xh - x)) := by abel
+      have h1 : ‖(z - a) + ((a - xh) + (xh - x))‖ ≤ ‖z - a‖ + ‖(a - xh) + (xh - x)‖ :=
+        norm_add_le _ _
+      have h2 : ‖(a - xh) + (xh - x)‖ ≤ ‖a - xh‖ + ‖xh - x‖ := norm_add_le _ _
+      rw [he]; rw [haxh] at h2; linarith
+    have hzball : z ∈ ball x R ∩ lattice d :=
+      ⟨by rw [mem_ball, dist_eq_norm]; linarith, hzlat⟩
+    have hyball : y ∈ ball x R ∩ lattice d :=
+      ⟨by rw [mem_ball, dist_eq_norm]; linarith, hylat⟩
+    have hzy' : ConnWithin G (ball x R ∩ lattice d) y z :=
+      ConnWithin.of_edge hyball hzball hedge
+    obtain ⟨Reg, hReg⟩ : ∃ T : Set (EuclideanSpace ℝ (Fin d)),
+        T = ball xh s2 ∩ shift (G y).carrier xh := ⟨_, rfl⟩
+    have hRegdist : ∀ p ∈ Reg, ‖p - xh‖ < s2 := by
+      intro p hp
+      rw [hReg] at hp
+      have := hp.1
+      rw [mem_ball, dist_eq_norm] at this
+      exact this
+    have hRegsub : Reg ⊆ ball x ρ := by
+      intro p hp
+      rw [mem_ball, dist_eq_norm]
+      have h1 := hRegdist p hp
+      have he : p - x = (p - xh) + (xh - x) := by abel
+      have h2 : ‖(p - xh) + (xh - x)‖ ≤ ‖p - xh‖ + ‖xh - x‖ := norm_add_le _ _
+      rw [he]; linarith
+    by_cases hcase : ∃ p ∈ Reg, p ∈ lattice d ∧ (G p).carrier = (G y).carrier
+    · obtain ⟨p, hpReg, hplat, hptype⟩ := hcase
+      have hpxh : ‖p - xh‖ < s2 := hRegdist p hpReg
+      rw [hReg] at hpReg
+      have hconn := discr_ueber_bande (Γ := G) (R := R3) hϑ hb hxhlat hylat hplat
+        (by linarith : ‖xh - y‖ < s2) hpxh hpReg.2 hptype (by linarith)
+      refine (ConnWithin.mono_ball ?_ hconn).symm
+      rw [dist_eq_norm]; linarith
+    · have hmiss : ∀ p ∈ Reg, p ∈ lattice d → (G p).carrier ≠ (G y).carrier := by
+        intro p hp hplat htype
+        exact hcase ⟨p, hp, hplat, htype⟩
+      have hRegcard : (typesIn G Reg).encard ≤ (k : ℕ∞) := by
+        refine encard_typesIn_le_of_missing hRegsub ?_ hylat hmiss hcard
+        rw [mem_ball, dist_eq_norm]; linarith
+      obtain ⟨w, hwlat, hwc, hwt, hwchain⟩ :=
+        hchain (G y).axis (G y).apex hv hϑV hϑV' a z hzlat hzca
+      have hshrink := shift_cone_apex_subset_shift_shrink (d := d) hv hϑV0 hϑV'
+        (le_of_lt hρ'0) xh
+      rw [← ha] at hshrink
+      have hballReg : ∀ p ∈ shift (cone (G y).axis (G y).apex) a ∩ lattice d,
+          ‖p - a‖ ≤ ‖z - a‖ → ball p ρ' ⊆ Reg := by
+        intro p hp hpd u hu
+        rw [mem_ball, dist_eq_norm] at hu
+        rw [hReg]
+        refine ⟨?_, ?_⟩
+        · rw [mem_ball, dist_eq_norm]
+          have he : u - xh = (u - p) + ((p - a) + (a - xh)) := by abel
+          have h1 : ‖(u - p) + ((p - a) + (a - xh))‖ ≤ ‖u - p‖ + ‖(p - a) + (a - xh)‖ :=
+            norm_add_le _ _
+          have h2 : ‖(p - a) + (a - xh)‖ ≤ ‖p - a‖ + ‖a - xh‖ := norm_add_le _ _
+          rw [he]; rw [haxh] at h2; linarith
+        · have hpshr := hshrink hp.1
+          refine cone_subset_carrier _ (hpshr.2 ?_)
+          rw [Metric.mem_closedBall, dist_eq_norm]
+          have he : u - xh - (p - xh) = u - p := by abel
+          rw [he]
+          exact le_of_lt hu
+      have hconnp : ∀ p ∈ shift (cone (G y).axis (G y).apex) a ∩ lattice d,
+          ‖p - a‖ ≤ ‖z - a‖ → RRConnected G r' R' p := by
+        intro p hp hpd
+        exact IH G hb p hp.2
+          (le_trans (Set.encard_mono (typesIn_mono (hballReg p hp hpd))) hRegcard)
+      have hsubp : ∀ p ∈ shift (cone (G y).axis (G y).apex) a ∩ lattice d,
+          ‖p - a‖ ≤ ‖z - a‖ → R' + dist p x ≤ R := by
+        intro p hp hpd
+        rw [dist_eq_norm]
+        have he : p - x = (p - a) + ((a - xh) + (xh - x)) := by abel
+        have h1 : ‖(p - a) + ((a - xh) + (xh - x))‖ ≤ ‖p - a‖ + ‖(a - xh) + (xh - x)‖ :=
+          norm_add_le _ _
+        have h2 : ‖(a - xh) + (xh - x)‖ ≤ ‖a - xh‖ + ‖xh - x‖ := norm_add_le _ _
+        rw [he]; rw [haxh] at h2; linarith
+      have hzw : ConnWithin G (ball x R ∩ lattice d) z w :=
+        connWithin_of_chain (le_of_lt hδr') hconnp hsubp hwchain
+      have hwxh : ‖w - xh‖ < s := by
+        have he : w - xh = (w - a) + (a - xh) := by abel
+        have h1 : ‖(w - a) + (a - xh)‖ ≤ ‖w - a‖ + ‖a - xh‖ := norm_add_le _ _
+        rw [he]; rw [haxh] at h1; linarith
+      have hxhw : ConnWithin G (ball x R ∩ lattice d) xh w := by
+        refine ConnWithin.mono_ball ?_
+          (hxhconn w (by rw [mem_ball, dist_eq_norm]; exact hwxh) hwlat)
+        rw [dist_eq_norm]; linarith
+      exact (hxhw.trans hzw.symm).trans hzy'.symm
+  intro y hy hylat
+  exact (claim x (mem_ball_self hS0) hxlat).symm.trans (claim y hy hylat)
+
+
+/-- **Lemma 5.7** of Bux–Kassmann–Schulze, the core induction: there is a jump
+constant `δ > 0` and, for every `k`, radii `r_k ≤ ρ_k ≤ R_k` with `δ < r_k`, all
+depending only on `ϑ` and `d`, such that every lattice point is
+`r_k`-`R_k`-connected as soon as at most `k` cone types are realised at the
+lattice points of `B_{ρ_k}`. -/
+theorem core_induction (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ k : ℕ, ∃ r ρ R : ℝ, δ < r ∧ r ≤ ρ ∧ ρ ≤ R ∧
+      ∀ G : Configuration (EuclideanSpace ℝ (Fin d)), (∀ z, ϑ ≤ (G z).apex) →
+      ∀ x ∈ lattice d, (typesIn G (ball x ρ)).encard ≤ (k : ℕ∞) →
+        RRConnected G r R x := by
+  obtain ⟨δ, t₀, hδ0, ht₀0, hchain⟩ := exists_chain_to_apex (d := d) hϑ hϑ'
+  refine ⟨δ, hδ0, fun k => ?_⟩
+  induction k with
+  | zero =>
+      refine ⟨δ + 1, δ + 1, δ + 1, by linarith, le_rfl, le_rfl, ?_⟩
+      intro G _hb x hxlat hcard
+      exfalso
+      have hmem : (G x).carrier ∈ typesIn G (ball x (δ + 1)) :=
+        mem_typesIn (mem_ball_self (by linarith)) hxlat
+      have h0 : (typesIn G (ball x (δ + 1))).encard = 0 :=
+        le_antisymm (by simpa using hcard) (zero_le)
+      rw [Set.encard_eq_zero] at h0
+      rw [h0] at hmem
+      exact absurd hmem (Set.notMem_empty _)
+  | succ k ih =>
+      obtain ⟨r', ρ', R', h1, h2, h3, IH⟩ := ih
+      exact core_induction_step hϑ hϑ' hδ0 ht₀0 hchain h1 h2 h3 IH
+
+
+/-- **Lemma 5.7** in the form recorded by `CoreInduction`, for a fixed
+`ϑ`-bounded configuration. -/
+theorem coreInduction_holds (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hb : ∀ z, ϑ ≤ (Γ z).apex) :
+    ∃ δ : ℝ, 0 < δ ∧ CoreInduction Γ δ := by
+  obtain ⟨δ, hδ0, h⟩ := core_induction (d := d) (ϑ := ϑ) hϑ hϑ'
+  refine ⟨δ, hδ0, fun k => ?_⟩
+  obtain ⟨r, ρ, R, h1, h2, h3, h4⟩ := h k
+  exact ⟨r, ρ, R, h1, h2, h3, h4 Γ hb⟩
+
+
+/-- Sanity check that the conclusion of Lemma 5.7 has content: `ConnWithin` is not
+vacuously true. With no admissible vertices only the reflexive case survives, so a
+`ConnWithin` between distinct points really does record an edge path. -/
+theorem connWithin_empty {x y : EuclideanSpace ℝ (Fin d)}
+    (h : ConnWithin Γ ∅ x y) : x = y := by
+  induction h with
+  | refl => rfl
+  | tail _ hstep _ => simp at hstep
 
 end QFS

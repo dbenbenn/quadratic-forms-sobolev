@@ -21,8 +21,8 @@ function-space set-up of Section 1 (including equation (1.6)), the full
 definitional set-up of Section 2, the geometric lemmas of Sections 2 and 3, the
 whole of Section 4 — the paper's "continuous prelude", whose main result,
 **Theorem 4.1**, is proved here (`QFS.cont_connectivity`) — and Section 5's
-auxiliary results, Lemmas 5.1–5.6, the quantitative discrete counterparts of the
-Section 4 lemmas. The paper's main theorems (1.1 and 1.3) are recorded as
+auxiliary results and core induction, Lemmas 5.1–5.7 — the quantitative discrete
+counterparts of the Section 4 lemmas, and the induction that assembles them. The paper's main theorems (1.1 and 1.3) are recorded as
 type-checked `Prop`s, so what remains to be proved is stated precisely. See
 *Not attempted* below for what is deliberately left out.
 
@@ -80,7 +80,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 5.4 | Lemma | density, discrete | ✅ |
 | 5.5 | Lemma | "über Bande", discrete | ✅ |
 | 5.6 | Lemma | the jump constant `δ` | ✅ |
-| 5.7 | Lemma | the core induction | ⚪ statement recorded (`QFS.CoreInduction`); base case `k = 1` proved |
+| 5.7 | Lemma | the core induction | ✅ (monotonicity clause omitted, see Deviations 12) |
 | 5.8 | Corollary | discrete template | ❌ out of scope |
 | 5.9 | Lemma | apex shrinking | ❌ out of scope |
 | 5.10 | Definition | towns | ❌ out of scope |
@@ -99,9 +99,8 @@ the machinery of Sections 5 and 6 (Lemma 3.3, which Proposition 3.5 needs, is
 false as stated). From Section 1, the function-space definitions, assumption
 (1.4), the reverse inequality and equation (1.6) are proved, and Theorems 1.1
 and 1.3 are recorded as type-checked `Prop`s so the remaining target is precise.
-Lemma 5.7 (the core induction, 185 lines of dense argument), the renormalisation
-machinery of Lemmas 5.8–5.16, and Section 6 remain a project in their own
-right.
+The renormalisation machinery of Lemmas 5.8–5.16 and Section 6 remain a project
+in their own right.
 
 ## What is proved, in detail
 
@@ -190,8 +189,11 @@ right.
 | Where a descent chain lives | Lem. 5.7, step (3) | `QFS.Jump.chain_dist_le`, `QFS.Jump.chain_mem` | ✅ proved |
 | **Path assembly**: "the well-connected balls overlap" | Lem. 5.7, step (3) | `QFS.connWithin_of_chain` | ✅ **proved** |
 | Cone types realised at the lattice points of a set | §5.2 | `QFS.typesIn` | ✅ defined |
-| Statement of Lemma 5.7 | Lem. 5.7 | `QFS.CoreInduction` | ⚪ stated, not proved |
-| **Lemma 5.7, base case `k = 1`** | Lem. 5.7 | `QFS.core_induction_base` | ✅ **proved** |
+| Statement of Lemma 5.7 | Lem. 5.7 | `QFS.CoreInduction` | ✅ defined |
+| Lemma 5.7, base case `k = 1` alone | Lem. 5.7 | `QFS.core_induction_base` | ✅ proved |
+| **Lemma 5.7, the induction step** | Lem. 5.7 | `QFS.core_induction_step` | ✅ **proved** |
+| **Lemma 5.7** | Lem. 5.7 | `QFS.core_induction`, `QFS.coreInduction_holds` | ✅ **proved** |
+| `ConnWithin` is not vacuous | (sanity check) | `QFS.connWithin_empty` | ✅ proved |
 
 ## Deviations
 
@@ -336,6 +338,13 @@ Each departure from the paper, and why.
     `QFS.mem_cone_of_norm_sub_lt` (which is the case `p = t·v`, where the gap is
     `t sin ϑ` — recorded as `QFS.coneGap_smul_axis`).
 
+12. **Lemma 5.7's monotonicity clause is not formalised.** The lemma asserts
+    `r_i < r_{i+1}`, `ρ_i < ρ_{i+1}`, `R_i < R_{i+1}` and `δ < r_1`. The
+    formalisation gives each `k` its own `r_k ≤ ρ_k ≤ R_k` with `δ < r_k`, which
+    is what the proof of Lemma 5.7 itself uses — the monotonicity is never
+    invoked there, and with `δ < r_k` for every `k` it is not needed to carry the
+    invariant. It is presumably wanted by Corollary 5.8, which is out of scope.
+
 ## Not attempted
 
 Recorded here rather than silently omitted. The paper's two main theorems and
@@ -353,77 +362,46 @@ formalised is the geometric and graph-theoretic layer they are built on.
 | Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Thm. 1.3's setting, and on Lemma 3.3 (see Deviations 7). |
 | Lemma 3.3 for `d ≥ 2` | Lem. 3.3 | True but needs an argument the paper does not give; see Deviations 7. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
-| Core induction; renormalisation | §5 (Lems. 5.7–5.16) | Lemma 5.7's base case is proved and its statement recorded (`QFS.CoreInduction`); the induction step is not — see below. 5.8–5.16 build the "town" and scale machinery. (Lemmas 5.1–5.6 **are** formalised.) |
+| Renormalisation | §5 (Lems. 5.8–5.16) | The "town" and scale machinery. (Lemmas 5.1–5.7 **are** formalised.) |
 | Proof of Theorem 1.3 | §6 | As above. |
 | Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §§3 and 6. |
 
-## What the induction step of Lemma 5.7 still needs
+## Lemma 5.7
 
-The base case `k = 1` is `QFS.core_induction_base`: it is Corollary 5.2 applied
-to `x` and each lattice point of `B_r(x)`. The step is where the work is. Given
-`r_{k−1} ≤ ρ_{k−1} ≤ R_{k−1}`, the paper picks
-`s > (ρ_{k−1}+√d)/sin ϑ`, `S > (s+√d)/sin ϑ`, sets `r_k = S`, takes an
-`s`-`S`-connected `x̂ ∈ B_{r_k}(x)` (Lemma 5.4), and for `y ∈ B_{r_k}(x)` of type
-`V` splits on whether `V` is realised in
-`B_{ŝ+ρ_{k−1}}(x̂) ∩ V[x̂]`. The case where it is, is Lemma 5.5, which is proved
-here. The other case needs four things that are not yet formalised:
+`QFS.core_induction` proves it, in a form slightly stronger than the paper's
+statement: the constants are produced **before** the configuration is mentioned,
 
-1. ~~**Type counting.**~~ **Done.** `QFS.encard_typesIn_le_of_missing`: if at most
-   `k+1` types are realised at the lattice points of `T`, the type of some
-   `y ∈ T` is one of them, and no lattice point of `S ⊆ T` has that type, then at
-   most `k` types are realised in `S`. (`Set.encard` throughout, not
-   `Set.ncard` — the latter is `0` on infinite sets and would make the hypothesis
-   vacuous.)
+```
+∃ δ > 0, ∀ k, ∃ r ρ R, δ < r ∧ r ≤ ρ ∧ ρ ≤ R ∧
+  ∀ Γ, (∀ z, ϑ ≤ (Γ z).apex) → ∀ x ∈ ℤ^d,
+    (types realised at the lattice points of B_ρ(x)).encard ≤ k → RRConnected Γ r R x
+```
 
-2. ~~**Descent inside a translated, shrunk half-cone.**~~ **Done.**
-   `QFS.coneGap_gt_eq_shift_cone` shows that the points of gap more than `ρ` are
-   exactly the half-cone with the same axis and angle whose apex has moved
-   `ρ / sin ϑ` along the axis, so `Ṽ_ρ` contains such a half-cone
-   (`QFS.shift_cone_subset_shrink`). Lemma 5.6 for a half-cone with an arbitrary
-   apex is `QFS.exists_closer_lattice_nearby_shift`, and the paper's "connected
-   to a lattice point near the tip" is `QFS.exists_chain_to_apex_shrunk`: from
-   any lattice point of `c + Ṽ_ρ` the chain of jumps of length less than `δ`
-   reaches a lattice point within `t₀` of the displaced apex, with `δ` and `t₀`
-   depending only on `ϑ` and `d` — not on the apex, and not on `ρ`.
+which is the paper's assertion that they depend only on `ϑ` and `d`, made
+visible in the quantifier order (as in Lemma 2.2). `QFS.coreInduction_holds` is
+the same for a fixed configuration, discharging the recorded `CoreInduction`.
 
-   The construction turned out not to need the hypothesis that a closer lattice
-   point exists: outside a ball of radius `t₀` about the apex one can *always*
-   step at least `1` closer (`QFS.exists_lattice_step_toward_apex`). That is what
-   makes the descent terminate on `⌈‖x − c‖⌉₊`, with no appeal to finiteness of
-   the lattice in a bounded region, and it strengthens Lemma 5.6 as stated.
+The induction runs from the vacuous case `k = 0` — a lattice point always
+realises its own type in `B_ρ(x)`, so the hypothesis is contradictory — with
+`QFS.core_induction_step` doing the work. `QFS.core_induction_base` records the
+paper's own base case `k = 1` separately.
 
-3. ~~**Assembling paths across different balls.**~~ **Done.**
-   `QFS.ConnWithin.mono_ball` pushes a path from `B_r(p)` into `B_R(b)` whenever
-   `r + dist p b ≤ R`; `QFS.RRConnected.conn` turns an `r`-`R`-connected point
-   into a connection between any two lattice points of its `r`-ball; and
-   `QFS.connWithin_of_chain` is the paper's *"all these well-connected balls
-   overlap and are therefore connected"*: a descent chain whose jumps are shorter
-   than `r` becomes an edge path as soon as every lattice point of the region is
-   `r`-`R`-connected, delivered inside any ball containing all the `B_R(p)`.
-   `QFS.Jump.chain_dist_le` and `QFS.Jump.chain_mem` bound where the chain lives.
+Three departures from the paper's proof, all forced:
 
-4. **The recursion producing the constants.** `CoreInduction` is stated so that
-   each `k` carries its own `r, ρ, R`, which avoids constructing three
-   interleaved sequences; the paper's monotonicity `r_i < r_{i+1}` etc. is then
-   not needed, only the invariant `δ < r_k`.
-
-Items 1, 2 and 3 are now done; **item 4 and the assembly itself remain**. What is
-left is arithmetic rather than geometry: choosing the constants and checking the
-inequalities line up. Two adjustments to the paper's choices are needed, both
-harmless:
-
-* A descent chain starting in `B_ŝ(x̂)` decreases distance to the *apex*
-  `x̂ + (ρ_{k−1}/sin ϑ_V)·v`, not to `x̂`, so it stays only in
-  `B_{ŝ + 2ρ_{k−1}/sin ϑ}(x̂)`. The inductive hypothesis must therefore be
-  invoked on that slightly larger ball, and the Case A assumption stated for the
-  correspondingly larger region.
-* The chain ends within `t₀` of the apex, hence within `ρ_{k−1}/sin ϑ + t₀` of
-  `x̂`. For `x̂`, which is `s`-`S`-connected, to reach it, `s` must exceed that;
-  since the paper only imposes a lower bound on `s`, take
-  `s > (ρ_{k−1}+√d)/sin ϑ + t₀`.
-
-Nothing here looks false — unlike Lemmas 3.3 and 3.4 — and the geometric
-obstacles are cleared, but Lemmas 5.8–5.16 and Section 6 still sit on top.
+* The paper's `s` and the region radius need enlarging. A descent chain
+  decreases distance to the **displaced apex** `x̂ + (ρ'/sin ϑ_V)·v`, not to `x̂`,
+  so it leaves `B_ŝ(x̂)`; the inductive hypothesis is therefore invoked on a
+  larger ball, and the case distinction made on the correspondingly larger
+  region. And the chain ends within `t₀` of that apex, so `s` must exceed
+  `ρ'/sin ϑ + t₀` for `x̂` to reach it. Since the paper only imposes lower bounds
+  on `s` and `ŝ`, both are free adjustments.
+* Lemma 5.1(2) is applied at the **displaced apex**, so that the lattice point it
+  produces lands in the shrunk cone `x̂ + Ṽ_{ρ'}` rather than merely in `V[x̂]`.
+  Applying it at `x̂`, as the wording suggests, would not put the point where the
+  inductive hypothesis can be used.
+* `Set.encard` is used for "at most `k` cone types", never `Set.ncard`: the
+  latter is `0` on infinite sets, which would make the hypothesis vacuously
+  satisfiable and the lemma false as stated in Lean.
 
 ## Verification
 
