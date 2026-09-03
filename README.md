@@ -182,6 +182,13 @@ right.
 | **Lemma 5.6 for a half-cone with arbitrary apex** | Lem. 5.6 (shifted) | `QFS.exists_closer_lattice_nearby_shift` | ✅ **proved** |
 | Descent chain to the apex | Lem. 5.6, "I.e." (shifted) | `QFS.exists_chain_to_apex` | ✅ proved |
 | **The jump statement and chain for a shrunk half-cone** | Lem. 5.7, step (2) | `QFS.exists_chain_to_apex_shrunk`, `QFS.shift_cone_apex_subset_shift_shrink` | ✅ **proved** |
+| Types are monotone in the region | Lem. 5.7, step (1) | `QFS.typesIn_mono`, `QFS.mem_typesIn` | ✅ proved |
+| Dropping a witnessed element from `≤ k+1` leaves `≤ k` | Lem. 5.7, step (1) | `QFS.encard_le_of_subset_diff` | ✅ proved |
+| **Type counting**: a missing type drops the count | Lem. 5.7, step (1) | `QFS.encard_typesIn_le_of_missing` | ✅ **proved** |
+| Push a path into a larger ball | Lem. 5.7, step (3) | `QFS.ConnWithin.mono_ball` | ✅ proved |
+| An `r`-`R`-connected point joins its `r`-ball | Lem. 5.7, step (3) | `QFS.RRConnected.conn` | ✅ proved |
+| Where a descent chain lives | Lem. 5.7, step (3) | `QFS.Jump.chain_dist_le`, `QFS.Jump.chain_mem` | ✅ proved |
+| **Path assembly**: "the well-connected balls overlap" | Lem. 5.7, step (3) | `QFS.connWithin_of_chain` | ✅ **proved** |
 | Cone types realised at the lattice points of a set | §5.2 | `QFS.typesIn` | ✅ defined |
 | Statement of Lemma 5.7 | Lem. 5.7 | `QFS.CoreInduction` | ⚪ stated, not proved |
 | **Lemma 5.7, base case `k = 1`** | Lem. 5.7 | `QFS.core_induction_base` | ✅ **proved** |
@@ -361,10 +368,12 @@ to `x` and each lattice point of `B_r(x)`. The step is where the work is. Given
 `B_{ŝ+ρ_{k−1}}(x̂) ∩ V[x̂]`. The case where it is, is Lemma 5.5, which is proved
 here. The other case needs four things that are not yet formalised:
 
-1. **Type counting.** That the types realised in
-   `B_{ŝ+ρ_{k−1}}(x̂) ∩ V[x̂]` number at most `k−1`, since they are among the `≤ k`
-   types of `B_{ρ_k}(x)` and exclude `V`. Bookkeeping with `Set.encard`, given
-   `ρ_k > S + ŝ + ρ_{k−1}`; routine but fiddly.
+1. ~~**Type counting.**~~ **Done.** `QFS.encard_typesIn_le_of_missing`: if at most
+   `k+1` types are realised at the lattice points of `T`, the type of some
+   `y ∈ T` is one of them, and no lattice point of `S ⊆ T` has that type, then at
+   most `k` types are realised in `S`. (`Set.encard` throughout, not
+   `Set.ncard` — the latter is `0` on infinite sets and would make the hypothesis
+   vacuous.)
 
 2. ~~**Descent inside a translated, shrunk half-cone.**~~ **Done.**
    `QFS.coneGap_gt_eq_shift_cone` shows that the points of gap more than `ρ` are
@@ -383,20 +392,38 @@ here. The other case needs four things that are not yet formalised:
    makes the descent terminate on `⌈‖x − c‖⌉₊`, with no appeal to finiteness of
    the lattice in a bounded region, and it strengthens Lemma 5.6 as stated.
 
-3. **Assembling paths across different balls.** The conclusion is a `ConnWithin`
-   inside `B_{R_k}(x)`, built from paths inside `B_{R_{k−1}}(p)` for various `p`,
-   one inside `B_S(x̂)`, and single edges. `QFS.ConnWithin.mono` handles the
-   inclusions; the arithmetic of `R_k > 2S + R_{k−1} + ŝ` and
-   `R_k > (ŝ+ρ_{k−1}) + (2(ŝ+ρ_{k−1})+√d)/sin ϑ` has to be tracked.
+3. ~~**Assembling paths across different balls.**~~ **Done.**
+   `QFS.ConnWithin.mono_ball` pushes a path from `B_r(p)` into `B_R(b)` whenever
+   `r + dist p b ≤ R`; `QFS.RRConnected.conn` turns an `r`-`R`-connected point
+   into a connection between any two lattice points of its `r`-ball; and
+   `QFS.connWithin_of_chain` is the paper's *"all these well-connected balls
+   overlap and are therefore connected"*: a descent chain whose jumps are shorter
+   than `r` becomes an edge path as soon as every lattice point of the region is
+   `r`-`R`-connected, delivered inside any ball containing all the `B_R(p)`.
+   `QFS.Jump.chain_dist_le` and `QFS.Jump.chain_mem` bound where the chain lives.
 
 4. **The recursion producing the constants.** `CoreInduction` is stated so that
    each `k` carries its own `r, ρ, R`, which avoids constructing three
    interleaved sequences; the paper's monotonicity `r_i < r_{i+1}` etc. is then
    not needed, only the invariant `δ < r_k`.
 
-Of these, item 2 is now done; items 1, 3 and 4 remain. Nothing here looks false —
-unlike Lemmas 3.3 and 3.4 — but it is still a substantial piece of work, and
-Lemmas 5.8–5.16 and Section 6 sit on top of it.
+Items 1, 2 and 3 are now done; **item 4 and the assembly itself remain**. What is
+left is arithmetic rather than geometry: choosing the constants and checking the
+inequalities line up. Two adjustments to the paper's choices are needed, both
+harmless:
+
+* A descent chain starting in `B_ŝ(x̂)` decreases distance to the *apex*
+  `x̂ + (ρ_{k−1}/sin ϑ_V)·v`, not to `x̂`, so it stays only in
+  `B_{ŝ + 2ρ_{k−1}/sin ϑ}(x̂)`. The inductive hypothesis must therefore be
+  invoked on that slightly larger ball, and the Case A assumption stated for the
+  correspondingly larger region.
+* The chain ends within `t₀` of the apex, hence within `ρ_{k−1}/sin ϑ + t₀` of
+  `x̂`. For `x̂`, which is `s`-`S`-connected, to reach it, `s` must exceed that;
+  since the paper only imposes a lower bound on `s`, take
+  `s > (ρ_{k−1}+√d)/sin ϑ + t₀`.
+
+Nothing here looks false — unlike Lemmas 3.3 and 3.4 — and the geometric
+obstacles are cleared, but Lemmas 5.8–5.16 and Section 6 still sit on top.
 
 ## Verification
 

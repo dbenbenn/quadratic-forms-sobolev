@@ -795,4 +795,107 @@ theorem shift_cone_apex_subset_shift_shrink {v : EuclideanSpace ℝ (Fin d)} (hv
   rw [he]
   exact shift_mono (shift_cone_subset_shrink hv hϑV hϑV' hρ) c
 
+
+/-! ## Type counting
+
+Item 1 of the induction step of Lemma 5.7: if a cone type `V` is realised
+somewhere in `T` but nowhere in a subset `S`, then `S` realises strictly fewer
+types than `T`. -/
+
+lemma mem_typesIn {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {S : Set (EuclideanSpace ℝ (Fin d))} {p : EuclideanSpace ℝ (Fin d)} (hp : p ∈ S)
+    (hlat : p ∈ lattice d) : (Γ p).carrier ∈ typesIn Γ S := ⟨p, ⟨hp, hlat⟩, rfl⟩
+
+lemma typesIn_mono {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {S T : Set (EuclideanSpace ℝ (Fin d))} (h : S ⊆ T) : typesIn Γ S ⊆ typesIn Γ T :=
+  Set.image_mono (Set.inter_subset_inter h Set.Subset.rfl)
+
+/-- Dropping a witnessed element from an ambient set of at most `k+1` elements
+leaves at most `k`. -/
+lemma encard_le_of_subset_diff {α : Type*} {A B : Set α} {v : α} {k : ℕ}
+    (hAB : A ⊆ B \ {v}) (hv : v ∈ B) (hB : B.encard ≤ ((k + 1 : ℕ) : ℕ∞)) :
+    A.encard ≤ (k : ℕ∞) := by
+  have h1 : (B \ {v}).encard + 1 = B.encard := Set.encard_sdiff_singleton_add_one hv
+  have h2 : A.encard ≤ (B \ {v}).encard := Set.encard_mono hAB
+  have h3 : (B \ {v}).encard + 1 ≤ (k : ℕ∞) + 1 := by
+    rw [h1]
+    refine hB.trans ?_
+    push_cast
+    exact le_rfl
+  exact h2.trans ((WithTop.add_le_add_iff_right WithTop.one_ne_top).mp h3)
+
+/-- **Type counting for the induction step of Lemma 5.7.** If at most `k+1` cone
+types are realised at the lattice points of `T`, the type of `y ∈ T` is realised
+in `T`, and no lattice point of `S ⊆ T` has that type, then at most `k` types are
+realised at the lattice points of `S`. -/
+theorem encard_typesIn_le_of_missing {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {S T : Set (EuclideanSpace ℝ (Fin d))} (hST : S ⊆ T)
+    {y : EuclideanSpace ℝ (Fin d)} (hy : y ∈ T) (hylat : y ∈ lattice d)
+    (hmiss : ∀ p ∈ S, p ∈ lattice d → (Γ p).carrier ≠ (Γ y).carrier)
+    {k : ℕ} (hT : (typesIn Γ T).encard ≤ ((k + 1 : ℕ) : ℕ∞)) :
+    (typesIn Γ S).encard ≤ (k : ℕ∞) := by
+  refine encard_le_of_subset_diff ?_ (mem_typesIn hy hylat) hT
+  rintro t ⟨p, ⟨hpS, hplat⟩, rfl⟩
+  exact ⟨typesIn_mono hST (mem_typesIn hpS hplat), fun h => hmiss p hpS hplat h⟩
+
+/-! ## Path assembly
+
+Item 3 of the induction step: the paths produced by the inductive hypothesis live
+in balls `B_{R'}(p)` around various lattice points `p`, and have to be pushed into
+one big ball. -/
+
+variable {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+
+/-- Push a path from a small ball into a larger one. -/
+lemma ConnWithin.mono_ball {p b : EuclideanSpace ℝ (Fin d)} {r R : ℝ}
+    (h : r + dist p b ≤ R) {u w : EuclideanSpace ℝ (Fin d)}
+    (huw : ConnWithin Γ (ball p r ∩ lattice d) u w) :
+    ConnWithin Γ (ball b R ∩ lattice d) u w :=
+  ConnWithin.mono (Set.inter_subset_inter (Metric.ball_subset_ball' h) Set.Subset.rfl) huw
+
+/-- An `r`-`R`-connected point joins any two lattice points of its `r`-ball. -/
+lemma RRConnected.conn {r R : ℝ} {c : EuclideanSpace ℝ (Fin d)} (h : RRConnected Γ r R c)
+    {p q : EuclideanSpace ℝ (Fin d)} (hp : p ∈ ball c r) (hplat : p ∈ lattice d)
+    (hq : q ∈ ball c r) (hqlat : q ∈ lattice d) :
+    ConnWithin Γ (ball c R ∩ lattice d) p q :=
+  (h p hp hplat).symm.trans (h q hq hqlat)
+
+/-- **The paper's "all these well-connected balls overlap".** A descent chain
+whose jumps are shorter than `r` becomes an edge path, as soon as every lattice
+point of the region is `r`-`R`-connected; the path is delivered inside any ball
+`B_{Rb}(b)` containing all the balls `B_R(p)`. -/
+theorem connWithin_of_chain {W : Set (EuclideanSpace ℝ (Fin d))}
+    {c b : EuclideanSpace ℝ (Fin d)} {δ r R Rb : ℝ} (hδr : δ ≤ r)
+    (hconn : ∀ p ∈ W ∩ lattice d, RRConnected Γ r R p)
+    (hsub : ∀ p ∈ W ∩ lattice d, R + dist p b ≤ Rb)
+    {x y : EuclideanSpace ℝ (Fin d)} (hchain : Relation.ReflTransGen (Jump W c δ) x y) :
+    ConnWithin Γ (ball b Rb ∩ lattice d) x y := by
+  induction hchain with
+  | refl => exact ConnWithin.refl _
+  | tail _ hstep ih =>
+      obtain ⟨hp, hq, -, hlen⟩ := hstep
+      refine ih.trans (ConnWithin.mono_ball (hsub _ hp) ?_)
+      refine (hconn _ hp) _ ?_ hq.2
+      rw [mem_ball, dist_eq_norm]
+      exact lt_of_lt_of_le hlen hδr
+
+
+/-- A descent chain never moves further from the base point than it started, so
+it stays inside the region on which the inductive hypothesis was invoked. -/
+lemma Jump.chain_dist_le {W : Set (EuclideanSpace ℝ (Fin d))}
+    {c : EuclideanSpace ℝ (Fin d)} {δ : ℝ} {x y : EuclideanSpace ℝ (Fin d)}
+    (h : Relation.ReflTransGen (Jump W c δ) x y) : ‖y - c‖ ≤ ‖x - c‖ := by
+  induction h with
+  | refl => exact le_rfl
+  | tail _ hstep ih => exact le_trans hstep.2.2.1.le ih
+
+/-- Every point of a descent chain lies in `W`. -/
+lemma Jump.chain_mem {W : Set (EuclideanSpace ℝ (Fin d))}
+    {c : EuclideanSpace ℝ (Fin d)} {δ : ℝ} {x y : EuclideanSpace ℝ (Fin d)}
+    (hx : x ∈ W ∩ lattice d) (h : Relation.ReflTransGen (Jump W c δ) x y) :
+    y ∈ W ∩ lattice d := by
+  induction h with
+  | refl => exact hx
+  | tail _ hstep _ => exact hstep.2.1
+
 end QFS
