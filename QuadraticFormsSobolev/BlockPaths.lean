@@ -92,10 +92,10 @@ def AdmissiblePt (Δ : ℝ) (m : ℕ) (z x : EuclideanSpace ℝ (Fin d)) : Prop 
   x ∈ lattice d ∧ ‖x - Δ ^ (m + 1) • z‖ ≤ 2 * Real.sqrt d * Δ ^ (m + 1)
 
 lemma Admissible.left {Δ : ℝ} {m : ℕ} {z x y : EuclideanSpace ℝ (Fin d)}
-    (h : Admissible Δ m z x y) : AdmissiblePt Δ m z x := ⟨h.1, h.2.2.2.2.1⟩
+    (h : Admissible Δ m z x y) : AdmissiblePt Δ m z x := ⟨h.1, h.2.2.2.2.2.1⟩
 
 lemma Admissible.right {Δ : ℝ} {m : ℕ} {z x y : EuclideanSpace ℝ (Fin d)}
-    (h : Admissible Δ m z x y) : AdmissiblePt Δ m z y := ⟨h.2.1, h.2.2.2.2.2⟩
+    (h : Admissible Δ m z x y) : AdmissiblePt Δ m z y := ⟨h.2.1, h.2.2.2.2.2.2⟩
 
 /-! ## What an edge reveals
 
@@ -788,9 +788,11 @@ types is Corollary 2.4: `ref_config_uniform` replaces `Γ` by a configuration wi
 at most `L` types whose cones sit inside `Γ`'s, and `PathProps.mono_config`
 carries the conclusion back. -/
 
-/-- **Theorem 5.15** of Bux–Kassmann–Schulze. -/
-theorem path_props (hd : 1 ≤ d) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (R₀ : ℝ) :
-    PathPropsHolds d ϑ R₀ := by
+/-- **Theorem 5.15** of Bux–Kassmann–Schulze, in the strengthened form that also
+records that every edge of `p_xy` is longer than `R₀` — which is what Section 6
+chains along. -/
+theorem path_props_long (hd : 1 ≤ d) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (R₀ : ℝ) :
+    PathPropsLongHolds d ϑ R₀ := by
   classical
   have hϑ3 : (0:ℝ) < ϑ / 3 := by positivity
   have hϑ3' : ϑ / 3 ≤ π / 2 := by linarith [pi_pos]
@@ -806,13 +808,13 @@ theorem path_props (hd : 1 ≤ d) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 
   obtain ⟨C, hC⟩ : ∃ C : ℕ, 2 * (Δ:ℝ) * R ≤ 2 ^ C := by
     obtain ⟨C, hC⟩ := pow_unbounded_of_one_lt (2 * (Δ:ℝ) * R) (by norm_num : (1:ℝ) < 2)
     exact ⟨C, hC.le⟩
-  refine ⟨N₀ + 2, (2 * C + 1) * (2 * ⌈R⌉₊ + 1) ^ d * (72 * K₁ * K₁), 2 * (Δ:ℝ) * R,
+  refine ⟨N₀ + 2, (2 * C + 1) * (2 * ⌈R⌉₊ + 1) ^ d * (72 * K₁ * K₁), 2 * (Δ:ℝ) ^ 2 * R,
     by omega, ?_, by nlinarith, fun Γ hΓ => ?_⟩
   · exact Nat.mul_pos (Nat.mul_pos (by omega) (Nat.pow_pos (by omega)))
       (Nat.mul_pos (Nat.mul_pos (by omega) hK₁) hK₁)
   -- pass to a configuration with at most `L` types
   obtain ⟨Γ', hrange, hsubc, -, hΓ'⟩ := href Γ hΓ
-  refine PathProps.mono_config hsubc ?_
+  refine PathPropsLong.mono_config hsubc ?_
   have hfin : (Set.range Γ').Finite := Set.finite_of_encard_le_coe hrange
   have htypes : ∀ B : Set (EuclideanSpace ℝ (Fin d)), (Γ' '' B).ncard ≤ max L 1 := by
     intro B
@@ -820,7 +822,12 @@ theorem path_props (hd : 1 ≤ d) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 
       (le_max_left L 1)
     rw [← hfin.cast_ncard_eq] at hrange
     exact_mod_cast hrange
-  exact pathProps_of_scaleData hd hΔ2R hR1 hC (fun m z hz =>
+  exact pathPropsLong_of_scaleData hd hΔ2R hR1 hΔR₀ hC (fun m z hz =>
     scaleData_of_blockData hΔ0 hRd (Classical.choice (hbd Γ' hΓ' htypes m z hz)))
+
+/-- **Theorem 5.15** of Bux–Kassmann–Schulze, as the paper states it. -/
+theorem path_props (hd : 1 ≤ d) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (R₀ : ℝ) :
+    PathPropsHolds d ϑ R₀ :=
+  (path_props_long hd hϑ hϑ' R₀).toPathPropsHolds
 
 end QFS
