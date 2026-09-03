@@ -161,4 +161,14 @@ lemma cone_neg (v : E) (ϑ : ℝ) : cone (-v) ϑ = -(cone v ϑ) := by
   simp only [cone, Set.mem_neg, Set.mem_ofPred_eq, inner_neg_left, inner_neg_right, norm_neg,
     neg_div, neg_ne_zero]
 
+
+/-- A point whose gap exceeds `ρ` lies in the `ρ`-shrunk cone `Ṽ_ρ`. This is how
+Lemma 5.7 produces lattice points inside the double half-cones it works with. -/
+lemma mem_shrink_cone_of_lt_coneGap {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) {p : E} {ρ : ℝ} (hρ : 0 ≤ ρ) (h : ρ < coneGap v ϑ p) :
+    p ∈ shrink (cone v ϑ) ρ := by
+  refine ⟨?_, closedBall_subset_cone hv hϑ hϑ' h⟩
+  rw [mem_cone_iff_coneGap_pos hv hϑ hϑ']
+  linarith
+
 end QFS

@@ -535,4 +535,59 @@ theorem exists_min_chain_in_cone {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2
     exists_min_of_jump (W := V.carrier) (c := 0) (δ := δ) zero_mem_lattice hstep x hx
   exact ⟨m, hm, fun w hw => by simpa [sub_zero] using hmin w hw, hchain⟩
 
+
+/-! ## Lemma 5.7: the core induction
+
+Lemma 5.7 asserts the existence of constants `r_k ≤ ρ_k ≤ R_k`, depending only on
+`ϑ` and `d`, with `δ < r_1`, such that every lattice point `x` is
+`r_k`-`R_k`-connected as soon as at most `k` cone types are realised at the
+lattice points of `B_{ρ_k}(x)`.
+
+The statement is recorded below as `CoreInduction`, and the base case `k = 1` is
+proved. The induction step is not formalised; see the README for what it needs. -/
+
+/-- The set of cone types realised at the lattice points of `S`. A "type" is the
+double cone itself, as in Definition 4.2. -/
+def typesIn (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    (S : Set (EuclideanSpace ℝ (Fin d))) : Set (Set (EuclideanSpace ℝ (Fin d))) :=
+  (fun p => (Γ p).carrier) '' (S ∩ lattice d)
+
+/-- The statement of **Lemma 5.7**. Recorded so that the remaining target is
+precise; only the case `k ≤ 1` is proved (`core_induction_base`). -/
+def CoreInduction (Γ : Configuration (EuclideanSpace ℝ (Fin d))) (δ : ℝ) : Prop :=
+  ∀ k : ℕ, ∃ r ρ R : ℝ, δ < r ∧ r ≤ ρ ∧ ρ ≤ R ∧
+    ∀ x ∈ lattice d, Set.encard (typesIn Γ (ball x ρ)) ≤ (k : ℕ∞) →
+      RRConnected Γ r R x
+
+/-- **Lemma 5.7, the base case `k = 1`.** If only one cone type is realised at the
+lattice points of `B_ρ(x)`, then `x` is `r`-`R`-connected; this is Corollary 5.2
+applied to `x` and each lattice point of `B_r(x)`. -/
+theorem core_induction_base (hϑ : 0 < ϑ) (hb : ∀ z, ϑ ≤ (Γ z).apex) {δ : ℝ} (hδ : 0 < δ) :
+    ∃ r ρ R : ℝ, δ < r ∧ r ≤ ρ ∧ ρ ≤ R ∧
+      ∀ x ∈ lattice d, Set.encard (typesIn Γ (ball x ρ)) ≤ 1 → RRConnected Γ r R x := by
+  have hs0 : 0 < Real.sin ϑ :=
+    Real.sin_pos_of_pos_of_lt_pi hϑ (by
+      have := (Γ 0).apex_le
+      have := hb 0
+      linarith [pi_pos])
+  have hdnn : (0:ℝ) ≤ Real.sqrt d := Real.sqrt_nonneg _
+  refine ⟨δ + 1, δ + 1, (δ + 1 + Real.sqrt d) / Real.sin ϑ + (δ + 1) + 1,
+    by linarith, le_rfl, ?_, ?_⟩
+  · have : 0 < (δ + 1 + Real.sqrt d) / Real.sin ϑ := div_pos (by linarith) hs0
+    linarith
+  · intro x hx hcard y hy hylat
+    rw [mem_ball, dist_eq_norm] at hy
+    -- `x` and `y` are lattice points of `B_ρ(x)`, so they have the same type.
+    have hxb : x ∈ ball x (δ + 1) ∩ lattice d := ⟨mem_ball_self (by linarith), hx⟩
+    have hyb : y ∈ ball x (δ + 1) ∩ lattice d := by
+      refine ⟨?_, hylat⟩
+      rw [mem_ball, dist_eq_norm]
+      exact hy
+    have htx : (Γ x).carrier ∈ typesIn Γ (ball x (δ + 1)) := ⟨x, hxb, rfl⟩
+    have hty : (Γ y).carrier ∈ typesIn Γ (ball x (δ + 1)) := ⟨y, hyb, rfl⟩
+    have htype : (Γ x).carrier = (Γ y).carrier :=
+      Set.encard_le_one_iff.mp hcard _ _ htx hty
+    exact discr_connect_two_of_same_type hϑ hb hx hylat htype
+      (by rw [norm_sub_rev]; exact hy) (by linarith)
+
 end QFS

@@ -38,6 +38,8 @@ the statement as printed is false:
 * **Lemma 4.6** needs a hypothesis `z ∈ U` that is not stated.
 * **Theorem 4.1**'s induction is applied to a set that need not be connected;
   the repair is to run it on `B_r(x) ∩ Ṽ[x]` with the half-cone.
+* **Lemma 5.6** is called obvious, but the obvious argument (stepping radially
+  toward the tip) does not work; see *Deviations* 11.
 
 ## Coverage: every numbered result in the paper
 
@@ -78,7 +80,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 | 5.4 | Lemma | density, discrete | ✅ |
 | 5.5 | Lemma | "über Bande", discrete | ✅ |
 | 5.6 | Lemma | the jump constant `δ` | ✅ |
-| 5.7 | Lemma | the core induction | ❌ out of scope |
+| 5.7 | Lemma | the core induction | ⚪ statement recorded (`QFS.CoreInduction`); base case `k = 1` proved |
 | 5.8 | Corollary | discrete template | ❌ out of scope |
 | 5.9 | Lemma | apex shrinking | ❌ out of scope |
 | 5.10 | Definition | towns | ❌ out of scope |
@@ -174,6 +176,10 @@ right.
 | Lattice points have integer squared norm | (new) | `QFS.exists_natCast_sq_norm` | ✅ proved |
 | The descent principle | Lem. 5.6, "I.e." clause | `QFS.Jump`, `QFS.exists_min_of_jump` | ✅ proved |
 | **Lemma 5.6 in full**, chain down to the tip | Lem. 5.6 | `QFS.exists_min_chain_in_cone` | ✅ **proved** |
+| Points of large gap lie in the shrunk cone `Ṽ_ρ` | (new; needed by Lem. 5.7) | `QFS.mem_shrink_cone_of_lt_coneGap` | ✅ proved |
+| Cone types realised at the lattice points of a set | §5.2 | `QFS.typesIn` | ✅ defined |
+| Statement of Lemma 5.7 | Lem. 5.7 | `QFS.CoreInduction` | ⚪ stated, not proved |
+| **Lemma 5.7, base case `k = 1`** | Lem. 5.7 | `QFS.core_induction_base` | ✅ **proved** |
 
 ## Deviations
 
@@ -335,9 +341,49 @@ formalised is the geometric and graph-theoretic layer they are built on.
 | Discrete kernel `ω^k_h`, test-function bound | Prop. 3.5, Cor. 3.6 | Integration against the kernel; depends on Thm. 1.3's setting, and on Lemma 3.3 (see Deviations 7). |
 | Lemma 3.3 for `d ≥ 2` | Lem. 3.3 | True but needs an argument the paper does not give; see Deviations 7. |
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
-| Core induction; renormalisation | §5 (Lems. 5.7–5.16) | Lemma 5.7 alone is 185 lines of dense argument; 5.8–5.16 build the "town" and scale machinery. A project in its own right. (Lemmas 5.1–5.6 **are** formalised.) |
+| Core induction; renormalisation | §5 (Lems. 5.7–5.16) | Lemma 5.7's base case is proved and its statement recorded (`QFS.CoreInduction`); the induction step is not — see below. 5.8–5.16 build the "town" and scale machinery. (Lemmas 5.1–5.6 **are** formalised.) |
 | Proof of Theorem 1.3 | §6 | As above. |
 | Auxiliary integral estimates | Lems. 7.1, 7.2 | Measure-theoretic, attached to §§3 and 6. |
+
+## What the induction step of Lemma 5.7 still needs
+
+The base case `k = 1` is `QFS.core_induction_base`: it is Corollary 5.2 applied
+to `x` and each lattice point of `B_r(x)`. The step is where the work is. Given
+`r_{k−1} ≤ ρ_{k−1} ≤ R_{k−1}`, the paper picks
+`s > (ρ_{k−1}+√d)/sin ϑ`, `S > (s+√d)/sin ϑ`, sets `r_k = S`, takes an
+`s`-`S`-connected `x̂ ∈ B_{r_k}(x)` (Lemma 5.4), and for `y ∈ B_{r_k}(x)` of type
+`V` splits on whether `V` is realised in
+`B_{ŝ+ρ_{k−1}}(x̂) ∩ V[x̂]`. The case where it is, is Lemma 5.5, which is proved
+here. The other case needs four things that are not yet formalised:
+
+1. **Type counting.** That the types realised in
+   `B_{ŝ+ρ_{k−1}}(x̂) ∩ V[x̂]` number at most `k−1`, since they are among the `≤ k`
+   types of `B_{ρ_k}(x)` and exclude `V`. Bookkeeping with `Set.encard`, given
+   `ρ_k > S + ŝ + ρ_{k−1}`; routine but fiddly.
+
+2. **Descent inside a translated, shrunk half-cone.** The paper's "since
+   `r_{k−1} > δ`, all these well-connected balls overlap and are therefore
+   connected to a lattice point near the tip" is Lemma 5.6 iterated inside
+   `x̂ + Ṽ_{ρ_{k−1}}` rather than inside a cone with apex at the origin. The
+   descent principle `QFS.exists_min_of_jump` is general enough to consume it,
+   but the *local* jump statement — Lemma 5.6 for a shrunk half-cone with a
+   displaced tip — has to be proved. `QFS.coneGap` should make this tractable:
+   `Ṽ_ρ` is the closed cone with the same axis and angle translated along the
+   axis by `ρ / sin ϑ`, since `coneGap v ϑ (p − a·v) = coneGap v ϑ p − a sin ϑ`.
+
+3. **Assembling paths across different balls.** The conclusion is a `ConnWithin`
+   inside `B_{R_k}(x)`, built from paths inside `B_{R_{k−1}}(p)` for various `p`,
+   one inside `B_S(x̂)`, and single edges. `QFS.ConnWithin.mono` handles the
+   inclusions; the arithmetic of `R_k > 2S + R_{k−1} + ŝ` and
+   `R_k > (ŝ+ρ_{k−1}) + (2(ŝ+ρ_{k−1})+√d)/sin ϑ` has to be tracked.
+
+4. **The recursion producing the constants.** `CoreInduction` is stated so that
+   each `k` carries its own `r, ρ, R`, which avoids constructing three
+   interleaved sequences; the paper's monotonicity `r_i < r_{i+1}` etc. is then
+   not needed, only the invariant `δ < r_k`.
+
+Nothing here looks false — unlike Lemmas 3.3 and 3.4 — but it is a substantial
+piece of work, and Lemmas 5.8–5.16 and Section 6 sit on top of it.
 
 ## Verification
 
