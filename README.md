@@ -27,7 +27,9 @@ Of the road to Theorem 1.1, Section 3 is formalised as far as the discrete
 kernel goes — Corollary 3.1, Lemmas 3.2–3.4, **Proposition 3.5** and **Corollary
 3.6** — as is §3.2's scaffolding (the step functions, their almost-everywhere
 convergence, and the tiling identity that turns the discrete sums into
-integrals), leaving one limit in §3.2 open. Theorem 1.1 itself is recorded as
+integrals). The paper's dominated-convergence step is proved under the a priori
+hypothesis `f ∈ H^{α/2}(B*)`, which reduces §3.2 to the single qualitative
+statement `H_k(B*) ⊆ H^{α/2}(B*)`. Theorem 1.1 itself is recorded as
 a type-checked `Prop`, together with the enlarged-ball form
 (`QFS.TheoremOneOneBall`) that §3.2 alone would give; its last step, from a ball
 `B*` down to `B`, is an appendix lemma the paper quotes from a Whitney
@@ -125,7 +127,7 @@ One row per numbered statement, including the ones not attempted. ✅ proved,
 Sections 2, 4, 5 and 6 are formalised completely, apart from one remark of
 Section 2 that the paper itself quotes rather than proves (see *Not attempted*).
 Of Section 3, everything up to and including Corollary 3.6 is formalised; what
-remains there is one limit in §3.2 (the right-hand side of `(discret)`) and
+remains there is §3.2's qualitative inclusion `H_k(B*) ⊆ H^{α/2}(B*)` and
 Lemma 3.7. From Section 1,
 the function-space definitions, assumption (1.4), the reverse inequality and
 equation (1.6) are proved, Theorem 1.3 is proved, and Theorem 1.1 is recorded as
@@ -191,6 +193,10 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **The step index `x_h(s)`** | §3.2 | `QFS.stepIndex`, `QFS.stepIndex_mem_scaledLattice`, `QFS.mem_halfClosedCube_stepIndex`, `QFS.mem_closedCube_stepIndex`, `QFS.stepIndex_eq_of_mem`, `QFS.halfClosedCube_subset_closedCube` | ✅ **proved** |
 | **`f_h(x_h(s)) → f(s)` almost everywhere** | §3.2 | `QFS.tendsto_avg_stepIndex`, `QFS.tendsto_avg_stepIndex_indicator` | ✅ **proved** |
 | **A step function integrates to `∑ c(x)·h^d`** | §3.2 | `QFS.lintegral_eq_tsum_halfClosedCube`, `QFS.lintegral_stepFun` | ✅ **proved** |
+| **The tile-averaging operator, and that it preserves the integral** | §3.2 | `QFS.tileAvg`, `QFS.lintegral_tileAvg` | ✅ **proved** |
+| **Generalized (Vitali) dominated convergence, dominants allowed to move** | §3.2 | `QFS.limsup_lintegral_le_of_dominant` | ✅ **proved** |
+| **A Lipschitz function has finite `H^{α/2}` seminorm on a ball (`α < 2`)** | §3.2 | `QFS.formHs_lt_top_of_lipschitzOn`, `QFS.lintegral_ball_rpow_lt_top` | ✅ **proved** |
+| **Granted Theorem 1.1, an approximation bounded on `H^{α/2}` is bounded on `H_k`** — the circularity in the mollification route | §3.2 | `QFS.form_le_of_theoremOneOneBall` | ✅ **proved** |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
 | The lattice is closed under negation | (new) | `QFS.neg_mem_lattice` | ✅ proved |
@@ -700,45 +706,94 @@ together with the results the paper itself quotes from elsewhere.
 | `H_k` on balls | Lem. 3.7 | Depends on Cor. 3.6. |
 | `{x | V ⊆ Γ(x)}` is Lebesgue measurable | §2 (after Cor. 2.4) | The paper does not prove it — "This implication is due to [Debreu67, Thm. 4.4]". It is what makes the sets `A_h^m(u)` measurable, which Proposition 3.5 integrates over, so it is carried there as the explicit hypothesis `QFS.CondMeas`. |
 | Auxiliary integral estimate | Lem. 7.1 | An integral computation feeding the appendix lemma, which is itself quoted rather than proved. |
-| The passage to the limit `h → 0` | §3.2 | Not formalised; see the note below. Everything the passage rests on **is** proved: the discrete estimates it feeds on (Corollaries 3.1 and 3.6), the almost-everywhere convergence `f_h(x_h(s)) → f(s)` (`QFS.tendsto_avg_stepIndex`, from Lemma 7.2 along the tiling), and the identity turning the discrete sums into integrals (`QFS.lintegral_stepFun`). What is missing is one limit: `limsup_h ∫∫ g_h ≤ ∫∫ g` on the right-hand side. |
+| The passage to the limit `h → 0` | §3.2 | Not formalised, but reduced to one qualitative statement; see the note below. The discrete estimates it feeds on (Corollaries 3.1 and 3.6), the almost-everywhere convergence `f_h(x_h(s)) → f(s)` (`QFS.tendsto_avg_stepIndex`), the identity turning the sums into integrals (`QFS.lintegral_stepFun`) and **the paper's dominated-convergence step itself, for `f ∈ H^{α/2}(B*)`** (`QFS.lintegral_tileAvg`, `QFS.limsup_lintegral_le_of_dominant`) are all proved. What is missing is that every `f ∈ H_k(B*)` already lies in `H^{α/2}(B*)`. |
 
-### A note on §3.2's dominated convergence
+### §3.2's dominated convergence, and what is left of it
 
-Section 3.2 passes from the discrete inequality to the continuous one by letting
-`h → 0`. On the left it uses Fatou, which needs nothing extra. On the right it
-writes
+Section 3.2 passes from the discrete inequality `(discret)` to the continuous
+one by letting `h → 0`. On the left it uses Fatou, which needs nothing extra. On
+the right it writes
 
 > For the right hand side in (discret) this implies with help of dominated
 > convergence … `∫ g_h → ∫ g`
 
-without exhibiting a dominating function, and supplying one is not routine. Two
-natural candidates fail:
+without exhibiting a dominating function. No fixed dominant exists, and the
+obvious candidates fail:
 
-* bounding `f_h(x)` by the Hardy–Littlewood maximal function `Mf` gives the
-  dominant `(Mf(s) + Mf(t))² k(s,t)`, whose integral over `B* × B*` need not be
-  finite — the factor does not vanish on the diagonal, where `k` is not
-  integrable;
+* bounding `f_h(x)` by the Hardy–Littlewood maximal function `Mf` gives
+  `(Mf(s) + Mf(t))² k(s,t)`, whose integral over `B* × B*` need not be finite —
+  the factor does not vanish on the diagonal, where `k` is not integrable;
 * applying Jensen to `(f_h(x) − f_h(y))²` and using Lemma 3.4 leads back to
-  `|f|_{H^{α/2}(B*)}`, which is exactly the quantity being bounded and is not
-  known finite a priori — that is what the theorem is proving.
+  `|f|_{H^{α/2}(B*)}`, which is the quantity being bounded.
 
-For Lipschitz `f` a dominant does exist, since
-`(f(s) − f(t))²|s − t|^{-d-α} ≤ L²|s − t|^{2-d-α}` is integrable for `α < 2`;
-whether one may reduce to that case is not addressed. This is recorded as an
-obstacle encountered in formalising the step, not as a claim that the step is
-wrong.
+**The step is nonetheless repairable, and the repair is formalised.** What
+dominated convergence needs is not a *fixed* dominant but a sequence of them
+whose integrals converge, and the tile-averaging operator supplies exactly that:
 
-Three reductions were tried and do not remove it.
+| | Lean |
+| --- | --- |
+| `E_h Φ(s) = ⨍_{tile ∋ s} Φ`, the conditional expectation onto the tiling | `QFS.tileAvg` |
+| `∫ E_h Φ = ∫ Φ` — averaging preserves the integral, so the dominants all have the *same* integral | `QFS.lintegral_tileAvg` |
+| the generalized (Vitali) dominated convergence theorem, dominants allowed to move | `QFS.limsup_lintegral_le_of_dominant` |
+
+Writing `Φ(u,v) = (f(u) − f(v))²|u − v|^{-d-α}·1_{B*×B*}`, Jensen and Lemma 3.4
+give `g_h ≤ Λ(2√d)^{d+α}·E_hΦ` (the tiles of the product tiling are the sets
+`Ã_h(x) × Ã_h(y)`, and on them `|u − v| ≍ |s − t|` because the sum is restricted
+to `|x − y| > √d h`), while `E_hΦ → Φ` almost everywhere is Lemma 7.2. So
+
+> **the paper's dominated-convergence step is valid for every `f ∈ H^{α/2}(B*)`.**
+
+That hypothesis is the theorem's own conclusion, so this is an a priori
+estimate. Removing it is what remains open.
+
+### Why the Lipschitz/mollification reduction does not remove it
+
+The natural way to supply the a priori hypothesis is to prove the theorem first
+for mollifications `f_ε = f * ρ_ε` and pass to the limit. Its two halves have
+opposite fates, and both are recorded in Lean.
+
+**The half that works.** `f_ε` is smooth, hence Lipschitz on a ball, hence in
+`H^{α/2}` for every `α < 2`:
+
+| A Lipschitz function has finite `H^{α/2}` seminorm on a ball | `QFS.formHs_lt_top_of_lipschitzOn` | ✅ **proved** |
+| --- | --- | --- |
+
+so mollification does put `f_ε` into the class where the step above is valid.
+Fatou then handles the left-hand side of the limit `ε → 0`, since
+`f_ε → f` almost everywhere.
+
+**The half that does not.** The reduction also needs
+`|f_ε|_{H_k(B*)} ≲ |f|_{H_k(B**)}` — mollification must not inflate the
+right-hand side. Mollifying is averaging over translates, and
+
+  `f_ε(s) − f_ε(t) = ∫ ρ_ε(z)(f(s−z) − f(t−z)) dz`,
+
+so Jensen turns the requirement into `k(u+z, v+z) ≲ k(u,v)` for `|z| ≤ ε`.
+**`k` is not translation-stable in this sense**: it is built from a configuration
+of cones that may vary arbitrarily from point to point, and `k(u,v)` is allowed
+to vanish — the lower bound in (1.4) carries the indicator `1_E` — while
+`k(u+z, v+z)` is comparable to `|u − v|^{-d-α}`. No such constant exists.
+
+This is *not* a refutation. Granted Theorem 1.1, `H_k(B)` and `H^{α/2}(B)`
+coincide with comparable seminorms, so mollification *is* bounded on `H_k`; the
+deduction simply runs through the theorem. `QFS.form_le_of_theoremOneOneBall`
+makes that precise: **assuming Theorem 1.1, any approximation bounded on
+`H^{α/2}` is bounded on `H_k`.** So the missing half of the reduction is
+equivalent to the statement it would prove, not weaker than it — which is why
+the route is circular rather than wrong.
+
+Three further reductions were tried and also fail.
 
 * **Truncation.** It *is* enough to prove the theorem for bounded `f`: the
   truncations `f_N = max(−N, min(N, f))` satisfy `|f_N(x) − f_N(y)| ≤
   |f(x) − f(y)|`, so `|f_N|_{H_k(B*)} ≤ |f|_{H_k(B*)}`, while Fatou gives
-  `|f|_{H^{α/2}(B)} ≤ liminf_N |f_N|_{H^{α/2}(B)}`. But boundedness alone still
-  produces no dominant, because `∫∫_{B*×B*} k = ∞`: the obstruction is the
-  diagonal singularity of `k`, not the size of `f`.
-* **Avoiding the right-hand limit altogether.** Fatou on the left plus a bound
-  `∫∫ g_h ≤ C|f|_{H_k(B*)}` *uniform in `h`* would suffice, with no limit on the
-  right at all. Jensen reduces this to
+  `|f|_{H^{α/2}(B)} ≤ liminf_N |f_N|_{H^{α/2}(B)}`. Truncation is therefore
+  `H_k`-nonincreasing — the property mollification lacks — but it gains no
+  smoothness, so it does not supply the a priori hypothesis either. Boundedness
+  alone yields no dominant, since `∫∫_{B*×B*} k = ∞`.
+* **A uniform-in-`h` bound instead of a limit.** Fatou on the left plus
+  `∫∫ g_h ≤ C|f|_{H_k(B*)}` uniform in `h` would finish the proof with no
+  right-hand limit at all. Jensen reduces this to
   `[⨍⨍_{A×A'}(f(s)−f(t))²]·[∫∫_{A×A'} k] ≤ C h^{2d} ∫∫_{A×A'}(f(s)−f(t))² k(s,t)`
   on each pair of cubes — a correlation inequality that is false in general, and
   false in exactly the relevant configuration: `k` carries the cone structure, so
@@ -747,17 +802,15 @@ Three reductions were tried and do not remove it.
 * **Jensen against the `k`-weighted measure.** Jensen with respect to
   `k(s,t)·d(s,t)/∫∫_{A×A'}k` does give the required per-cube inequality, but for
   the `k`-weighted average of `f(s) − f(t)`, whereas `f_h(x) − f_h(y)` is its
-  Lebesgue average; the two are not comparable without further information
-  about `k`.
+  Lebesgue average; the two are not comparable without further information about
+  `k`.
 
-What the repository now contains is everything on both sides of that one limit:
-the discrete inequality's ingredients (Corollaries 3.1 and 3.6), the
-almost-everywhere convergence `f_h(x_h(s)) → f(s)` for locally integrable `f`
-(`QFS.tendsto_avg_stepIndex`, and `QFS.tendsto_avg_stepIndex_indicator` for the
-paper's restriction of the integral to `B*`), and the identity
-`∫ c(x_h(s)) ds = ∑_n c(h·n)·h^d` (`QFS.lintegral_stepFun`) by which the sums of
-Corollary 3.1 become integrals. Fatou is then available on the left; only the
-right-hand limit is open.
+What is missing, then, is a single qualitative statement: that every
+`f ∈ H_k(B*)` already lies in `H^{α/2}(B*)`. Given it, the chain
+Corollary 3.1 → Corollary 3.6 → `(discret)` → Fatou on the left →
+`QFS.limsup_lintegral_le_of_dominant` on the right closes, with all the
+constants the paper claims. This is recorded as an obstacle encountered in
+formalising the step, not as a claim that the step is wrong.
 
 ## Lemma 5.7
 
@@ -1168,6 +1221,7 @@ printed statement where one exists.
 | `Cubes` | the maximum norm, cubes, Lemma 2.7 |
 | `RefCones` | Lemma 2.2 and Corollary 2.4: finitely many reference cones |
 | `Section3` | lattices, Lemmas 3.2 and 3.4, cube volumes, the tiling |
+| `Section32` | §3.2: the moving dominant, generalized dominated convergence, Lipschitz functions in `H^{α/2}`, and the circularity of the mollification route |
 | `ThinCones` | Lemma 3.3 for `d ≥ 2` |
 | `Section4` | the continuous prelude; Theorem 4.1 |
 | `Section5` | Lemmas 5.1–5.7, Corollary 5.8 |
