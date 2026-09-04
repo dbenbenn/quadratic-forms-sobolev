@@ -92,33 +92,54 @@ The route it attempts is a local Poincaré inequality on a cube `Q` of side `h`,
   (★)  `∫∫_{Q×Q}(f(s) − f(t))² ≤ C(d,ϑ,α,Λ)·h^{d+α}·∫∫_{Q*×Q*}(f(s) − f(t))²k(s,t)`,
 
 which summed over the tiles bounds `A_h` uniformly and closes the theorem with
-Fatou alone. `(★)` would follow by chaining: join `s` to `t` through intermediate
-points that *do* see the relevant cones, and average over a positive-measure set
-of chains. Chaining needs three quantitative inputs, and all three are proved:
+Fatou alone. `(★)` follows by chaining: join `s` to `t` through intermediate points that *do*
+see the relevant cones, and average over a positive-measure set of chains.
+
+**The chaining argument is now complete for pairs sharing a cone direction**, and
+that case of the open statement is proved:
+
+> `QFS.formHs_le_form_of_commonDirection` — if every cone of `Γ` contains a fixed
+> `Ṽ(v,ϑ)`, then `|f|²_{H^{α/2}(ℝ^d)} ≤ 2Λ(C + C')·|f|²_{H_k(ℝ^d)}` with explicit
+> constants, i.e. `H_k ⊆ H^{α/2}`.
+
+Underneath it is a theorem of independent interest,
+`QFS.localPoincare_sameDirection`: for any unit `v` and `ϑ ∈ (0,π/2]`, the **full**
+fractional energy of `ℝ^d` is bounded by the energy restricted to pairs whose
+difference lies in the fixed cone `Ṽ(v,ϑ)`. That is "directional regularity
+implies full regularity", proved by chaining rather than by Fourier, with
+constants depending only on `d`, `ϑ` and `α`.
+
+The pieces, all proved:
 
 | Input | Lean | State |
 | --- | --- | --- |
 | A **ball** of common cone-neighbours of `s` and `t`, radius `‖s−t‖`, inside both cones and within `O(‖s−t‖/sin ϑ)` of each | `QFS.exists_ball_in_two_cones`, `QFS.mem_two_cones_of_mem_midBall` | ✅ proved |
 | The compression bound: for fixed `s`, `z`, the admissible `t` lie in a ball of radius comparable to `‖z−s‖` | `QFS.midBall_fibre_subset_closedBall`, `QFS.inner_mem_Icc_of_mem_midBall` | ✅ proved |
 | The averaging ball has volume exactly `c_d‖s−t‖^d` | `QFS.volume_midBall` | ✅ proved |
+| The `t`-side mirrors of the fibre lemmas | `QFS.inner_mem_Icc_of_mem_midBall'`, `QFS.midBall_fibre_subset_closedBall'`, `QFS.fibre_subset_singleton_of_notMem_cone'`, `QFS.lintegral_midBall_fibre_le'`, `QFS.chainConst'` | ✅ proved |
+| The fibre vanishes off the cone, so the exchange keeps the cone membership | `QFS.fibre_subset_singleton_of_notMem_cone` | ✅ proved |
+| Joint measurability of the averaging integral, so Tonelli applies | `QFS.measurable_param_midBall` | ✅ proved |
+| On a cone pair, `jumpKernel ≤ Λ·k` | `QFS.jumpKernel_le_of_mem_coneAt` | ✅ proved |
 | **The fibre estimate**: `∫_{t : z ∈ W(s,t)} ‖s−t‖^{-2d-α} dt ≤ C(d,ϑ,α)·‖z−s‖^{-d-α}` | `QFS.lintegral_midBall_fibre_le`, `QFS.chainConst` | ✅ proved |
 | **The averaging step**: `(f(t)−f(s))²·|W(s,t)| ≤ ∫_{W(s,t)} 2(f(z)−f(s))² + 2(f(t)−f(z))²` | `QFS.osc_mul_volume_le`, `QFS.osc_weighted_le` | ✅ proved |
-| **The exchange at fixed `s`**: Tonelli plus the fibre estimate, returning the weight `‖z−s‖^{-d-α}` | `QFS.lintegral_swap_fibre` | ✅ proved |
+| **The exchange at fixed `s`**: Tonelli plus the fibre estimate, returning the weight `‖z−s‖^{-d-α}` | `QFS.lintegral_swap_fibre`, `QFS.lintegral_swap_fibre'` | ✅ proved |
+| **`(★)` for a common cone direction** | `QFS.localPoincare_sameDirection` | ✅ **proved** |
+| **`H_k ⊆ H^{α/2}` for a common cone direction** | `QFS.formHs_le_form_of_commonDirection` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
 integration in `t`, and it is why the argument is scale-invariant: the singular
 weight comes back as exactly the weight of the `H_k` form on the pair `(s,z)`,
 which the lower bound of (1.4) then converts into `k(s,z)`.
 
-**Where the same-cone-direction case stands.** Averaging, exchange and fibre
-estimate are all proved, and `QFS.lintegral_swap_fibre` performs the Tonelli
-swap. What is left is bookkeeping: the chained integrand
-`2(f(z)−f(s))² + 2(f(t)−f(z))²` must be split, the exchange applied to the first
-term, and the fibre lemmas mirrored on the `t` side for the second — the mirror
-statements are the same computation with `⟪v, z − t⟫ ∈ [δ(3/sin ϑ − 2),
-δ(3/sin ϑ + 2)]` in place of `⟪v, z − s⟫ ∈ [δ(3/sin ϑ − 1), δ(3/sin ϑ + 1)]`.
-Then the cone membership `z − s ∈ Ṽ(v,ϑ) ⊆ Γ(s)` converts `‖z−s‖^{-d-α}` into
-`Λ k(s,z)` and `(★)` follows for pairs sharing a cone direction.
+**How the same-direction case goes.** The chained integrand
+`2(f(z)−f(s))² + 2(f(t)−f(z))²` is split, and each half is sent through the
+exchange that handles it — `QFS.lintegral_swap_fibre` on the `s` side,
+`QFS.lintegral_swap_fibre'` on the `t` side — with Tonelli in the outer pair
+taken once in each order. The mirror statements are the same computation with
+`⟪v, z − t⟫ ∈ [δ(3/sin ϑ − 2), δ(3/sin ϑ + 2)]` in place of
+`⟪v, z − s⟫ ∈ [δ(3/sin ϑ − 1), δ(3/sin ϑ + 1)]`: the displacement from `s` to `t`
+costs one extra unit and nothing else. Then `z − s ∈ Ṽ(v,ϑ) ⊆ Γ(s)` converts
+`‖z−s‖^{-d-α}` into `Λ k(s,z)`.
 
 The first input is the substantive one. The paper's Lemma 4.3 produces a *single*
 intermediate point; a point is a null set and cannot absorb an average, so a
@@ -138,9 +159,9 @@ precisely how it avoids this. Corollary 2.4 (`QFS.ref_config`) reduces the
 configuration to finitely many cone types, so the residue is exactly the
 *cross-type* pairs within a single tile.
 
-Nothing here is claimed to be correct beyond what Lean checks: the three lemmas
-above are proved, the assembly of `(★)` from them is not, and the cross-type case
-is open.
+Nothing here is claimed beyond what Lean checks: every row of the table above is
+proved, including `(★)` and the inclusion `H_k ⊆ H^{α/2}` for a common cone
+direction; the cross-type case is open and nothing here bears on it.
 
 ## Coverage: every numbered result in the paper
 
