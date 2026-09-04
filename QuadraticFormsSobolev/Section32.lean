@@ -1341,4 +1341,20 @@ theorem tendsto_stepIndex {ι : Type*} {l : Filter ι} (hn : ι → ℝ) (hpos :
   calc ‖stepIndex d (hn i) s - s‖ ≤ Real.sqrt d * hn i / 2 := this
     _ = Real.sqrt d / 2 * hn i := by ring
 
+
+/-- The piecewise-constant approximation of Section 3.2: the average of `f` over
+the tile of the `h`-tiling. -/
+noncomputable def cubeAvg (d : ℕ) (h : ℝ) (f : EuclideanSpace ℝ (Fin d) → ℝ)
+    (x : EuclideanSpace ℝ (Fin d)) : ℝ := ⨍ y in closedCube h x, f y
+
+/-- `f_h(x_h(s)) → f(s)` almost everywhere: Lemma 7.2, in the notation of
+Section 3.2. -/
+theorem tendsto_cubeAvg_stepIndex {f : EuclideanSpace ℝ (Fin d) → ℝ}
+    (hf : LocallyIntegrable f volume) :
+    ∀ᵐ s : EuclideanSpace ℝ (Fin d),
+      ∀ {ι : Type} {l : Filter ι} (hn : ι → ℝ), (∀ i, 0 < hn i) →
+        Filter.Tendsto hn l (nhds 0) →
+        Filter.Tendsto (fun i => cubeAvg d (hn i) f (stepIndex d (hn i) s)) l (nhds (f s)) :=
+  tendsto_avg_stepIndex hf
+
 end QFS
