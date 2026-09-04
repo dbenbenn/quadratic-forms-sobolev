@@ -3357,4 +3357,47 @@ theorem formHs_ball_ne_top_of_osc_bounded (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ :
   refine ne_top_of_le_ne_top hKtop (le_trans hfatou ?_)
   exact Filter.liminf_le_of_frequently_le (Filter.Frequently.of_forall hbound)
 
+
+/-- **Theorem 1.1's enlarged-ball form, under the oscillation hypothesis alone.**
+Composing the splitting route with §3.2's assembly: no dominated convergence and
+no a priori `H^{α/2}` hypothesis — only that the tile oscillation of `f` be
+bounded along some sequence of scales, on a ball large enough. -/
+theorem formHs_ball_le_form_of_osc_bounded (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ Real.pi / 2) (hα : 0 < α) (hα2 : α < 2) (hΛ : 1 ≤ Λ) :
+    ∃ κ κ' c : ℝ, 1 ≤ κ ∧ 1 ≤ κ' ∧ 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ, Measurable f → LocallyIntegrable f volume →
+        form (ball x₀ (κ' * R)) k f ≠ ⊤ →
+        (∃ (hn : ℕ → ℝ) (M : ℝ≥0∞), (∀ n, 0 < hn n) ∧
+          (∀ n, hn n ≤ (κ + Real.sqrt d) * R) ∧
+          Filter.Tendsto hn Filter.atTop (nhds 0) ∧ M ≠ ⊤ ∧
+          ∀ n, ENNReal.ofReal ((hn n) ^ (-α)) *
+            tileOsc d (hn n) (ball x₀ (κ' * R)) f ≤ M) →
+        formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
+  obtain ⟨κ, c, hκ, hc, hmain⟩ :=
+    formHs_ball_le_form_of_formHs_ne_top (d := d) hϑ hϑ' hd hα hα2 hΛ
+  obtain ⟨κ₀, hκ₀, hosc⟩ := formHs_ball_ne_top_of_osc_bounded hd hϑ hϑ' hα hα2 hΛ
+  have hsd : (0:ℝ) ≤ Real.sqrt d := Real.sqrt_nonneg _
+  refine ⟨κ, (κ₀ + Real.sqrt d) * (κ + Real.sqrt d), c, hκ, ?_, hc,
+    fun Γ hΓ hmeas k hk hkm x₀ R hR f hfm hf hform ⟨hn, M, hpos, hle, hlim, hM, hb⟩ => ?_⟩
+  · nlinarith [hκ₀, hκ]
+  have hR1 : 0 < (κ + Real.sqrt d) * R := by nlinarith
+  -- the oscillation hypothesis gives the finiteness §3.2 needs
+  have hfin : formHs (ball x₀ ((κ + Real.sqrt d) * R)) α f ≠ ⊤ := by
+    refine hosc Γ hΓ hmeas k hk hkm x₀ ((κ + Real.sqrt d) * R) hR1 f hfm hf ?_
+      ⟨hn, M, hpos, hle, hlim, hM, ?_⟩
+    · rw [show (κ₀ + Real.sqrt d) * ((κ + Real.sqrt d) * R)
+        = (κ₀ + Real.sqrt d) * (κ + Real.sqrt d) * R from by ring]
+      exact hform
+    · intro n
+      rw [show (κ₀ + Real.sqrt d) * ((κ + Real.sqrt d) * R)
+        = (κ₀ + Real.sqrt d) * (κ + Real.sqrt d) * R from by ring]
+      exact hb n
+  exact hmain Γ hΓ hmeas k hk hkm x₀ R hR f hfm hf hfin
+
 end QFS

@@ -96,6 +96,7 @@ and the rest are gaps or slips repaired silently:
 | **Proposition 3.5** and **Corollary 3.6**, the discrete kernel (`d ≥ 2`) | `QFS.prop_test_fct`, `QFS.cor_rescaled_kernel_uniform` |
 | **Corollary 3.1**, rescaled to `hℤ^d` | `QFS.corollaryThreeOne` |
 | **§3.2's limit procedure**, assembled into Lemma 3.7's enlarged-ball form, under the finiteness hypothesis the paper's own dominated-convergence step needs | `QFS.formHs_ball_le_form_of_formHs_ne_top` |
+| The same under a weaker, kernel-free hypothesis: the tile oscillation bounded along a sequence of scales | `QFS.formHs_ball_le_form_of_osc_bounded` |
 | **Lemma 7.1**'s chain (6.14), for a ball and for a domain, with the quoted Whitney/Dyda input as a hypothesis | `QFS.formHs_le_form_of_ballComparability`, `QFS.formHs_le_form_domain` |
 | **Lemma 7.2**, differentiation along cubes, and its analogue on `ℝ^d × ℝ^d` | `QFS.lemma_lebesgue_diff`, `QFS.lemma_lebesgue_diff₂` |
 | **Theorem 1.4** for `Ω = ℝ^d`, granted Theorem 1.1 | `QFS.theoremOneFourUniv_of_theoremOneOne` |
@@ -521,6 +522,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **The weight a splitting argument pays**, in either coordinate | §3.2 (new) | `QFS.lintegral_far_weight_le`, `QFS.lintegral_far_weight_le'` | ✅ **proved** |
 | **The splitting bound**: `∫∫ g_h ≤ 3\|f\|²_{H_k} + C h^{-α}·(tile oscillation)` | §3.2 (new) | `QFS.tileOsc`, `QFS.lintegral_stepG_le_split`, `QFS.ofReal_sq_add_three`, `QFS.constraintSet_subset`, `QFS.stepG_eq_indicator`, `QFS.measurable_stepFun`, `QFS.measurableSet_scaledLattice`, `QFS.measurableSet_discretePairs` | ✅ **proved** |
 | **Bounded oscillation suffices**: no dominated convergence, no a priori `H^{α/2}` hypothesis | §3.2 (new) | `QFS.formHs_ball_ne_top_of_osc_bounded` | ✅ **proved** |
+| **Theorem 1.1's enlarged-ball form under the oscillation hypothesis alone** | §3.2, Lem. 3.7 | `QFS.formHs_ball_le_form_of_osc_bounded` | ✅ **proved** |
 | **A Lipschitz cutoff, and `(χ(x)−χ(y))² ≤ min(‖x−y‖²/δ², 1)`** | §3.2 | `QFS.cutoff`, `QFS.cutoff_eq_one`, `QFS.cutoff_eq_zero`, `QFS.abs_cutoff_sub_le`, `QFS.sq_cutoff_sub_le`, `QFS.abs_clamp_sub_le` | ✅ **proved** |
 | **Pairs in a common tile; the tiling of pairs** | §3.2 | `QFS.sameTile`, `QFS.sameTile_eq_iUnion`, `QFS.measurableSet_sameTile`, `QFS.norm_sub_le_of_sameTile`, `QFS.coneSet` | ✅ **proved** |
 | **On close cone pairs the kernel dominates the flat measure** | §3.2 (new) | `QFS.lintegral_sq_le_form_of_close` | ✅ **proved** |
