@@ -2260,4 +2260,122 @@ theorem lintegral_stepG_eq {h : ℝ} (hh : 0 < h) (S : Set (EuclideanSpace ℝ (
     discreteKernel, mul_comm (ENNReal.ofReal ((h ^ (2 * d))⁻¹)), mul_assoc,
     ofReal_inv_pow_mul hh, mul_one]
 
+
+/-! ## Dominated convergence on the right
+
+Everything is now in place: `stepG_le_tileAvg₂` dominates, `lintegral_tileAvg₂`
+keeps the integral of the dominant constant, `tendsto_tileAvg₂` and
+`tendsto_stepG_ae` supply the two convergences, and the finiteness of the
+`H^{α/2}` form of the larger ball makes the dominant integrable. -/
+
+theorem form_eq_lintegral_ballIntegrand {Ω : Set (EuclideanSpace ℝ (Fin d))}
+    (hΩ : MeasurableSet Ω) (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) :
+    form Ω k f = ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      ballIntegrand d k Ω f p := by
+  have hfun : (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+        ENNReal.ofReal ((f q.2 - f q.1) ^ 2) * k q.1 q.2)
+      = fun q => ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * k q.1 q.2 := by
+    funext q
+    rw [show (f q.2 - f q.1) ^ 2 = (f q.1 - f q.2) ^ 2 from by ring]
+  rw [form, hfun]
+  simp only [ballIntegrand]
+  exact (lintegral_indicator (hΩ.prod hΩ) _).symm
+
+theorem measurable_stepG {h : ℝ} (hh : 0 < h) (S : Set (EuclideanSpace ℝ (Fin d))) (R₀ : ℝ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) => k p.1 p.2)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) : Measurable (stepG d h S R₀ k f) := by
+  have h1 : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      (discretePairs d h S R₀).indicator
+        (fun q => ENNReal.ofReal ((cubeAvg d h f q.1 - cubeAvg d h f q.2) ^ 2))
+        (stepIndex d h p.1, stepIndex d h p.2) :=
+    measurable_stepFun₂ hh (fun x y => (discretePairs d h S R₀).indicator
+      (fun q => ENNReal.ofReal ((cubeAvg d h f q.1 - cubeAvg d h f q.2) ^ 2)) (x, y))
+  unfold stepG
+  exact h1.mul hkm
+
+theorem measurable_tileAvg₂ {h : ℝ} (hh : 0 < h)
+    (Φ : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞) :
+    Measurable (tileAvg₂ d h Φ) :=
+  measurable_stepFun₂ hh (fun x y => (ENNReal.ofReal (h ^ (2 * d)))⁻¹ *
+    ∫⁻ q in closedCube h x ×ˢ closedCube h y, Φ q)
+
+theorem measurable_ballIntegrand {Ω : Set (EuclideanSpace ℝ (Fin d))} (hΩ : MeasurableSet Ω)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) => k p.1 p.2)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hfm : Measurable f) :
+    Measurable (ballIntegrand d k Ω f) := by
+  refine Measurable.indicator ?_ (hΩ.prod hΩ)
+  exact (ENNReal.measurable_ofReal.comp
+    (((hfm.comp measurable_fst).sub (hfm.comp measurable_snd)).pow_const 2)).mul hkm
+
+theorem measurable_jumpKernel (d : ℕ) (α : ℝ) :
+    Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      jumpKernel d α p.1 p.2 := by
+  unfold jumpKernel
+  exact ENNReal.measurable_ofReal.comp
+    ((measurable_fst.sub measurable_snd).norm.pow_const _)
+
+lemma closedCube_subset_ball {h R R' : ℝ} {x₀ x : EuclideanSpace ℝ (Fin d)}
+    (hR : Real.sqrt d * (h / 2) ≤ R' - R) (hx : x ∈ ball x₀ R) :
+    closedCube h x ⊆ ball x₀ R' := by
+  intro s hs
+  have h1 : ‖s - x‖ ≤ Real.sqrt d * (h / 2) := norm_sub_le_of_mem_closedCube hs
+  have h2 : ‖x - x₀‖ < R := mem_ball_iff_norm.mp hx
+  refine mem_ball_iff_norm.mpr ?_
+  calc ‖s - x₀‖ ≤ ‖s - x‖ + ‖x - x₀‖ := by
+        simpa using norm_sub_le_norm_sub_add_norm_sub s x x₀
+    _ < R' := by linarith
+
+/-- **The limit of the right-hand side of `(discret)`.** For a function whose
+`H^{α/2}` form on the larger ball is finite, the integrals of `g_h` do not
+exceed, in the limit, the `k`-form of the ball. This is the step the paper
+performs with dominated convergence. -/
+theorem limsup_lintegral_stepG_le {α Λ R R' : ℝ} (hα : 0 ≤ α)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : ∀ a b, k a b ≤ ENNReal.ofReal Λ * jumpKernel d α a b)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) => k p.1 p.2)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hfm : Measurable f)
+    (hf : LocallyIntegrable f volume) (hd : 0 < d)
+    {x₀ : EuclideanSpace ℝ (Fin d)}
+    (hn : ℕ → ℝ) (hpos : ∀ n, 0 < hn n) (hlim : Filter.Tendsto hn Filter.atTop (nhds 0))
+    (hsmall : ∀ n, Real.sqrt d * (hn n / 2) ≤ R' - R)
+    (hfinite : formHs (ball x₀ R') α f ≠ ⊤) :
+    Filter.limsup (fun n => ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+        stepG d (hn n) (ball x₀ R) (3 * (Real.sqrt d * hn n)) k f p) Filter.atTop
+      ≤ form (ball x₀ R) k f := by
+  set Φ : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞ :=
+    ballIntegrand d (jumpKernel d α) (ball x₀ R') f with hΦdef
+  set C : ℝ≥0∞ := ENNReal.ofReal Λ * ENNReal.ofReal (2 ^ ((d : ℝ) + α)) with hCdef
+  have hCne : C ≠ ∞ := ENNReal.mul_ne_top ENNReal.ofReal_ne_top ENNReal.ofReal_ne_top
+  have hΦm : Measurable Φ :=
+    measurable_ballIntegrand measurableSet_ball (measurable_jumpKernel d α) hfm
+  have hΦint : ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d), Φ p ≠ ⊤ := by
+    rw [hΦdef, ← form_eq_lintegral_ballIntegrand measurableSet_ball]
+    exact hfinite
+  have hglm : Measurable (ballIntegrand d k (ball x₀ R) f) :=
+    measurable_ballIntegrand measurableSet_ball hkm hfm
+  have hmain := limsup_lintegral_le_of_dominant
+    (μ := (volume : Measure (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d))))
+    (g := fun n p => stepG d (hn n) (ball x₀ R) (3 * (Real.sqrt d * hn n)) k f p)
+    (G := fun n p => C * tileAvg₂ d (hn n) Φ p)
+    (gl := ballIntegrand d k (ball x₀ R) f) (Gl := fun p => C * Φ p)
+    (fun n => measurable_stepG (hpos n) _ _ hkm f)
+    (fun n => (measurable_tileAvg₂ (hpos n) Φ).const_mul C)
+    hglm (hΦm.const_mul C)
+    (fun n p => stepG_le_tileAvg₂ (hpos n) hα hk hfm hf
+      (fun x hx => closedCube_subset_ball (hsmall n) hx) p)
+    (tendsto_stepG_ae hn hpos hlim hk hf hd)
+    (by
+      filter_upwards [tendsto_tileAvg₂ hΦm hΦint] with p hp
+      exact ENNReal.Tendsto.const_mul (hp hn hpos hlim) (Or.inr hCne))
+    (fun n => by rw [lintegral_const_mul' _ _ hCne, lintegral_tileAvg₂ (hpos n) Φ,
+      lintegral_const_mul' _ _ hCne])
+    (by
+      rw [lintegral_const_mul' _ _ hCne]
+      exact ENNReal.mul_ne_top hCne hΦint)
+  rw [form_eq_lintegral_ballIntegrand measurableSet_ball]
+  exact hmain
+
 end QFS
