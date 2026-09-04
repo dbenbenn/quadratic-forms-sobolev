@@ -1937,4 +1937,177 @@ theorem ofReal_sq_cubeAvg_sub_le {h : ℝ} (hh : 0 < h) {f : EuclideanSpace ℝ 
         rw [ofReal_integral_eq_lintegral_ofReal hG2
           (Filter.Eventually.of_forall fun q => sq_nonneg _)]
 
+
+/-! ## The jump kernel is comparable on tiles
+
+Away from the diagonal the jump kernel varies by a bounded factor over a pair
+of tiles.  Taking the separation parameter `R₀ = 3√d` rather than the `√d` of
+Corollary 3.6 -- which only strengthens the constraint, so the corollary still
+applies -- makes the factor `2^{d+α}`. -/
+
+lemma norm_sub_le_of_mem_closedCube {h : ℝ} {x s : EuclideanSpace ℝ (Fin d)}
+    (hs : s ∈ closedCube h x) : ‖s - x‖ ≤ Real.sqrt d * (h / 2) := by
+  calc ‖s - x‖ ≤ Real.sqrt d * infNorm (s - x) := norm_le_sqrt_dim_mul_infNorm _
+    _ ≤ Real.sqrt d * (h / 2) := mul_le_mul_of_nonneg_left hs (Real.sqrt_nonneg _)
+
+/-- The distance between two points of a pair of tiles, compared to the distance
+between the tiles' centres. -/
+lemma norm_sub_mem_cubes {h : ℝ} {x y s t : EuclideanSpace ℝ (Fin d)}
+    (hs : s ∈ closedCube h x) (ht : t ∈ closedCube h y) :
+    ‖x - y‖ - Real.sqrt d * h ≤ ‖s - t‖ ∧ ‖s - t‖ ≤ ‖x - y‖ + Real.sqrt d * h := by
+  have h1 : ‖s - x‖ ≤ Real.sqrt d * (h / 2) := norm_sub_le_of_mem_closedCube hs
+  have h2 : ‖t - y‖ ≤ Real.sqrt d * (h / 2) := norm_sub_le_of_mem_closedCube ht
+  have hxs : ‖x - s‖ = ‖s - x‖ := norm_sub_rev _ _
+  have hyt : ‖y - t‖ = ‖t - y‖ := norm_sub_rev _ _
+  constructor
+  · have : ‖x - y‖ ≤ ‖x - s‖ + ‖s - t‖ + ‖t - y‖ := by
+      calc ‖x - y‖ ≤ ‖x - s‖ + ‖s - y‖ := by
+            simpa using norm_sub_le_norm_sub_add_norm_sub x s y
+        _ ≤ ‖x - s‖ + (‖s - t‖ + ‖t - y‖) := by
+            gcongr
+            simpa using norm_sub_le_norm_sub_add_norm_sub s t y
+        _ = ‖x - s‖ + ‖s - t‖ + ‖t - y‖ := by ring
+    rw [hxs] at this
+    linarith
+  · have : ‖s - t‖ ≤ ‖s - x‖ + ‖x - y‖ + ‖y - t‖ := by
+      calc ‖s - t‖ ≤ ‖s - x‖ + ‖x - t‖ := by
+            simpa using norm_sub_le_norm_sub_add_norm_sub s x t
+        _ ≤ ‖s - x‖ + (‖x - y‖ + ‖y - t‖) := by
+            gcongr
+            simpa using norm_sub_le_norm_sub_add_norm_sub x y t
+        _ = ‖s - x‖ + ‖x - y‖ + ‖y - t‖ := by ring
+    rw [hyt] at this
+    linarith
+
+/-- **The jump kernel is comparable across a pair of well-separated tiles.** -/
+theorem jumpKernel_le_of_mem_cubes {h α : ℝ} (hh : 0 < h) (hα : 0 ≤ α)
+    {x y : EuclideanSpace ℝ (Fin d)} (hxy : 3 * (Real.sqrt d * h) < ‖x - y‖)
+    {s t u v : EuclideanSpace ℝ (Fin d)} (hs : s ∈ closedCube h x) (ht : t ∈ closedCube h y)
+    (hu : u ∈ closedCube h x) (hv : v ∈ closedCube h y) :
+    jumpKernel d α s t ≤ ENNReal.ofReal (2 ^ ((d : ℝ) + α)) * jumpKernel d α u v := by
+  obtain ⟨hst1, -⟩ := norm_sub_mem_cubes hs ht
+  obtain ⟨huv1, huv2⟩ := norm_sub_mem_cubes hu hv
+  have hsq : (0:ℝ) ≤ Real.sqrt d * h := by positivity
+  have hstpos : 0 < ‖s - t‖ := by linarith
+  have huvpos : 0 < ‖u - v‖ := by linarith
+  have hle : ‖u - v‖ ≤ 2 * ‖s - t‖ := by linarith
+  have hexp : -(d : ℝ) - α ≤ 0 := by
+    have : (0:ℝ) ≤ (d : ℝ) := Nat.cast_nonneg d
+    linarith
+  have hkey : ‖s - t‖ ^ (-(d : ℝ) - α)
+      ≤ 2 ^ ((d : ℝ) + α) * ‖u - v‖ ^ (-(d : ℝ) - α) := by
+    have h1 : (2 * ‖s - t‖) ^ (-(d : ℝ) - α) ≤ ‖u - v‖ ^ (-(d : ℝ) - α) :=
+      Real.rpow_le_rpow_of_nonpos huvpos hle hexp
+    have h2 : (2 * ‖s - t‖) ^ (-(d : ℝ) - α)
+        = 2 ^ (-(d : ℝ) - α) * ‖s - t‖ ^ (-(d : ℝ) - α) :=
+      Real.mul_rpow (by norm_num) hstpos.le
+    have h3 : (2:ℝ) ^ ((d : ℝ) + α) * (2 ^ (-(d : ℝ) - α)) = 1 := by
+      rw [← Real.rpow_add (by norm_num)]
+      norm_num
+    have h4 : (0:ℝ) < 2 ^ ((d : ℝ) + α) := Real.rpow_pos_of_pos (by norm_num) _
+    calc ‖s - t‖ ^ (-(d : ℝ) - α)
+        = 2 ^ ((d : ℝ) + α) * (2 ^ (-(d : ℝ) - α) * ‖s - t‖ ^ (-(d : ℝ) - α)) := by
+          rw [← mul_assoc, h3, one_mul]
+      _ ≤ 2 ^ ((d : ℝ) + α) * ‖u - v‖ ^ (-(d : ℝ) - α) := by
+          rw [← h2]
+          exact mul_le_mul_of_nonneg_left h1 h4.le
+  rw [jumpKernel, jumpKernel, ← ENNReal.ofReal_mul (by positivity)]
+  exact ENNReal.ofReal_le_ofReal hkey
+
+
+/-! ## The dominant
+
+Putting Jensen and the tile comparability of the kernel together: the
+discretized integrand of the right-hand side of `(discret)`, with the kernel `k`
+itself rather than its lattice average, is dominated by a constant multiple of
+the tile average of the `H^{α/2}` integrand of a slightly larger ball. -/
+
+/-- The integrand of the right-hand side of `(discret)`, written as a function
+on `ℝ^d × ℝ^d`: the discrete factor is constant on each tile, the kernel is not
+discretized. This is the paper's `g_h`. -/
+noncomputable def stepG (d : ℕ) (h : ℝ) (S : Set (EuclideanSpace ℝ (Fin d))) (R₀ : ℝ)
+    (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ)
+    (p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) : ℝ≥0∞ :=
+  (discretePairs d h S R₀).indicator
+      (fun q => ENNReal.ofReal ((cubeAvg d h f q.1 - cubeAvg d h f q.2) ^ 2))
+      (stepIndex d h p.1, stepIndex d h p.2) * k p.1 p.2
+
+/-- The integrand of a form on a ball, extended by zero: the paper's `g` (for
+`k`) and `g̃` (for the jump kernel). -/
+noncomputable def ballIntegrand (d : ℕ)
+    (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    (B : Set (EuclideanSpace ℝ (Fin d))) (f : EuclideanSpace ℝ (Fin d) → ℝ)
+    (q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) : ℝ≥0∞ :=
+  (B ×ˢ B).indicator (fun q => ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * k q.1 q.2) q
+
+/-- **The dominant.** -/
+theorem stepG_le_tileAvg₂ {h α Λ : ℝ} (hh : 0 < h) (hα : 0 ≤ α)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : ∀ a b, k a b ≤ ENNReal.ofReal Λ * jumpKernel d α a b)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hfm : Measurable f)
+    (hf : LocallyIntegrable f volume)
+    {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ}
+    (hcube : ∀ x ∈ ball x₀ R, closedCube h x ⊆ ball x₀ R')
+    (p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) :
+    stepG d h (ball x₀ R) (3 * (Real.sqrt d * h)) k f p
+      ≤ ENNReal.ofReal Λ * ENNReal.ofReal (2 ^ ((d : ℝ) + α)) *
+        tileAvg₂ d h (ballIntegrand d (jumpKernel d α) (ball x₀ R') f) p := by
+  by_cases hmem : (stepIndex d h p.1, stepIndex d h p.2)
+      ∈ discretePairs d h (ball x₀ R) (3 * (Real.sqrt d * h))
+  · have hx : stepIndex d h p.1 ∈ ball x₀ R := hmem.1.1
+    have hy : stepIndex d h p.2 ∈ ball x₀ R := hmem.2.1.1
+    have hsep : 3 * (Real.sqrt d * h) < ‖stepIndex d h p.1 - stepIndex d h p.2‖ := hmem.2.2
+    have hp1 : p.1 ∈ closedCube h (stepIndex d h p.1) := mem_closedCube_stepIndex hh p.1
+    have hp2 : p.2 ∈ closedCube h (stepIndex d h p.2) := mem_closedCube_stepIndex hh p.2
+    have hCmeas : MeasurableSet (closedCube h (stepIndex d h p.1) ×ˢ
+        closedCube h (stepIndex d h p.2)) :=
+      (isClosed_closedCube hh.le _).measurableSet.prod (isClosed_closedCube hh.le _).measurableSet
+    have hjne : jumpKernel d α p.1 p.2 ≠ ∞ := by rw [jumpKernel]; exact ENNReal.ofReal_ne_top
+    have h2ne : ENNReal.ofReal (2 ^ ((d : ℝ) + α)) ≠ ∞ := ENNReal.ofReal_ne_top
+    -- the pointwise comparison inside the tile
+    have hinner : ∀ q ∈ closedCube h (stepIndex d h p.1) ×ˢ closedCube h (stepIndex d h p.2),
+        ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * jumpKernel d α p.1 p.2
+          ≤ ENNReal.ofReal (2 ^ ((d : ℝ) + α)) * ballIntegrand d (jumpKernel d α) (ball x₀ R') f q := by
+      intro q hq
+      have hq1 : q.1 ∈ ball x₀ R' := hcube _ hx hq.1
+      have hq2 : q.2 ∈ ball x₀ R' := hcube _ hy hq.2
+      have hind : ballIntegrand d (jumpKernel d α) (ball x₀ R') f q
+          = ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * jumpKernel d α q.1 q.2 := by
+        rw [ballIntegrand,
+          Set.indicator_of_mem (show q ∈ ball x₀ R' ×ˢ ball x₀ R' from ⟨hq1, hq2⟩)]
+      rw [hind]
+      calc ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * jumpKernel d α p.1 p.2
+          ≤ ENNReal.ofReal ((f q.1 - f q.2) ^ 2) *
+              (ENNReal.ofReal (2 ^ ((d : ℝ) + α)) * jumpKernel d α q.1 q.2) :=
+            mul_le_mul' le_rfl (jumpKernel_le_of_mem_cubes hh hα hsep hp1 hp2 hq.1 hq.2)
+        _ = ENNReal.ofReal (2 ^ ((d : ℝ) + α)) *
+              (ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * jumpKernel d α q.1 q.2) := by ring
+    -- assemble
+    rw [stepG, Set.indicator_of_mem hmem]
+    calc ENNReal.ofReal ((cubeAvg d h f (stepIndex d h p.1)
+            - cubeAvg d h f (stepIndex d h p.2)) ^ 2) * k p.1 p.2
+        ≤ ((ENNReal.ofReal (h ^ (2 * d)))⁻¹ *
+              ∫⁻ q in closedCube h (stepIndex d h p.1) ×ˢ closedCube h (stepIndex d h p.2),
+                ENNReal.ofReal ((f q.1 - f q.2) ^ 2)) *
+            (ENNReal.ofReal Λ * jumpKernel d α p.1 p.2) :=
+          mul_le_mul' (ofReal_sq_cubeAvg_sub_le hh hfm hf _ _) (hk _ _)
+      _ = ENNReal.ofReal Λ * ((ENNReal.ofReal (h ^ (2 * d)))⁻¹ *
+            ∫⁻ q in closedCube h (stepIndex d h p.1) ×ˢ closedCube h (stepIndex d h p.2),
+              ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * jumpKernel d α p.1 p.2) := by
+          rw [lintegral_mul_const' _ _ hjne]
+          ring
+      _ ≤ ENNReal.ofReal Λ * ((ENNReal.ofReal (h ^ (2 * d)))⁻¹ *
+            ∫⁻ q in closedCube h (stepIndex d h p.1) ×ˢ closedCube h (stepIndex d h p.2),
+              ENNReal.ofReal (2 ^ ((d : ℝ) + α)) * ballIntegrand d (jumpKernel d α) (ball x₀ R') f q) := by
+          refine mul_le_mul' le_rfl (mul_le_mul' le_rfl ?_)
+          exact lintegral_mono_ae
+            ((ae_restrict_iff' hCmeas).mpr (Filter.Eventually.of_forall hinner))
+      _ = ENNReal.ofReal Λ * ENNReal.ofReal (2 ^ ((d : ℝ) + α)) *
+            tileAvg₂ d h (ballIntegrand d (jumpKernel d α) (ball x₀ R') f) p := by
+          rw [lintegral_const_mul' _ _ h2ne, tileAvg₂, closedCube₂]
+          ring
+  · rw [stepG, Set.indicator_of_notMem hmem, zero_mul]
+    exact bot_le
+
 end QFS
