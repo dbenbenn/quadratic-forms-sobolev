@@ -132,7 +132,8 @@ The pieces, all proved:
 | **…but in the plane it can**: a ball of common cone-neighbours for cross-direction pairs | `QFS.mem_two_cones_of_mem_planarBall`, `QFS.abs_cross_ge_of_notMem_doubleCone`, `QFS.cramer2`, `QFS.perp2`, `QFS.cross2` | ✅ **proved** |
 | **The planar family as a function of the pair, with two-sided comparability** | `QFS.planarCtr`, `QFS.planarA`, `QFS.planarB`, `QFS.planarA_bounds`, `QFS.planarB_bounds`, `QFS.planarBall_comparable` | ✅ **proved** |
 | **The planar fibre estimate** | `QFS.planarBall`, `QFS.planarConst`, `QFS.lintegral_planarBall_fibre_le` | ✅ **proved** |
-| **The exchange for the planar family** | `QFS.lintegral_swap_planar`, `QFS.measurableSet_planarBall`, `QFS.measurableSet_planarBall_fibre` | ✅ **proved** |
+| **The exchange for the planar family**, both sides | `QFS.lintegral_swap_planar`, `QFS.lintegral_swap_planar'`, `QFS.lintegral_planarBall_fibre_le'`, `QFS.planarBall_comparable''`, `QFS.measurableSet_planarBall`, `QFS.measurableSet_planarBall_fibre` | ✅ **proved** |
+| **The planar averaging step** | `QFS.volume_planarBall`, `QFS.osc_weighted_le_planar` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
 integration in `t`, and it is why the argument is scale-invariant: the singular
@@ -206,9 +207,11 @@ graph and fibre bound — were both to hand. The cone restriction survives it
 because off the cone at `s` the fibre is not merely null but **empty**: every
 point of a planar ball sees both cones by construction.
 
-What remains for `d = 2` is the assembly: an averaging step for this family, and
-the split of each cross block into the pairs that are already cone pairs — which
-go straight into the `H_k` form by (1.4) — and the rest.
+**Every ingredient of the `d = 2` cross blocks is now proved** — geometry, both
+fibre estimates, both exchanges, and the averaging step. What remains is the
+assembly: split each cross block into the pairs that are already cone pairs —
+which go straight into the `H_k` form by (1.4)'s lower bound — and the rest,
+which these lemmas handle.
 
 The analytic machinery is stated abstractly enough to be reused: the exchange
 asks only that a family of averaging sets have measurable graph and a fibre
