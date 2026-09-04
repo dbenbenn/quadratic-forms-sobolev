@@ -216,6 +216,14 @@ The pieces, all proved:
 | **The wide-cone regime is the case `γ = π/2`**: every wide-cone statement above is now *derived* from the spread ones, not proved separately | `QFS.sobolevInclusion_wide`, `QFS.formHs_ball_ne_top_of_wide`, `QFS.formHs_ball_le_form_wide`, `QFS.ballComparability_wide`, `QFS.formHs_le_form_wide`, `QFS.formHs_univ_le_form_univ_wide`, `QFS.Hk_univ_eq_Hs_univ_wide` | ✅ **proved** |
 | **Pairwise overlap is strictly weaker than a common direction**: three cones in `ℝ³` of apex `arccos √(14/15) ≈ 15° < π/4`, overlapping pairwise, with no unit vector in all three | `QFS.exAxis`, `QFS.exApex`, `QFS.exAperture`, `QFS.ex_overlap`, `QFS.ex_no_common_direction`, `QFS.exists_narrow_overlapping_cones_without_common_direction` | ✅ **proved** |
 | **Theorem 1.1 for a narrow, direction-less configuration in `ℝ³`** — a case outside both §3.2 and the wide-cone theorem | `QFS.sobolevInclusion_narrow_example` | ✅ **proved** |
+| **The chaining for one pair at a time**: the density of the visible type is needed only at that pair's own averaging ball, and only on a chosen set of pairs | `QFS.osc_weighted_le_visible'`, `QFS.localPoincare_visible_on`, `QFS.formHs_le_form_of_visibleDense_on` | ✅ **proved** |
+| **Local domination**: the dominating type may vary from pair to pair | `QFS.LocallyDominated`, `QFS.measurable_midBall_inter_volume` | ✅ **proved** |
+| **The near-diagonal energy under local domination**, every dimension, any apex angle | `QFS.lintegral_near_le_form_of_locallyDominated` | ✅ **proved** |
+| **`H^{α/2} ≤ C·H_k + C'·L²` under local domination** (near part by chaining, far part by the kernel tail) | `QFS.formHs_univ_le_of_locallyDominated` | ✅ **proved** |
+| **The §3.2 input and Theorem 1.1's enlarged-ball form under local domination** | `QFS.formHs_ball_ne_top_of_locallyDominated`, `QFS.formHs_ball_le_form_locallyDominated` | ✅ **proved** |
+| **The hypothesis holds pointwise for *every* configuration** (Lebesgue density): a.e. `s` has a radius below which some type dominates the chaining ball — only the uniformity of that radius in `s` is missing | `QFS.ae_exists_dominating_type`, `QFS.exists_dense_radius`, `QFS.midBall_inter_half`, `QFS.half_volume_midBall` | ✅ **proved** |
+| **A ball centred in a closed half-space has at least half its volume there** (point reflection in the centre) | `QFS.half_le_volume_ball_inter_halfspace` | ✅ **proved** |
+| **Theorem 1.1 for two arbitrary narrow cone types split by a hyperplane** — unrelated directions, disjoint cones, any dimension: outside every regime above | `QFS.twoSideConfig`, `QFS.twoSideConfig_isBounded`, `QFS.twoSideConfig_condMeas`, `QFS.twoSideConfig_locallyDominated`, `QFS.formHs_ball_le_form_twoSide` | ✅ **proved** |
 | The Lipschitz cutoff and its cost | `QFS.cutoff`, `QFS.sq_cutoff_sub_le`, `QFS.sq_cutoff_mul_sub_le`, `QFS.form_cutoff_le`, `QFS.lintegral_cutoff_error_le`, `QFS.lintegral_cutoff_error_le'` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
@@ -1948,6 +1956,49 @@ two lines are never more than `π/2` apart, `ϑ > π/4` gives `γ ≤ π/2 < 2ϑ
 free: the wide-cone theorems are exactly the case `γ = π/2`, and are now derived
 from the small-spread ones instead of being proved separately.
 
+**Local domination: the type may vary from point to point.** The chaining needs,
+for a pair `(s,t)`, only that *some* reference cone `Ṽ(v,θ)` sits inside the cones
+of a fixed fraction of the one ball `B(s + (3‖s−t‖/sin θ)v, ‖s−t‖)` it averages
+over — and that ball depends on `s`, on `‖s−t‖` and on `v`, **not** on the
+direction of `t−s`. Isolating that (`QFS.localPoincare_visible_on`) lets the
+dominating type vary from pair to pair. Summing over the finitely many reference
+types and bounding the pairs at distance more than `r₀` by the `L²` norm gives
+
+> `QFS.formHs_univ_le_of_locallyDominated` — if for a.e. `s` and every `t` within
+> `r₀` some reference type fills a `c₀`-fraction of that pair's averaging ball,
+> then `|f|²_{H^{α/2}} ≤ C·|f|²_{H_k} + C'·‖f‖²_{L²}`,
+
+and with the cutoff argument, the §3.2 input and Theorem 1.1's enlarged-ball form
+(`QFS.formHs_ball_ne_top_of_locallyDominated`,
+`QFS.formHs_ball_le_form_locallyDominated`) — in every dimension, at any apex
+angle, with no relation whatsoever between the cone directions at different
+points.
+
+**How close that is to the open statement.** By the Lebesgue density theorem the
+hypothesis is *pointwise automatic*: for every admissible configuration, almost
+every `s` lies in some reference type `U_v`, is a density point of it, and then
+every pair `(s,t)` with `‖s−t‖` below a radius `ρ(s) > 0` has at least half of its
+averaging ball inside `U_v` (`QFS.ae_exists_dominating_type`, via
+`QFS.exists_dense_radius` and `QFS.midBall_inter_half`). **The whole remaining gap
+is the uniformity of `ρ(s)` in `s`.** Pairs with `‖s−t‖ ≤ ρ(s)` are controlled for
+free; what is not controlled is the set of pairs both of whose endpoints sit below
+their own density scale, and the energy carried there cannot be discarded without
+knowing in advance that the total energy is finite — which is the statement being
+proved. Absorbing it would need a stopping-time or good-λ argument, or a
+continuum analogue of §§5–6.
+
+**A configuration no earlier theorem reaches.** Take `V(v₁,ϑ)` where `⟪n,x⟫ ≥ 0`
+and `V(v₂,ϑ)` elsewhere, with `v₁`, `v₂` arbitrary and `ϑ` as small as one likes.
+The two double cones can be disjoint, so neither the common-direction theorem, nor
+the wide-cone theorem, nor the overlap theorem, nor the small-spread theorem
+applies; and both types have positive measure, so the a.e. common-direction
+theorem does not either. But at every point one of the two closed half-spaces
+contains at least half of the chaining ball — point reflection in the ball's
+centre carries the outside part into the inside part
+(`QFS.half_le_volume_ball_inter_halfspace`) — so the configuration is locally
+dominated with a *uniform* radius, and Theorem 1.1 holds for it in every dimension
+(`QFS.formHs_ball_le_form_twoSide`).
+
 **Why longer chains do not close the gap.** A chain with two or more interior
 points has an interior leg whose two endpoints are both intermediate, so both
 their types are chosen by the configuration; making such a leg a cone pair
@@ -1979,8 +2030,10 @@ Cauchy–Schwarz and scale bookkeeping on the order of §§5–6 themselves. It 
 recorded here, not attempted.
 
 **What is still not done.** Narrow cones (apex `≤ π/4`) in dimension three and
-above, apart from the pairwise-overlapping families and the small-spread
-configurations just described — and only those: dimension one is trivial (`QFS.formHs_le_form_dim_one`:
+above, apart from the pairwise-overlapping families, the small-spread
+configurations and the locally dominated ones just described — the residue is a
+uniformity statement, `QFS.LocallyDominated`, whose pointwise form is a theorem
+(`QFS.ae_exists_dominating_type`) — and only those: dimension one is trivial (`QFS.formHs_le_form_dim_one`:
 on the line every double cone is `ℝ ∖ {0}`, so every pair is a cone pair and
 (1.4)'s lower bound gives the inclusion outright), dimension two is step 6, and
 wide cones are step 9. The remaining case fails for the reason in step 5 —

@@ -4604,6 +4604,1111 @@ theorem formHs_le_form_of_visibleDense {d : ℕ} {v : EuclideanSpace ℝ (Fin d)
           unitBallVol d * form Set.univ k f := by ring
 
 
+
+
+/-! ### The same, for one pair at a time and on a set of pairs
+
+The density of the visible type is used only at the ball the chaining averages
+over, once per pair. Isolating that is what lets the type vary from pair to
+pair. -/
+
+/-- **The averaging step, over the common neighbours of the visible type.** -/
+theorem osc_weighted_le_visible' {d : ℕ} (v : EuclideanSpace ℝ (Fin d)) (ϑ : ℝ) {α c₀ : ℝ}
+    (hc₀ : 0 ≤ c₀) {U : Set (EuclideanSpace ℝ (Fin d))} (hUm : MeasurableSet U)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) {s t : EuclideanSpace ℝ (Fin d)} (hst : s ≠ t)
+    (hU : ENNReal.ofReal (c₀ * ‖s - t‖ ^ d) ≤
+      volume (U ∩ closedBall (midCentre v ϑ s t) ‖s - t‖)) :
+    ENNReal.ofReal ((f t - f s) ^ 2) * ENNReal.ofReal (‖s - t‖ ^ (-(d : ℝ) - α)) *
+        ENNReal.ofReal c₀
+      ≤ ENNReal.ofReal (‖s - t‖ ^ (-(2 * (d : ℝ)) - α)) *
+        ∫⁻ z in closedBall (midCentre v ϑ s t) ‖s - t‖,
+          U.indicator (fun z =>
+            ENNReal.ofReal (2 * (f z - f s) ^ 2 + 2 * (f t - f z) ^ 2)) z := by
+  have hr : 0 < ‖s - t‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hst
+  have hw : ‖s - t‖ ^ (-(d : ℝ) - α)
+      = ‖s - t‖ ^ (-(2 * (d : ℝ)) - α) * ‖s - t‖ ^ d := by
+    rw [← Real.rpow_natCast ‖s - t‖ d, ← Real.rpow_add hr]
+    congr 1
+    ring
+  have heq : ∫⁻ z in closedBall (midCentre v ϑ s t) ‖s - t‖,
+        U.indicator (fun z =>
+          ENNReal.ofReal (2 * (f z - f s) ^ 2 + 2 * (f t - f z) ^ 2)) z
+      = ∫⁻ z in U ∩ closedBall (midCentre v ϑ s t) ‖s - t‖,
+          ENNReal.ofReal (2 * (f z - f s) ^ 2 + 2 * (f t - f z) ^ 2) := by
+    rw [lintegral_indicator hUm, Measure.restrict_restrict hUm]
+  have hpt : ENNReal.ofReal ((f t - f s) ^ 2) *
+        volume (U ∩ closedBall (midCentre v ϑ s t) ‖s - t‖)
+      ≤ ∫⁻ z in U ∩ closedBall (midCentre v ϑ s t) ‖s - t‖,
+          ENNReal.ofReal (2 * (f z - f s) ^ 2 + 2 * (f t - f z) ^ 2) := by
+    rw [← setLIntegral_const (U ∩ closedBall (midCentre v ϑ s t) ‖s - t‖)
+      (ENNReal.ofReal ((f t - f s) ^ 2))]
+    refine lintegral_mono fun z => ENNReal.ofReal_le_ofReal ?_
+    nlinarith [sq_nonneg (f z - f s - (f t - f z)), sq_nonneg (f z - f s + (f t - f z))]
+  calc ENNReal.ofReal ((f t - f s) ^ 2) * ENNReal.ofReal (‖s - t‖ ^ (-(d : ℝ) - α)) *
+        ENNReal.ofReal c₀
+      = ENNReal.ofReal (‖s - t‖ ^ (-(2 * (d : ℝ)) - α)) *
+          (ENNReal.ofReal ((f t - f s) ^ 2) * ENNReal.ofReal (c₀ * ‖s - t‖ ^ d)) := by
+        rw [hw, ENNReal.ofReal_mul (by positivity), ENNReal.ofReal_mul hc₀]
+        ring
+    _ ≤ ENNReal.ofReal (‖s - t‖ ^ (-(2 * (d : ℝ)) - α)) *
+          (ENNReal.ofReal ((f t - f s) ^ 2) *
+            volume (U ∩ closedBall (midCentre v ϑ s t) ‖s - t‖)) :=
+        mul_le_mul' le_rfl (mul_le_mul' le_rfl hU)
+    _ ≤ ENNReal.ofReal (‖s - t‖ ^ (-(2 * (d : ℝ)) - α)) *
+          ∫⁻ z in U ∩ closedBall (midCentre v ϑ s t) ‖s - t‖,
+            ENNReal.ofReal (2 * (f z - f s) ^ 2 + 2 * (f t - f z) ^ 2) :=
+        mul_le_mul' le_rfl hpt
+    _ = ENNReal.ofReal (‖s - t‖ ^ (-(2 * (d : ℝ)) - α)) *
+          ∫⁻ z in closedBall (midCentre v ϑ s t) ‖s - t‖,
+            U.indicator (fun z =>
+              ENNReal.ofReal (2 * (f z - f s) ^ 2 + 2 * (f t - f z) ^ 2)) z := by
+        rw [heq]
+
+
+/-- **The local Poincaré inequality with a densely visible type.** The full
+fractional energy is controlled by the energy of the pairs `(s,z)` with
+`z − s ∈ Ṽ(v,ϑ)` **and `z` of the visible type** — which is the class the lower
+bound of (1.4) can read, through the cone at `z`. -/
+theorem localPoincare_visible_on {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1)
+    {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α c₀ : ℝ} (hα : 0 ≤ α) (hd : 0 < d)
+    (hc₀ : 0 ≤ c₀) {U : Set (EuclideanSpace ℝ (Fin d))} (hUm : MeasurableSet U)
+    {P : Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d))} (hPm : MeasurableSet P)
+    (hU : ∀ p ∈ P, p.1 ≠ p.2 → ENNReal.ofReal (c₀ * ‖p.1 - p.2‖ ^ d) ≤
+      volume (U ∩ closedBall (midCentre v ϑ p.1 p.2) ‖p.1 - p.2‖))
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f) :
+    ENNReal.ofReal c₀ * ∫⁻ p in P,
+        ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+          ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(d : ℝ) - α))
+      ≤ ENNReal.ofReal (chainConst d ϑ α) * unitBallVol d *
+          (∫⁻ s, ∫⁻ z in {z | z - s ∈ cone v ϑ},
+            U.indicator (fun z => ENNReal.ofReal (2 * (f z - f s) ^ 2)) z *
+              ENNReal.ofReal (‖z - s‖ ^ (-(d : ℝ) - α)))
+        + ENNReal.ofReal (chainConst' d ϑ α) * unitBallVol d *
+          (∫⁻ t, ∫⁻ z in {z | z - t ∈ cone v ϑ},
+            U.indicator (fun z => ENNReal.ofReal (2 * (f t - f z) ^ 2)) z *
+              ENNReal.ofReal (‖z - t‖ ^ (-(d : ℝ) - α))) := by
+  set A : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞ := fun p =>
+    ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(2 * (d : ℝ)) - α)) *
+      ∫⁻ z in closedBall (midCentre v ϑ p.1 p.2) ‖p.1 - p.2‖,
+        U.indicator (fun z => ENNReal.ofReal (2 * (f z - f p.1) ^ 2)) z with hAdef
+  set B : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞ := fun p =>
+    ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(2 * (d : ℝ)) - α)) *
+      ∫⁻ z in closedBall (midCentre v ϑ p.1 p.2) ‖p.1 - p.2‖,
+        U.indicator (fun z => ENNReal.ofReal (2 * (f p.2 - f z) ^ 2)) z with hBdef
+  have hw2m : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(2 * (d : ℝ)) - α)) := by fun_prop
+  have hUsnd : MeasurableSet {q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+      EuclideanSpace ℝ (Fin d) | q.2 ∈ U} := hUm.preimage measurable_snd
+  have hHA : Measurable fun q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+      EuclideanSpace ℝ (Fin d) =>
+      U.indicator (fun z => ENNReal.ofReal (2 * (f z - f q.1.1) ^ 2)) q.2 := by
+    have hEq : (fun q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+          EuclideanSpace ℝ (Fin d) =>
+          U.indicator (fun z => ENNReal.ofReal (2 * (f z - f q.1.1) ^ 2)) q.2)
+        = {q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+            EuclideanSpace ℝ (Fin d) | q.2 ∈ U}.indicator
+            (fun q => ENNReal.ofReal (2 * (f q.2 - f q.1.1) ^ 2)) := by
+      funext q
+      by_cases hq : q.2 ∈ U
+      · rw [Set.indicator_of_mem hq, Set.indicator_of_mem (show q ∈ {q | q.2 ∈ U} from hq)]
+      · rw [Set.indicator_of_notMem hq,
+          Set.indicator_of_notMem (show q ∉ {q | q.2 ∈ U} from hq)]
+    rw [hEq]
+    exact Measurable.indicator (by fun_prop) hUsnd
+  have hHB : Measurable fun q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+      EuclideanSpace ℝ (Fin d) =>
+      U.indicator (fun z => ENNReal.ofReal (2 * (f q.1.2 - f z) ^ 2)) q.2 := by
+    have hEq : (fun q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+          EuclideanSpace ℝ (Fin d) =>
+          U.indicator (fun z => ENNReal.ofReal (2 * (f q.1.2 - f z) ^ 2)) q.2)
+        = {q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+            EuclideanSpace ℝ (Fin d) | q.2 ∈ U}.indicator
+            (fun q => ENNReal.ofReal (2 * (f q.1.2 - f q.2) ^ 2)) := by
+      funext q
+      by_cases hq : q.2 ∈ U
+      · rw [Set.indicator_of_mem hq, Set.indicator_of_mem (show q ∈ {q | q.2 ∈ U} from hq)]
+      · rw [Set.indicator_of_notMem hq,
+          Set.indicator_of_notMem (show q ∉ {q | q.2 ∈ U} from hq)]
+    rw [hEq]
+    exact Measurable.indicator (by fun_prop) hUsnd
+  have hGs : ∀ s : EuclideanSpace ℝ (Fin d),
+      Measurable (U.indicator fun z => ENNReal.ofReal (2 * (f z - f s) ^ 2)) := by
+    intro s; exact Measurable.indicator (by fun_prop) hUm
+  have hGt : ∀ t : EuclideanSpace ℝ (Fin d),
+      Measurable (U.indicator fun z => ENNReal.ofReal (2 * (f t - f z) ^ 2)) := by
+    intro t; exact Measurable.indicator (by fun_prop) hUm
+  have hAm : Measurable A := by
+    rw [hAdef]; exact hw2m.mul (measurable_param_midBall v ϑ hHA)
+  have hBm : Measurable B := by
+    rw [hBdef]; exact hw2m.mul (measurable_param_midBall v ϑ hHB)
+  -- the pointwise bound
+  have hptwise : ∀ p ∈ P,
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+        ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(d : ℝ) - α)) * ENNReal.ofReal c₀
+        ≤ A p + B p := by
+    rintro ⟨s, t⟩ hp
+    by_cases hst : s = t
+    · subst hst
+      simp only [sub_self, norm_zero]
+      rw [Real.zero_rpow (by
+        have : (0:ℝ) < (d : ℝ) := by exact_mod_cast hd
+        intro hc; linarith), ENNReal.ofReal_zero]
+      simp
+    · have hsplit : ∀ z : EuclideanSpace ℝ (Fin d),
+          U.indicator (fun z => ENNReal.ofReal (2 * (f z - f s) ^ 2 + 2 * (f t - f z) ^ 2)) z
+            = U.indicator (fun z => ENNReal.ofReal (2 * (f z - f s) ^ 2)) z
+              + U.indicator (fun z => ENNReal.ofReal (2 * (f t - f z) ^ 2)) z := by
+        intro z
+        by_cases hz : z ∈ U
+        · rw [Set.indicator_of_mem hz, Set.indicator_of_mem hz, Set.indicator_of_mem hz,
+            ← ENNReal.ofReal_add (by positivity) (by positivity)]
+        · rw [Set.indicator_of_notMem hz, Set.indicator_of_notMem hz,
+            Set.indicator_of_notMem hz, add_zero]
+      have hsum : ∫⁻ z in closedBall (midCentre v ϑ s t) ‖s - t‖,
+            U.indicator (fun z =>
+              ENNReal.ofReal (2 * (f z - f s) ^ 2 + 2 * (f t - f z) ^ 2)) z
+          = (∫⁻ z in closedBall (midCentre v ϑ s t) ‖s - t‖,
+              U.indicator (fun z => ENNReal.ofReal (2 * (f z - f s) ^ 2)) z)
+            + ∫⁻ z in closedBall (midCentre v ϑ s t) ‖s - t‖,
+              U.indicator (fun z => ENNReal.ofReal (2 * (f t - f z) ^ 2)) z := by
+        rw [← lintegral_add_left (hGs s)]
+        exact lintegral_congr fun z => hsplit z
+      refine le_trans (osc_weighted_le_visible' v ϑ hc₀ hUm f hst (hU (s, t) hp hst))
+        (le_of_eq ?_)
+      rw [hAdef, hBdef, ← mul_add]
+      exact congrArg _ hsum
+  calc ENNReal.ofReal c₀ * ∫⁻ p in P,
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(d : ℝ) - α))
+      = ∫⁻ p in P, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+          ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(d : ℝ) - α)) * ENNReal.ofReal c₀ := by
+        rw [← lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+        exact lintegral_congr fun p => by ring
+    _ ≤ ∫⁻ p in P, (A p + B p) := setLIntegral_mono' hPm hptwise
+    _ ≤ ∫⁻ p, (A p + B p) := lintegral_mono' Measure.restrict_le_self le_rfl
+    _ = (∫⁻ p, A p) + ∫⁻ p, B p := lintegral_add_left hAm _
+    _ ≤ ENNReal.ofReal (chainConst d ϑ α) * unitBallVol d *
+          (∫⁻ s, ∫⁻ z in {z | z - s ∈ cone v ϑ},
+            U.indicator (fun z => ENNReal.ofReal (2 * (f z - f s) ^ 2)) z *
+              ENNReal.ofReal (‖z - s‖ ^ (-(d : ℝ) - α)))
+        + ENNReal.ofReal (chainConst' d ϑ α) * unitBallVol d *
+          (∫⁻ t, ∫⁻ z in {z | z - t ∈ cone v ϑ},
+            U.indicator (fun z => ENNReal.ofReal (2 * (f t - f z) ^ 2)) z *
+              ENNReal.ofReal (‖z - t‖ ^ (-(d : ℝ) - α))) := by
+        refine add_le_add ?_ ?_
+        · rw [Measure.volume_eq_prod, lintegral_prod _ hAm.aemeasurable,
+            ← lintegral_const_mul' _ _
+              (ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top)]
+          exact lintegral_mono fun s => lintegral_swap_fibre hv hϑ hϑ' hα hd s (hGs s)
+        · rw [Measure.volume_eq_prod, lintegral_prod_symm _ hBm.aemeasurable,
+            ← lintegral_const_mul' _ _
+              (ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top)]
+          exact lintegral_mono fun t => lintegral_swap_fibre' hv hϑ hϑ' hα hd t (hGt t)
+
+theorem formHs_le_form_of_visibleDense_on {d : ℕ} {v : EuclideanSpace ℝ (Fin d)}
+    (hv : ‖v‖ = 1)
+    {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α) (hd : 0 < d)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {Λ c₀ : ℝ} (hc₀ : 0 ≤ c₀)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hmeas : CondMeas Γ)
+    {P : Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d))} (hPm : MeasurableSet P)
+    (hvis : ∀ p ∈ P, p.1 ≠ p.2 → ENNReal.ofReal (c₀ * ‖p.1 - p.2‖ ^ d) ≤
+      volume ({x | doubleCone v ϑ ⊆ (Γ x).carrier} ∩
+        closedBall (midCentre v ϑ p.1 p.2) ‖p.1 - p.2‖))
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
+    ENNReal.ofReal c₀ * ∫⁻ p in P,
+        ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+      ≤ ENNReal.ofReal (2 * Λ) *
+          (ENNReal.ofReal (chainConst d ϑ α) + ENNReal.ofReal (chainConst' d ϑ α)) *
+          unitBallVol d * form Set.univ k f := by
+  have hΛ : (0 : ℝ) < Λ := lt_of_lt_of_le zero_lt_one hk.one_le
+  set U : Set (EuclideanSpace ℝ (Fin d)) :=
+    {x | doubleCone v ϑ ⊆ (Γ x).carrier} with hUdef
+  have hUm : MeasurableSet U := hmeas _
+  -- the `H_k` form as an iterated integral
+  have hform : form Set.univ k f
+      = ∫⁻ x, ∫⁻ y, ENNReal.ofReal ((f y - f x) ^ 2) * k x y := by
+    rw [form, Set.univ_prod_univ, setLIntegral_univ, Measure.volume_eq_prod,
+      lintegral_prod _ hkm.aemeasurable]
+  have hconeMeas : ∀ x : EuclideanSpace ℝ (Fin d),
+      MeasurableSet {y : EuclideanSpace ℝ (Fin d) | y - x ∈ cone v ϑ} := fun x =>
+    ((isOpen_cone v ϑ).preimage (by fun_prop)).measurableSet
+  -- each cone-and-type-restricted term is dominated by the `H_k` form
+  have hterm : ∀ (g : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ),
+      (∀ x y, (g x y) ^ 2 = (f y - f x) ^ 2) →
+      (∫⁻ x, ∫⁻ y in {y | y - x ∈ cone v ϑ},
+          U.indicator (fun y => ENNReal.ofReal (2 * (g x y) ^ 2)) y *
+            ENNReal.ofReal (‖y - x‖ ^ (-(d : ℝ) - α)))
+        ≤ ENNReal.ofReal (2 * Λ) * form Set.univ k f := by
+    intro g hg
+    rw [hform, ← lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+    refine lintegral_mono fun x => ?_
+    rw [← lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+    calc ∫⁻ y in {y | y - x ∈ cone v ϑ},
+          U.indicator (fun y => ENNReal.ofReal (2 * (g x y) ^ 2)) y *
+            ENNReal.ofReal (‖y - x‖ ^ (-(d : ℝ) - α))
+        ≤ ∫⁻ y in {y | y - x ∈ cone v ϑ},
+            ENNReal.ofReal (2 * Λ) * (ENNReal.ofReal ((f y - f x) ^ 2) * k x y) := by
+          refine lintegral_mono_ae ?_
+          filter_upwards [ae_restrict_mem (hconeMeas x)] with y hyc
+          by_cases hyU : y ∈ U
+          · -- `y` has the visible type, so `x` lies in the cone at `y`
+            have hxy : x ∈ coneAt Γ y := by
+              have hmem : x - y ∈ doubleCone v ϑ := by
+                have : y - x ∈ cone v ϑ := hyc
+                refine Or.inr ?_
+                rw [Set.mem_neg]
+                simpa using this
+              exact hyU hmem
+            have hjk : ENNReal.ofReal (‖y - x‖ ^ (-(d : ℝ) - α))
+                ≤ ENNReal.ofReal Λ * k x y := by
+              have h0 : ENNReal.ofReal (‖y - x‖ ^ (-(d : ℝ) - α)) = jumpKernel d α y x := by
+                rw [jumpKernel]
+              have h1 : jumpKernel d α y x ≤ ENNReal.ofReal Λ * k y x :=
+                jumpKernel_le_of_mem_coneAt hk hxy
+              rw [h0, hk.symm y x] at *
+              exact h1
+            rw [Set.indicator_of_mem hyU]
+            calc ENNReal.ofReal (2 * (g x y) ^ 2) *
+                  ENNReal.ofReal (‖y - x‖ ^ (-(d : ℝ) - α))
+                ≤ ENNReal.ofReal (2 * (f y - f x) ^ 2) * (ENNReal.ofReal Λ * k x y) := by
+                  rw [hg]; exact mul_le_mul' le_rfl hjk
+              _ = ENNReal.ofReal (2 * Λ) * (ENNReal.ofReal ((f y - f x) ^ 2) * k x y) := by
+                  rw [ENNReal.ofReal_mul (by norm_num : (0:ℝ) ≤ 2),
+                    ENNReal.ofReal_mul (by norm_num : (0:ℝ) ≤ 2)]
+                  ring
+          · rw [Set.indicator_of_notMem hyU, zero_mul]
+            exact bot_le
+      _ ≤ ∫⁻ y, ENNReal.ofReal (2 * Λ) * (ENNReal.ofReal ((f y - f x) ^ 2) * k x y) := by
+          exact lintegral_mono' Measure.restrict_le_self le_rfl
+  -- assemble
+  have hlhs : ENNReal.ofReal c₀ * ∫⁻ p in P,
+        ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+      = ENNReal.ofReal c₀ * ∫⁻ p in P,
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+            ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(d : ℝ) - α)) := rfl
+  rw [hlhs]
+  refine le_trans (localPoincare_visible_on hv hϑ hϑ' hα hd hc₀ hUm hPm hvis hf) ?_
+  have hA := hterm (fun x y => f y - f x) (fun x y => rfl)
+  have hB := hterm (fun x y => f x - f y) (fun x y => by ring)
+  calc ENNReal.ofReal (chainConst d ϑ α) * unitBallVol d *
+        (∫⁻ s, ∫⁻ z in {z | z - s ∈ cone v ϑ},
+          U.indicator (fun z => ENNReal.ofReal (2 * (f z - f s) ^ 2)) z *
+            ENNReal.ofReal (‖z - s‖ ^ (-(d : ℝ) - α)))
+      + ENNReal.ofReal (chainConst' d ϑ α) * unitBallVol d *
+        (∫⁻ t, ∫⁻ z in {z | z - t ∈ cone v ϑ},
+          U.indicator (fun z => ENNReal.ofReal (2 * (f t - f z) ^ 2)) z *
+            ENNReal.ofReal (‖z - t‖ ^ (-(d : ℝ) - α)))
+      ≤ ENNReal.ofReal (chainConst d ϑ α) * unitBallVol d *
+          (ENNReal.ofReal (2 * Λ) * form Set.univ k f)
+        + ENNReal.ofReal (chainConst' d ϑ α) * unitBallVol d *
+          (ENNReal.ofReal (2 * Λ) * form Set.univ k f) :=
+        add_le_add (mul_le_mul' le_rfl hA) (mul_le_mul' le_rfl hB)
+    _ = ENNReal.ofReal (2 * Λ) *
+          (ENNReal.ofReal (chainConst d ϑ α) + ENNReal.ofReal (chainConst' d ϑ α)) *
+          unitBallVol d * form Set.univ k f := by ring
+
+
+
+/-! ## Local domination: the type may vary from point to point
+
+The chaining needs, for each pair `(s,t)`, only that *some* reference cone is
+contained in the cones of a fixed fraction of the one ball it averages over — and
+that ball is determined by `s`, by `‖s−t‖` and by the reference direction, not by
+the direction of `t−s`. The type may therefore vary from pair to pair, and the
+Lebesgue density theorem supplies the fraction at almost every point. What it
+does not supply is a *uniform* radius below which the fraction is there; that
+uniformity, `QFS.LocallyDominated`, is exactly what separates the theorem below
+from the open statement. -/
+
+/-- The volume of the chaining ball met by a fixed set, as a function of the pair. -/
+lemma measurable_midBall_inter_volume {d : ℕ} (v : EuclideanSpace ℝ (Fin d)) (θ : ℝ)
+    {U : Set (EuclideanSpace ℝ (Fin d))} (hUm : MeasurableSet U) :
+    Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      volume (U ∩ closedBall (midCentre v θ p.1 p.2) ‖p.1 - p.2‖) := by
+  have hind : Measurable fun q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+      EuclideanSpace ℝ (Fin d) => U.indicator (fun _ => (1 : ℝ≥0∞)) q.2 :=
+    Measurable.indicator measurable_const (hUm.preimage measurable_snd)
+  have h := measurable_param_midBall v θ hind
+  have heq : ∀ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      (∫⁻ z in closedBall (midCentre v θ p.1 p.2) ‖p.1 - p.2‖,
+        U.indicator (fun _ => (1 : ℝ≥0∞)) z)
+        = volume (U ∩ closedBall (midCentre v θ p.1 p.2) ‖p.1 - p.2‖) := by
+    intro p
+    rw [lintegral_indicator hUm, Measure.restrict_restrict hUm, setLIntegral_one]
+  simpa [heq] using h
+
+/-- **Local domination of a cone type.** For every pair `(s,t)` at distance at most
+`r₀`, one of finitely many reference cones `Ṽ(v,θ)`, `v ∈ S`, lies inside the cones
+of a `c₀`-fraction of the ball the chaining averages over. -/
+def LocallyDominated {d : ℕ} (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    (S : Finset (EuclideanSpace ℝ (Fin d))) (θ c₀ r₀ : ℝ) : Prop :=
+  ∀ᵐ s : EuclideanSpace ℝ (Fin d), ∀ t : EuclideanSpace ℝ (Fin d), ‖s - t‖ ≤ r₀ →
+    ∃ v ∈ S, ENNReal.ofReal (c₀ * ‖s - t‖ ^ d) ≤
+      volume ({x : EuclideanSpace ℝ (Fin d) | doubleCone v θ ⊆ (Γ x).carrier} ∩
+        closedBall (midCentre v θ s t) ‖s - t‖)
+
+/-- **The near-diagonal energy is controlled under local domination**, in every
+dimension and at any apex angle: the type may vary from pair to pair. -/
+theorem lintegral_near_le_form_of_locallyDominated {d : ℕ} (hd : 0 < d)
+    {θ α Λ c₀ r₀ : ℝ} (hθ : 0 < θ) (hθ' : θ ≤ π / 2) (hα : 0 ≤ α) (hc₀ : 0 < c₀)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {S : Finset (EuclideanSpace ℝ (Fin d))} (hSu : ∀ v ∈ S, ‖v‖ = 1)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hmeas : CondMeas Γ)
+    (hdom : LocallyDominated Γ S θ c₀ r₀)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
+    ∫⁻ p in {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) | ‖p.1 - p.2‖ ≤ r₀},
+        ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+      ≤ (S.card : ℝ≥0∞) * ((ENNReal.ofReal c₀)⁻¹ * (ENNReal.ofReal (2 * Λ) *
+          (ENNReal.ofReal (chainConst d θ α) + ENNReal.ofReal (chainConst' d θ α)) *
+          unitBallVol d * form Set.univ k f)) := by
+  classical
+  set F : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞ := fun p =>
+    ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 with hF
+  set K : ℝ≥0∞ := ENNReal.ofReal (2 * Λ) *
+    (ENNReal.ofReal (chainConst d θ α) + ENNReal.ofReal (chainConst' d θ α)) *
+    unitBallVol d * form Set.univ k f with hK
+  set Q : EuclideanSpace ℝ (Fin d) →
+      Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) := fun v =>
+    {p | ‖p.1 - p.2‖ ≤ r₀ ∧ ENNReal.ofReal (c₀ * ‖p.1 - p.2‖ ^ d) ≤
+      volume ({x : EuclideanSpace ℝ (Fin d) | doubleCone v θ ⊆ (Γ x).carrier} ∩
+        closedBall (midCentre v θ p.1 p.2) ‖p.1 - p.2‖)} with hQ
+  have hQm : ∀ v, MeasurableSet (Q v) := by
+    intro v
+    have h1 : MeasurableSet {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+        ‖p.1 - p.2‖ ≤ r₀} := measurableSet_le (by fun_prop) measurable_const
+    have h2 : MeasurableSet {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+        ENNReal.ofReal (c₀ * ‖p.1 - p.2‖ ^ d) ≤
+          volume ({x : EuclideanSpace ℝ (Fin d) | doubleCone v θ ⊆ (Γ x).carrier} ∩
+            closedBall (midCentre v θ p.1 p.2) ‖p.1 - p.2‖)} :=
+      measurableSet_le (by fun_prop) (measurable_midBall_inter_volume v θ (hmeas _))
+    exact h1.inter h2
+  -- the good pairs cover the near-diagonal region up to a null set
+  obtain ⟨N, hNnull, hN⟩ : ∃ N : Set (EuclideanSpace ℝ (Fin d)), volume N = 0 ∧
+      ∀ s ∉ N, ∀ t : EuclideanSpace ℝ (Fin d), ‖s - t‖ ≤ r₀ →
+        ∃ v ∈ S, ENNReal.ofReal (c₀ * ‖s - t‖ ^ d) ≤
+          volume ({x : EuclideanSpace ℝ (Fin d) | doubleCone v θ ⊆ (Γ x).carrier} ∩
+            closedBall (midCentre v θ s t) ‖s - t‖) := by
+    refine ⟨{s | ¬ (∀ t : EuclideanSpace ℝ (Fin d), ‖s - t‖ ≤ r₀ →
+        ∃ v ∈ S, ENNReal.ofReal (c₀ * ‖s - t‖ ^ d) ≤
+          volume ({x : EuclideanSpace ℝ (Fin d) | doubleCone v θ ⊆ (Γ x).carrier} ∩
+            closedBall (midCentre v θ s t) ‖s - t‖))}, ae_iff.mp hdom, fun s hs => ?_⟩
+    exact not_not.mp hs
+  have hnullprod : volume (N ×ˢ (Set.univ : Set (EuclideanSpace ℝ (Fin d)))) = 0 := by
+    rw [Measure.volume_eq_prod, Measure.prod_prod, hNnull, zero_mul]
+  have hcover : {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) | ‖p.1 - p.2‖ ≤ r₀}
+      ≤ᵐ[volume] ⋃ v ∈ S, Q v := by
+    have hsub : {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+        ¬ (p ∈ {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) | ‖p.1 - p.2‖ ≤ r₀} →
+          p ∈ ⋃ v ∈ S, Q v)} ⊆ N ×ˢ (Set.univ : Set (EuclideanSpace ℝ (Fin d))) := by
+      intro p hp
+      simp only [Set.mem_ofPred_eq, Classical.not_imp] at hp
+      obtain ⟨hp1, hp2⟩ := hp
+      refine ⟨?_, Set.mem_univ _⟩
+      by_contra hpN
+      obtain ⟨v, hvS, hv⟩ := hN p.1 hpN p.2 hp1
+      exact hp2 (Set.mem_biUnion hvS ⟨hp1, hv⟩)
+    exact ae_iff.mpr (measure_mono_null hsub hnullprod)
+  have hblock : ∀ v ∈ S, ∫⁻ p in Q v, F p ≤ (ENNReal.ofReal c₀)⁻¹ * K := by
+    intro v hvS
+    have hmain := formHs_le_form_of_visibleDense_on (hSu v hvS) hθ hθ' hα hd hc₀.le hk hmeas
+      (hQm v) (fun p hp _ => hp.2) hf hkm
+    rw [← hK] at hmain
+    have hc : ENNReal.ofReal c₀ ≠ 0 := by
+      simpa using (ENNReal.ofReal_pos).mpr hc₀
+    calc ∫⁻ p in Q v, F p
+        = (ENNReal.ofReal c₀)⁻¹ * (ENNReal.ofReal c₀ * ∫⁻ p in Q v, F p) := by
+          rw [← mul_assoc, ENNReal.inv_mul_cancel hc ENNReal.ofReal_ne_top, one_mul]
+      _ ≤ (ENNReal.ofReal c₀)⁻¹ * K := mul_le_mul' le_rfl hmain
+  calc ∫⁻ p in {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) | ‖p.1 - p.2‖ ≤ r₀},
+        F p
+      ≤ ∫⁻ p in ⋃ v ∈ S, Q v, F p := lintegral_mono_set' hcover
+    _ ≤ ∑ v ∈ S, ∫⁻ p in Q v, F p := by
+        have hun : (⋃ v ∈ S, Q v) = ⋃ v : {x // x ∈ S}, Q (v : EuclideanSpace ℝ (Fin d)) := by
+          ext p
+          simp only [Set.mem_iUnion, Subtype.exists, exists_prop]
+        rw [hun]
+        refine le_trans (lintegral_iUnion_le _ _) ?_
+        rw [tsum_fintype]
+        exact le_of_eq (Finset.sum_coe_sort S fun v => ∫⁻ p in Q v, F p)
+    _ ≤ ∑ _v ∈ S, (ENNReal.ofReal c₀)⁻¹ * K := Finset.sum_le_sum hblock
+    _ = (S.card : ℝ≥0∞) * ((ENNReal.ofReal c₀)⁻¹ * K) := by
+        rw [Finset.sum_const, nsmul_eq_mul]
+
+
+/-- **The `H^{α/2}` form under local domination**: the near-diagonal part is
+controlled by the `H_k` form, the far part by the `L²` norm. -/
+theorem formHs_univ_le_of_locallyDominated {d : ℕ} (hd : 0 < d)
+    {θ α Λ c₀ r₀ : ℝ} (hθ : 0 < θ) (hθ' : θ ≤ π / 2) (hα : 0 < α) (hc₀ : 0 < c₀)
+    (hr₀ : 0 < r₀)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {S : Finset (EuclideanSpace ℝ (Fin d))} (hSu : ∀ v ∈ S, ‖v‖ = 1)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hmeas : CondMeas Γ)
+    (hdom : LocallyDominated Γ S θ c₀ r₀)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
+    formHs Set.univ α f
+      ≤ (S.card : ℝ≥0∞) * ((ENNReal.ofReal c₀)⁻¹ * (ENNReal.ofReal (2 * Λ) *
+          (ENNReal.ofReal (chainConst d θ α) + ENNReal.ofReal (chainConst' d θ α)) *
+          unitBallVol d * form Set.univ k f))
+        + 2 * (ENNReal.ofReal (r₀ ^ (-α)) * kernelTail d α) *
+            ∫⁻ x, ENNReal.ofReal (2 * f x ^ 2) := by
+  classical
+  set F : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞ := fun p =>
+    ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 with hF
+  set N : Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) :=
+    {p | ‖p.1 - p.2‖ ≤ r₀} with hN
+  have hNm : MeasurableSet N := measurableSet_le (by fun_prop) measurable_const
+  have hjm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      jumpKernel d α p.1 p.2 := measurable_jumpKernel d α
+  have hgm : Measurable fun x : EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal (2 * f x ^ 2) := by fun_prop
+  -- split the whole-space energy at the scale `r₀`
+  have hsplit : formHs Set.univ α f = (∫⁻ p in N, F p) + ∫⁻ p in Nᶜ, F p := by
+    rw [formHs, form, Set.univ_prod_univ, setLIntegral_univ]
+    exact (lintegral_add_compl F hNm).symm
+  have hfar : ∫⁻ p in Nᶜ, F p
+      ≤ 2 * (ENNReal.ofReal (r₀ ^ (-α)) * kernelTail d α) *
+          ∫⁻ x, ENNReal.ofReal (2 * f x ^ 2) := by
+    have hptwise : ∀ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+        F p ≤ ENNReal.ofReal (2 * f p.1 ^ 2) * jumpKernel d α p.1 p.2
+              + ENNReal.ofReal (2 * f p.2 ^ 2) * jumpKernel d α p.1 p.2 := by
+      intro p
+      have hsq : (f p.2 - f p.1) ^ 2 ≤ 2 * f p.1 ^ 2 + 2 * f p.2 ^ 2 := by
+        nlinarith [sq_nonneg (f p.1 + f p.2)]
+      rw [hF, ← add_mul]
+      refine mul_le_mul' ?_ le_rfl
+      rw [← ENNReal.ofReal_add (by positivity) (by positivity)]
+      exact ENNReal.ofReal_le_ofReal hsq
+    have hsub1 : Nᶜ ⊆ {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+        p.1 ∈ Set.univ ∧ r₀ < ‖p.1 - p.2‖} := by
+      intro p hp
+      exact ⟨Set.mem_univ _, by simpa [hN] using hp⟩
+    have hsub2 : Nᶜ ⊆ {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+        p.2 ∈ Set.univ ∧ r₀ < ‖p.1 - p.2‖} := by
+      intro p hp
+      exact ⟨Set.mem_univ _, by simpa [hN] using hp⟩
+    have hk1 : ∀ a b : EuclideanSpace ℝ (Fin d),
+        jumpKernel d α a b ≤ ENNReal.ofReal 1 * jumpKernel d α a b := by
+      intro a b; simp
+    calc ∫⁻ p in Nᶜ, F p
+        ≤ ∫⁻ p in Nᶜ, (ENNReal.ofReal (2 * f p.1 ^ 2) * jumpKernel d α p.1 p.2
+            + ENNReal.ofReal (2 * f p.2 ^ 2) * jumpKernel d α p.1 p.2) :=
+          lintegral_mono hptwise
+      _ = (∫⁻ p in Nᶜ, ENNReal.ofReal (2 * f p.1 ^ 2) * jumpKernel d α p.1 p.2)
+            + ∫⁻ p in Nᶜ, ENNReal.ofReal (2 * f p.2 ^ 2) * jumpKernel d α p.1 p.2 :=
+          lintegral_add_left ((hgm.comp measurable_fst).mul hjm) _
+      _ ≤ (∫⁻ p in {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+                p.1 ∈ Set.univ ∧ r₀ < ‖p.1 - p.2‖},
+              ENNReal.ofReal (2 * f p.1 ^ 2) * jumpKernel d α p.1 p.2)
+            + ∫⁻ p in {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+                p.2 ∈ Set.univ ∧ r₀ < ‖p.1 - p.2‖},
+              ENNReal.ofReal (2 * f p.2 ^ 2) * jumpKernel d α p.1 p.2 :=
+          add_le_add (lintegral_mono_set hsub1) (lintegral_mono_set hsub2)
+      _ ≤ (ENNReal.ofReal 1 * (ENNReal.ofReal (r₀ ^ (-α)) * kernelTail d α) *
+              ∫⁻ x in Set.univ, ENNReal.ofReal (2 * f x ^ 2))
+            + ENNReal.ofReal 1 * (ENNReal.ofReal (r₀ ^ (-α)) * kernelTail d α) *
+              ∫⁻ x in Set.univ, ENNReal.ofReal (2 * f x ^ 2) :=
+          add_le_add
+            (lintegral_far_weight_le hd hr₀ hα hk1 hjm hgm MeasurableSet.univ)
+            (lintegral_far_weight_le' hd hr₀ hα hk1 hjm hgm MeasurableSet.univ)
+      _ = 2 * (ENNReal.ofReal (r₀ ^ (-α)) * kernelTail d α) *
+              ∫⁻ x, ENNReal.ofReal (2 * f x ^ 2) := by
+          rw [setLIntegral_univ, ENNReal.ofReal_one, one_mul]
+          ring
+  rw [hsplit]
+  exact add_le_add (lintegral_near_le_form_of_locallyDominated hd hθ hθ' hα.le hc₀ hSu hk
+    hmeas hdom hf hkm) hfar
+
+/-- A density point has, at every small enough radius, a ball whose complement of
+`U` is a small fraction of it. -/
+lemma exists_dense_radius {d : ℕ} {U : Set (EuclideanSpace ℝ (Fin d))}
+    {x : EuclideanSpace ℝ (Fin d)}
+    (hx : Filter.Tendsto (fun r => volume (U ∩ closedBall x r) / volume (closedBall x r))
+      (nhdsWithin 0 (Set.Ioi 0)) (nhds 1)) {η : ℝ≥0∞} (hη : η ≠ 0) :
+    ∃ ρ > 0, ∀ r : ℝ, 0 < r → r ≤ ρ →
+      volume (closedBall x r) ≤ volume (U ∩ closedBall x r) + η * volume (closedBall x r) := by
+  have hlt : (1 : ℝ≥0∞) - η < 1 := by
+    refine ENNReal.sub_lt_self ENNReal.one_ne_top one_ne_zero hη
+  have hev : ∀ᶠ r in nhdsWithin (0:ℝ) (Set.Ioi 0),
+      (1 : ℝ≥0∞) - η < volume (U ∩ closedBall x r) / volume (closedBall x r) :=
+    hx.eventually (eventually_gt_nhds hlt)
+  rw [eventually_nhdsWithin_iff] at hev
+  obtain ⟨ρ, hρ0, hρ⟩ := Metric.eventually_nhds_iff.mp hev
+  refine ⟨ρ / 2, by positivity, fun r hr hrρ => ?_⟩
+  have hdist : dist r 0 < ρ := by
+    rw [Real.dist_eq, sub_zero, abs_of_pos hr]
+    linarith
+  have hkey := hρ hdist (Set.mem_Ioi.mpr hr)
+  have hbv : volume (closedBall x r) = ENNReal.ofReal (r ^ d) * unitBallVol d :=
+    volume_closedBall_eq x hr.le
+  have hbne : volume (closedBall x r) ≠ 0 := by
+    rw [hbv]
+    exact mul_ne_zero (by simp [ENNReal.ofReal_eq_zero, not_le, pow_pos hr]) (unitBallVol_ne_zero d)
+  have hbtop : volume (closedBall x r) ≠ ∞ := by
+    rw [hbv]; exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top
+  have hmul : ((1 : ℝ≥0∞) - η) * volume (closedBall x r) < volume (U ∩ closedBall x r) := by
+    rwa [ENNReal.lt_div_iff_mul_lt (Or.inl hbne) (Or.inl hbtop)] at hkey
+  by_cases hη1 : 1 ≤ η
+  · calc volume (closedBall x r) = 1 * volume (closedBall x r) := (one_mul _).symm
+      _ ≤ η * volume (closedBall x r) := mul_le_mul' hη1 le_rfl
+      _ ≤ volume (U ∩ closedBall x r) + η * volume (closedBall x r) := le_add_self
+  · have hη' : η ≤ 1 := le_of_not_ge hη1
+    calc volume (closedBall x r)
+        = ((1 : ℝ≥0∞) - η) * volume (closedBall x r) + η * volume (closedBall x r) := by
+          rw [← add_mul, tsub_add_cancel_of_le hη', one_mul]
+      _ ≤ volume (U ∩ closedBall x r) + η * volume (closedBall x r) :=
+          add_le_add hmul.le le_rfl
+
+/-- **From a density point to the chaining ball.** If `U` fills all but an
+`η`-fraction of the ball of radius `(1 + 3/sin θ)‖s−t‖` about `s`, then it fills
+at least half of the ball the chaining averages over. -/
+lemma midBall_inter_half {d : ℕ} {θ : ℝ} (hθ : 0 < θ) (hθ' : θ ≤ π / 2)
+    {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1)
+    {U : Set (EuclideanSpace ℝ (Fin d))} (hUm : MeasurableSet U)
+    {s t : EuclideanSpace ℝ (Fin d)} (hst : s ≠ t) {η : ℝ≥0∞}
+    (hη : η * ENNReal.ofReal ((1 + 3 / Real.sin θ) ^ d) ≤ 1 / 2)
+    (hdens : volume (closedBall s ((1 + 3 / Real.sin θ) * ‖s - t‖))
+      ≤ volume (U ∩ closedBall s ((1 + 3 / Real.sin θ) * ‖s - t‖))
+        + η * volume (closedBall s ((1 + 3 / Real.sin θ) * ‖s - t‖))) :
+    (1 / 2 : ℝ≥0∞) * volume (closedBall (midCentre v θ s t) ‖s - t‖)
+      ≤ volume (U ∩ closedBall (midCentre v θ s t) ‖s - t‖) := by
+  have hδ : 0 < ‖s - t‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hst
+  have hsin : 0 < Real.sin θ := Real.sin_pos_of_pos_of_lt_pi hθ (by linarith [Real.pi_pos])
+  set K : ℝ := 1 + 3 / Real.sin θ with hK
+  have hK1 : 1 ≤ K := by rw [hK]; have : 0 < 3 / Real.sin θ := by positivity
+                         linarith
+  set W : Set (EuclideanSpace ℝ (Fin d)) := closedBall (midCentre v θ s t) ‖s - t‖ with hW
+  set B : Set (EuclideanSpace ℝ (Fin d)) := closedBall s (K * ‖s - t‖) with hB
+  have hWB : W ⊆ B := by
+    intro z hz
+    have h := (mem_two_cones_of_mem_midBall hv hθ hθ' hst hz).2.2.1
+    rw [hB, Metric.mem_closedBall, dist_eq_norm]
+    exact h
+  have hvolW : volume W = ENNReal.ofReal (‖s - t‖ ^ d) * unitBallVol d := volume_midBall v θ s t
+  have hvolB : volume B = ENNReal.ofReal ((K * ‖s - t‖) ^ d) * unitBallVol d :=
+    volume_closedBall_eq s (by positivity)
+  have hBW : volume B = ENNReal.ofReal (K ^ d) * volume W := by
+    rw [hvolB, hvolW, ← mul_assoc, ← ENNReal.ofReal_mul (by positivity), mul_pow]
+  have hWtop : volume W ≠ ∞ := by
+    rw [hvolW]; exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top
+  have hBtop : volume B ≠ ∞ := by
+    rw [hvolB]; exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top
+  -- the deficit of `U` in the big ball
+  have hsplitB : volume (U ∩ B) + volume (B \ U) = volume B := by
+    rw [Set.inter_comm]
+    exact measure_inter_add_sdiff B hUm
+  have hdefB : volume (B \ U) ≤ η * volume B := by
+    have hle : volume (U ∩ B) + volume (B \ U) ≤ volume (U ∩ B) + η * volume B := by
+      rw [hsplitB]; exact hdens
+    have hfin : volume (U ∩ B) ≠ ∞ :=
+      ne_top_of_le_ne_top hBtop (measure_mono Set.inter_subset_right)
+    exact (ENNReal.add_le_add_iff_left hfin).mp hle
+  -- transfer to the small ball
+  have hsplitW : volume (U ∩ W) + volume (W \ U) = volume W := by
+    rw [Set.inter_comm]
+    exact measure_inter_add_sdiff W hUm
+  have hdefW : volume (W \ U) ≤ (1 / 2 : ℝ≥0∞) * volume W := by
+    calc volume (W \ U) ≤ volume (B \ U) := measure_mono (Set.sdiff_subset_sdiff_left hWB)
+      _ ≤ η * volume B := hdefB
+      _ = η * ENNReal.ofReal (K ^ d) * volume W := by rw [hBW, mul_assoc]
+      _ ≤ (1 / 2 : ℝ≥0∞) * volume W := mul_le_mul' hη le_rfl
+  have hhalf : volume W = (1 / 2 : ℝ≥0∞) * volume W + (1 / 2 : ℝ≥0∞) * volume W := by
+    rw [← add_mul, one_div, ENNReal.inv_two_add_inv_two, one_mul]
+  have hfinW : (1 / 2 : ℝ≥0∞) * volume W ≠ ∞ :=
+    ENNReal.mul_ne_top (by norm_num) hWtop
+  have hcalc : (1 / 2 : ℝ≥0∞) * volume W + (1 / 2 : ℝ≥0∞) * volume W
+      ≤ volume (U ∩ W) + (1 / 2 : ℝ≥0∞) * volume W :=
+    calc (1 / 2 : ℝ≥0∞) * volume W + (1 / 2 : ℝ≥0∞) * volume W = volume W := hhalf.symm
+      _ = volume (U ∩ W) + volume (W \ U) := hsplitW.symm
+      _ ≤ volume (U ∩ W) + (1 / 2 : ℝ≥0∞) * volume W := add_le_add le_rfl hdefW
+  exact (ENNReal.add_le_add_iff_right hfinW).mp hcalc
+
+/-- The half-ball bound in the form the chaining consumes. -/
+lemma half_volume_midBall {d : ℕ} {θ : ℝ} (v s t : EuclideanSpace ℝ (Fin d)) :
+    (1 / 2 : ℝ≥0∞) * volume (closedBall (midCentre v θ s t) ‖s - t‖)
+      = ENNReal.ofReal (((unitBallVol d).toReal / 2) * ‖s - t‖ ^ d) := by
+  rw [volume_midBall, ENNReal.ofReal_mul (by positivity), ENNReal.ofReal_div_of_pos two_pos,
+    ENNReal.ofReal_toReal unitBallVol_ne_top, ENNReal.ofReal_ofNat]
+  simp [div_eq_mul_inv, mul_comm, mul_assoc]
+
+/-- **The local-domination hypothesis holds pointwise, for every configuration.**
+For almost every `s` there are a reference type `v` and a radius `ρ > 0` such that
+every pair `(s,t)` with `‖s−t‖ ≤ ρ` has half of its chaining ball inside the set
+where `Ṽ(v,θ)` sits in the cone. Only the *uniformity* of `ρ` in `s` is missing
+from `QFS.LocallyDominated`. -/
+theorem ae_exists_dominating_type {d : ℕ} (hd : 0 < d) {ϑ θ : ℝ} (hϑ' : ϑ ≤ π / 2)
+    (hθ : 0 < θ) (hθϑ : θ < ϑ)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ) :
+    ∃ S : Finset (EuclideanSpace ℝ (Fin d)), (∀ v ∈ S, ‖v‖ = 1) ∧
+      ∀ᵐ s : EuclideanSpace ℝ (Fin d), ∃ v ∈ S, ∃ ρ : ℝ, 0 < ρ ∧
+        ∀ t : EuclideanSpace ℝ (Fin d), ‖s - t‖ ≤ ρ →
+          ENNReal.ofReal (((unitBallVol d).toReal / 2) * ‖s - t‖ ^ d) ≤
+            volume ({x : EuclideanSpace ℝ (Fin d) | doubleCone v θ ⊆ (Γ x).carrier} ∩
+              closedBall (midCentre v θ s t) ‖s - t‖) := by
+  classical
+  have hθ0 : 0 < θ := hθ
+  have hsin : 0 < Real.sin θ :=
+    Real.sin_pos_of_pos_of_lt_pi hθ (by linarith [Real.pi_pos, hϑ'])
+  set K : ℝ := 1 + 3 / Real.sin θ with hKdef
+  have hK1 : 1 ≤ K := by
+    have : 0 < 3 / Real.sin θ := by positivity
+    rw [hKdef]; linarith
+  have hKpos : 0 < K := by linarith
+  obtain ⟨S, hSu, hcov⟩ :=
+    ref_cones' (E := EuclideanSpace ℝ (Fin d)) (ϑ := ϑ) (θ := θ) hϑ' hθ hθϑ
+  refine ⟨S, hSu, ?_⟩
+  set U : EuclideanSpace ℝ (Fin d) → Set (EuclideanSpace ℝ (Fin d)) := fun v =>
+    {x : EuclideanSpace ℝ (Fin d) | doubleCone v θ ⊆ (Γ x).carrier} with hU
+  have hUm : ∀ v, MeasurableSet (U v) := fun v => hmeas _
+  -- density points of each type
+  have hdens : ∀ v : EuclideanSpace ℝ (Fin d), ∀ᵐ x : EuclideanSpace ℝ (Fin d),
+      x ∈ U v → Filter.Tendsto (fun r => volume (U v ∩ closedBall x r) / volume (closedBall x r))
+        (nhdsWithin 0 (Set.Ioi 0)) (nhds 1) := by
+    intro v
+    exact (ae_restrict_iff' (hUm v)).mp
+      (Besicovitch.ae_tendsto_measure_inter_div volume (U v))
+  have hall : ∀ᵐ x : EuclideanSpace ℝ (Fin d), ∀ v ∈ S,
+      x ∈ U v → Filter.Tendsto (fun r => volume (U v ∩ closedBall x r) / volume (closedBall x r))
+        (nhdsWithin 0 (Set.Ioi 0)) (nhds 1) :=
+    (Filter.eventually_all_finset S).mpr fun v _ => hdens v
+  filter_upwards [hall] with s hs
+  obtain ⟨v, hvS, hv⟩ := hcov Γ hΓ s
+  have hsU : s ∈ U v := hv
+  have hten := hs v hvS hsU
+  set η : ℝ≥0∞ := ENNReal.ofReal (1 / (2 * K ^ d)) with hη
+  have hη0 : η ≠ 0 := by
+    rw [hη, ne_eq, ENNReal.ofReal_eq_zero, not_le]
+    positivity
+  have hηK : η * ENNReal.ofReal (K ^ d) ≤ 1 / 2 := by
+    rw [hη, ← ENNReal.ofReal_mul (by positivity)]
+    rw [show 1 / (2 * K ^ d) * K ^ d = 1 / 2 from by field_simp]
+    rw [ENNReal.ofReal_div_of_pos two_pos, ENNReal.ofReal_one, ENNReal.ofReal_ofNat]
+  obtain ⟨ρ, hρ0, hρ⟩ := exists_dense_radius hten hη0
+  refine ⟨v, hvS, ρ / K, by positivity, fun t hst => ?_⟩
+  by_cases hts : s = t
+  · subst hts
+    simp only [sub_self, norm_zero]
+    rw [show ((unitBallVol d).toReal / 2) * (0:ℝ) ^ d = 0 from by
+      rw [zero_pow (by omega : d ≠ 0)]; ring, ENNReal.ofReal_zero]
+    exact bot_le
+  · have hst' : s ≠ t := hts
+    have hδ : 0 < ‖s - t‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hst'
+    have hKδ : K * ‖s - t‖ ≤ ρ := by
+      have : ‖s - t‖ ≤ ρ / K := hst
+      calc K * ‖s - t‖ ≤ K * (ρ / K) := by nlinarith
+        _ = ρ := by field_simp
+    have hdensity := hρ (K * ‖s - t‖) (by positivity) hKδ
+    have hhalf := midBall_inter_half hθ (by linarith) (hSu v hvS) (hUm v) hst' hηK hdensity
+    rw [← half_volume_midBall (θ := θ) v s t]
+    exact hhalf
+
+
+/-! ### The consequence for §3.2
+
+The same cutoff argument as in the wide and small-spread regimes, with the extra
+`L²` term of `QFS.formHs_univ_le_of_locallyDominated` absorbed. -/
+
+/-- **The inclusion §3.2 needs, under local domination.** No apex restriction, no
+dimension restriction and no relation between the cone directions at different
+points. -/
+theorem formHs_ball_ne_top_of_locallyDominated {d : ℕ} (hd : 0 < d) {θ α Λ c₀ r₀ : ℝ}
+    (hθ : 0 < θ) (hθ' : θ ≤ π / 2) (hα : 0 < α) (hα2 : α < 2) (hc₀ : 0 < c₀) (hr₀ : 0 < r₀)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {S : Finset (EuclideanSpace ℝ (Fin d))} (hSu : ∀ v ∈ S, ‖v‖ = 1)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hmeas : CondMeas Γ)
+    (hdom : LocallyDominated Γ S θ c₀ r₀)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      k p.1 p.2)
+    {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ} (hRR : R < R')
+    (hL2 : ∫⁻ x in ball x₀ R', ENNReal.ofReal (f x ^ 2) ≠ ∞)
+    (hHk : form (ball x₀ R') k f ≠ ∞) :
+    formHs (ball x₀ R) α f ≠ ∞ := by
+  have hδ : 0 < R' - R := by linarith
+  have hcm : Measurable (cutoff x₀ R R') := by unfold cutoff; fun_prop
+  set g : EuclideanSpace ℝ (Fin d) → ℝ := fun x => cutoff x₀ R R' x * f x with hgdef
+  have hgm : Measurable g := by rw [hgdef]; exact hcm.mul hf
+  have hkmg : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((g p.2 - g p.1) ^ 2) * k p.1 p.2 := by
+    refine Measurable.mul (ENNReal.measurable_ofReal.comp ?_) hkm
+    exact ((hgm.comp measurable_snd).sub (hgm.comp measurable_fst)).pow_const 2
+  have hcongr : formHs (ball x₀ R) α f = formHs (ball x₀ R) α g := by
+    refine setLIntegral_congr_fun (measurableSet_ball.prod measurableSet_ball) ?_
+    rintro ⟨u, v⟩ ⟨hu, hv⟩
+    have hu1 : cutoff x₀ R R' u = 1 := by
+      refine cutoff_eq_one hRR ?_
+      rw [Metric.mem_ball, dist_eq_norm] at hu
+      linarith
+    have hv1 : cutoff x₀ R R' v = 1 := by
+      refine cutoff_eq_one hRR ?_
+      rw [Metric.mem_ball, dist_eq_norm] at hv
+      linarith
+    simp only [hgdef, hu1, hv1, one_mul]
+  have hmono : formHs (ball x₀ R) α g ≤ formHs Set.univ α g := by
+    refine lintegral_mono_set ?_
+    exact Set.prod_mono (Set.subset_univ _) (Set.subset_univ _)
+  have hmain := formHs_univ_le_of_locallyDominated hd hθ hθ' hα hc₀ hr₀ hSu hk hmeas hdom
+    hgm hkmg
+  -- the `H_k` cost of the cutoff is finite
+  have hCδ : (∫⁻ u : EuclideanSpace ℝ (Fin d),
+      ENNReal.ofReal (min (‖u‖ ^ 2 / (R' - R) ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α))) ≠ ∞ :=
+    (lintegral_cutoff_kernel_lt_top hd hδ hα hα2).ne
+  have hcost := form_cutoff_le (x₀ := x₀) hk hd hα hα2 hRR hf hkm
+  have hform : form Set.univ k g < ∞ := by
+    refine lt_of_le_of_lt hcost ?_
+    refine ENNReal.add_lt_top.mpr ⟨ENNReal.add_lt_top.mpr ⟨?_, ?_⟩, ?_⟩
+    · exact ENNReal.mul_lt_top (by norm_num) hHk.lt_top
+    · exact ENNReal.mul_lt_top (by norm_num)
+        (ENNReal.mul_lt_top (ENNReal.mul_lt_top ENNReal.ofReal_lt_top hCδ.lt_top) hL2.lt_top)
+    · exact ENNReal.mul_lt_top (by norm_num)
+        (ENNReal.mul_lt_top (ENNReal.mul_lt_top ENNReal.ofReal_lt_top hCδ.lt_top) hL2.lt_top)
+  -- the `L²` cost of the cutoff is finite
+  have hL2g : (∫⁻ x : EuclideanSpace ℝ (Fin d), ENNReal.ofReal (2 * g x ^ 2)) < ∞ := by
+    have hpt : ∀ x : EuclideanSpace ℝ (Fin d), ENNReal.ofReal (2 * g x ^ 2)
+        ≤ (ball x₀ R').indicator (fun x => ENNReal.ofReal (2 * f x ^ 2)) x := by
+      intro x
+      by_cases hx : x ∈ ball x₀ R'
+      · rw [Set.indicator_of_mem hx]
+        refine ENNReal.ofReal_le_ofReal ?_
+        have h0 : 0 ≤ cutoff x₀ R R' x := cutoff_nonneg _ _ _ _
+        have h1 : cutoff x₀ R R' x ≤ 1 := cutoff_le_one _ _ _ _
+        have hgx : g x ^ 2 = cutoff x₀ R R' x ^ 2 * f x ^ 2 := by rw [hgdef]; ring
+        have hc2 : cutoff x₀ R R' x ^ 2 ≤ 1 := by nlinarith
+        have : g x ^ 2 ≤ f x ^ 2 := by
+          rw [hgx]
+          nlinarith [sq_nonneg (f x), hc2]
+        linarith
+      · have hz : cutoff x₀ R R' x = 0 := by
+          refine cutoff_eq_zero hRR ?_
+          rw [Metric.mem_ball, dist_eq_norm, not_lt] at hx
+          exact hx
+        rw [Set.indicator_of_notMem hx]
+        simp [hgdef, hz]
+    calc (∫⁻ x : EuclideanSpace ℝ (Fin d), ENNReal.ofReal (2 * g x ^ 2))
+        ≤ ∫⁻ x, (ball x₀ R').indicator (fun x => ENNReal.ofReal (2 * f x ^ 2)) x :=
+          lintegral_mono hpt
+      _ = ∫⁻ x in ball x₀ R', ENNReal.ofReal (2 * f x ^ 2) :=
+          lintegral_indicator measurableSet_ball _
+      _ = 2 * ∫⁻ x in ball x₀ R', ENNReal.ofReal (f x ^ 2) := by
+          rw [← lintegral_const_mul' _ _ (by norm_num : (2:ℝ≥0∞) ≠ ∞)]
+          refine lintegral_congr fun x => ?_
+          rw [ENNReal.ofReal_mul (by norm_num), ENNReal.ofReal_ofNat]
+      _ < ∞ := ENNReal.mul_lt_top (by norm_num) hL2.lt_top
+  refine ne_of_lt (lt_of_le_of_lt (le_trans (le_of_eq hcongr) (le_trans hmono hmain)) ?_)
+  refine ENNReal.add_lt_top.mpr ⟨?_, ?_⟩
+  · refine ENNReal.mul_lt_top (by simp) (ENNReal.mul_lt_top ?_ (ENNReal.mul_lt_top ?_ hform))
+    · exact ENNReal.inv_lt_top.mpr (ENNReal.ofReal_pos.mpr hc₀)
+    · exact ENNReal.mul_lt_top (ENNReal.mul_lt_top ENNReal.ofReal_lt_top
+        (ENNReal.add_lt_top.mpr ⟨ENNReal.ofReal_lt_top, ENNReal.ofReal_lt_top⟩))
+        (lt_top_iff_ne_top.mpr unitBallVol_ne_top)
+  · exact ENNReal.mul_lt_top (ENNReal.mul_lt_top (by norm_num)
+      (ENNReal.mul_lt_top ENNReal.ofReal_lt_top (kernelTail_lt_top hd hα))) hL2g
+
+theorem formHs_ball_le_form_locallyDominated {d : ℕ} (hd : 2 ≤ d) {ϑ θ α Λ c₀ r₀ : ℝ}
+    (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hθ : 0 < θ) (hθ' : θ ≤ π / 2) (hα : 0 < α)
+    (hα2 : α < 2) (hΛ : 1 ≤ Λ) (hc₀ : 0 < c₀) (hr₀ : 0 < r₀)
+    {S : Finset (EuclideanSpace ℝ (Fin d))} (hSu : ∀ v ∈ S, ‖v‖ = 1) :
+    ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+        LocallyDominated Γ S θ c₀ r₀ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ, Measurable f → LocallyIntegrable f volume →
+        (∫⁻ x in ball x₀ (κ * R), ENNReal.ofReal (f x ^ 2)) ≠ ⊤ →
+        formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
+  have hd0 : 0 < d := by omega
+  obtain ⟨κ, c, hκ, hc, hmain⟩ :=
+    formHs_ball_le_form_of_formHs_ne_top (d := d) hϑ hϑ' hd hα hα2 hΛ
+  have hs : (0:ℝ) ≤ Real.sqrt (d : ℝ) := Real.sqrt_nonneg _
+  refine ⟨2 * (κ + Real.sqrt (d : ℝ)), c, by nlinarith, hc,
+    fun Γ hΓ hmeas hdom k hk hkm x₀ R hR f hfm hf hL2 => ?_⟩
+  set ρ : ℝ := (κ + Real.sqrt (d : ℝ)) * R with hρ
+  have hρpos : 0 < ρ := by rw [hρ]; nlinarith
+  have hsub : ball x₀ (κ * R) ⊆ ball x₀ (2 * (κ + Real.sqrt (d : ℝ)) * R) := by
+    refine ball_subset_ball ?_
+    nlinarith
+  by_cases htop : form (ball x₀ (2 * (κ + Real.sqrt (d : ℝ)) * R)) k f = ⊤
+  · rw [htop, ENNReal.mul_top (by simpa using lt_of_lt_of_le zero_lt_one hc)]
+    exact le_top
+  have hfin : formHs (ball x₀ ρ) α f ≠ ⊤ := by
+    refine formHs_ball_ne_top_of_locallyDominated hd0 hθ hθ' hα hα2 hc₀ hr₀ hSu hk hmeas
+      hdom hfm hkm
+      (show ρ < 2 * (κ + Real.sqrt (d : ℝ)) * R by rw [hρ]; nlinarith) hL2 htop
+  refine le_trans (hmain Γ hΓ hmeas k hk hkm x₀ R hR f hfm hf hfin) (mul_le_mul' le_rfl ?_)
+  exact form_mono_set hsub k f
+
+
+
+/-! ### A configuration no earlier theorem reaches
+
+Two arbitrary cone types, as narrow as one likes and pointing in unrelated
+directions, split by a hyperplane. At every point one of the two closed
+half-spaces contains at least half of the ball the chaining averages over — a
+point reflection in its centre carries the outside part into the inside part — so
+the configuration is locally dominated, and Theorem 1.1 holds for it. -/
+
+/-- **A ball centred in a closed half-space has at least half its volume there.**
+Point reflection in the centre carries the part outside into the part inside. -/
+lemma half_le_volume_ball_inter_halfspace {d : ℕ} (n : EuclideanSpace ℝ (Fin d)) (t : ℝ)
+    {c : EuclideanSpace ℝ (Fin d)} (hc : t ≤ ⟪n, c⟫_ℝ) (r : ℝ) :
+    (1 / 2 : ℝ≥0∞) * volume (closedBall c r)
+      ≤ volume (closedBall c r ∩ {x : EuclideanSpace ℝ (Fin d) | t ≤ ⟪n, x⟫_ℝ}) := by
+  classical
+  set H : Set (EuclideanSpace ℝ (Fin d)) := {x | t ≤ ⟪n, x⟫_ℝ} with hH
+  set B : Set (EuclideanSpace ℝ (Fin d)) := closedBall c r with hB
+  have hHm : MeasurableSet H := measurableSet_le measurable_const (by fun_prop)
+  -- the reflection through `c`
+  set φ : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) := fun x => c + c - x with hφ
+  have hmp : MeasurePreserving φ volume volume := by
+    have h1 : MeasurePreserving (fun x : EuclideanSpace ℝ (Fin d) => -x) volume volume :=
+      (Measure.measurePreserving_neg volume)
+    have h2 : MeasurePreserving (fun x : EuclideanSpace ℝ (Fin d) => (c + c) + x) volume volume :=
+      measurePreserving_add_left volume (c + c)
+    have : φ = (fun x => (c + c) + x) ∘ (fun x => -x) := by
+      funext x; simp [hφ, sub_eq_add_neg]
+    rw [this]
+    exact h2.comp h1
+  have hφB : φ ⁻¹' B = B := by
+    ext x
+    simp only [hφ, hB, Set.mem_preimage, Metric.mem_closedBall, dist_eq_norm]
+    constructor
+    · intro h
+      have : ‖c + c - x - c‖ = ‖c - x‖ := by congr 1; abel
+      rw [this, ← norm_neg] at h
+      simpa [neg_sub] using h
+    · intro h
+      have : ‖c + c - x - c‖ = ‖c - x‖ := by congr 1; abel
+      rw [this, ← norm_neg]
+      simpa [neg_sub] using h
+  have hφH : φ ⁻¹' H ⊆ Hᶜ ∪ H := fun x _ => by
+    by_cases hx : x ∈ H
+    · exact Or.inr hx
+    · exact Or.inl hx
+  -- the complement of `H` inside `B` injects into `H ∩ B`
+  have hmap : B \ H ⊆ φ ⁻¹' (B ∩ H) := by
+    intro x hx
+    obtain ⟨hxB, hxH⟩ := hx
+    refine ⟨?_, ?_⟩
+    · rw [hφB.symm] at hxB
+      exact (hφB ▸ hxB)
+    · have hxlt : ⟪n, x⟫_ℝ < t := by
+        by_contra hcon
+        exact hxH (not_lt.mp hcon)
+      change t ≤ ⟪n, c + c - x⟫_ℝ
+      have : ⟪n, c + c - x⟫_ℝ = ⟪n, c⟫_ℝ + ⟪n, c⟫_ℝ - ⟪n, x⟫_ℝ := by
+        rw [inner_sub_right, inner_add_right]
+      rw [this]
+      linarith
+  have hvol : volume (B \ H) ≤ volume (B ∩ H) := by
+    calc volume (B \ H) ≤ volume (φ ⁻¹' (B ∩ H)) := measure_mono hmap
+      _ = volume (B ∩ H) :=
+          hmp.measure_preimage
+            (hB ▸ (measurableSet_closedBall.inter hHm)).nullMeasurableSet
+  have hsplit : volume (B ∩ H) + volume (B \ H) = volume B := measure_inter_add_sdiff B hHm
+  have hBtop : volume B ≠ ∞ := by
+    rw [hB]
+    exact measure_closedBall_lt_top.ne
+  have : volume B ≤ 2 * volume (B ∩ H) := by
+    calc volume B = volume (B ∩ H) + volume (B \ H) := hsplit.symm
+      _ ≤ volume (B ∩ H) + volume (B ∩ H) := add_le_add le_rfl hvol
+      _ = 2 * volume (B ∩ H) := by rw [two_mul]
+  calc (1 / 2 : ℝ≥0∞) * volume B ≤ (1 / 2 : ℝ≥0∞) * (2 * volume (B ∩ H)) :=
+        mul_le_mul' le_rfl this
+    _ = volume (B ∩ H) := by
+        rw [← mul_assoc, one_div, ENNReal.inv_mul_cancel two_ne_zero (by norm_num), one_mul]
+
+
+open scoped Classical in
+/-- **Two unrelated cone types, split by a hyperplane.** `V(v₁,ϑ)` where
+`⟪n,x⟫ ≥ 0`, `V(v₂,ϑ)` elsewhere. Nothing relates `v₁` to `v₂`. -/
+noncomputable def twoSideConfig {d : ℕ} (n v₁ v₂ : EuclideanSpace ℝ (Fin d))
+    (h₁ : ‖v₁‖ = 1) (h₂ : ‖v₂‖ = 1) {ϑ : ℝ} (hϑ0 : 0 < ϑ) (hϑ : ϑ ≤ π / 2) :
+    Configuration (EuclideanSpace ℝ (Fin d)) := fun x =>
+  if 0 ≤ ⟪n, x⟫_ℝ then ⟨v₁, h₁, ϑ, hϑ0, hϑ⟩ else ⟨v₂, h₂, ϑ, hϑ0, hϑ⟩
+
+lemma twoSideConfig_isBounded {d : ℕ} (n v₁ v₂ : EuclideanSpace ℝ (Fin d))
+    (h₁ : ‖v₁‖ = 1) (h₂ : ‖v₂‖ = 1) {ϑ : ℝ} (hϑ0 : 0 < ϑ) (hϑ : ϑ ≤ π / 2) :
+    IsBounded (twoSideConfig n v₁ v₂ h₁ h₂ hϑ0 hϑ) ϑ := by
+  refine ⟨hϑ0, fun x => ?_⟩
+  rw [twoSideConfig]
+  by_cases hx : 0 ≤ ⟪n, x⟫_ℝ <;> simp [hx]
+
+lemma twoSideConfig_condMeas {d : ℕ} (n v₁ v₂ : EuclideanSpace ℝ (Fin d))
+    (h₁ : ‖v₁‖ = 1) (h₂ : ‖v₂‖ = 1) {ϑ : ℝ} (hϑ0 : 0 < ϑ) (hϑ : ϑ ≤ π / 2) :
+    CondMeas (twoSideConfig n v₁ v₂ h₁ h₂ hϑ0 hϑ) := by
+  classical
+  intro W
+  have hup : MeasurableSet {x : EuclideanSpace ℝ (Fin d) | 0 ≤ ⟪n, x⟫_ℝ} :=
+    measurableSet_le measurable_const (by fun_prop)
+  have hset : {x : EuclideanSpace ℝ (Fin d) |
+      W ⊆ (twoSideConfig n v₁ v₂ h₁ h₂ hϑ0 hϑ x).carrier}
+      = (if W ⊆ doubleCone v₁ ϑ then {x : EuclideanSpace ℝ (Fin d) | 0 ≤ ⟪n, x⟫_ℝ} else ∅)
+        ∪ (if W ⊆ doubleCone v₂ ϑ then {x : EuclideanSpace ℝ (Fin d) | 0 ≤ ⟪n, x⟫_ℝ}ᶜ
+            else ∅) := by
+    ext x
+    by_cases hx : 0 ≤ ⟪n, x⟫_ℝ
+    · by_cases hW : W ⊆ doubleCone v₁ ϑ <;>
+        simp [twoSideConfig, DCone.carrier, hx, hW]
+    · by_cases hW : W ⊆ doubleCone v₂ ϑ <;>
+        simp [twoSideConfig, DCone.carrier, hx, hW]
+  rw [hset]
+  refine MeasurableSet.union ?_ ?_ <;> split_ifs
+  · exact hup
+  · exact MeasurableSet.empty
+  · exact hup.compl
+  · exact MeasurableSet.empty
+
+/-- **The two-sided configuration is locally dominated**, whatever the two cone
+directions and however narrow the cones: at every point one of the two closed
+half-spaces contains at least half of the chaining ball. -/
+lemma twoSideConfig_locallyDominated {d : ℕ}
+    (n v₁ v₂ : EuclideanSpace ℝ (Fin d)) (h₁ : ‖v₁‖ = 1) (h₂ : ‖v₂‖ = 1)
+    {ϑ θ : ℝ} (hϑ0 : 0 < ϑ) (hϑ : ϑ ≤ π / 2) (hθ0 : 0 < θ) (hθϑ : θ ≤ ϑ) (r₀ : ℝ) :
+    LocallyDominated (twoSideConfig n v₁ v₂ h₁ h₂ hϑ0 hϑ) {v₁, -v₁, v₂, -v₂} θ
+      ((unitBallVol d).toReal / 2) r₀ := by
+  classical
+  have hθπ : θ ≤ π / 2 := le_trans hθϑ hϑ
+  refine Filter.Eventually.of_forall fun s t _ => ?_
+  set δ : ℝ := ‖s - t‖ with hδ
+  -- a direction whose inner product with `n` has the sign we need
+  have hinner : ∀ v : EuclideanSpace ℝ (Fin d),
+      ⟪n, midCentre v θ s t⟫_ℝ = ⟪n, s⟫_ℝ + (3 * δ / Real.sin θ) * ⟪n, v⟫_ℝ := by
+    intro v
+    rw [midCentre, inner_add_right, real_inner_smul_right, hδ]
+  by_cases hs : 0 ≤ ⟪n, s⟫_ℝ
+  · -- the upper side: use `±v₁`, oriented so that the chaining ball stays above
+    set v : EuclideanSpace ℝ (Fin d) := if 0 ≤ ⟪n, v₁⟫_ℝ then v₁ else -v₁ with hv
+    have hvS : v ∈ ({v₁, -v₁, v₂, -v₂} : Finset (EuclideanSpace ℝ (Fin d))) := by
+      rw [hv]; split_ifs <;> simp
+    have hvsign : 0 ≤ ⟪n, v⟫_ℝ := by
+      rw [hv]; split_ifs with h
+      · exact h
+      · rw [inner_neg_right]; linarith [not_le.mp h]
+    have hvcone : doubleCone v θ = doubleCone v₁ θ := by
+      rw [hv]; split_ifs
+      · rfl
+      · exact doubleCone_neg v₁ θ
+    have hδ0 : 0 ≤ δ := norm_nonneg _
+    have hsin : 0 < Real.sin θ :=
+      Real.sin_pos_of_pos_of_lt_pi hθ0 (by linarith [Real.pi_pos])
+    have hc : (0:ℝ) ≤ ⟪n, midCentre v θ s t⟫_ℝ := by
+      rw [hinner v]
+      have : 0 ≤ (3 * δ / Real.sin θ) * ⟪n, v⟫_ℝ := by positivity
+      linarith
+    have hsub : {x : EuclideanSpace ℝ (Fin d) | (0:ℝ) ≤ ⟪n, x⟫_ℝ} ⊆
+        {x : EuclideanSpace ℝ (Fin d) |
+          doubleCone v θ ⊆ (twoSideConfig n v₁ v₂ h₁ h₂ hϑ0 hϑ x).carrier} := by
+      intro x hx
+      have hx' : (0:ℝ) ≤ ⟪n, x⟫_ℝ := hx
+      rw [Set.mem_ofPred_eq, twoSideConfig, if_pos hx', DCone.carrier, hvcone]
+      exact doubleCone_mono hθ0.le (by linarith [Real.pi_pos]) hθϑ
+    refine ⟨v, hvS, ?_⟩
+    rw [← half_volume_midBall (θ := θ) v s t]
+    calc (1 / 2 : ℝ≥0∞) * volume (closedBall (midCentre v θ s t) ‖s - t‖)
+        ≤ volume (closedBall (midCentre v θ s t) ‖s - t‖ ∩
+            {x : EuclideanSpace ℝ (Fin d) | (0:ℝ) ≤ ⟪n, x⟫_ℝ}) :=
+          half_le_volume_ball_inter_halfspace n 0 hc _
+      _ ≤ volume ({x : EuclideanSpace ℝ (Fin d) |
+            doubleCone v θ ⊆ (twoSideConfig n v₁ v₂ h₁ h₂ hϑ0 hϑ x).carrier} ∩
+            closedBall (midCentre v θ s t) ‖s - t‖) := by
+          refine measure_mono ?_
+          rintro x ⟨hx1, hx2⟩
+          exact ⟨hsub hx2, hx1⟩
+  · -- the lower side: use `±v₂`, oriented so that the chaining ball stays below
+    have hsneg : ⟪n, s⟫_ℝ < 0 := not_le.mp hs
+    set v : EuclideanSpace ℝ (Fin d) := if ⟪n, v₂⟫_ℝ ≤ 0 then v₂ else -v₂ with hv
+    have hvS : v ∈ ({v₁, -v₁, v₂, -v₂} : Finset (EuclideanSpace ℝ (Fin d))) := by
+      rw [hv]; split_ifs <;> simp
+    have hvsign : ⟪n, v⟫_ℝ ≤ 0 := by
+      rw [hv]; split_ifs with h
+      · exact h
+      · rw [inner_neg_right]; linarith [not_le.mp h]
+    have hvcone : doubleCone v θ = doubleCone v₂ θ := by
+      rw [hv]; split_ifs
+      · rfl
+      · exact doubleCone_neg v₂ θ
+    have hδ0 : 0 ≤ δ := norm_nonneg _
+    have hsin : 0 < Real.sin θ :=
+      Real.sin_pos_of_pos_of_lt_pi hθ0 (by linarith [Real.pi_pos])
+    have hc : ⟪n, midCentre v θ s t⟫_ℝ ≤ ⟪n, s⟫_ℝ := by
+      rw [hinner v]
+      have : (3 * δ / Real.sin θ) * ⟪n, v⟫_ℝ ≤ 0 := by
+        have h1 : 0 ≤ 3 * δ / Real.sin θ := by positivity
+        exact mul_nonpos_of_nonneg_of_nonpos h1 hvsign
+      linarith
+    have hc' : -⟪n, s⟫_ℝ ≤ ⟪-n, midCentre v θ s t⟫_ℝ := by
+      rw [inner_neg_left]
+      linarith
+    have hsub : {x : EuclideanSpace ℝ (Fin d) | -⟪n, s⟫_ℝ ≤ ⟪-n, x⟫_ℝ} ⊆
+        {x : EuclideanSpace ℝ (Fin d) |
+          doubleCone v θ ⊆ (twoSideConfig n v₁ v₂ h₁ h₂ hϑ0 hϑ x).carrier} := by
+      intro x hx
+      have hx' : -⟪n, s⟫_ℝ ≤ ⟪-n, x⟫_ℝ := hx
+      rw [inner_neg_left] at hx'
+      have hxneg : ¬ (0:ℝ) ≤ ⟪n, x⟫_ℝ := by
+        push Not
+        linarith
+      rw [Set.mem_ofPred_eq, twoSideConfig, if_neg hxneg, DCone.carrier, hvcone]
+      exact doubleCone_mono hθ0.le (by linarith [Real.pi_pos]) hθϑ
+    refine ⟨v, hvS, ?_⟩
+    rw [← half_volume_midBall (θ := θ) v s t]
+    calc (1 / 2 : ℝ≥0∞) * volume (closedBall (midCentre v θ s t) ‖s - t‖)
+        ≤ volume (closedBall (midCentre v θ s t) ‖s - t‖ ∩
+            {x : EuclideanSpace ℝ (Fin d) | -⟪n, s⟫_ℝ ≤ ⟪-n, x⟫_ℝ}) :=
+          half_le_volume_ball_inter_halfspace (-n) (-⟪n, s⟫_ℝ) hc' _
+      _ ≤ volume ({x : EuclideanSpace ℝ (Fin d) |
+            doubleCone v θ ⊆ (twoSideConfig n v₁ v₂ h₁ h₂ hϑ0 hϑ x).carrier} ∩
+            closedBall (midCentre v θ s t) ‖s - t‖) := by
+          refine measure_mono ?_
+          rintro x ⟨hx1, hx2⟩
+          exact ⟨hsub hx2, hx1⟩
+
+/-- **Theorem 1.1 for two arbitrary narrow cone types split by a hyperplane**, in
+every dimension `d ≥ 2`. Nothing relates `v₁` to `v₂`: the two double cones may be
+disjoint, so neither the common-direction theorem, nor the wide-cone theorem, nor
+the overlap theorem, nor the small-spread theorem applies. -/
+theorem formHs_ball_le_form_twoSide {d : ℕ} (hd : 2 ≤ d)
+    (n v₁ v₂ : EuclideanSpace ℝ (Fin d)) (h₁ : ‖v₁‖ = 1) (h₂ : ‖v₂‖ = 1)
+    {ϑ α Λ : ℝ} (hϑ0 : 0 < ϑ) (hϑ : ϑ ≤ π / 2) (hα : 0 < α) (hα2 : α < 2) (hΛ : 1 ≤ Λ) :
+    ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds (twoSideConfig n v₁ v₂ h₁ h₂ hϑ0 hϑ) α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ, Measurable f → LocallyIntegrable f volume →
+        (∫⁻ x in ball x₀ (κ * R), ENNReal.ofReal (f x ^ 2)) ≠ ⊤ →
+        formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
+  classical
+  have hd0 : 0 < d := by omega
+  have hunit : 0 < (unitBallVol d).toReal := by
+    rw [ENNReal.toReal_pos_iff]
+    exact ⟨pos_iff_ne_zero.mpr (unitBallVol_ne_zero d),
+      lt_of_le_of_ne le_top unitBallVol_ne_top⟩
+  have hSu : ∀ v ∈ ({v₁, -v₁, v₂, -v₂} : Finset (EuclideanSpace ℝ (Fin d))), ‖v‖ = 1 := by
+    intro v hv
+    simp only [Finset.mem_insert, Finset.mem_singleton] at hv
+    rcases hv with h | h | h | h <;> rw [h] <;> simpa using ‹_›
+  obtain ⟨κ, c, hκ, hc, H⟩ := formHs_ball_le_form_locallyDominated (d := d) hd hϑ0 hϑ hϑ0 hϑ
+    hα hα2 hΛ (c₀ := (unitBallVol d).toReal / 2) (by positivity) (r₀ := 1) one_pos hSu
+  exact ⟨κ, c, hκ, hc, fun k hk hkm x₀ R hR f hfm hfl hL2 =>
+    H (twoSideConfig n v₁ v₂ h₁ h₂ hϑ0 hϑ)
+      (twoSideConfig_isBounded n v₁ v₂ h₁ h₂ hϑ0 hϑ)
+      (twoSideConfig_condMeas n v₁ v₂ h₁ h₂ hϑ0 hϑ)
+      (twoSideConfig_locallyDominated n v₁ v₂ h₁ h₂ hϑ0 hϑ hϑ0 le_rfl 1)
+      k hk hkm x₀ R hR f hfm hfl hL2⟩
+
 /-! ### How far the one-point chaining reaches
 
 The hypothesis of `formHs_le_form_of_visibleDense` asks for density at *every*
