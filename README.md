@@ -131,6 +131,7 @@ The pieces, all proved:
 | **One intermediate point provably cannot do the cross blocks in `d ≥ 3`** | `QFS.no_common_neighbour_of_skew_axes`, `QFS.abs_inner_gt_of_mem_doubleCone` | ✅ **proved** (a disproof) |
 | **…but in the plane it can**: a ball of common cone-neighbours for cross-direction pairs | `QFS.mem_two_cones_of_mem_planarBall`, `QFS.abs_cross_ge_of_notMem_doubleCone`, `QFS.cramer2`, `QFS.perp2`, `QFS.cross2` | ✅ **proved** |
 | **The planar family as a function of the pair, with two-sided comparability** | `QFS.planarCtr`, `QFS.planarA`, `QFS.planarB`, `QFS.planarA_bounds`, `QFS.planarB_bounds`, `QFS.planarBall_comparable` | ✅ **proved** |
+| **The planar fibre estimate** | `QFS.planarBall`, `QFS.planarConst`, `QFS.lintegral_planarBall_fibre_le` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
 integration in `t`, and it is why the argument is scale-invariant: the singular
@@ -190,9 +191,18 @@ the coefficients Cramer's rule produces) and satisfies the two-sided
 comparability `‖t−s‖ sin ϑ/2 ≤ ‖z−s‖, ‖z−t‖ ≤ ‖t−s‖(1/|cross₂| + 1)` that the
 fibre estimate consumes (`QFS.planarBall_comparable`) — again because the ball's
 radius `‖t−s‖ sin²ϑ/2` is too small to swallow the separation. **The geometric
-input for `d = 2` is therefore complete.** What remains is the fibre estimate,
-the exchange and the assembly — analysis of the kind already carried out twice,
-plugging into `QFS.lintegral_swap_of_fibre_bound`.
+input for `d = 2` is therefore complete**, and so is the fibre estimate:
+`QFS.lintegral_planarBall_fibre_le` returns the weight `‖z−s‖^{-2-α}` with
+constant `(1/|cross₂| + 1)^{4+α}·4/sin²ϑ`, using both directions of the
+comparability exactly as the common-direction case does. `QFS.planarBall`
+packages the family with its side conditions folded in — the diagonal and the
+pairs that are already cone pairs get the empty ball, since they need no
+chaining.
+
+What remains for `d = 2` is the exchange instance (immediate from
+`QFS.lintegral_swap_of_fibre_bound`) and the assembly, including the split of
+each cross block into the pairs that are already cone pairs — which go straight
+into the `H_k` form by (1.4) — and the rest.
 
 The analytic machinery is stated abstractly enough to be reused: the exchange
 asks only that a family of averaging sets have measurable graph and a fibre
