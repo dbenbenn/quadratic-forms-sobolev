@@ -1695,4 +1695,139 @@ theorem planarBall_comparable {vs vt : EuclideanSpace ℝ (Fin 2)} (hvs : ‖vs�
   · nlinarith [hBlow, hL2, hδ, hs0, hs1]
   · rw [hdiv] at hBup; nlinarith [hBup, hU2, hδ, hprod]
 
+
+/-! ## The planar fibre estimate
+
+The averaging family, packaged as a set-valued function with the side conditions
+folded in, and the estimate that lets `lintegral_swap_of_fibre_bound` apply to
+it. Pairs that are already cone pairs, and the diagonal, get the empty ball —
+they need no chaining. -/
+
+/-- The planar averaging ball, with its side conditions folded in. -/
+def planarBall (vs vt : EuclideanSpace ℝ (Fin 2)) (ϑ : ℝ)
+    (s t : EuclideanSpace ℝ (Fin 2)) : Set (EuclideanSpace ℝ (Fin 2)) :=
+  {z | s ≠ t ∧ t - s ∉ doubleCone vs ϑ ∧ t - s ∉ doubleCone vt ϑ ∧
+    z ∈ closedBall (planarCtr vs vt s t) (‖t - s‖ * Real.sin ϑ ^ 2 / 2)}
+
+/-- Every point of the planar ball sees both cones. -/
+theorem mem_two_cones_of_mem_planarBall' {vs vt : EuclideanSpace ℝ (Fin 2)}
+    (hvs : ‖vs‖ = 1) (hvt : ‖vt‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
+    (hD : cross2 vs vt ≠ 0) {s t z : EuclideanSpace ℝ (Fin 2)}
+    (hz : z ∈ planarBall vs vt ϑ s t) :
+    z - s ∈ doubleCone vs ϑ ∧ z - t ∈ doubleCone vt ϑ :=
+  mem_two_cones_of_mem_planarBall hvs hvt hϑ hϑ' hz.1 hD hz.2.1 hz.2.2.1 hz.2.2.2
+
+/-- Two-sided comparability, on the packaged family. -/
+theorem planarBall_comparable' {vs vt : EuclideanSpace ℝ (Fin 2)} (hvs : ‖vs‖ = 1)
+    (hvt : ‖vt‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hD : cross2 vs vt ≠ 0)
+    {s t z : EuclideanSpace ℝ (Fin 2)} (hz : z ∈ planarBall vs vt ϑ s t) :
+    ‖t - s‖ * Real.sin ϑ / 2 ≤ ‖z - s‖ ∧
+      ‖z - s‖ ≤ ‖t - s‖ * (1 / |cross2 vs vt| + 1) :=
+  let h := planarBall_comparable hvs hvt hϑ hϑ' hD hz.2.1 hz.2.2.1 hz.2.2.2
+  ⟨h.1, h.2.1⟩
+
+/-- The constant in the planar fibre estimate. -/
+noncomputable def planarConst (vs vt : EuclideanSpace ℝ (Fin 2)) (ϑ α : ℝ) : ℝ :=
+  (1 / |cross2 vs vt| + 1) ^ (4 + α) * 4 / Real.sin ϑ ^ 2
+
+/-- **The planar fibre estimate.** The exact analogue of
+`lintegral_midBall_fibre_le` for the planar family: the weight `‖s − t‖^{-4-α}`
+integrated over the `t`-fibre above `z` returns `‖z − s‖^{-2-α}`. -/
+theorem lintegral_planarBall_fibre_le {vs vt : EuclideanSpace ℝ (Fin 2)} (hvs : ‖vs‖ = 1)
+    (hvt : ‖vt‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α)
+    (hD : cross2 vs vt ≠ 0) (s z : EuclideanSpace ℝ (Fin 2)) :
+    ∫⁻ t in {t | z ∈ planarBall vs vt ϑ s t},
+        ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α))
+      ≤ ENNReal.ofReal (planarConst vs vt ϑ α * ‖z - s‖ ^ (-(2 : ℝ) - α)) * unitBallVol 2 := by
+  have hs0 : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [Real.pi_pos])
+  have hDpos : 0 < |cross2 vs vt| := abs_pos.mpr hD
+  have hA : (0 : ℝ) < 1 / |cross2 vs vt| + 1 := by positivity
+  -- the fibre sits in a ball of radius comparable to `‖z − s‖`
+  have hsub : {t | z ∈ planarBall vs vt ϑ s t}
+      ⊆ closedBall s (2 * ‖z - s‖ / Real.sin ϑ) := by
+    intro t ht
+    obtain ⟨hlow, -⟩ := planarBall_comparable' hvs hvt hϑ hϑ' hD ht
+    rw [Metric.mem_closedBall, dist_eq_norm, le_div_iff₀ hs0]
+    linarith
+  have hmeas : MeasurableSet {t : EuclideanSpace ℝ (Fin 2) | z ∈ planarBall vs vt ϑ s t} := by
+    have h1 : MeasurableSet {t : EuclideanSpace ℝ (Fin 2) | s ≠ t} :=
+      (measurableSet_singleton s).compl.congr (by ext t; simp [eq_comm, Set.mem_compl_iff])
+    have h2 : MeasurableSet {t : EuclideanSpace ℝ (Fin 2) | t - s ∉ doubleCone vs ϑ} :=
+      ((isOpen_doubleCone vs ϑ).preimage (by fun_prop)).measurableSet.compl
+    have h3 : MeasurableSet {t : EuclideanSpace ℝ (Fin 2) | t - s ∉ doubleCone vt ϑ} :=
+      ((isOpen_doubleCone vt ϑ).preimage (by fun_prop)).measurableSet.compl
+    have h4 : MeasurableSet {t : EuclideanSpace ℝ (Fin 2) |
+        z ∈ closedBall (planarCtr vs vt s t) (‖t - s‖ * Real.sin ϑ ^ 2 / 2)} := by
+      have hc1 : Continuous fun t : EuclideanSpace ℝ (Fin 2) =>
+          dist z (planarCtr vs vt s t) := by
+        unfold planarCtr planarA cross2; fun_prop
+      have hc2 : Continuous fun t : EuclideanSpace ℝ (Fin 2) =>
+          ‖t - s‖ * Real.sin ϑ ^ 2 / 2 := by fun_prop
+      simpa [Metric.mem_closedBall] using (isClosed_le hc1 hc2).measurableSet
+    have hEq : {t : EuclideanSpace ℝ (Fin 2) | z ∈ planarBall vs vt ϑ s t}
+        = ({t : EuclideanSpace ℝ (Fin 2) | s ≠ t} ∩
+            {t : EuclideanSpace ℝ (Fin 2) | t - s ∉ doubleCone vs ϑ} ∩
+            {t : EuclideanSpace ℝ (Fin 2) | t - s ∉ doubleCone vt ϑ}) ∩
+          {t : EuclideanSpace ℝ (Fin 2) |
+            z ∈ closedBall (planarCtr vs vt s t) (‖t - s‖ * Real.sin ϑ ^ 2 / 2)} := by
+      ext t
+      simp only [planarBall, Set.mem_ofPred_eq, Set.mem_inter_iff]
+      tauto
+    rw [hEq]
+    exact ((h1.inter h2).inter h3).inter h4
+  rcases eq_or_ne z s with rfl | hzs
+  · have hball0 : volume (closedBall z (0 : ℝ)) = 0 := by
+      rw [volume_closedBall_eq _ le_rfl]; norm_num
+    have hnull : volume {t : EuclideanSpace ℝ (Fin 2) | z ∈ planarBall vs vt ϑ z t} = 0 := by
+      refine measure_mono_null (le_trans hsub (le_of_eq ?_)) hball0
+      simp
+    rw [setLIntegral_measure_zero _ _ hnull]
+    simp
+  · have hn : 0 < ‖z - s‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hzs
+    have hexp : -(4 : ℝ) - α ≤ 0 := by linarith
+    have hquot : 0 < ‖z - s‖ / (1 / |cross2 vs vt| + 1) := by positivity
+    have hpt : ∀ t ∈ {t | z ∈ planarBall vs vt ϑ s t},
+        ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α))
+          ≤ ENNReal.ofReal ((‖z - s‖ / (1 / |cross2 vs vt| + 1)) ^ (-(4 : ℝ) - α)) := by
+      intro t ht
+      obtain ⟨-, hup⟩ := planarBall_comparable' hvs hvt hϑ hϑ' hD ht
+      refine ENNReal.ofReal_le_ofReal (Real.rpow_le_rpow_of_nonpos hquot ?_ hexp)
+      rw [div_le_iff₀ hA, norm_sub_rev s t]
+      linarith
+    calc ∫⁻ t in {t | z ∈ planarBall vs vt ϑ s t},
+            ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α))
+        ≤ ∫⁻ _ in {t | z ∈ planarBall vs vt ϑ s t},
+            ENNReal.ofReal ((‖z - s‖ / (1 / |cross2 vs vt| + 1)) ^ (-(4 : ℝ) - α)) := by
+          refine lintegral_mono_ae ?_
+          filter_upwards [ae_restrict_mem hmeas] with t ht using hpt t ht
+      _ = ENNReal.ofReal ((‖z - s‖ / (1 / |cross2 vs vt| + 1)) ^ (-(4 : ℝ) - α)) *
+            volume {t | z ∈ planarBall vs vt ϑ s t} := setLIntegral_const _ _
+      _ ≤ ENNReal.ofReal ((‖z - s‖ / (1 / |cross2 vs vt| + 1)) ^ (-(4 : ℝ) - α)) *
+            volume (closedBall s (2 * ‖z - s‖ / Real.sin ϑ)) :=
+          mul_le_mul' le_rfl (measure_mono hsub)
+      _ = ENNReal.ofReal (planarConst vs vt ϑ α * ‖z - s‖ ^ (-(2 : ℝ) - α)) *
+            unitBallVol 2 := by
+          rw [volume_closedBall_eq _ (by positivity), ← mul_assoc,
+            ← ENNReal.ofReal_mul (Real.rpow_nonneg hquot.le _)]
+          congr 2
+          have e1 : (‖z - s‖ / (1 / |cross2 vs vt| + 1)) ^ (-(4 : ℝ) - α)
+              = ‖z - s‖ ^ (-(4 : ℝ) - α) * (1 / |cross2 vs vt| + 1) ^ (4 + α) := by
+            rw [Real.div_rpow hn.le hA.le,
+              show -(4 : ℝ) - α = -(4 + α) from by ring, Real.rpow_neg hA.le,
+              div_eq_mul_inv, inv_inv]
+          have e2 : (2 * ‖z - s‖ / Real.sin ϑ) ^ 2
+              = ‖z - s‖ ^ ((2 : ℕ) : ℝ) * (4 / Real.sin ϑ ^ 2) := by
+            rw [Real.rpow_natCast]
+            field_simp
+            ring
+          have e3 : ‖z - s‖ ^ (-(4 : ℝ) - α) * ‖z - s‖ ^ ((2 : ℕ) : ℝ)
+              = ‖z - s‖ ^ (-(2 : ℝ) - α) := by
+            rw [← Real.rpow_add hn]; congr 1; push_cast; ring
+          rw [e1, e2, planarConst]
+          rw [show ‖z - s‖ ^ (-(4 : ℝ) - α) * (1 / |cross2 vs vt| + 1) ^ (4 + α) *
+                (‖z - s‖ ^ ((2 : ℕ) : ℝ) * (4 / Real.sin ϑ ^ 2))
+              = (‖z - s‖ ^ (-(4 : ℝ) - α) * ‖z - s‖ ^ ((2 : ℕ) : ℝ)) *
+                ((1 / |cross2 vs vt| + 1) ^ (4 + α) * 4 / Real.sin ϑ ^ 2) from by ring, e3]
+          ring
+
 end QFS
