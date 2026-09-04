@@ -224,6 +224,10 @@ The pieces, all proved:
 | **The hypothesis holds pointwise for *every* configuration** (Lebesgue density): a.e. `s` has a radius below which some type dominates the chaining ball — only the uniformity of that radius in `s` is missing | `QFS.ae_exists_dominating_type`, `QFS.exists_dense_radius`, `QFS.midBall_inter_half`, `QFS.half_volume_midBall` | ✅ **proved** |
 | **A ball centred in a closed half-space has at least half its volume there** (point reflection in the centre) | `QFS.half_le_volume_ball_inter_halfspace` | ✅ **proved** |
 | **Theorem 1.1 for two arbitrary narrow cone types split by a hyperplane** — unrelated directions, disjoint cones, any dimension: outside every regime above | `QFS.twoSideConfig`, `QFS.twoSideConfig_isBounded`, `QFS.twoSideConfig_condMeas`, `QFS.twoSideConfig_locallyDominated`, `QFS.formHs_ball_le_form_twoSide` | ✅ **proved** |
+| **Multi-scale local domination**: the aperture parameter fixes how far along `v` the chaining ball sits, so a window of scales is available at each pair | `QFS.LocallyDominatedAt`, `QFS.LocallyDominated.locallyDominatedAt` | ✅ **proved** |
+| **The whole chain for multi-scale local domination** | `QFS.lintegral_near_le_form_of_locallyDominatedAt`, `QFS.formHs_univ_le_of_locallyDominatedAt`, `QFS.formHs_ball_ne_top_of_locallyDominatedAt`, `QFS.formHs_ball_le_form_locallyDominatedAt` | ✅ **proved** |
+| The cutoff step, abstracted: any `H^{α/2} ≤ C·H_k + C'·L²` bound gives §3.2's input | `QFS.formHs_ball_ne_top_of_L2inclusion` | ✅ **proved** |
+| **Every uniformly continuous configuration is locally dominated**, hence satisfies Theorem 1.1 — every dimension, any apex angle | `QFS.dangle_le_of_norm_sub_le`, `QFS.locallyDominated_of_uniformContinuous`, `QFS.formHs_ball_le_form_of_uniformContinuous` | ✅ **proved** |
 | The Lipschitz cutoff and its cost | `QFS.cutoff`, `QFS.sq_cutoff_sub_le`, `QFS.sq_cutoff_mul_sub_le`, `QFS.form_cutoff_le`, `QFS.lintegral_cutoff_error_le`, `QFS.lintegral_cutoff_error_le'` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
@@ -1986,6 +1990,24 @@ their own density scale, and the energy carried there cannot be discarded withou
 knowing in advance that the total energy is finite — which is the statement being
 proved. Absorbing it would need a stopping-time or good-λ argument, or a
 continuum analogue of §§5–6.
+
+**Two ways the hypothesis is met.** *Continuity*: if the cone axis is uniformly
+continuous then near any point every cone still contains one fixed reference
+cone, so the whole chaining ball is of a single type and the radius is uniform —
+`QFS.locallyDominated_of_uniformContinuous`, and with it Theorem 1.1 for every
+uniformly continuous configuration, in every dimension and at any apex angle
+(`QFS.formHs_ball_le_form_of_uniformContinuous`). *Discontinuity*: the two-sided
+example below, where the axis field jumps.
+
+**A window of scales.** The aperture parameter of the chaining does double duty:
+`Ṽ(v,θ)` fixes both which cone the intermediate point must contain and how far
+along `v` its ball sits, namely `3‖s−t‖/sin θ`. Shrinking `θ` moves the ball
+further out at the same radius, so each pair may be served by any of a finite set
+`Θ` of apertures — `QFS.LocallyDominatedAt`, with the whole chain behind it
+(`QFS.formHs_univ_le_of_locallyDominatedAt`,
+`QFS.formHs_ball_ne_top_of_locallyDominatedAt`,
+`QFS.formHs_ball_le_form_locallyDominatedAt`) and the constant summed over `Θ`.
+The single-scale hypothesis is the case `Θ = {θ}`.
 
 **A configuration no earlier theorem reaches.** Take `V(v₁,ϑ)` where `⟪n,x⟫ ≥ 0`
 and `V(v₂,ϑ)` elsewhere, with `v₁`, `v₂` arbitrary and `ϑ` as small as one likes.
