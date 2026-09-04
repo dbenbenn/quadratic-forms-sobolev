@@ -609,4 +609,90 @@ theorem lintegral_cutoff_kernel_lt_top (hd : 0 < d) {δ α : ℝ} (hδ : 0 < δ)
         · refine lt_of_le_of_lt (lintegral_mono hlarge) ?_
           exact lintegral_compl_ball_rpow_lt_top hd (by linarith) (by linarith)
 
+
+/-! ## A Lipschitz cutoff
+
+The standard radial cutoff, with the one estimate the jump kernel needs:
+`(χ(x) − χ(y))² ≤ min (‖x−y‖²/δ², 1)`, which is exactly the factor
+`lintegral_cutoff_kernel_lt_top` integrates. -/
+
+/-- The radial Lipschitz cutoff: `1` on `B_R(x₀)`, `0` off `B_{R'}(x₀)`. -/
+noncomputable def cutoff (x₀ : EuclideanSpace ℝ (Fin d)) (R R' : ℝ)
+    (x : EuclideanSpace ℝ (Fin d)) : ℝ :=
+  min 1 (max 0 ((R' - ‖x - x₀‖) / (R' - R)))
+
+lemma abs_clamp_sub_le (a b : ℝ) : |min 1 (max 0 a) - min 1 (max 0 b)| ≤ |a - b| := by
+  refine le_trans (abs_min_sub_min_le_max 1 (max 0 a) 1 (max 0 b)) ?_
+  rw [sub_self, abs_zero]
+  refine max_le (abs_nonneg _) ?_
+  rw [max_comm 0 a, max_comm 0 b]
+  exact abs_max_sub_max_le_abs a b 0
+
+lemma cutoff_nonneg (x₀ : EuclideanSpace ℝ (Fin d)) (R R' : ℝ)
+    (x : EuclideanSpace ℝ (Fin d)) : 0 ≤ cutoff x₀ R R' x :=
+  le_min zero_le_one (le_max_left _ _)
+
+lemma cutoff_le_one (x₀ : EuclideanSpace ℝ (Fin d)) (R R' : ℝ)
+    (x : EuclideanSpace ℝ (Fin d)) : cutoff x₀ R R' x ≤ 1 := min_le_left _ _
+
+lemma cutoff_eq_one {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ} (hRR : R < R')
+    {x : EuclideanSpace ℝ (Fin d)} (hx : ‖x - x₀‖ ≤ R) : cutoff x₀ R R' x = 1 := by
+  have hδ : 0 < R' - R := by linarith
+  have h1 : 1 ≤ (R' - ‖x - x₀‖) / (R' - R) := by
+    rw [le_div_iff₀ hδ]
+    linarith
+  rw [cutoff, max_eq_right (by linarith), min_eq_left h1]
+
+lemma cutoff_eq_zero {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ} (hRR : R < R')
+    {x : EuclideanSpace ℝ (Fin d)} (hx : R' ≤ ‖x - x₀‖) : cutoff x₀ R R' x = 0 := by
+  have hδ : 0 < R' - R := by linarith
+  have h1 : (R' - ‖x - x₀‖) / (R' - R) ≤ 0 := div_nonpos_of_nonpos_of_nonneg (by linarith) hδ.le
+  rw [cutoff, max_eq_left h1, min_eq_right zero_le_one]
+
+/-- The cutoff is `1/(R'−R)`-Lipschitz. -/
+lemma abs_cutoff_sub_le {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ} (hRR : R < R')
+    (x y : EuclideanSpace ℝ (Fin d)) :
+    |cutoff x₀ R R' x - cutoff x₀ R R' y| ≤ ‖x - y‖ / (R' - R) := by
+  have hδ : 0 < R' - R := by linarith
+  refine le_trans (abs_clamp_sub_le _ _) ?_
+  have hsub : (R' - ‖x - x₀‖) / (R' - R) - (R' - ‖y - x₀‖) / (R' - R)
+      = (‖y - x₀‖ - ‖x - x₀‖) / (R' - R) := by field_simp; ring
+  rw [hsub, abs_div, abs_of_pos hδ]
+  gcongr
+  have h := abs_norm_sub_norm_le (y - x₀) (x - x₀)
+  have h2 : (y - x₀) - (x - x₀) = y - x := by abel
+  rw [h2] at h
+  rw [norm_sub_rev x y]
+  exact h
+
+/-- **The cutoff estimate.** `(χ(x) − χ(y))²` is at most the factor that
+`lintegral_cutoff_kernel_lt_top` integrates against the jump kernel. -/
+theorem sq_cutoff_sub_le {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ} (hRR : R < R')
+    (x y : EuclideanSpace ℝ (Fin d)) :
+    (cutoff x₀ R R' x - cutoff x₀ R R' y) ^ 2
+      ≤ min (‖x - y‖ ^ 2 / (R' - R) ^ 2) 1 := by
+  have hδ : 0 < R' - R := by linarith
+  have h1 : |cutoff x₀ R R' x - cutoff x₀ R R' y| ≤ ‖x - y‖ / (R' - R) :=
+    abs_cutoff_sub_le hRR x y
+  have h2 : |cutoff x₀ R R' x - cutoff x₀ R R' y| ≤ 1 := by
+    rw [abs_le]
+    constructor <;>
+      [linarith [cutoff_nonneg x₀ R R' x, cutoff_le_one x₀ R R' y];
+       linarith [cutoff_nonneg x₀ R R' y, cutoff_le_one x₀ R R' x]]
+  refine le_min ?_ ?_
+  · have hm := mul_self_le_mul_self (abs_nonneg (cutoff x₀ R R' x - cutoff x₀ R R' y)) h1
+    rw [abs_mul_abs_self] at hm
+    calc (cutoff x₀ R R' x - cutoff x₀ R R' y) ^ 2
+        = (cutoff x₀ R R' x - cutoff x₀ R R' y) *
+          (cutoff x₀ R R' x - cutoff x₀ R R' y) := pow_two _
+      _ ≤ (‖x - y‖ / (R' - R)) * (‖x - y‖ / (R' - R)) := hm
+      _ = ‖x - y‖ ^ 2 / (R' - R) ^ 2 := by rw [div_mul_div_comm, ← pow_two, ← pow_two]
+  · have hm := mul_self_le_mul_self (abs_nonneg (cutoff x₀ R R' x - cutoff x₀ R R' y)) h2
+    rw [abs_mul_abs_self] at hm
+    calc (cutoff x₀ R R' x - cutoff x₀ R R' y) ^ 2
+        = (cutoff x₀ R R' x - cutoff x₀ R R' y) *
+          (cutoff x₀ R R' x - cutoff x₀ R R' y) := pow_two _
+      _ ≤ 1 * 1 := hm
+      _ = 1 := by norm_num
+
 end QFS
