@@ -1516,4 +1516,75 @@ theorem measurable_discreteC_stepIndex {h : ℝ} (hh : 0 < h)
       discreteC d h S R₀ ω f (stepIndex d h p.1, stepIndex d h p.2)) :=
   measurable_stepFun₂ hh (fun x y => discreteC d h S R₀ ω f (x, y))
 
+
+/-! ## Off the ball the discretized integrand vanishes
+
+The remaining half of the convergence: at a point strictly outside the closed
+ball, the lattice point is eventually outside the ball too, so the constraint
+of the discrete form fails and the integrand is eventually zero.  The sphere,
+where neither argument applies, is a null set. -/
+
+/-- Spheres are null in dimension at least one. -/
+theorem volume_sphere_eq_zero (hd : 0 < d) (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ) :
+    volume (Metric.sphere x₀ R) = 0 := by
+  have : Nontrivial (EuclideanSpace ℝ (Fin d)) := by
+    have hpos : 0 < Module.finrank ℝ (EuclideanSpace ℝ (Fin d)) := by
+      simp [finrank_euclideanSpace, hd]
+    exact Module.nontrivial_of_finrank_pos hpos
+  exact MeasureTheory.Measure.addHaar_sphere _ _ _
+
+theorem ae_notMem_sphere (hd : 0 < d) (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ) :
+    ∀ᵐ x : EuclideanSpace ℝ (Fin d), x ∉ Metric.sphere x₀ R := by
+  have hset : {x : EuclideanSpace ℝ (Fin d) | ¬ x ∉ Metric.sphere x₀ R}
+      = Metric.sphere x₀ R := by ext x; simp
+  rw [ae_iff, hset]
+  exact volume_sphere_eq_zero hd x₀ R
+
+/-- **The full almost-everywhere convergence of the left-hand integrand.**
+Inside the ball the limit is the integrand of `formHs`; outside the closed ball
+the discretized integrand is eventually zero; the sphere is null. -/
+theorem tendsto_discreteC_jump_ae {ι : Type} {l : Filter ι} (hn : ι → ℝ)
+    (hpos : ∀ i, 0 < hn i) (hlim : Filter.Tendsto hn l (nhds 0))
+    {α R₀ : ℝ} (hR₀ : 0 < R₀) {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ}
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : LocallyIntegrable f volume) (hd : 0 < d) :
+    ∀ᵐ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      Filter.Tendsto (fun i => discreteC d (hn i) (ball x₀ R) (R₀ * hn i) (jumpKernel d α)
+          (cubeAvg d (hn i) f) (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2)) l
+        (nhds ((ball x₀ R ×ˢ ball x₀ R).indicator
+          (fun q => ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * jumpKernel d α q.1 q.2) p)) := by
+  filter_upwards [tendsto_discreteC_jump hn hpos hlim (α := α) hR₀ hf hd,
+    ae_prod_both (ae_notMem_sphere (d := d) hd x₀ R)] with p hin hsph
+  by_cases hmem : p ∈ ball x₀ R ×ˢ ball x₀ R
+  · rw [Set.indicator_of_mem hmem]; exact hin hmem
+  · rw [Set.indicator_of_notMem hmem]
+    -- one coordinate lies strictly outside the closed ball
+    have hout : p.1 ∈ (closedBall x₀ R)ᶜ ∨ p.2 ∈ (closedBall x₀ R)ᶜ := by
+      rcases not_and_or.mp (fun hh => hmem ⟨hh.1, hh.2⟩) with h1 | h1
+      · left
+        simp only [Set.mem_compl_iff, mem_closedBall_iff_norm, not_le]
+        rcases lt_or_gt_of_ne (show ‖p.1 - x₀‖ ≠ R by simpa using hsph.1) with hlt | hgt
+        · exact absurd (mem_ball_iff_norm.mpr hlt) h1
+        · exact hgt
+      · right
+        simp only [Set.mem_compl_iff, mem_closedBall_iff_norm, not_le]
+        rcases lt_or_gt_of_ne (show ‖p.2 - x₀‖ ≠ R by simpa using hsph.2) with hlt | hgt
+        · exact absurd (mem_ball_iff_norm.mpr hlt) h1
+        · exact hgt
+    have hzero : ∀ᶠ i in l, discreteC d (hn i) (ball x₀ R) (R₀ * hn i) (jumpKernel d α)
+        (cubeAvg d (hn i) f) (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2) = 0 := by
+      have hopen : IsOpen ((closedBall x₀ R)ᶜ : Set (EuclideanSpace ℝ (Fin d))) :=
+        isClosed_closedBall.isOpen_compl
+      rcases hout with h1 | h1
+      · have := (tendsto_stepIndex hn hpos hlim p.1).eventually (hopen.mem_nhds h1)
+        filter_upwards [this] with i hi
+        refine Set.indicator_of_notMem (fun hc => ?_) _
+        exact hi (ball_subset_closedBall hc.1.1)
+      · have := (tendsto_stepIndex hn hpos hlim p.2).eventually (hopen.mem_nhds h1)
+        filter_upwards [this] with i hi
+        refine Set.indicator_of_notMem (fun hc => ?_) _
+        exact hi (ball_subset_closedBall hc.2.1.1)
+    refine (tendsto_const_nhds : Filter.Tendsto (fun _ : ι => (0 : ℝ≥0∞)) l (nhds 0)).congr' ?_
+    filter_upwards [hzero] with i hi
+    exact hi.symm
+
 end QFS
