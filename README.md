@@ -155,6 +155,8 @@ The pieces, all proved:
 | **Theorem 1.1 on a ball, unconditionally, in the plane** — the paper's statement, with the gap closed by the new mathematics above | `QFS.formHs_ball_le_form_planar` | ✅ **proved** |
 | **The same, in the paper's own shape** (`TheoremOneOneBallCondMeas`) | `QFS.theoremOneOneBallCondMeas_two` | ✅ **proved** |
 | **Theorem 1.1 in the plane on the same ball**, granted the quoted Whitney/Dyda input | `QFS.formHs_le_form_planar` | ✅ **proved** |
+| **`H_k(ℝ²) ⊆ H^{α/2}(ℝ²)` with a constant depending only on `ϑ, Λ, α`** | `QFS.formHs_univ_le_form_univ_planar` | ✅ **proved** |
+| **Theorem 1.4 for `Ω = ℝ²`**: `H_k(ℝ²) = H^{α/2}(ℝ²)` | `QFS.Hk_univ_eq_Hs_univ_planar` | ✅ **proved** |
 | The Lipschitz cutoff and its cost | `QFS.cutoff`, `QFS.sq_cutoff_sub_le`, `QFS.sq_cutoff_mul_sub_le`, `QFS.form_cutoff_le`, `QFS.lintegral_cutoff_error_le`, `QFS.lintegral_cutoff_error_le'` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
@@ -335,7 +337,7 @@ blocked on a recorded gap, ❌ out of scope.
 | 1.1 | Theorem | main comparability, continuous | 🚧 the **enlarged-ball form is proved** (`QFS.formHs_ball_le_form_of_formHs_ne_top`) under the finiteness hypothesis §3.2's own dominated-convergence step needs and the paper does not state. In `d = 2` that hypothesis is discharged by new mathematics recorded outside these tables, giving the ball form in the paper's shape (`QFS.TheoremOneOneBallCondMeas`, proved as `QFS.theoremOneOneBallCondMeas_two`) and, through Lemma 7.1's chain, the same-ball statement (`QFS.formHs_le_form_planar`). The statement itself is recorded as `QFS.TheoremOneOne` |
 | 1.2 | Remark | strength of the hypotheses | ⚪ (condition (M) is `QFS.CondM`) |
 | 1.3 | Theorem | main comparability, discrete | ✅ **proved** (`QFS.theoremOneThree`) |
-| 1.4 | Theorem | `H_k(Ω) = H^{α/2}(Ω)` | 🚧 the case `Ω = ℝ^d` **proved** granted Theorem 1.1 (`QFS.theoremOneFourUniv_of_theoremOneOne`); the Lipschitz-domain case needs Lemma 7.1, the density assertions are quoted from [DeDe12] |
+| 1.4 | Theorem | `H_k(Ω) = H^{α/2}(Ω)` | 🚧 the case `Ω = ℝ^d` **proved** granted Theorem 1.1 (`QFS.theoremOneFourUniv_of_theoremOneOne`), and **unconditionally in the plane** granted the quoted Whitney/Dyda input (`QFS.Hk_univ_eq_Hs_univ_planar`, by new mathematics recorded outside these tables); the Lipschitz-domain case needs Lemma 7.1 for domains, the density assertions are quoted from [DeDe12] |
 | 1.5 | Corollary | regular Dirichlet form | ❌ out of scope |
 | 1.6 | Corollary | Harnack / Hölder regularity | ❌ out of scope (quoted from [DyKa15]) |
 | 2.1 | Definition | cones, half-cones, configurations | ✅ |
@@ -1039,8 +1041,9 @@ paper* and excluded from the tables above — so there the chain is complete and
 the ball form holds unconditionally (`QFS.formHs_ball_le_form_planar`). In
 dimension three and above it is open. Through Lemma 7.1's chain the planar
 result also gives the same-ball statement there (`QFS.formHs_le_form_planar`),
-so in the plane the whole road from Theorem 1.3 to Theorem 1.1 is
-machine-checked, with only the paper's own quoted inputs left as hypotheses.
+so in the plane the whole road from Theorem 1.3 to Theorem 1.1, and on to
+Theorem 1.4 for `ℝ²` (`QFS.Hk_univ_eq_Hs_univ_planar`), is machine-checked, with
+only the paper's own quoted inputs left as hypotheses.
 
 The rest of this section records what the open statement can be reduced to; it
 is the route that was pursued before §3.2's own argument was formalised, and it
@@ -1697,7 +1700,9 @@ proved in Lean:
    formalisation carries: `QFS.theoremOneOneBallCondMeas_two`. Lemma 7.1's chain,
    refactored to take the ball comparability as an input
    (`QFS.formHs_le_form_of_ballComparability`), then gives the same-ball
-   statement `QFS.formHs_le_form_planar`.
+   statement `QFS.formHs_le_form_planar`, and the paper's own passage to the
+   whole space gives Theorem 1.4 for `ℝ²`
+   (`QFS.formHs_univ_le_form_univ_planar`, `QFS.Hk_univ_eq_Hs_univ_planar`).
 
 **What is still not done.** Dimension three and above, for the reason in step 5 —
 that needs the continuum analogue of §§5–6. And the Whitney family and Dyda's
