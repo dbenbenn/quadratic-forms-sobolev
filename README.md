@@ -139,6 +139,8 @@ The pieces, all proved:
 | **The dichotomy that closes the plane** | `QFS.cross2_ne_zero_or_carrier_eq`, `QFS.eq_or_eq_neg_of_cross2_eq_zero` | ✅ **proved** |
 | **Every block of the planar decomposition is controlled** | `QFS.planar_block_le`, `QFS.unitBallVol_ne_zero` | ✅ **proved** |
 | **`H_k ⊆ H^{α/2}` on `ℝ²`, for every admissible configuration** | `QFS.sobolevInclusion_planar` | ✅ **proved** |
+| **The same on a ball — the form §3.2 consumes** | `QFS.formHs_ball_ne_top_of_planar` | ✅ **proved** |
+| The Lipschitz cutoff and its cost | `QFS.cutoff`, `QFS.sq_cutoff_sub_le`, `QFS.sq_cutoff_mul_sub_le`, `QFS.form_cutoff_le`, `QFS.lintegral_cutoff_error_le`, `QFS.lintegral_cutoff_error_le'` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
 integration in `t`, and it is why the argument is scale-invariant: the singular
@@ -235,15 +237,30 @@ The finite sum is done, and with it the plane:
 > satisfying Debreu's condition, every kernel satisfying (1.4) and every
 > measurable `f`, `|f|²_{H^{α/2}(ℝ²)} ≤ C·|f|²_{H_k(ℝ²)}` for a finite `C`.
 
-**That is the whole-space form of the statement §3.2 needs, proved for all
-admissible configurations in dimension two.** One caveat, stated plainly: §3.2
-consumes the *ball-localised* form, `H_k(B*) ⊆ H^{α/2}(B*)`, and the theorem
-above is on `ℝ²`. The localisation of the left-hand side is already available
-(`QFS.formHs_le_form_of_commonDirection_on` and `QFS.formHs_le_form_planar_cross`
-confine the endpoints to a set), but their right-hand sides run over all of `ℝ²`;
-confining those too needs the exchange with the `z`-integral restricted, which is
-the same argument with one more side condition carried through. Until that is
-done, what is proved is the whole-space inclusion, not the ball version.
+**That is the statement §3.2 needs, proved for all admissible configurations in
+dimension two.** §3.2 consumes the *ball-localised* form, and that is now proved
+too:
+
+> **`QFS.formHs_ball_ne_top_of_planar`** — if `f` has finite `L²` norm and finite
+> `H_k` form on the outer ball, its `H^{α/2}` form on the inner ball is finite:
+> `f ∈ H_k(B*) ⟹ f ∈ H^{α/2}(B)`.
+
+The bridge is the Lipschitz cutoff. `χf` agrees with `f` on the inner ball, so
+the two `H^{α/2}` forms there agree; it is supported in the outer ball, so the
+whole-space theorem applies to it; and `QFS.form_cutoff_le` says the cost is
+twice the `H_k` form on the outer ball plus an `L²` term, both finite by
+hypothesis. A *sharp* cutoff fails here — its error integral diverges at the
+boundary — which is why the Lipschitz one, and the estimate
+`(χ(x)−χ(y))² ≤ min(‖x−y‖²/δ², 1)` that matches the kernel's integrability, are
+what the argument needs.
+
+**What this does and does not give.** It removes §3.2's mathematical obstacle in
+dimension two: the a priori hypothesis its dominated-convergence step assumes is
+now a theorem there, and that step itself is already proved
+(`QFS.limsup_lintegral_le_of_dominant`). It does **not** give Theorem 1.1 in the
+plane inside Lean, because §3.2's own assembly — the `g_h` apparatus turning
+Corollary 3.1's sums into the integrals the limit acts on — is still not
+formalised. That is bookkeeping of known shape, but it is not done.
 
 The alternative route — multiply `f` by a Lipschitz cutoff and apply the
 whole-space theorem — now has its analytic input:
