@@ -1,3 +1,4 @@
+import QuadraticFormsSobolev.Section7
 import QuadraticFormsSobolev.Section3Kernel
 import QuadraticFormsSobolev.Section32
 
@@ -2947,5 +2948,41 @@ theorem theoremOneOneBallCondMeas_two : TheoremOneOneBallCondMeas 2 := by
   have h2 : form (ball x₀ (κ * R)) k f = form (ball x₀ (κ * R)) k g := form_congr_ae k hae
   rw [h1, h2]
   exact hmain Γ hΓ hmeas k hk hkm x₀ R hR g hgm hgloc hL2
+
+
+/-- **Theorem 1.1 in the plane**, on the same ball rather than an enlarged one,
+granted the Whitney/Dyda input the paper quotes rather than proves.
+
+This is `QFS.formHs_le_form_of_theoremOneOneBall` -- the chain (6.14) of
+Lemma 7.1 -- run on the planar ball comparability of this file instead of on the
+paper's unproved `QFS.TheoremOneOneBall`. Its hypotheses are the paper's, plus
+the two this formalisation carries throughout (Debreu's condition and the
+measurability of `k`), plus the Whitney family and Dyda's inequality (13), which
+the paper takes from [Dyda06] and a Whitney decomposition. -/
+theorem formHs_le_form_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ Real.pi / 2)
+    (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+    (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData 2 α κ)) :
+    ∃ c : ℝ, 0 < c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin 2)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin 2) → EuclideanSpace ℝ (Fin 2) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+          k p.1 p.2) →
+      ∀ f : EuclideanSpace ℝ (Fin 2) → ℝ,
+        (∀ (y₀ : EuclideanSpace ℝ (Fin 2)) (S : ℝ), 0 < S →
+          MemLp f 2 (volume.restrict (ball y₀ S))) →
+        (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin 2)) (R : ℝ), 0 < R →
+        ENNReal.ofReal c * formHs (ball x₀ R) α f ≤ form (ball x₀ R) k f := by
+  obtain ⟨κ, c₀, hκ, hc₀, H⟩ := theoremOneOneBallCondMeas_two ϑ Λ α hϑ hϑ' hΛ hα hα2
+  obtain ⟨W⟩ := hW κ hκ
+  have hc₀pos : (0 : ℝ) < c₀ := lt_of_lt_of_le zero_lt_one hc₀
+  have hMR : (0 : ℝ) < (W.overlapBound : ℝ) := by exact_mod_cast W.overlapBound_pos
+  refine ⟨c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ),
+    div_pos (mul_pos (inv_pos.mpr hc₀pos) W.dydaConst_pos) hMR,
+    fun Γ hΓ hmeas k hk hkm f hf hFmeas x₀ R hR => ?_⟩
+  exact formHs_le_form_of_ballComparability hκ hc₀ W
+    (fun y₀ S hS hmem => H Γ hΓ hmeas k hk hkm y₀ S hS f hmem) hf hFmeas x₀ R hR
 
 end QFS

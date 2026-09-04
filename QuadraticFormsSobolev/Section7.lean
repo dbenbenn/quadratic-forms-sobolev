@@ -235,33 +235,34 @@ structure WhitneyBallData (d : ℕ) (α κ : ℝ) where
   dyda : ∀ x₀ R, 0 < R → ∀ f, ENNReal.ofReal dydaConst * formHs (ball x₀ R) α f
     ≤ ∑' i, formHs (ball (ctr x₀ R i) (rad x₀ R i)) α f
 
-/-- **Theorem 1.1 from its enlarged-ball form**, by Lemma 7.1 applied to a ball.
+/-- **The chain (6.14) for a single ball**, taking the enlarged-ball
+comparability as an input for one fixed kernel and one fixed function.
+
+This is the content of the passage from `B*` to `B`; the two theorems below are
+instances of it, one for the paper's `QFS.TheoremOneOneBall` and one for the
+variant this formalisation proves.
 
 The measurability hypothesis on the integrand is where the paper's assumption
 that `k` be measurable — which `QFS.KernelBounds` drops, see Deviation 20 — is
 actually needed: without it the family of integrals over the Whitney balls
 cannot be summed. -/
-theorem formHs_le_form_of_theoremOneOneBall (h : TheoremOneOneBall d)
-    {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
-    (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ)) :
-    ∃ c : ℝ, 0 < c ∧
-      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsAdmissible Γ ϑ →
-      ∀ k, KernelBounds Γ α Λ k →
-      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
-        (∀ (y₀ : EuclideanSpace ℝ (Fin d)) (S : ℝ), 0 < S →
-          MemLp f 2 (volume.restrict (ball y₀ S))) →
-        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
-          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
-      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
-        ENNReal.ofReal c * formHs (ball x₀ R) α f ≤ form (ball x₀ R) k f := by
-  obtain ⟨κ, c₀, hκ, hc₀, H⟩ := h ϑ Λ α hϑ hΛ hα hα2
-  obtain ⟨W⟩ := hW κ hκ
+theorem formHs_le_form_of_ballComparability {α κ c₀ : ℝ} (hκ : 1 ≤ κ) (hc₀ : 1 ≤ c₀)
+    (W : WhitneyBallData d α κ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    {f : EuclideanSpace ℝ (Fin d) → ℝ}
+    (H : ∀ (y₀ : EuclideanSpace ℝ (Fin d)) (S : ℝ), 0 < S →
+      MemLp f 2 (volume.restrict (ball y₀ (κ * S))) →
+      formHs (ball y₀ S) α f ≤ ENNReal.ofReal c₀ * form (ball y₀ (κ * S)) k f)
+    (hf : ∀ (y₀ : EuclideanSpace ℝ (Fin d)) (S : ℝ), 0 < S →
+      MemLp f 2 (volume.restrict (ball y₀ S)))
+    (hFmeas : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2)
+    (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ) (hR : 0 < R) :
+    ENNReal.ofReal (c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ)) * formHs (ball x₀ R) α f
+      ≤ form (ball x₀ R) k f := by
   have hcount := W.countable
   have hc₀pos : (0 : ℝ) < c₀ := lt_of_lt_of_le zero_lt_one hc₀
   have hMR : (0 : ℝ) < (W.overlapBound : ℝ) := by exact_mod_cast W.overlapBound_pos
-  refine ⟨c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ),
-    div_pos (mul_pos (inv_pos.mpr hc₀pos) W.dydaConst_pos) hMR, ?_⟩
-  intro Γ hΓ k hk f hf hFmeas x₀ R hR
   have hM0 : W.overlapBound ≠ 0 := by have := W.overlapBound_pos; omega
   have hMne : ((W.overlapBound : ℕ) : ℝ≥0∞) ≠ 0 := by simpa using hM0
   have hMtop : ((W.overlapBound : ℕ) : ℝ≥0∞) ≠ ∞ := ENNReal.natCast_ne_top _
@@ -270,8 +271,7 @@ theorem formHs_le_form_of_theoremOneOneBall (h : TheoremOneOneBall d)
       ≤ form (ball (W.ctr x₀ R i) (κ * W.rad x₀ R i)) k f := by
     intro i
     by_cases hri : 0 < W.rad x₀ R i
-    · have h2 := H Γ hΓ k hk (W.ctr x₀ R i) (W.rad x₀ R i) hri f
-        (hf _ _ (by positivity))
+    · have h2 := H (W.ctr x₀ R i) (W.rad x₀ R i) hri (hf _ _ (by nlinarith))
       calc ENNReal.ofReal c₀⁻¹ * formHs (ball (W.ctr x₀ R i) (W.rad x₀ R i)) α f
           ≤ ENNReal.ofReal c₀⁻¹ * (ENNReal.ofReal c₀ *
               form (ball (W.ctr x₀ R i) (κ * W.rad x₀ R i)) k f) := mul_le_mul' le_rfl h2
@@ -297,6 +297,29 @@ theorem formHs_le_form_of_theoremOneOneBall (h : TheoremOneOneBall d)
   rw [ENNReal.ofReal_div_of_pos hMR, ENNReal.ofReal_mul (le_of_lt (inv_pos.mpr hc₀pos)),
     ENNReal.ofReal_natCast, div_eq_mul_inv]
   ring
+/-- **Theorem 1.1 from its enlarged-ball form**, by Lemma 7.1 applied to a ball. -/
+theorem formHs_le_form_of_theoremOneOneBall (h : TheoremOneOneBall d)
+    {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+    (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ)) :
+    ∃ c : ℝ, 0 < c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsAdmissible Γ ϑ →
+      ∀ k, KernelBounds Γ α Λ k →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
+        (∀ (y₀ : EuclideanSpace ℝ (Fin d)) (S : ℝ), 0 < S →
+          MemLp f 2 (volume.restrict (ball y₀ S))) →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+        ENNReal.ofReal c * formHs (ball x₀ R) α f ≤ form (ball x₀ R) k f := by
+  obtain ⟨κ, c₀, hκ, hc₀, H⟩ := h ϑ Λ α hϑ hΛ hα hα2
+  obtain ⟨W⟩ := hW κ hκ
+  have hc₀pos : (0 : ℝ) < c₀ := lt_of_lt_of_le zero_lt_one hc₀
+  have hMR : (0 : ℝ) < (W.overlapBound : ℝ) := by exact_mod_cast W.overlapBound_pos
+  refine ⟨c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ),
+    div_pos (mul_pos (inv_pos.mpr hc₀pos) W.dydaConst_pos) hMR, ?_⟩
+  intro Γ hΓ k hk f hf hFmeas x₀ R hR
+  exact formHs_le_form_of_ballComparability hκ hc₀ W
+    (fun y₀ S hS hmem => H Γ hΓ k hk y₀ S hS f hmem) hf hFmeas x₀ R hR
 
 
 /-- **The Whitney data is satisfiable**, so the theorem above is not vacuous: for
