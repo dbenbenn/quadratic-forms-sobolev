@@ -230,6 +230,7 @@ The pieces, all proved:
 | **Every uniformly continuous configuration is locally dominated**, hence satisfies Theorem 1.1 — every dimension, any apex angle | `QFS.dangle_le_of_norm_sub_le`, `QFS.locallyDominated_of_uniformContinuous`, `QFS.formHs_ball_le_form_of_uniformContinuous` | ✅ **proved** |
 | **Every admissible configuration has an explicit, measurable, everywhere-positive domination radius** — the density requirement restricted to dyadic scales | `QFS.denseFrom`, `QFS.measurableSet_denseFrom`, `QFS.ae_exists_denseFrom`, `QFS.domRadius`, `QFS.measurable_domRadius`, `QFS.domRadius_pos`, `QFS.exists_measurable_dominationRadius`, `QFS.measurable_volume_inter_closedBall`, `QFS.exists_dyadic_scale`, `QFS.midBall_inter_half'` | ✅ **proved** |
 | **Theorem 1.1 for *every* admissible configuration, for every `f` with `∫f²ρ^{-α} < ∞`** — the only remaining condition is on `f`, against that radius | `QFS.formHs_ball_le_form_of_dominationRadius` | ✅ **proved** |
+| **The visibility-weighted energy is controlled unconditionally** — every pair is paid for in proportion to how much of its averaging balls can see both endpoints; the dominated-pair theorem is the case where that weight is bounded below | `QFS.osc_weighted_le_vol`, `QFS.localPoincare_vol`, `QFS.formHs_le_form_of_vol`, `QFS.lintegral_visibility_le` | ✅ **proved** |
 | **The dominated pairs are controlled unconditionally** — for every admissible configuration, with no hypothesis at all | `QFS.dominatedPairs`, `QFS.measurableSet_dominatedPairs`, `QFS.lintegral_dominatedPairs_le` | ✅ **proved** |
 | **Local domination out to a radius that varies from point to point** | `QFS.LocallyDominatedRad`, `QFS.lintegral_near_le_form_of_locallyDominatedRad` | ✅ **proved** |
 | The far pairs with a variable cut-off radius, and the swap symmetry of the pair integral | `QFS.lintegral_far_var_le`, `QFS.lintegral_far_var_le'`, `QFS.setLIntegral_swap_pairs` | ✅ **proved** |
@@ -2015,6 +2016,20 @@ further out at the same radius, so each pair may be served by any of a finite se
 `QFS.formHs_ball_ne_top_of_locallyDominatedAt`,
 `QFS.formHs_ball_le_form_locallyDominatedAt`) and the constant summed over `Θ`.
 The single-scale hypothesis is the case `Θ = {θ}`.
+
+**The sharpest form of the chaining.** The argument does not really need a pair
+to be *dominated*; it pays for every pair in proportion to how much of its
+averaging ball can see both endpoints. Writing that visibility as the volume
+itself rather than as a constant fraction gives, for **every** admissible
+configuration and every `f`,
+
+> `QFS.lintegral_visibility_le` —
+> `∫∫ (f(t)−f(s))²‖s−t‖^{-2d-α}·(∑_q |U_q ∩ W_q(s,t)|) ≤ C·|f|²_{H_k}`,
+
+the sum running over the finitely many reference types and apertures. Every other
+statement in this section is a corollary of that one: bounding the weight below
+by `c₀‖s−t‖^d` on a set of pairs gives the dominated-pair theorem, and the
+local-domination hypotheses exhibit such sets.
 
 **What is true with no hypothesis at all.** Call a pair `(s,t)` *dominated* if
 some reference cone, at some aperture in a finite set `Θ`, fills a `c₀`-fraction
