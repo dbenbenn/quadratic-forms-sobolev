@@ -25,3 +25,4 @@ import QuadraticFormsSobolev.Section6
 import QuadraticFormsSobolev.Rescaling
 import QuadraticFormsSobolev.Section32
 import QuadraticFormsSobolev.Section7
+import QuadraticFormsSobolev.BeyondThePaper
