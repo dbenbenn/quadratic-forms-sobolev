@@ -1530,6 +1530,51 @@ admissible at some scale and centre, so `QFS.ScaleData` must supply the walk tha
 `PathProps` returns; and the reduction `QFS.pathPropsLong_of_scaleData` is therefore
 not vacuous either.
 
+## The research arc, in one place
+
+The gap in §3.2 started as *"the paper appeals to dominated convergence without
+exhibiting a dominant"*. It ends, in the plane, as a theorem. The steps, each
+proved in Lean:
+
+1. **No fixed dominant exists** — the two natural candidates fail (README, §3.2
+   note). But a *moving* one does: tile-averaging preserves the integral
+   (`QFS.lintegral_tileAvg`), so the generalized Vitali theorem
+   (`QFS.limsup_lintegral_le_of_dominant`) justifies the step for every
+   `f ∈ H^{α/2}(B*)`.
+2. **That hypothesis is the theorem's own conclusion**, so the question became
+   the qualitative inclusion `H_k(B*) ⊆ H^{α/2}(B*)`. Five reductions were tried
+   and recorded as failures — mollification is circular, truncation gains no
+   smoothness, and so on.
+3. **A sharper reduction**: it suffices that
+   `liminf_h h^{-α}‖f − E_h f‖²_{L²} < ∞` — a kernel-free Besov quantity — and
+   its cone-restricted part is bounded outright
+   (`QFS.oscillation_sameTile_le_form`).
+4. **The chaining programme.** A positive-measure ball of common cone-neighbours
+   (`QFS.exists_ball_in_two_cones`, strengthening Lemma 4.3), a fibre estimate,
+   an averaging step, and a Tonelli exchange, abstracted over the family of
+   averaging sets (`QFS.lintegral_swap_of_fibre_bound`). This gives the
+   inclusion whenever the cones share a direction
+   (`QFS.formHs_le_form_of_commonDirection_on`), hence on every diagonal block of
+   the finite decomposition Corollary 2.4 supplies
+   (`QFS.diagonal_blocks_of_bounded`).
+5. **The cross blocks are impossible by that method in `d ≥ 3`**
+   (`QFS.no_common_neighbour_of_skew_axes`: skew-axis cones can be disjoint) —
+   **but reachable in the plane**, where two non-parallel lines meet
+   (`QFS.mem_two_cones_of_mem_planarBall`), and where "the pair is not already a
+   cone pair" supplies exactly the quantitative separation needed.
+6. **Hence in dimension two**: every block is controlled
+   (`QFS.planar_block_le`), so `H_k(ℝ²) ⊆ H^{α/2}(ℝ²)`
+   (`QFS.sobolevInclusion_planar`), and via a Lipschitz cutoff the ball form §3.2
+   actually consumes (`QFS.formHs_ball_ne_top_of_planar`).
+
+**What is still not done.** Dimension three and above, for the reason in step 5 —
+that needs the continuum analogue of §§5–6. And, in every dimension, §3.2's own
+assembly: the `g_h` apparatus turning Corollary 3.1's sums into the integrals the
+limit acts on. Its bridge is built (`QFS.lintegral_stepFun₂`, the tiling of
+pairs) but the assembly itself is not written, so **Theorem 1.1 is not proved in
+Lean even in the plane** — what is proved is that its only mathematical obstacle
+is gone there.
+
 ## Verification
 
 Every commit is checked with
@@ -1556,9 +1601,9 @@ printed statement where one exists.
 | `Cubes` | the maximum norm, cubes, Lemma 2.7 |
 | `RefCones` | Lemma 2.2 and Corollary 2.4: finitely many reference cones |
 | `Section3` | lattices, Lemmas 3.2 and 3.4, cube volumes, the tiling |
-| `Section32` | §3.2: the moving dominant, generalized dominated convergence, Lipschitz functions in `H^{α/2}`, and the circularity of the mollification route |
+| `Section32` | §3.2: the moving dominant, generalized dominated convergence, Lipschitz functions in `H^{α/2}`, the circularity of the mollification route, the tiling of pairs, and the Lipschitz cutoff with its cost |
 | `Section7` | Theorem 1.4 on `ℝ^d`, and the finite-overlap chain (6.14) of Lemma 7.1 |
-| `BeyondThePaper` | **not the paper** — new, incomplete research on the open statement; see *Beyond the paper* |
+| `BeyondThePaper` | **not the paper** — new research on the open statement: the chaining programme, closed in dimension two; see *Beyond the paper* |
 | `ThinCones` | Lemma 3.3 for `d ≥ 2` |
 | `Section4` | the continuous prelude; Theorem 4.1 |
 | `Section5` | Lemmas 5.1–5.7, Corollary 5.8 |
