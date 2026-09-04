@@ -2747,4 +2747,62 @@ theorem planar_block_le {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : �
                 ENNReal.ofReal (chainConst' 2 V.apex α)) * unitBallVol 2) *
             form Set.univ k f := by ring
 
+
+/-! ## The open statement, in dimension two
+
+Corollary 2.4 covers `ℝ²` by finitely many pieces on each of which a reference
+cone is available; the squares of that cover exhaust `ℝ² × ℝ²`; every block is
+controlled by `planar_block_le`; and a finite sum of finite constants is
+finite. -/
+
+/-- **`H_k ⊆ H^{α/2}` in dimension two**, for every `ϑ`-bounded configuration
+satisfying Debreu's measurability condition.
+
+This is the statement §3.2 needs, proved in the plane for *all* admissible
+configurations — not only those with a common cone direction. In dimension three
+and above it remains open, and `no_common_neighbour_of_skew_axes` shows why the
+method used here cannot reach it. -/
+theorem sobolevInclusion_planar {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin 2))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin 2) → EuclideanSpace ℝ (Fin 2) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) {f : EuclideanSpace ℝ (Fin 2) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
+    ∃ C : ℝ≥0∞, C ≠ ∞ ∧ formHs Set.univ α f ≤ C * form Set.univ k f := by
+  classical
+  obtain ⟨Γ', hfin, hsub, hapex, -⟩ := ref_config hϑ hϑ' Γ hΓ
+  have : Fintype ↥(Set.range Γ') := hfin.fintype
+  have hap : ∀ V ∈ Set.range Γ', V.apex = ϑ / 3 := by
+    rintro V ⟨x, rfl⟩
+    exact hapex x
+  set blk : ↥(Set.range Γ') × ↥(Set.range Γ') →
+      Set (EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2)) := fun i =>
+    {x | (i.1 : DCone (EuclideanSpace ℝ (Fin 2))).carrier ⊆ (Γ x).carrier} ×ˢ
+      {x | (i.2 : DCone (EuclideanSpace ℝ (Fin 2))).carrier ⊆ (Γ x).carrier} with hblk
+  have hcover : (⋃ i, blk i) = Set.univ := by
+    refine Set.eq_univ_of_forall fun p => ?_
+    refine Set.mem_iUnion.mpr ⟨(⟨Γ' p.1, ⟨p.1, rfl⟩⟩, ⟨Γ' p.2, ⟨p.2, rfl⟩⟩), ?_⟩
+    exact ⟨hsub p.1, hsub p.2⟩
+  choose C hCtop hCle using fun i : ↥(Set.range Γ') × ↥(Set.range Γ') =>
+    planar_block_le hϑ hϑ' hα hk hmeas hf hkm (i.1 : DCone (EuclideanSpace ℝ (Fin 2)))
+      (i.2 : DCone (EuclideanSpace ℝ (Fin 2)))
+      (by rw [hap _ i.1.2, hap _ i.2.2])
+  refine ⟨∑' i, C i, ?_, ?_⟩
+  · rw [tsum_fintype]
+    exact (ENNReal.sum_lt_top.mpr fun i _ => (hCtop i).lt_top).ne
+  · have hlhs : formHs Set.univ α f
+        = ∫⁻ p in ⋃ i, blk i, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+          ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(2 : ℝ) - α)) := by
+      rw [hcover, formHs, form, Set.univ_prod_univ]
+      refine lintegral_congr fun p => ?_
+      rw [jumpKernel]
+      norm_num
+    rw [hlhs]
+    calc ∫⁻ p in ⋃ i, blk i, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+          ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(2 : ℝ) - α))
+        ≤ ∑' i, ∫⁻ p in blk i, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+            ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(2 : ℝ) - α)) := lintegral_iUnion_le _ _
+      _ ≤ ∑' i, C i * form Set.univ k f := ENNReal.tsum_le_tsum (fun i => hCle i)
+      _ = (∑' i, C i) * form Set.univ k f := ENNReal.tsum_mul_right
+
 end QFS
