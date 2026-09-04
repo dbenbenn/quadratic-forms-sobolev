@@ -1169,7 +1169,7 @@ theorem lintegral_stepFun₂ {h : ℝ} (hh : 0 < h)
 
 
 /-- Every point of `hℤ^d` is `h·n` for an integer vector `n`. -/
-lemma exists_latticePt {h : ℝ} (hh : h ≠ 0) {x : EuclideanSpace ℝ (Fin d)}
+lemma exists_latticePt {h : ℝ} {x : EuclideanSpace ℝ (Fin d)}
     (hx : x ∈ scaledLattice d h) : ∃ n : Fin d → ℤ, latticePt d h n = x := by
   choose n hn using hx
   refine ⟨n, ?_⟩
@@ -1183,7 +1183,7 @@ noncomputable def latticeEquiv (d : ℕ) {h : ℝ} (hh : h ≠ 0) :
   Equiv.ofBijective (fun n => ⟨latticePt d h n, latticePt_mem_scaledLattice h n⟩)
     ⟨fun n m hnm => latticePt_injective hh (congrArg Subtype.val hnm),
      fun x => by
-       obtain ⟨n, hn⟩ := exists_latticePt hh x.2
+       obtain ⟨n, hn⟩ := exists_latticePt x.2
        exact ⟨n, Subtype.ext hn⟩⟩
 
 @[simp] lemma latticeEquiv_apply (d : ℕ) {h : ℝ} (hh : h ≠ 0) (n : Fin d → ℤ) :
