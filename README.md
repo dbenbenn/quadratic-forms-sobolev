@@ -86,6 +86,33 @@ and the rest are gaps or slips repaired silently:
   5.15 does not provide (Deviation 17).
 * Four smaller printed slips are listed in Deviation 19.
 
+## The headline results
+
+| What | Lean |
+| --- | --- |
+| **Theorem 1.3**, the discrete comparability | `QFS.theoremOneThree` |
+| **Theorem 5.15**, the path properties it rests on | `QFS.path_props_of_pos` |
+| **Theorem 4.1**, connectivity in the continuum | `QFS.cont_connectivity` |
+| **Proposition 3.5** and **Corollary 3.6**, the discrete kernel (`d ≥ 2`) | `QFS.prop_test_fct`, `QFS.cor_rescaled_kernel_uniform` |
+| **Corollary 3.1**, rescaled to `hℤ^d` | `QFS.corollaryThreeOne` |
+| **§3.2's limit procedure**, assembled into Lemma 3.7's enlarged-ball form, under the finiteness hypothesis the paper's own dominated-convergence step needs | `QFS.formHs_ball_le_form_of_formHs_ne_top` |
+| **Lemma 7.1**'s chain (6.14), for a ball and for a domain, with the quoted Whitney/Dyda input as a hypothesis | `QFS.formHs_le_form_of_ballComparability`, `QFS.formHs_le_form_domain` |
+| **Lemma 7.2**, differentiation along cubes, and its analogue on `ℝ^d × ℝ^d` | `QFS.lemma_lebesgue_diff`, `QFS.lemma_lebesgue_diff₂` |
+| **Theorem 1.4** for `Ω = ℝ^d`, granted Theorem 1.1 | `QFS.theoremOneFourUniv_of_theoremOneOne` |
+
+And, in `BeyondThePaper.lean` — **new mathematics, not the paper**, excluded from
+the coverage tables:
+
+| What | Lean |
+| --- | --- |
+| `H_k ⊆ H^{α/2}` on `ℝ²`, for every admissible configuration | `QFS.sobolevInclusion_planar` |
+| `H_k ⊆ H^{α/2}` on `ℝ^d` for cones of apex angle `> π/4`, every `d` | `QFS.sobolevInclusion_wide` |
+| The same on the line, where it is trivial | `QFS.formHs_le_form_dim_one` |
+| **Theorem 1.1** in the plane, in the paper's own statement | `QFS.theoremOneOneCondMeas_two` |
+| **Theorem 1.1** for wide cones, every `d ≥ 2` | `QFS.formHs_le_form_wide` |
+| **Theorem 1.4** for `ℝ²`, for `ℝ^d` with wide cones, and for a planar domain | `QFS.Hk_univ_eq_Hs_univ_planar`, `QFS.Hk_univ_eq_Hs_univ_wide`, `QFS.Hk_domain_eq_Hs_domain_planar` |
+| **Lemma 3.7**'s own statement, in the plane | `QFS.Hk_ball_eq_Hs_ball_planar` |
+
 ## Beyond the paper — new mathematics, clearly separated
 
 **One file, `QuadraticFormsSobolev/BeyondThePaper.lean`, is not a formalisation
@@ -1195,7 +1222,7 @@ together with the results the paper itself quotes from elsewhere.
 | `H_k(Ω) = H^{α/2}(Ω)`, density | Thm. 1.4 | Depends on Thm. 1.1 and on Lipschitz-domain extension theory not in scope. |
 | Regular Dirichlet form; Markov process | Cor. 1.5 | Depends on Thm. 1.1 and on Dirichlet-form theory (Fukushima–Oshima–Takeda) absent from Mathlib. This is the one result here whose obstacle is the library rather than the paper. |
 | Weak Harnack, Hölder regularity | Cor. 1.6 | Quoted from Dyda–Kassmann; not proved in the paper. |
-| The Whitney decomposition of a bounded Lipschitz domain | Lem. 7.1 | Asserted, not proved: "The Whitney decomposition technique provides a family `ℬ` of balls with the following properties." Carried as the hypotheses of `QFS.lemma_ball_to_domain`. |
+| The Whitney decomposition of a bounded Lipschitz domain | Lem. 7.1 | Asserted, not proved: "The Whitney decomposition technique provides a family `ℬ` of balls with the following properties." Carried as `QFS.WhitneyBallData` / `QFS.WhitneyDomainData`, which bundle exactly what the chain (6.14) uses: property (ii) (`enlarged_subset`), property (iii) (`overlap`) and the conclusion of Dyda's inequality (`dyda`). Property (i) — that nearby points of `Ω` share a ball — is what Dyda's inequality is proved from, and is not needed once its conclusion is assumed, so it is not part of the structure. |
 | Dyda's inequality (13) | Lem. 7.1 | Quoted from [Dyda06, proof of Thm. 1]; carried as the hypothesis `hdyda` of `QFS.lemma_ball_to_domain`. |
 | Density of `C^∞(Ω̄)` and `C_c^∞(ℝ^d)` in `H^{α/2}` | Thm. 1.4 | Quoted from [DeDe12, Props. 4.52 and 4.27]. |
 | `H_k` on balls | Lem. 3.7 | ✅ **proved** in the enlarged-ball form (`QFS.formHs_ball_le_form_of_formHs_ne_top`), under the finiteness hypothesis above. |
