@@ -1982,7 +1982,7 @@ lemma norm_sub_mem_cubes {h : ℝ} {x y s t : EuclideanSpace ℝ (Fin d)}
 
 /-- **The jump kernel is comparable across a pair of well-separated tiles.** -/
 theorem jumpKernel_le_of_mem_cubes {h α : ℝ} (hh : 0 < h) (hα : 0 ≤ α)
-    {x y : EuclideanSpace ℝ (Fin d)} (hxy : 3 * (Real.sqrt d * h) < ‖x - y‖)
+    {x y : EuclideanSpace ℝ (Fin d)} (hxy : 3 * Real.sqrt d * h < ‖x - y‖)
     {s t u v : EuclideanSpace ℝ (Fin d)} (hs : s ∈ closedCube h x) (ht : t ∈ closedCube h y)
     (hu : u ∈ closedCube h x) (hv : v ∈ closedCube h y) :
     jumpKernel d α s t ≤ ENNReal.ofReal (2 ^ ((d : ℝ) + α)) * jumpKernel d α u v := by
@@ -2051,14 +2051,14 @@ theorem stepG_le_tileAvg₂ {h α Λ : ℝ} (hh : 0 < h) (hα : 0 ≤ α)
     {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ}
     (hcube : ∀ x ∈ ball x₀ R, closedCube h x ⊆ ball x₀ R')
     (p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) :
-    stepG d h (ball x₀ R) (3 * (Real.sqrt d * h)) k f p
+    stepG d h (ball x₀ R) (3 * Real.sqrt d * h) k f p
       ≤ ENNReal.ofReal Λ * ENNReal.ofReal (2 ^ ((d : ℝ) + α)) *
         tileAvg₂ d h (ballIntegrand d (jumpKernel d α) (ball x₀ R') f) p := by
   by_cases hmem : (stepIndex d h p.1, stepIndex d h p.2)
-      ∈ discretePairs d h (ball x₀ R) (3 * (Real.sqrt d * h))
+      ∈ discretePairs d h (ball x₀ R) (3 * Real.sqrt d * h)
   · have hx : stepIndex d h p.1 ∈ ball x₀ R := hmem.1.1
     have hy : stepIndex d h p.2 ∈ ball x₀ R := hmem.2.1.1
-    have hsep : 3 * (Real.sqrt d * h) < ‖stepIndex d h p.1 - stepIndex d h p.2‖ := hmem.2.2
+    have hsep : 3 * Real.sqrt d * h < ‖stepIndex d h p.1 - stepIndex d h p.2‖ := hmem.2.2
     have hp1 : p.1 ∈ closedCube h (stepIndex d h p.1) := mem_closedCube_stepIndex hh p.1
     have hp2 : p.2 ∈ closedCube h (stepIndex d h p.2) := mem_closedCube_stepIndex hh p.2
     have hCmeas : MeasurableSet (closedCube h (stepIndex d h p.1) ×ˢ
@@ -2122,7 +2122,7 @@ theorem tendsto_stepG_ae {ι : Type} {l : Filter ι} (hn : ι → ℝ)
     {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ} {f : EuclideanSpace ℝ (Fin d) → ℝ}
     (hf : LocallyIntegrable f volume) (hd : 0 < d) :
     ∀ᵐ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
-      Filter.Tendsto (fun i => stepG d (hn i) (ball x₀ R) (3 * (Real.sqrt d * hn i)) k f p) l
+      Filter.Tendsto (fun i => stepG d (hn i) (ball x₀ R) (3 * Real.sqrt d * hn i) k f p) l
         (nhds (ballIntegrand d k (ball x₀ R) f p)) := by
   filter_upwards [ae_prod_both (tendsto_cubeAvg_stepIndex hf), ae_prod_ne (d := d) hd,
     ae_prod_both (ae_notMem_sphere (d := d) hd x₀ R)] with p hconv hne hsph
@@ -2146,12 +2146,12 @@ theorem tendsto_stepG_ae {ι : Type} {l : Filter ι} (hn : ι → ℝ)
     have hbig : ∀ᶠ i in l,
         ‖p.1 - p.2‖ / 2 < ‖stepIndex d (hn i) p.1 - stepIndex d (hn i) p.2‖ :=
       ((hs1.sub hs2).norm).eventually (eventually_gt_nhds (by linarith))
-    have hsmall : ∀ᶠ i in l, 3 * (Real.sqrt d * hn i) < ‖p.1 - p.2‖ / 2 := by
-      have : Filter.Tendsto (fun i => 3 * (Real.sqrt d * hn i)) l (nhds 0) := by
-        simpa using (hlim.const_mul (Real.sqrt d)).const_mul 3
+    have hsmall : ∀ᶠ i in l, 3 * Real.sqrt d * hn i < ‖p.1 - p.2‖ / 2 := by
+      have : Filter.Tendsto (fun i => 3 * Real.sqrt d * hn i) l (nhds 0) := by
+        simpa [mul_assoc] using (hlim.const_mul (Real.sqrt d)).const_mul 3
       exact this.eventually (eventually_lt_nhds (by linarith))
     have hcon : ∀ᶠ i in l, (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2) ∈
-        discretePairs d (hn i) (ball x₀ R) (3 * (Real.sqrt d * hn i)) := by
+        discretePairs d (hn i) (ball x₀ R) (3 * Real.sqrt d * hn i) := by
       filter_upwards [hb1, hb2, hbig, hsmall] with i hi1 hi2 hi3 hi4
       exact ⟨⟨hi1, stepIndex_mem_scaledLattice p.1⟩, ⟨hi2, stepIndex_mem_scaledLattice p.2⟩,
         by linarith⟩
@@ -2178,7 +2178,7 @@ theorem tendsto_stepG_ae {ι : Type} {l : Filter ι} (hn : ι → ℝ)
         · exact absurd (mem_ball_iff_norm.mpr hlt) h1
         · exact hgt
     have hzero : ∀ᶠ i in l,
-        stepG d (hn i) (ball x₀ R) (3 * (Real.sqrt d * hn i)) k f p = 0 := by
+        stepG d (hn i) (ball x₀ R) (3 * Real.sqrt d * hn i) k f p = 0 := by
       have hopen : IsOpen ((closedBall x₀ R)ᶜ : Set (EuclideanSpace ℝ (Fin d))) :=
         isClosed_closedBall.isOpen_compl
       rcases hout with h1 | h1
@@ -2343,7 +2343,7 @@ theorem limsup_lintegral_stepG_le {α Λ R R' : ℝ} (hα : 0 ≤ α)
     (hsmall : ∀ n, Real.sqrt d * (hn n / 2) ≤ R' - R)
     (hfinite : formHs (ball x₀ R') α f ≠ ⊤) :
     Filter.limsup (fun n => ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
-        stepG d (hn n) (ball x₀ R) (3 * (Real.sqrt d * hn n)) k f p) Filter.atTop
+        stepG d (hn n) (ball x₀ R) (3 * Real.sqrt d * hn n) k f p) Filter.atTop
       ≤ form (ball x₀ R) k f := by
   set Φ : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞ :=
     ballIntegrand d (jumpKernel d α) (ball x₀ R') f with hΦdef
@@ -2358,7 +2358,7 @@ theorem limsup_lintegral_stepG_le {α Λ R R' : ℝ} (hα : 0 ≤ α)
     measurable_ballIntegrand measurableSet_ball hkm hfm
   have hmain := limsup_lintegral_le_of_dominant
     (μ := (volume : Measure (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d))))
-    (g := fun n p => stepG d (hn n) (ball x₀ R) (3 * (Real.sqrt d * hn n)) k f p)
+    (g := fun n p => stepG d (hn n) (ball x₀ R) (3 * Real.sqrt d * hn n) k f p)
     (G := fun n p => C * tileAvg₂ d (hn n) Φ p)
     (gl := ballIntegrand d k (ball x₀ R) f) (Gl := fun p => C * Φ p)
     (fun n => measurable_stepG (hpos n) _ _ hkm f)
@@ -2377,5 +2377,143 @@ theorem limsup_lintegral_stepG_le {α Λ R R' : ℝ} (hα : 0 ≤ α)
       exact ENNReal.mul_ne_top hCne hΦint)
   rw [form_eq_lintegral_ballIntegrand measurableSet_ball]
   exact hmain
+
+
+/-! ## Corollary 3.6, packaged as assumption (1.7)
+
+`cor_rescaled_kernel` gives the two bounds on `ω^k_h` for pairs separated by
+more than `√d h`; `(discret)` consumes them as a `DiscreteKernelBounds`, which
+also asks for symmetry and for a constant at least one. -/
+
+lemma limsup_const_mul {c : ℝ≥0∞} (hc : c ≠ ⊤) (u : ℕ → ℝ≥0∞) :
+    Filter.limsup (fun n => c * u n) Filter.atTop = c * Filter.limsup u Filter.atTop := by
+  have hmono : Monotone (fun x : ℝ≥0∞ => c * x) := fun a b hab => mul_le_mul' le_rfl hab
+  have hcont : ContinuousAt (fun x : ℝ≥0∞ => c * x) (Filter.limsup u Filter.atTop) :=
+    (ENNReal.continuous_const_mul hc).continuousAt
+  exact (hmono.map_limsup_of_continuousAt u hcont).symm
+
+/-- The discrete kernel of a symmetric kernel is symmetric. -/
+theorem discreteKernel_symm {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hsymm : ∀ x y, k x y = k y x) (h : ℝ) (x y : EuclideanSpace ℝ (Fin d)) :
+    discreteKernel d k h x y = discreteKernel d k h y x := by
+  rw [discreteKernel, discreteKernel]
+  congr 1
+  rw [Measure.volume_eq_prod, ← Measure.prod_restrict, ← Measure.prod_restrict,
+    ← lintegral_prod_swap (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      k q.1 q.2)]
+  exact lintegral_congr fun q => hsymm q.2 q.1
+
+/-- **Corollary 3.6 as assumption (1.7)**, with the separation parameter `3√d`
+that the tile comparison of the kernel needs. -/
+theorem discreteKernelBounds_discreteKernel {ϑ α Λ : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ Real.pi / 2) (hd : 2 ≤ d) (hα : 0 < α) (hα2 : α ≤ 2) :
+    ∃ θ' : ℝ, 0 < θ' ∧ θ' ≤ Real.pi / 2 ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+      ∃ C : ℝ, 1 ≤ C ∧
+      ∀ h : ℝ, 0 < h →
+      ∃ Γ' : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ' θ' ∧
+        DiscreteKernelBounds Γ' α C (3 * Real.sqrt d * h) (scaledLattice d h)
+          (discreteKernel d k h) := by
+  obtain ⟨θ', hθ0, hθle, hmain⟩ := cor_rescaled_kernel (d := d) hϑ hϑ' hd hα hα2
+  refine ⟨θ', hθ0, hθle, fun Γ hΓ hmeas k hk => ?_⟩
+  obtain ⟨C, hC0, hCmain⟩ := hmain Γ hΓ hmeas Λ k hk
+  refine ⟨max C 1, le_max_right _ _, fun h hh => ?_⟩
+  obtain ⟨Γ', -, hΓ'b, hbounds⟩ := hCmain h hh
+  have hsd : (0:ℝ) ≤ Real.sqrt d * h := by positivity
+  refine ⟨Γ', hΓ'b, ?_⟩
+  refine ⟨le_max_right _ _, fun x _ y _ => discreteKernel_symm hk.symm h x y, ?_, ?_⟩
+  · intro x hx y hy hxy
+    have hxy' : Real.sqrt d * h < ‖x - y‖ := by nlinarith
+    refine le_trans (mul_le_mul' ?_ le_rfl) (hbounds x hx y hy hxy').1
+    refine ENNReal.ofReal_le_ofReal ?_
+    have h1 : (0:ℝ) < C := hC0
+    have h2 : C ≤ max C 1 := le_max_left _ _
+    exact inv_anti₀ h1 h2
+  · intro x hx y hy hxy
+    have hxy' : Real.sqrt d * h < ‖x - y‖ := by nlinarith
+    refine le_trans (hbounds x hx y hy hxy').2 (mul_le_mul' ?_ le_rfl)
+    exact ENNReal.ofReal_le_ofReal (le_max_left _ _)
+
+
+/-! ## Lemma 3.7 on a ball
+
+The assembly of Section 3.2: Fatou on the left, `(discret)` in the middle,
+dominated convergence with the moving dominant on the right.  The one
+hypothesis the paper does not state is the finiteness of the `H^{α/2}` form of
+the larger ball, which is what its own appeal to dominated convergence needs;
+see the README. -/
+
+/-- **Lemma 3.7 (`H_k(B) ⊆ H^{α/2}(B)`) on a ball**, for every `f` whose
+`H^{α/2}` form on a slightly larger ball is finite. The constants `κ` and `c`
+do not depend on the ball, on `f`, or on the scale. -/
+theorem formHs_ball_le_form_of_formHs_ne_top {ϑ α Λ : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ Real.pi / 2) (hd : 2 ≤ d) (hα : 0 < α) (hα2 : α < 2)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      k p.1 p.2) :
+    ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ, Measurable f → LocallyIntegrable f volume →
+        formHs (ball x₀ (κ * R + Real.sqrt d)) α f ≠ ⊤ →
+        formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
+  have hd1 : 0 < d := by omega
+  have hsd : (0:ℝ) < Real.sqrt d := Real.sqrt_pos.mpr (by exact_mod_cast hd1)
+  obtain ⟨θ', hθ0, hθle, hcor⟩ :=
+    discreteKernelBounds_discreteKernel (Λ := Λ) hϑ hϑ' hd hα hα2.le
+  obtain ⟨C, hC1, hCmain⟩ := hcor Γ hΓ hmeas k hk
+  obtain ⟨κ, c, hκ, hc, hdiscret⟩ := discret_lintegral (d := d) θ' C α (3 * Real.sqrt d)
+    hθ0 hC1 hα hα2 (by positivity)
+  refine ⟨κ, c, hκ, hc, fun x₀ R hR f hfm hf hfin => ?_⟩
+  set hn : ℕ → ℝ := fun n => 1 / ((n : ℝ) + 1) with hndef
+  have hpos : ∀ n, 0 < hn n := fun n => by
+    rw [hndef]; positivity
+  have hlim : Filter.Tendsto hn Filter.atTop (nhds 0) :=
+    tendsto_one_div_add_atTop_nhds_zero_nat
+  have hle1 : ∀ n, hn n ≤ 1 := fun n => by
+    rw [hndef]
+    have : (1:ℝ) ≤ (n : ℝ) + 1 := by
+      have := Nat.cast_nonneg (α := ℝ) n
+      linarith
+    simpa using (div_le_one (by positivity)).mpr this
+  -- the two sides of `(discret)`, as functions of `n`
+  set L : ℕ → ℝ≥0∞ := fun n =>
+    ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      discreteC d (hn n) (ball x₀ R) (3 * Real.sqrt d * hn n) (jumpKernel d α)
+        (cubeAvg d (hn n) f) (stepIndex d (hn n) p.1, stepIndex d (hn n) p.2) with hLdef
+  set SG : ℕ → ℝ≥0∞ := fun n =>
+    ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      stepG d (hn n) (ball x₀ (κ * R)) (3 * Real.sqrt d * hn n) k f p with hSGdef
+  have hstep : ∀ n, L n ≤ ENNReal.ofReal c * SG n := by
+    intro n
+    obtain ⟨Γ', hΓ'b, hω⟩ := hCmain (hn n) (hpos n)
+    have hineq := hdiscret Γ' hΓ'b (hn n) (hpos n) (discreteKernel d k (hn n)) hω x₀ R
+      (cubeAvg d (hn n) f) hR
+    rw [hLdef, hSGdef]
+    simp only
+    rw [lintegral_stepG_eq (hpos n)]
+    exact hineq
+  -- Fatou on the left
+  have hfatou : formHs (ball x₀ R) α f ≤ Filter.liminf L Filter.atTop :=
+    formHs_ball_le_liminf hn hpos hlim (R₀ := 3 * Real.sqrt d) (by positivity) hf hd1
+  -- dominated convergence on the right
+  have hSG : Filter.limsup SG Filter.atTop ≤ form (ball x₀ (κ * R)) k f := by
+    refine limsup_lintegral_stepG_le hα.le hk.upper hkm hfm hf hd1 hn hpos hlim ?_ hfin
+    intro n
+    have h1 : hn n ≤ 1 := hle1 n
+    have h2 : (0:ℝ) ≤ Real.sqrt d := Real.sqrt_nonneg _
+    have : Real.sqrt d * (hn n / 2) ≤ Real.sqrt d := by nlinarith
+    linarith [this]
+  calc formHs (ball x₀ R) α f ≤ Filter.liminf L Filter.atTop := hfatou
+    _ ≤ Filter.liminf (fun n => ENNReal.ofReal c * SG n) Filter.atTop :=
+        Filter.liminf_le_liminf (Filter.Eventually.of_forall hstep)
+    _ ≤ Filter.limsup (fun n => ENNReal.ofReal c * SG n) Filter.atTop :=
+        Filter.liminf_le_limsup
+    _ = ENNReal.ofReal c * Filter.limsup SG Filter.atTop :=
+        limsup_const_mul ENNReal.ofReal_ne_top SG
+    _ ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := mul_le_mul' le_rfl hSG
 
 end QFS
