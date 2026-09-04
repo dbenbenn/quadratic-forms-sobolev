@@ -1,3 +1,4 @@
+import QuadraticFormsSobolev.Section3Kernel
 import QuadraticFormsSobolev.LebesgueDiff
 import QuadraticFormsSobolev.LebesgueDiff2
 import QuadraticFormsSobolev.Section1
@@ -2109,5 +2110,154 @@ theorem stepG_le_tileAvg₂ {h α Λ : ℝ} (hh : 0 < h) (hα : 0 ≤ α)
           ring
   · rw [stepG, Set.indicator_of_notMem hmem, zero_mul]
     exact bot_le
+
+
+/-- **The right-hand integrand converges almost everywhere.** Unlike the
+left-hand one this needs no continuity of the kernel: the kernel factor
+`k(s,t)` does not move with `h`. -/
+theorem tendsto_stepG_ae {ι : Type} {l : Filter ι} (hn : ι → ℝ)
+    (hpos : ∀ i, 0 < hn i) (hlim : Filter.Tendsto hn l (nhds 0))
+    {α Λ : ℝ} {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : ∀ a b, k a b ≤ ENNReal.ofReal Λ * jumpKernel d α a b)
+    {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ} {f : EuclideanSpace ℝ (Fin d) → ℝ}
+    (hf : LocallyIntegrable f volume) (hd : 0 < d) :
+    ∀ᵐ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      Filter.Tendsto (fun i => stepG d (hn i) (ball x₀ R) (3 * (Real.sqrt d * hn i)) k f p) l
+        (nhds (ballIntegrand d k (ball x₀ R) f p)) := by
+  filter_upwards [ae_prod_both (tendsto_cubeAvg_stepIndex hf), ae_prod_ne (d := d) hd,
+    ae_prod_both (ae_notMem_sphere (d := d) hd x₀ R)] with p hconv hne hsph
+  have hs1 : Filter.Tendsto (fun i => stepIndex d (hn i) p.1) l (nhds p.1) :=
+    tendsto_stepIndex hn hpos hlim p.1
+  have hs2 : Filter.Tendsto (fun i => stepIndex d (hn i) p.2) l (nhds p.2) :=
+    tendsto_stepIndex hn hpos hlim p.2
+  by_cases hmem : p ∈ ball x₀ R ×ˢ ball x₀ R
+  · rw [ballIntegrand, Set.indicator_of_mem hmem]
+    have h1 := hconv.1 hn hpos hlim
+    have h2 := hconv.2 hn hpos hlim
+    have hr : (0 : ℝ) < ‖p.1 - p.2‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hne
+    have hkne : k p.1 p.2 ≠ ∞ := by
+      refine ne_top_of_le_ne_top ?_ (hk p.1 p.2)
+      exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top (by rw [jumpKernel]; exact ENNReal.ofReal_ne_top)
+    -- the constraint eventually holds
+    have hb1 : ∀ᶠ i in l, stepIndex d (hn i) p.1 ∈ ball x₀ R :=
+      hs1.eventually (isOpen_ball.mem_nhds hmem.1)
+    have hb2 : ∀ᶠ i in l, stepIndex d (hn i) p.2 ∈ ball x₀ R :=
+      hs2.eventually (isOpen_ball.mem_nhds hmem.2)
+    have hbig : ∀ᶠ i in l,
+        ‖p.1 - p.2‖ / 2 < ‖stepIndex d (hn i) p.1 - stepIndex d (hn i) p.2‖ :=
+      ((hs1.sub hs2).norm).eventually (eventually_gt_nhds (by linarith))
+    have hsmall : ∀ᶠ i in l, 3 * (Real.sqrt d * hn i) < ‖p.1 - p.2‖ / 2 := by
+      have : Filter.Tendsto (fun i => 3 * (Real.sqrt d * hn i)) l (nhds 0) := by
+        simpa using (hlim.const_mul (Real.sqrt d)).const_mul 3
+      exact this.eventually (eventually_lt_nhds (by linarith))
+    have hcon : ∀ᶠ i in l, (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2) ∈
+        discretePairs d (hn i) (ball x₀ R) (3 * (Real.sqrt d * hn i)) := by
+      filter_upwards [hb1, hb2, hbig, hsmall] with i hi1 hi2 hi3 hi4
+      exact ⟨⟨hi1, stepIndex_mem_scaledLattice p.1⟩, ⟨hi2, stepIndex_mem_scaledLattice p.2⟩,
+        by linarith⟩
+    have hprod : Filter.Tendsto
+        (fun i => ENNReal.ofReal ((cubeAvg d (hn i) f (stepIndex d (hn i) p.1)
+              - cubeAvg d (hn i) f (stepIndex d (hn i) p.2)) ^ 2) * k p.1 p.2) l
+        (nhds (ENNReal.ofReal ((f p.1 - f p.2) ^ 2) * k p.1 p.2)) :=
+      ENNReal.Tendsto.mul_const
+        ((ENNReal.continuous_ofReal.tendsto _).comp ((h1.sub h2).pow 2)) (Or.inr hkne)
+    refine hprod.congr' ?_
+    filter_upwards [hcon] with i hi
+    rw [stepG, Set.indicator_of_mem hi]
+  · rw [ballIntegrand, Set.indicator_of_notMem hmem]
+    have hout : p.1 ∈ (closedBall x₀ R)ᶜ ∨ p.2 ∈ (closedBall x₀ R)ᶜ := by
+      rcases not_and_or.mp (fun hh => hmem ⟨hh.1, hh.2⟩) with h1 | h1
+      · left
+        simp only [Set.mem_compl_iff, mem_closedBall_iff_norm, not_le]
+        rcases lt_or_gt_of_ne (show ‖p.1 - x₀‖ ≠ R by simpa using hsph.1) with hlt | hgt
+        · exact absurd (mem_ball_iff_norm.mpr hlt) h1
+        · exact hgt
+      · right
+        simp only [Set.mem_compl_iff, mem_closedBall_iff_norm, not_le]
+        rcases lt_or_gt_of_ne (show ‖p.2 - x₀‖ ≠ R by simpa using hsph.2) with hlt | hgt
+        · exact absurd (mem_ball_iff_norm.mpr hlt) h1
+        · exact hgt
+    have hzero : ∀ᶠ i in l,
+        stepG d (hn i) (ball x₀ R) (3 * (Real.sqrt d * hn i)) k f p = 0 := by
+      have hopen : IsOpen ((closedBall x₀ R)ᶜ : Set (EuclideanSpace ℝ (Fin d))) :=
+        isClosed_closedBall.isOpen_compl
+      rcases hout with h1 | h1
+      · filter_upwards [hs1.eventually (hopen.mem_nhds h1)] with i hi
+        rw [stepG, Set.indicator_of_notMem (fun hc => hi (ball_subset_closedBall hc.1.1)),
+          zero_mul]
+      · filter_upwards [hs2.eventually (hopen.mem_nhds h1)] with i hi
+        rw [stepG, Set.indicator_of_notMem (fun hc => hi (ball_subset_closedBall hc.2.1.1)),
+          zero_mul]
+    refine (tendsto_const_nhds : Filter.Tendsto (fun _ : ι => (0 : ℝ≥0∞)) l (nhds 0)).congr' ?_
+    filter_upwards [hzero] with i hi
+    exact hi.symm
+
+
+/-! ## The right-hand side of `(discret)` as an integral
+
+The paper's identity: the sum on the right of `(discret)`, whose kernel is the
+lattice average `ω^k_h`, is the integral of `g_h`, whose kernel is `k` itself.
+The two differ only by which representative of the tile one integrates. -/
+
+lemma cube_subset_halfClosedCube {h : ℝ} (u : EuclideanSpace ℝ (Fin d)) :
+    cube h u ⊆ halfClosedCube h u := by
+  intro x hx i
+  have := abs_sub_lt_of_mem_cube hx i
+  rw [abs_lt] at this
+  exact ⟨by linarith [this.1], by linarith [this.2]⟩
+
+lemma lintegral_halfClosedCube₂_eq_cube₂ {h : ℝ} (hh : 0 < h)
+    (u v : EuclideanSpace ℝ (Fin d))
+    (F : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞) :
+    ∫⁻ q in halfClosedCube h u ×ˢ halfClosedCube h v, F q
+      = ∫⁻ q in cube h u ×ˢ cube h v, F q := by
+  have hvolc : volume (cube h u ×ˢ cube h v)
+      = ENNReal.ofReal (h ^ d) * ENNReal.ofReal (h ^ d) := by
+    rw [Measure.volume_eq_prod, Measure.prod_prod, volume_cube hh, volume_cube hh]
+  refine setLIntegral_congr_of_subset
+    ((isOpen_cube hh u).measurableSet.prod (isOpen_cube hh v).measurableSet)
+    (Set.prod_mono (cube_subset_halfClosedCube u) (cube_subset_halfClosedCube v)) ?_ ?_ F
+  · rw [hvolc, Measure.volume_eq_prod, Measure.prod_prod, volume_halfClosedCube hh.le,
+      volume_halfClosedCube hh.le]
+  · rw [hvolc]
+    exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top ENNReal.ofReal_ne_top
+
+/-- **The right-hand side of `(discret)`, as an integral.** -/
+theorem lintegral_stepG_eq {h : ℝ} (hh : 0 < h) (S : Set (EuclideanSpace ℝ (Fin d))) (R₀ : ℝ)
+    (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) :
+    ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d), stepG d h S R₀ k f p
+      = ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+          discreteC d h S R₀ (discreteKernel d k h) (cubeAvg d h f)
+            (stepIndex d h p.1, stepIndex d h p.2) := by
+  rw [lintegral_eq_tsum_halfClosedCube₂ hh,
+    lintegral_stepFun₂ hh (fun x y => discreteC d h S R₀ (discreteKernel d k h) (cubeAvg d h f)
+      (x, y))]
+  refine tsum_congr fun nm => ?_
+  set x := latticePt d h nm.1 with hx
+  set y := latticePt d h nm.2 with hy
+  set c : ℝ≥0∞ := (discretePairs d h S R₀).indicator
+    (fun q => ENNReal.ofReal ((cubeAvg d h f q.1 - cubeAvg d h f q.2) ^ 2)) (x, y) with hc
+  have hcne : c ≠ ∞ := by
+    by_cases hm : ((x, y) : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d))
+        ∈ discretePairs d h S R₀
+    · rw [hc, Set.indicator_of_mem hm]; exact ENNReal.ofReal_ne_top
+    · rw [hc, Set.indicator_of_notMem hm]; exact ENNReal.zero_ne_top
+  have hdisc : discreteC d h S R₀ (discreteKernel d k h) (cubeAvg d h f) (x, y)
+      = c * discreteKernel d k h x y := by
+    by_cases hm : ((x, y) : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d))
+        ∈ discretePairs d h S R₀
+    · rw [discreteC, Set.indicator_of_mem hm, hc, Set.indicator_of_mem hm]
+    · rw [discreteC, Set.indicator_of_notMem hm, hc, Set.indicator_of_notMem hm, zero_mul]
+  have hcongr : ∀ p ∈ halfClosedCube h x ×ˢ halfClosedCube h y,
+      stepG d h S R₀ k f p = c * k p.1 p.2 := by
+    intro p hp
+    rw [stepG, hc, stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h nm.1) hp.1,
+      stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h nm.2) hp.2]
+  rw [setLIntegral_congr_fun ((measurableSet_halfClosedCube h x).prod
+      (measurableSet_halfClosedCube h y)) hcongr,
+    lintegral_const_mul' _ _ hcne, lintegral_halfClosedCube₂_eq_cube₂ hh, hdisc, mul_assoc,
+    discreteKernel, mul_comm (ENNReal.ofReal ((h ^ (2 * d))⁻¹)), mul_assoc,
+    ofReal_inv_pow_mul hh, mul_one]
 
 end QFS
