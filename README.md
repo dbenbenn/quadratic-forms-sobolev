@@ -129,7 +129,8 @@ The pieces, all proved:
 | **The same, with both endpoints confined to a set `U`** — the diagonal blocks of the type decomposition | `QFS.localPoincare_sameDirection_on`, `QFS.formHs_le_form_of_commonDirection_on` | ✅ **proved** |
 | **Every diagonal block of the canonical decomposition is controlled, by one constant** | `QFS.diagonal_blocks_of_bounded` | ✅ **proved** |
 | **One intermediate point provably cannot do the cross blocks in `d ≥ 3`** | `QFS.no_common_neighbour_of_skew_axes`, `QFS.abs_inner_gt_of_mem_doubleCone` | ✅ **proved** (a disproof) |
-| **…but in the plane it can**: a ball of common cone-neighbours for cross-direction pairs | `QFS.exists_ball_in_two_cones_two`, `QFS.abs_cross_ge_of_notMem_doubleCone`, `QFS.cramer2`, `QFS.perp2`, `QFS.cross2` | ✅ **proved** |
+| **…but in the plane it can**: a ball of common cone-neighbours for cross-direction pairs | `QFS.mem_two_cones_of_mem_planarBall`, `QFS.abs_cross_ge_of_notMem_doubleCone`, `QFS.cramer2`, `QFS.perp2`, `QFS.cross2` | ✅ **proved** |
+| **The planar family as a function of the pair, with two-sided comparability** | `QFS.planarCtr`, `QFS.planarA`, `QFS.planarB`, `QFS.planarA_bounds`, `QFS.planarB_bounds`, `QFS.planarBall_comparable` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
 integration in `t`, and it is why the argument is scale-invariant: the singular
@@ -184,9 +185,14 @@ right ones: parallel axes fall under the common-direction theorem, and a pair
 that is *already* a cone pair needs no chaining. What makes it quantitative is
 that "not already a cone pair" forces the component of `t − s` across each axis
 to be at least `‖t−s‖ sin ϑ`, which keeps the intersection point of the two
-axis-lines away from both endpoints. What remains for `d = 2` is to feed this
-family of balls through the exchange — a fibre bound, in the sense of
-`QFS.lintegral_swap_of_fibre_bound`.
+axis-lines away from both endpoints. The family is now an explicit function of the pair (`QFS.planarCtr`, built from
+the coefficients Cramer's rule produces) and satisfies the two-sided
+comparability `‖t−s‖ sin ϑ/2 ≤ ‖z−s‖, ‖z−t‖ ≤ ‖t−s‖(1/|cross₂| + 1)` that the
+fibre estimate consumes (`QFS.planarBall_comparable`) — again because the ball's
+radius `‖t−s‖ sin²ϑ/2` is too small to swallow the separation. **The geometric
+input for `d = 2` is therefore complete.** What remains is the fibre estimate,
+the exchange and the assembly — analysis of the kind already carried out twice,
+plugging into `QFS.lintegral_swap_of_fibre_bound`.
 
 The analytic machinery is stated abstractly enough to be reused: the exchange
 asks only that a family of averaging sets have measurable graph and a fibre
