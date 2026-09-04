@@ -1587,4 +1587,52 @@ theorem tendsto_discreteC_jump_ae {ι : Type} {l : Filter ι} (hn : ι → ℝ)
     filter_upwards [hzero] with i hi
     exact hi.symm
 
+
+/-! ## Fatou on the left-hand side
+
+The `H^{α/2}` form of the ball is at most the limit inferior of the
+discretized forms of the step functions.  This is the first half of the
+passage to the limit in Section 3.2. -/
+
+/-- The `formHs` of a ball, written as an integral of an indicator over the
+whole product space, with the difference in the order the discretization
+uses. -/
+theorem formHs_ball_eq_lintegral_indicator (α : ℝ) (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) :
+    formHs (ball x₀ R) α f
+      = ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+        (ball x₀ R ×ˢ ball x₀ R).indicator
+          (fun q => ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * jumpKernel d α q.1 q.2) p := by
+  have hfun : (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+        ENNReal.ofReal ((f q.2 - f q.1) ^ 2) * jumpKernel d α q.1 q.2)
+      = fun q => ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * jumpKernel d α q.1 q.2 := by
+    funext q
+    rw [show (f q.2 - f q.1) ^ 2 = (f q.1 - f q.2) ^ 2 from by ring]
+  rw [formHs, form, hfun, lintegral_indicator (measurableSet_ball.prod measurableSet_ball)]
+
+/-- **Fatou for the discretization.** -/
+theorem formHs_ball_le_liminf {ι : Type} {l : Filter ι} [l.NeBot] [l.IsCountablyGenerated]
+    (hn : ι → ℝ) (hpos : ∀ i, 0 < hn i) (hlim : Filter.Tendsto hn l (nhds 0))
+    {α R₀ : ℝ} (hR₀ : 0 < R₀) {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ}
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : LocallyIntegrable f volume) (hd : 0 < d) :
+    formHs (ball x₀ R) α f
+      ≤ Filter.liminf (fun i => ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+          discreteC d (hn i) (ball x₀ R) (R₀ * hn i) (jumpKernel d α) (cubeAvg d (hn i) f)
+            (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2)) l := by
+  have hae := tendsto_discreteC_jump_ae hn hpos hlim (α := α) hR₀ hf hd (x₀ := x₀) (R := R)
+  rw [formHs_ball_eq_lintegral_indicator]
+  calc ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+          (ball x₀ R ×ˢ ball x₀ R).indicator
+            (fun q => ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * jumpKernel d α q.1 q.2) p
+      = ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+          Filter.liminf (fun i => discreteC d (hn i) (ball x₀ R) (R₀ * hn i) (jumpKernel d α)
+            (cubeAvg d (hn i) f) (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2)) l := by
+        refine lintegral_congr_ae ?_
+        filter_upwards [hae] with p hp
+        exact hp.liminf_eq.symm
+    _ ≤ Filter.liminf (fun i => ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+          discreteC d (hn i) (ball x₀ R) (R₀ * hn i) (jumpKernel d α) (cubeAvg d (hn i) f)
+            (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2)) l :=
+        lintegral_liminf_le fun i => measurable_discreteC_stepIndex (hpos i) _ _ _ _
+
 end QFS
