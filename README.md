@@ -157,6 +157,8 @@ The pieces, all proved:
 | **Theorem 1.1 in the plane on the same ball**, granted the quoted Whitney/Dyda input | `QFS.formHs_le_form_planar` | ✅ **proved** |
 | **`H_k(ℝ²) ⊆ H^{α/2}(ℝ²)` with a constant depending only on `ϑ, Λ, α`** | `QFS.formHs_univ_le_form_univ_planar` | ✅ **proved** |
 | **Theorem 1.4 for `Ω = ℝ²`**: `H_k(ℝ²) = H^{α/2}(ℝ²)` | `QFS.Hk_univ_eq_Hs_univ_planar` | ✅ **proved** |
+| **The comparability on a planar domain**, granted its Whitney family | `QFS.formHs_le_form_domain_planar` | ✅ **proved** |
+| **Theorem 1.4 for a planar domain**: `H_k(Ω) = H^{α/2}(Ω)` | `QFS.Hk_domain_eq_Hs_domain_planar` | ✅ **proved** |
 | The Lipschitz cutoff and its cost | `QFS.cutoff`, `QFS.sq_cutoff_sub_le`, `QFS.sq_cutoff_mul_sub_le`, `QFS.form_cutoff_le`, `QFS.lintegral_cutoff_error_le`, `QFS.lintegral_cutoff_error_le'` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
@@ -337,7 +339,7 @@ blocked on a recorded gap, ❌ out of scope.
 | 1.1 | Theorem | main comparability, continuous | 🚧 the **enlarged-ball form is proved** (`QFS.formHs_ball_le_form_of_formHs_ne_top`) under the finiteness hypothesis §3.2's own dominated-convergence step needs and the paper does not state. In `d = 2` that hypothesis is discharged by new mathematics recorded outside these tables, giving the ball form in the paper's shape (`QFS.TheoremOneOneBallCondMeas`, proved as `QFS.theoremOneOneBallCondMeas_two`) and, through Lemma 7.1's chain, the same-ball statement (`QFS.formHs_le_form_planar`). The statement itself is recorded as `QFS.TheoremOneOne` |
 | 1.2 | Remark | strength of the hypotheses | ⚪ (condition (M) is `QFS.CondM`) |
 | 1.3 | Theorem | main comparability, discrete | ✅ **proved** (`QFS.theoremOneThree`) |
-| 1.4 | Theorem | `H_k(Ω) = H^{α/2}(Ω)` | 🚧 the case `Ω = ℝ^d` **proved** granted Theorem 1.1 (`QFS.theoremOneFourUniv_of_theoremOneOne`), and **unconditionally in the plane** granted the quoted Whitney/Dyda input (`QFS.Hk_univ_eq_Hs_univ_planar`, by new mathematics recorded outside these tables); the Lipschitz-domain case needs Lemma 7.1 for domains, the density assertions are quoted from [DeDe12] |
+| 1.4 | Theorem | `H_k(Ω) = H^{α/2}(Ω)` | 🚧 the case `Ω = ℝ^d` **proved** granted Theorem 1.1 (`QFS.theoremOneFourUniv_of_theoremOneOne`); **in the plane, `Ω = ℝ²` unconditionally** and **any measurable `Ω` with a Whitney family** (`QFS.Hk_univ_eq_Hs_univ_planar`, `QFS.Hk_domain_eq_Hs_domain_planar`, by new mathematics recorded outside these tables), granted the Whitney/Dyda input the paper quotes; the density assertions are quoted from [DeDe12] |
 | 1.5 | Corollary | regular Dirichlet form | ❌ out of scope |
 | 1.6 | Corollary | Harnack / Hölder regularity | ❌ out of scope (quoted from [DyKa15]) |
 | 2.1 | Definition | cones, half-cones, configurations | ✅ |
@@ -376,7 +378,7 @@ blocked on a recorded gap, ❌ out of scope.
 | 5.14 | Proposition | renormalisation | ✅ |
 | 5.15 | Theorem | path properties | ✅ **proved** (`QFS.path_props`) |
 | 5.16 | Lemma | the first jump | ✅ |
-| 7.1 | Lemma | from balls to a bounded Lipschitz domain | 🚧 its chain (6.14) **proved** (`QFS.lemma_ball_to_domain`), including the finite-overlap step (`QFS.tsum_setLIntegral_le_of_overlap`); the Whitney family and Dyda's inequality (13) are hypotheses, as in the paper |
+| 7.1 | Lemma | from balls to a bounded Lipschitz domain | 🚧 its chain (6.14) **proved** (`QFS.lemma_ball_to_domain`), including the finite-overlap step (`QFS.tsum_setLIntegral_le_of_overlap`), and packaged for a ball (`QFS.formHs_le_form_of_ballComparability`) and for a domain (`QFS.formHs_le_form_domain`); the Whitney family and Dyda's inequality (13) are hypotheses, as in the paper (`QFS.WhitneyBallData`, `QFS.WhitneyDomainData`) |
 | 7.2 | Lemma | a Lebesgue differentiation argument | ✅ **proved** (`QFS.lemma_lebesgue_diff`) |
 
 Sections 2, 4, 5 and 6 are formalised completely, apart from one remark of
@@ -480,6 +482,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **The finite-overlap estimate** of (6.14) | Lem. 7.1 | `QFS.tsum_setLIntegral_le_of_overlap`, `QFS.tsum_setLIntegral_le_of_overlap_sq` | ✅ **proved** |
 | **The chain (6.14)**, with the Whitney family and Dyda's inequality as hypotheses | Lem. 7.1 | `QFS.lemma_ball_to_domain` | ✅ **proved** |
 | **The quoted Whitney/Dyda input for a ball**, and that it is satisfiable | Lem. 7.1 | `QFS.WhitneyBallData`, `QFS.whitneyBallData_one` | ✅ **stated, non-vacuous** |
+| **The quoted Whitney/Dyda input for a domain**, and Lemma 7.1 for a domain | Lem. 7.1 | `QFS.WhitneyDomainData`, `QFS.formHs_le_form_domain` | ✅ **proved** |
 | **Enlarged ball ⟹ same ball**: the last step of §3.2 | §3.2, Lem. 7.1 | `QFS.formHs_le_form_of_ballComparability`, `QFS.formHs_le_form_of_theoremOneOneBall` | ✅ **proved** |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
