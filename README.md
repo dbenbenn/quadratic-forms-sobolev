@@ -159,6 +159,7 @@ The pieces, all proved:
 | **Theorem 1.4 for `Ω = ℝ²`**: `H_k(ℝ²) = H^{α/2}(ℝ²)` | `QFS.Hk_univ_eq_Hs_univ_planar` | ✅ **proved** |
 | **The comparability on a planar domain**, granted its Whitney family | `QFS.formHs_le_form_domain_planar` | ✅ **proved** |
 | **Theorem 1.4 for a planar domain**: `H_k(Ω) = H^{α/2}(Ω)` | `QFS.Hk_domain_eq_Hs_domain_planar` | ✅ **proved** |
+| **Theorem 1.1 in the plane, in the paper's own statement** | `QFS.theoremOneOneCondMeas_two` | ✅ **proved** |
 | **Lemma 3.7's own statement in the plane**: `H_k(B) = H^{α/2}(B)` | `QFS.Hk_ball_eq_Hs_ball_planar` | ✅ **proved** |
 | **The hypotheses of all of the above are satisfiable** | `QFS.planar_hypotheses_nonvacuous` | ✅ **proved** |
 | The Lipschitz cutoff and its cost | `QFS.cutoff`, `QFS.sq_cutoff_sub_le`, `QFS.sq_cutoff_mul_sub_le`, `QFS.form_cutoff_le`, `QFS.lintegral_cutoff_error_le`, `QFS.lintegral_cutoff_error_le'` | ✅ **proved** |
@@ -338,7 +339,7 @@ blocked on a recorded gap, ❌ out of scope.
 
 | # | Kind | Label | State |
 | --- | --- | --- | --- |
-| 1.1 | Theorem | main comparability, continuous | 🚧 the **enlarged-ball form is proved** (`QFS.formHs_ball_le_form_of_formHs_ne_top`) under the finiteness hypothesis §3.2's own dominated-convergence step needs and the paper does not state. In `d = 2` that hypothesis is discharged by new mathematics recorded outside these tables, giving the ball form in the paper's shape (`QFS.TheoremOneOneBallCondMeas`, proved as `QFS.theoremOneOneBallCondMeas_two`) and, through Lemma 7.1's chain, the same-ball statement (`QFS.formHs_le_form_planar`). The statement itself is recorded as `QFS.TheoremOneOne` |
+| 1.1 | Theorem | main comparability, continuous | 🚧 the **enlarged-ball form is proved** (`QFS.formHs_ball_le_form_of_formHs_ne_top`) under the finiteness hypothesis §3.2's own dominated-convergence step needs and the paper does not state. **In `d = 2` the theorem itself is proved** in the paper's own statement (`QFS.TheoremOneOneCondMeas`, proved as `QFS.theoremOneOneCondMeas_two`) — by new mathematics recorded outside these tables, and granted the Whitney/Dyda input Lemma 7.1 quotes. The paper's own `Prop` is `QFS.TheoremOneOne`, which differs only in using condition (M) where this formalisation uses Debreu's conclusion, and in leaving the measurability of `k` implicit |
 | 1.2 | Remark | strength of the hypotheses | ⚪ (condition (M) is `QFS.CondM`) |
 | 1.3 | Theorem | main comparability, discrete | ✅ **proved** (`QFS.theoremOneThree`) |
 | 1.4 | Theorem | `H_k(Ω) = H^{α/2}(Ω)` | 🚧 the case `Ω = ℝ^d` **proved** granted Theorem 1.1 (`QFS.theoremOneFourUniv_of_theoremOneOne`); **in the plane, `Ω = ℝ²` unconditionally** and **any measurable `Ω` with a Whitney family** (`QFS.Hk_univ_eq_Hs_univ_planar`, `QFS.Hk_domain_eq_Hs_domain_planar`, by new mathematics recorded outside these tables), granted the Whitney/Dyda input the paper quotes; the density assertions are quoted from [DeDe12] |
@@ -470,6 +471,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **§3.2's assembly: Lemma 3.7 on a ball**, under the finiteness hypothesis | Lem. 3.7, §3.2 | `QFS.formHs_ball_le_form_of_formHs_ne_top`, `QFS.form_mono_set`, `QFS.limsup_const_mul` | ✅ **proved** |
 | **Corollary 3.6 with the constant where the paper puts it** (before `Γ` and `k`) | Cor. 3.6 | `QFS.cor_rescaled_kernel_uniform` | ✅ **proved** |
 | **The ball form of Theorem 1.1 with the hypotheses this formalisation carries** | Thm. 1.1, §3.2 | `QFS.TheoremOneOneBallCondMeas` | ✅ stated |
+| **Theorem 1.1 with the hypotheses this formalisation carries** | Thm. 1.1 | `QFS.TheoremOneOneCondMeas`, `QFS.le_pi_div_two_of_isBounded` | ✅ stated |
 | **A function in `L²` of a ball has a measurable, globally integrable representative** | §3.2 | `QFS.exists_measurable_repr` | ✅ **proved** |
 | **Neither form sees a change of `f` on a null set** | §3.2 | `QFS.form_congr_ae`, `QFS.formHs_congr_ae` | ✅ **proved** |
 | **A Lipschitz function has finite `H^{α/2}` seminorm on a ball (`α < 2`)** | §3.2 | `QFS.formHs_lt_top_of_lipschitzOn`, `QFS.lintegral_ball_rpow_lt_top` | ✅ **proved** |
@@ -1735,9 +1737,12 @@ proved in Lean:
    formalisation carries: `QFS.theoremOneOneBallCondMeas_two`. Lemma 7.1's chain,
    refactored to take the ball comparability as an input
    (`QFS.formHs_le_form_of_ballComparability`), then gives the same-ball
-   statement `QFS.formHs_le_form_planar`, and the paper's own passage to the
-   whole space gives Theorem 1.4 for `ℝ²`
-   (`QFS.formHs_univ_le_form_univ_planar`, `QFS.Hk_univ_eq_Hs_univ_planar`).
+   statement `QFS.formHs_le_form_planar` — and, once the `L²` hypothesis is
+   weakened to the ball at hand as the paper has it, Theorem 1.1 itself in the
+   plane (`QFS.theoremOneOneCondMeas_two`). The paper's own passage to the whole
+   space then gives Theorem 1.4 for `ℝ²`
+   (`QFS.formHs_univ_le_form_univ_planar`, `QFS.Hk_univ_eq_Hs_univ_planar`) and,
+   with a Whitney family, for a domain (`QFS.Hk_domain_eq_Hs_domain_planar`).
 
 **What is still not done.** Dimension three and above, for the reason in step 5 —
 that needs the continuum analogue of §§5–6. And the Whitney family and Dyda's
