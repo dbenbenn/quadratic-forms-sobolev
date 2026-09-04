@@ -1391,4 +1391,81 @@ theorem ae_prod_ne (hd : 0 < d) :
     rw [he, hsing x]
   rw [lintegral_congr hfib, lintegral_zero]
 
+
+/-! ## The left-hand integrand converges
+
+Fatou needs only a lower bound on the limit inferior, and the limit itself is
+available wherever the two coordinates are interior to the ball, distinct, and
+Lebesgue points — a set of full measure. Outside the ball the bound is trivial,
+so the boundary never has to be discussed. -/
+
+/-- The jump kernel is continuous off the diagonal. -/
+theorem tendsto_jumpKernel {ι : Type*} {l : Filter ι} {α : ℝ}
+    {u v : ι → EuclideanSpace ℝ (Fin d)} {x y : EuclideanSpace ℝ (Fin d)}
+    (hu : Filter.Tendsto u l (nhds x)) (hv : Filter.Tendsto v l (nhds y)) (hxy : x ≠ y) :
+    Filter.Tendsto (fun i => jumpKernel d α (u i) (v i)) l (nhds (jumpKernel d α x y)) := by
+  have hn : (0 : ℝ) < ‖x - y‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hxy
+  have hnorm : Filter.Tendsto (fun i => ‖u i - v i‖) l (nhds ‖x - y‖) :=
+    ((hu.sub hv).norm)
+  have hrpow : Filter.Tendsto (fun i => ‖u i - v i‖ ^ (-(d : ℝ) - α)) l
+      (nhds (‖x - y‖ ^ (-(d : ℝ) - α))) := by
+    have hc : ContinuousAt (fun t : ℝ => t ^ (-(d : ℝ) - α)) ‖x - y‖ :=
+      Real.continuousAt_rpow_const _ _ (Or.inl (ne_of_gt hn))
+    exact hc.tendsto.comp hnorm
+  exact (ENNReal.continuous_ofReal.tendsto _).comp hrpow
+
+
+/-- **The left-hand integrand of `(discret)` converges**, at almost every pair
+interior to the ball. -/
+theorem tendsto_discreteC_jump {ι : Type} {l : Filter ι} (hn : ι → ℝ)
+    (hpos : ∀ i, 0 < hn i) (hlim : Filter.Tendsto hn l (nhds 0))
+    {α R₀ : ℝ} (hR₀ : 0 < R₀) {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ}
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : LocallyIntegrable f volume) (hd : 0 < d) :
+    ∀ᵐ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      p ∈ ball x₀ R ×ˢ ball x₀ R →
+      Filter.Tendsto (fun i => discreteC d (hn i) (ball x₀ R) (R₀ * hn i) (jumpKernel d α)
+          (cubeAvg d (hn i) f) (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2)) l
+        (nhds (ENNReal.ofReal ((f p.1 - f p.2) ^ 2) * jumpKernel d α p.1 p.2)) := by
+  filter_upwards [ae_prod_both (tendsto_cubeAvg_stepIndex hf), ae_prod_ne (d := d) hd]
+    with p hconv hne hmem
+  have h1 := hconv.1 hn hpos hlim
+  have h2 := hconv.2 hn hpos hlim
+  have hs1 : Filter.Tendsto (fun i => stepIndex d (hn i) p.1) l (nhds p.1) :=
+    tendsto_stepIndex hn hpos hlim p.1
+  have hs2 : Filter.Tendsto (fun i => stepIndex d (hn i) p.2) l (nhds p.2) :=
+    tendsto_stepIndex hn hpos hlim p.2
+  have hr : (0 : ℝ) < ‖p.1 - p.2‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hne
+  -- the constraint eventually holds
+  have hb1 : ∀ᶠ i in l, stepIndex d (hn i) p.1 ∈ ball x₀ R :=
+    hs1.eventually (isOpen_ball.mem_nhds hmem.1)
+  have hb2 : ∀ᶠ i in l, stepIndex d (hn i) p.2 ∈ ball x₀ R :=
+    hs2.eventually (isOpen_ball.mem_nhds hmem.2)
+  have hnormlim : Filter.Tendsto
+      (fun i => ‖stepIndex d (hn i) p.1 - stepIndex d (hn i) p.2‖) l (nhds ‖p.1 - p.2‖) :=
+    (hs1.sub hs2).norm
+  have hbig : ∀ᶠ i in l,
+      ‖p.1 - p.2‖ / 2 < ‖stepIndex d (hn i) p.1 - stepIndex d (hn i) p.2‖ :=
+    hnormlim.eventually (eventually_gt_nhds (by linarith))
+  have hsmall : ∀ᶠ i in l, R₀ * hn i < ‖p.1 - p.2‖ / 2 := by
+    have : Filter.Tendsto (fun i => R₀ * hn i) l (nhds 0) := by simpa using hlim.const_mul R₀
+    exact this.eventually (eventually_lt_nhds (by linarith))
+  have hcon : ∀ᶠ i in l, (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2) ∈
+      discretePairs d (hn i) (ball x₀ R) (R₀ * hn i) := by
+    filter_upwards [hb1, hb2, hbig, hsmall] with i hi1 hi2 hi3 hi4
+    exact ⟨⟨hi1, stepIndex_mem_scaledLattice p.1⟩, ⟨hi2, stepIndex_mem_scaledLattice p.2⟩,
+      by linarith⟩
+  -- on that event the integrand is the product, which converges
+  have hprod : Filter.Tendsto
+      (fun i => ENNReal.ofReal ((cubeAvg d (hn i) f (stepIndex d (hn i) p.1)
+            - cubeAvg d (hn i) f (stepIndex d (hn i) p.2)) ^ 2)
+          * jumpKernel d α (stepIndex d (hn i) p.1) (stepIndex d (hn i) p.2)) l
+      (nhds (ENNReal.ofReal ((f p.1 - f p.2) ^ 2) * jumpKernel d α p.1 p.2)) :=
+    have hne' : jumpKernel d α p.1 p.2 ≠ ⊤ := by
+      rw [jumpKernel]; exact ENNReal.ofReal_ne_top
+    ENNReal.Tendsto.mul ((ENNReal.continuous_ofReal.tendsto _).comp ((h1.sub h2).pow 2))
+      (Or.inr hne') (tendsto_jumpKernel hs1 hs2 hne) (Or.inr ENNReal.ofReal_ne_top)
+  refine hprod.congr' ?_
+  filter_upwards [hcon] with i hi
+  rw [discreteC, Set.indicator_of_mem hi]
+
 end QFS
