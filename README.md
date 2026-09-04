@@ -132,6 +132,7 @@ The pieces, all proved:
 | **…but in the plane it can**: a ball of common cone-neighbours for cross-direction pairs | `QFS.mem_two_cones_of_mem_planarBall`, `QFS.abs_cross_ge_of_notMem_doubleCone`, `QFS.cramer2`, `QFS.perp2`, `QFS.cross2` | ✅ **proved** |
 | **The planar family as a function of the pair, with two-sided comparability** | `QFS.planarCtr`, `QFS.planarA`, `QFS.planarB`, `QFS.planarA_bounds`, `QFS.planarB_bounds`, `QFS.planarBall_comparable` | ✅ **proved** |
 | **The planar fibre estimate** | `QFS.planarBall`, `QFS.planarConst`, `QFS.lintegral_planarBall_fibre_le` | ✅ **proved** |
+| **The exchange for the planar family** | `QFS.lintegral_swap_planar`, `QFS.measurableSet_planarBall`, `QFS.measurableSet_planarBall_fibre` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
 integration in `t`, and it is why the argument is scale-invariant: the singular
@@ -199,10 +200,15 @@ packages the family with its side conditions folded in — the diagonal and the
 pairs that are already cone pairs get the empty ball, since they need no
 chaining.
 
-What remains for `d = 2` is the exchange instance (immediate from
-`QFS.lintegral_swap_of_fibre_bound`) and the assembly, including the split of
-each cross block into the pairs that are already cone pairs — which go straight
-into the `H_k` form by (1.4) — and the rest.
+The exchange instance is done too (`QFS.lintegral_swap_planar`): abstracting the
+exchange paid off exactly as intended, since its two hypotheses — measurable
+graph and fibre bound — were both to hand. The cone restriction survives it
+because off the cone at `s` the fibre is not merely null but **empty**: every
+point of a planar ball sees both cones by construction.
+
+What remains for `d = 2` is the assembly: an averaging step for this family, and
+the split of each cross block into the pairs that are already cone pairs — which
+go straight into the `H_k` form by (1.4) — and the rest.
 
 The analytic machinery is stated abstractly enough to be reused: the exchange
 asks only that a family of averaging sets have measurable graph and a fibre
