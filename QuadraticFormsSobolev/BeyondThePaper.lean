@@ -2985,4 +2985,84 @@ theorem formHs_le_form_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ Rea
   exact formHs_le_form_of_ballComparability hκ hc₀ W
     (fun y₀ S hS hmem => H Γ hΓ hmeas k hk hkm y₀ S hS f hmem) hf hFmeas x₀ R hR
 
+
+/-! ## Theorem 1.4 for `Ω = ℝ²`
+
+The paper deduces the whole-space case from Theorem 1.1 by monotone convergence,
+the constant being independent of the radius.  `QFS.theoremOneFourUniv_of_theoremOneOne`
+is that deduction from the paper's `Prop`; here it is run on the planar theorem
+instead. -/
+
+/-- **`H_k(ℝ²) ⊆ H^{α/2}(ℝ²)` with a uniform constant**, granted the quoted
+Whitney/Dyda input. Unlike `sobolevInclusion_planar`, whose constant is produced
+after `f` is fixed, the constant here depends only on `ϑ`, `Λ` and `α`. -/
+theorem formHs_univ_le_form_univ_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ Real.pi / 2) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+    (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData 2 α κ)) :
+    ∃ c : ℝ, 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin 2)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin 2) → EuclideanSpace ℝ (Fin 2) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+          k p.1 p.2) →
+      ∀ f : EuclideanSpace ℝ (Fin 2) → ℝ,
+        (∀ (x₀ : EuclideanSpace ℝ (Fin 2)) (R : ℝ), 0 < R →
+          MemLp f 2 (volume.restrict (ball x₀ R))) →
+        (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
+        formHs Set.univ α f ≤ ENNReal.ofReal c * form Set.univ k f := by
+  obtain ⟨c₀, hc₀pos, H⟩ := formHs_le_form_planar hϑ hϑ' hΛ hα hα2 hW
+  refine ⟨max c₀⁻¹ 1, le_max_right _ _,
+    fun Γ hΓ hmeas k hk hkm f hf hFmeas => ?_⟩
+  simp only [formHs]
+  rw [form_univ_eq_iSup, form_univ_eq_iSup, ENNReal.mul_iSup]
+  refine iSup_mono fun n => ?_
+  have hR : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have h1 := H Γ hΓ hmeas k hk hkm f hf hFmeas 0 ((n : ℝ) + 1) hR
+  have hstep : formHs (ball (0 : EuclideanSpace ℝ (Fin 2)) ((n : ℝ) + 1)) α f
+      ≤ ENNReal.ofReal c₀⁻¹ * form (ball (0 : EuclideanSpace ℝ (Fin 2)) ((n : ℝ) + 1)) k f := by
+    calc formHs (ball (0 : EuclideanSpace ℝ (Fin 2)) ((n : ℝ) + 1)) α f
+        = ENNReal.ofReal c₀⁻¹ * (ENNReal.ofReal c₀ *
+            formHs (ball (0 : EuclideanSpace ℝ (Fin 2)) ((n : ℝ) + 1)) α f) := by
+          rw [← mul_assoc, ← ENNReal.ofReal_mul (le_of_lt (inv_pos.mpr hc₀pos)),
+            inv_mul_cancel₀ (ne_of_gt hc₀pos), ENNReal.ofReal_one, one_mul]
+      _ ≤ ENNReal.ofReal c₀⁻¹ * form (ball (0 : EuclideanSpace ℝ (Fin 2)) ((n : ℝ) + 1)) k f :=
+          mul_le_mul' le_rfl h1
+  refine le_trans hstep (mul_le_mul' (ENNReal.ofReal_le_ofReal (le_max_left _ _)) le_rfl)
+
+/-- **Theorem 1.4 for `Ω = ℝ²`**: the two spaces coincide, granted the quoted
+Whitney/Dyda input. -/
+theorem Hk_univ_eq_Hs_univ_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ Real.pi / 2)
+    (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+    (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData 2 α κ))
+    {Γ : Configuration (EuclideanSpace ℝ (Fin 2))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin 2) → EuclideanSpace ℝ (Fin 2) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+      k p.1 p.2) :
+    Hk Set.univ k = Hs Set.univ α := by
+  obtain ⟨c, hc, H⟩ := formHs_univ_le_form_univ_planar hϑ hϑ' hΛ hα hα2 hW
+  refine Set.Subset.antisymm (fun f hf => ?_) (Hs_subset_Hk hk Set.univ)
+  obtain ⟨hfL2, hfform⟩ := hf
+  refine ⟨hfL2, ?_⟩
+  -- pass to a measurable representative
+  set g : EuclideanSpace ℝ (Fin 2) → ℝ := hfL2.1.mk f with hgdef
+  have hgm : Measurable g := hfL2.1.stronglyMeasurable_mk.measurable
+  have hae : ∀ᵐ x ∂(volume.restrict (Set.univ : Set (EuclideanSpace ℝ (Fin 2)))), f x = g x :=
+    hfL2.1.ae_eq_mk
+  have hgL2 : ∀ (x₀ : EuclideanSpace ℝ (Fin 2)) (R : ℝ), 0 < R →
+      MemLp g 2 (volume.restrict (ball x₀ R)) := by
+    intro x₀ R _
+    refine ((hfL2.ae_eq hae).mono_measure ?_)
+    exact Measure.restrict_mono (Set.subset_univ _) le_rfl
+  have hFmeas : Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+      ENNReal.ofReal ((g p.2 - g p.1) ^ 2) * k p.1 p.2 :=
+    (ENNReal.measurable_ofReal.comp
+      (((hgm.comp measurable_snd).sub (hgm.comp measurable_fst)).pow_const 2)).mul hkm
+  have hform : form Set.univ k g = form Set.univ k f := (form_congr_ae k hae).symm
+  have hformHs : formHs Set.univ α g = formHs Set.univ α f := (formHs_congr_ae α hae).symm
+  have hbound := H Γ hΓ hmeas k hk hkm g hgL2 hFmeas
+  rw [hformHs, hform] at hbound
+  exact ne_top_of_le_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top hfform) hbound
+
 end QFS
