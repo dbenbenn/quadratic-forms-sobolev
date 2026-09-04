@@ -401,6 +401,17 @@ theorem osc_weighted_le {d : ℕ} (v : EuclideanSpace ℝ (Fin d)) (ϑ : ℝ) {�
   ring
 
 
+/-- Off the cone the fibre is a single point: if `z − s` does not lie in
+`Ṽ(v,ϑ)` then no `t ≠ s` has `z` among the common neighbours of `s` and `t`.
+This is what lets the exchange keep the cone membership, without which the lower
+bound of (1.4) could not be applied to the resulting pair `(s,z)`. -/
+theorem fibre_subset_singleton_of_notMem_cone {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) {s z : E} (hz : z - s ∉ cone v ϑ) :
+    {t | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖} ⊆ {s} := by
+  intro t ht
+  by_contra hne
+  exact hz (mem_two_cones_of_mem_midBall hv hϑ hϑ' (fun h => hne h.symm) ht).1
+
 /-! ## The exchange
 
 With the averaging step and the fibre estimate in hand, the chaining argument is
@@ -418,7 +429,9 @@ theorem lintegral_swap_fibre {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : �
     ∫⁻ t, ENNReal.ofReal (‖s - t‖ ^ (-(2 * (d : ℝ)) - α)) *
         ∫⁻ z in closedBall (midCentre v ϑ s t) ‖s - t‖, G z
       ≤ ENNReal.ofReal (chainConst d ϑ α) * unitBallVol d *
-        ∫⁻ z, G z * ENNReal.ofReal (‖z - s‖ ^ (-(d : ℝ) - α)) := by
+        ∫⁻ z in {z | z - s ∈ cone v ϑ}, G z * ENNReal.ofReal (‖z - s‖ ^ (-(d : ℝ) - α)) := by
+  have hconeMeas : MeasurableSet {z : EuclideanSpace ℝ (Fin d) | z - s ∈ cone v ϑ} :=
+    ((isOpen_cone v ϑ).preimage (by fun_prop)).measurableSet
   have hsinP : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [Real.pi_pos])
   have h3P : (3 : ℝ) ≤ 3 / Real.sin ϑ := by
     have hnn : (0 : ℝ) ≤ 3 * (1 - Real.sin ϑ) / Real.sin ϑ :=
@@ -474,8 +487,9 @@ theorem lintegral_swap_fibre {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : �
         exact lintegral_congr hstep
     _ = ∫⁻ z, ∫⁻ t, w t * (closedBall (midCentre v ϑ s t) ‖s - t‖).indicator G z :=
         lintegral_lintegral_swap hunc
-    _ ≤ ∫⁻ z, G z * (ENNReal.ofReal (chainConst d ϑ α * ‖z - s‖ ^ (-(d : ℝ) - α)) *
-          unitBallVol d) := by
+    _ ≤ ∫⁻ z, {z | z - s ∈ cone v ϑ}.indicator
+          (fun z => G z * (ENNReal.ofReal (chainConst d ϑ α * ‖z - s‖ ^ (-(d : ℝ) - α)) *
+            unitBallVol d)) z := by
         refine lintegral_mono fun z => ?_
         have hfibmeas : MeasurableSet {t : EuclideanSpace ℝ (Fin d) |
             z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖} := by
@@ -506,13 +520,404 @@ theorem lintegral_swap_fibre {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : �
             _ = G z * ∫⁻ t in {t | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖}, w t :=
                 lintegral_const_mul _ hwmeas
         rw [hfib]
-        exact mul_le_mul' le_rfl (lintegral_midBall_fibre_le hv hϑ hϑ' hα hd s z)
+        by_cases hzc : z - s ∈ cone v ϑ
+        · rw [Set.indicator_of_mem (show z ∈ {z | z - s ∈ cone v ϑ} from hzc)]
+          exact mul_le_mul' le_rfl (lintegral_midBall_fibre_le hv hϑ hϑ' hα hd s z)
+        · rw [Set.indicator_of_notMem (show z ∉ {z | z - s ∈ cone v ϑ} from hzc)]
+          have hball0 : volume (closedBall s (0 : ℝ)) = 0 := by
+            rw [volume_closedBall_eq _ le_rfl, zero_pow (Nat.ne_of_gt hd), ENNReal.ofReal_zero,
+              zero_mul]
+          have hnull : volume {t : EuclideanSpace ℝ (Fin d) |
+              z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖} = 0 :=
+            measure_mono_null
+              (le_trans (fibre_subset_singleton_of_notMem_cone hv hϑ hϑ' hzc)
+                (by simp)) hball0
+          rw [setLIntegral_measure_zero _ _ hnull, mul_zero]
+    _ = ∫⁻ z in {z | z - s ∈ cone v ϑ},
+          G z * (ENNReal.ofReal (chainConst d ϑ α * ‖z - s‖ ^ (-(d : ℝ) - α)) *
+            unitBallVol d) := lintegral_indicator hconeMeas _
     _ = ENNReal.ofReal (chainConst d ϑ α) * unitBallVol d *
-          ∫⁻ z, G z * ENNReal.ofReal (‖z - s‖ ^ (-(d : ℝ) - α)) := by
+          ∫⁻ z in {z | z - s ∈ cone v ϑ},
+            G z * ENNReal.ofReal (‖z - s‖ ^ (-(d : ℝ) - α)) := by
         rw [← lintegral_const_mul' _ _
           (ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top)]
         refine lintegral_congr fun z => ?_
         rw [ENNReal.ofReal_mul hcc]
         ring
+
+
+/-! ## The mirror image, on the `t` side
+
+The chained integrand `2(f(z) − f(s))² + 2(f(t) − f(z))²` has two terms. The
+first is handled by the lemmas above; the second needs the same statements with
+the roles of `s` and `t` exchanged. The displacement from `s` to `t` costs one
+extra unit in the estimates — `3/sin ϑ ∓ 2` in place of `3/sin ϑ ∓ 1` — but
+nothing else changes. -/
+
+/-- The `t`-side of `inner_mem_Icc_of_mem_midBall`. -/
+theorem inner_mem_Icc_of_mem_midBall' {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ}
+    {s t z : E} (hz : z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖) :
+    ‖s - t‖ * (3 / Real.sin ϑ - 2) ≤ ⟪v, z - t⟫_ℝ ∧
+      ⟪v, z - t⟫_ℝ ≤ ‖s - t‖ * (3 / Real.sin ϑ + 2) := by
+  rw [Metric.mem_closedBall, dist_eq_norm, midCentre] at hz
+  set q : E := z - (s + (3 * ‖s - t‖ / Real.sin ϑ) • v) with hqdef
+  have hq' : ‖q + (s - t)‖ ≤ 2 * ‖s - t‖ := le_trans (norm_add_le _ _) (by linarith)
+  have hzt : z - t = (q + (s - t)) + (3 * ‖s - t‖ / Real.sin ϑ) • v := by rw [hqdef]; abel
+  have hinner : ⟪v, z - t⟫_ℝ = ⟪v, q + (s - t)⟫_ℝ + 3 * ‖s - t‖ / Real.sin ϑ := by
+    rw [hzt, inner_add_right, real_inner_smul_right, real_inner_self_eq_norm_sq, hv]
+    ring
+  have hcs : |⟪v, q + (s - t)⟫_ℝ| ≤ ‖q + (s - t)‖ := by
+    have := abs_real_inner_le_norm v (q + (s - t))
+    rwa [hv, one_mul] at this
+  rw [abs_le] at hcs
+  have heq : 3 * ‖s - t‖ / Real.sin ϑ = ‖s - t‖ * (3 / Real.sin ϑ) := by ring
+  rw [hinner, heq]
+  constructor <;> [linarith [hcs.1, hq']; linarith [hcs.2, hq']]
+
+/-- The `t`-side of `midBall_fibre_subset_closedBall`. -/
+theorem midBall_fibre_subset_closedBall' {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) (t z : E) :
+    {s | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖}
+      ⊆ closedBall t (‖z - t‖ / (3 / Real.sin ϑ - 2)) := by
+  intro s hs
+  have hsin : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [Real.pi_pos])
+  have hsin1 : Real.sin ϑ ≤ 1 := Real.sin_le_one ϑ
+  have h3 : (3 : ℝ) ≤ 3 / Real.sin ϑ := by
+    have hnn : (0 : ℝ) ≤ 3 * (1 - Real.sin ϑ) / Real.sin ϑ := div_nonneg (by linarith) hsin.le
+    have heq : 3 + 3 * (1 - Real.sin ϑ) / Real.sin ϑ = 3 / Real.sin ϑ := by field_simp; ring
+    linarith [heq]
+  have hden : 0 < 3 / Real.sin ϑ - 2 := by linarith
+  obtain ⟨hlow, -⟩ := inner_mem_Icc_of_mem_midBall' (s := s) hv hs
+  have hcs : ⟪v, z - t⟫_ℝ ≤ ‖z - t‖ := by
+    have := real_inner_le_norm v (z - t)
+    rwa [hv, one_mul] at this
+  have hdist : dist s t = ‖s - t‖ := dist_eq_norm _ _
+  rw [Metric.mem_closedBall, hdist, le_div_iff₀ hden]
+  linarith
+
+/-- Off the cone at `t` the `s`-fibre is a single point. -/
+theorem fibre_subset_singleton_of_notMem_cone' {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) {t z : E} (hz : z - t ∉ cone v ϑ) :
+    {s | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖} ⊆ {t} := by
+  intro s hs
+  by_contra hne
+  refine hz (mem_two_cones_of_mem_midBall hv hϑ hϑ'
+    (fun h => hne (Set.mem_singleton_iff.mpr h)) hs).2.1
+
+/-- The constant in the `t`-side fibre estimate. -/
+noncomputable def chainConst' (d : ℕ) (ϑ α : ℝ) : ℝ :=
+  (2 + 3 / Real.sin ϑ) ^ (2 * (d : ℝ) + α) / (3 / Real.sin ϑ - 2) ^ d
+
+/-- The `t`-side of `lintegral_midBall_fibre_le`. -/
+theorem lintegral_midBall_fibre_le' {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1)
+    {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α) (hd : 0 < d)
+    (t z : EuclideanSpace ℝ (Fin d)) :
+    ∫⁻ s in {s | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖},
+        ENNReal.ofReal (‖s - t‖ ^ (-(2 * (d : ℝ)) - α))
+      ≤ ENNReal.ofReal (chainConst' d ϑ α * ‖z - t‖ ^ (-(d : ℝ) - α)) * unitBallVol d := by
+  have hsin : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [Real.pi_pos])
+  have hsin1 : Real.sin ϑ ≤ 1 := Real.sin_le_one ϑ
+  have h3 : (3 : ℝ) ≤ 3 / Real.sin ϑ := by
+    have hnn : (0 : ℝ) ≤ 3 * (1 - Real.sin ϑ) / Real.sin ϑ := div_nonneg (by linarith) hsin.le
+    have heq : 3 + 3 * (1 - Real.sin ϑ) / Real.sin ϑ = 3 / Real.sin ϑ := by field_simp; ring
+    linarith [heq]
+  have hA : (0 : ℝ) < 2 + 3 / Real.sin ϑ := by linarith
+  have hB : (0 : ℝ) < 3 / Real.sin ϑ - 2 := by linarith
+  have hsub := midBall_fibre_subset_closedBall' hv hϑ hϑ' t z
+  have hmeas : MeasurableSet {s : EuclideanSpace ℝ (Fin d) |
+      z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖} := by
+    have h1 : Continuous fun s : EuclideanSpace ℝ (Fin d) => dist z (midCentre v ϑ s t) := by
+      unfold midCentre; fun_prop
+    have h2 : Continuous fun s : EuclideanSpace ℝ (Fin d) => ‖s - t‖ := by fun_prop
+    simpa [Metric.mem_closedBall] using (isClosed_le h1 h2).measurableSet
+  rcases eq_or_ne z t with rfl | hzt
+  · have hball0 : volume (closedBall z (0 : ℝ)) = 0 := by
+      rw [volume_closedBall_eq _ le_rfl, zero_pow (Nat.ne_of_gt hd), ENNReal.ofReal_zero, zero_mul]
+    have hnull : volume {s : EuclideanSpace ℝ (Fin d) |
+        z ∈ closedBall (midCentre v ϑ s z) ‖s - z‖} = 0 := by
+      refine measure_mono_null (le_trans hsub (le_of_eq ?_)) hball0
+      simp
+    rw [setLIntegral_measure_zero _ _ hnull]
+    simp
+  · have hn : 0 < ‖z - t‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hzt
+    have hexp : -(2 * (d : ℝ)) - α ≤ 0 := by
+      have : (0 : ℝ) ≤ (d : ℝ) := Nat.cast_nonneg d
+      linarith
+    have hquot : 0 < ‖z - t‖ / (2 + 3 / Real.sin ϑ) := by positivity
+    have hAe : (2 + 3 / Real.sin ϑ) ^ (-(2 * (d : ℝ)) - α)
+        = ((2 + 3 / Real.sin ϑ) ^ (2 * (d : ℝ) + α))⁻¹ := by
+      rw [show -(2 * (d : ℝ)) - α = -(2 * (d : ℝ) + α) from by ring, Real.rpow_neg hA.le]
+    have hxe : ‖z - t‖ ^ (-(2 * (d : ℝ)) - α) * ‖z - t‖ ^ ((d : ℕ) : ℝ)
+        = ‖z - t‖ ^ (-(d : ℝ) - α) := by
+      rw [← Real.rpow_add hn]; congr 1; ring
+    have hscalar : (‖z - t‖ / (2 + 3 / Real.sin ϑ)) ^ (-(2 * (d : ℝ)) - α) *
+        (‖z - t‖ ^ d / (3 / Real.sin ϑ - 2) ^ d)
+        = chainConst' d ϑ α * ‖z - t‖ ^ (-(d : ℝ) - α) := by
+      have e1 : (‖z - t‖ / (2 + 3 / Real.sin ϑ)) ^ (-(2 * (d : ℝ)) - α)
+          = ‖z - t‖ ^ (-(2 * (d : ℝ)) - α) * (2 + 3 / Real.sin ϑ) ^ (2 * (d : ℝ) + α) := by
+        rw [Real.div_rpow hn.le hA.le, hAe, div_eq_mul_inv, inv_inv]
+      rw [e1, ← Real.rpow_natCast ‖z - t‖ d, chainConst']
+      rw [show ‖z - t‖ ^ (-(2 * (d : ℝ)) - α) * (2 + 3 / Real.sin ϑ) ^ (2 * (d : ℝ) + α) *
+            (‖z - t‖ ^ ((d : ℕ) : ℝ) / (3 / Real.sin ϑ - 2) ^ d)
+          = (‖z - t‖ ^ (-(2 * (d : ℝ)) - α) * ‖z - t‖ ^ ((d : ℕ) : ℝ)) *
+            ((2 + 3 / Real.sin ϑ) ^ (2 * (d : ℝ) + α) / (3 / Real.sin ϑ - 2) ^ d) from by ring,
+        hxe]
+      ring
+    calc ∫⁻ s in {s | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖},
+            ENNReal.ofReal (‖s - t‖ ^ (-(2 * (d : ℝ)) - α))
+        ≤ ∫⁻ _ in {s | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖},
+            ENNReal.ofReal ((‖z - t‖ / (2 + 3 / Real.sin ϑ)) ^ (-(2 * (d : ℝ)) - α)) := by
+          refine lintegral_mono_ae ?_
+          filter_upwards [ae_restrict_mem hmeas] with s hs
+          obtain ⟨-, h1⟩ := norm_sub_le_of_mem_midBall hv hϑ hϑ' hs
+          refine ENNReal.ofReal_le_ofReal (Real.rpow_le_rpow_of_nonpos hquot ?_ hexp)
+          rw [div_le_iff₀ hA]
+          linarith [h1]
+      _ = ENNReal.ofReal ((‖z - t‖ / (2 + 3 / Real.sin ϑ)) ^ (-(2 * (d : ℝ)) - α)) *
+            volume {s | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖} := setLIntegral_const _ _
+      _ ≤ ENNReal.ofReal ((‖z - t‖ / (2 + 3 / Real.sin ϑ)) ^ (-(2 * (d : ℝ)) - α)) *
+            volume (closedBall t (‖z - t‖ / (3 / Real.sin ϑ - 2))) :=
+          mul_le_mul' le_rfl (measure_mono hsub)
+      _ = ENNReal.ofReal (chainConst' d ϑ α * ‖z - t‖ ^ (-(d : ℝ) - α)) * unitBallVol d := by
+          rw [volume_closedBall_eq _ (by positivity), ← mul_assoc,
+            ← ENNReal.ofReal_mul (Real.rpow_nonneg hquot.le _), div_pow, hscalar]
+
+
+/-- The `t`-side of `lintegral_swap_fibre`. -/
+theorem lintegral_swap_fibre' {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1)
+    {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α) (hd : 0 < d)
+    (t : EuclideanSpace ℝ (Fin d)) {G : EuclideanSpace ℝ (Fin d) → ℝ≥0∞} (hG : Measurable G) :
+    ∫⁻ s, ENNReal.ofReal (‖s - t‖ ^ (-(2 * (d : ℝ)) - α)) *
+        ∫⁻ z in closedBall (midCentre v ϑ s t) ‖s - t‖, G z
+      ≤ ENNReal.ofReal (chainConst' d ϑ α) * unitBallVol d *
+        ∫⁻ z in {z | z - t ∈ cone v ϑ}, G z * ENNReal.ofReal (‖z - t‖ ^ (-(d : ℝ) - α)) := by
+  have hconeMeas : MeasurableSet {z : EuclideanSpace ℝ (Fin d) | z - t ∈ cone v ϑ} :=
+    ((isOpen_cone v ϑ).preimage (by fun_prop)).measurableSet
+  have hsinP : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [Real.pi_pos])
+  have h3P : (3 : ℝ) ≤ 3 / Real.sin ϑ := by
+    have hnn : (0 : ℝ) ≤ 3 * (1 - Real.sin ϑ) / Real.sin ϑ :=
+      div_nonneg (by linarith [Real.sin_le_one ϑ]) hsinP.le
+    have heq : 3 + 3 * (1 - Real.sin ϑ) / Real.sin ϑ = 3 / Real.sin ϑ := by field_simp; ring
+    linarith [heq]
+  have hcc : 0 ≤ chainConst' d ϑ α := by
+    unfold chainConst'
+    exact div_nonneg (Real.rpow_nonneg (by linarith) _) (pow_nonneg (by linarith) d)
+  set w : EuclideanSpace ℝ (Fin d) → ℝ≥0∞ :=
+    fun s => ENNReal.ofReal (‖s - t‖ ^ (-(2 * (d : ℝ)) - α)) with hwdef
+  have hwmeas : Measurable w := by rw [hwdef]; fun_prop
+  have hgraph : MeasurableSet {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+      p.2 ∈ closedBall (midCentre v ϑ p.1 t) ‖p.1 - t‖} := by
+    have h1 : Continuous fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+        dist p.2 (midCentre v ϑ p.1 t) := by unfold midCentre; fun_prop
+    have h2 : Continuous fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+        ‖p.1 - t‖ := by fun_prop
+    simpa [Metric.mem_closedBall] using (isClosed_le h1 h2).measurableSet
+  have hstep : ∀ s, w s * ∫⁻ z in closedBall (midCentre v ϑ s t) ‖s - t‖, G z
+      = ∫⁻ z, w s * (closedBall (midCentre v ϑ s t) ‖s - t‖).indicator G z := by
+    intro s
+    rw [lintegral_const_mul' _ _ (by simp [hwdef] : w s ≠ ∞),
+      lintegral_indicator measurableSet_closedBall]
+  have hunc : AEMeasurable (Function.uncurry fun s z =>
+      w s * (closedBall (midCentre v ϑ s t) ‖s - t‖).indicator G z) volume := by
+    refine Measurable.aemeasurable ?_
+    have heq : (Function.uncurry fun s z =>
+        w s * (closedBall (midCentre v ϑ s t) ‖s - t‖).indicator G z)
+        = fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          w p.1 * {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+            p.2 ∈ closedBall (midCentre v ϑ p.1 t) ‖p.1 - t‖}.indicator
+              (fun q => G q.2) p := by
+      funext p
+      obtain ⟨s, z⟩ := p
+      simp only [Function.uncurry]
+      by_cases hp : z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖
+      · rw [Set.indicator_of_mem hp,
+          Set.indicator_of_mem (show (s, z) ∈ {p : EuclideanSpace ℝ (Fin d) ×
+            EuclideanSpace ℝ (Fin d) | p.2 ∈ closedBall (midCentre v ϑ p.1 t) ‖p.1 - t‖}
+            from hp)]
+      · rw [Set.indicator_of_notMem hp,
+          Set.indicator_of_notMem (show (s, z) ∉ {p : EuclideanSpace ℝ (Fin d) ×
+            EuclideanSpace ℝ (Fin d) | p.2 ∈ closedBall (midCentre v ϑ p.1 t) ‖p.1 - t‖}
+            from hp)]
+    rw [heq]
+    exact (hwmeas.comp measurable_fst).mul ((hG.comp measurable_snd).indicator hgraph)
+  calc ∫⁻ s, w s * ∫⁻ z in closedBall (midCentre v ϑ s t) ‖s - t‖, G z
+      = ∫⁻ s, ∫⁻ z, w s * (closedBall (midCentre v ϑ s t) ‖s - t‖).indicator G z :=
+        lintegral_congr hstep
+    _ = ∫⁻ z, ∫⁻ s, w s * (closedBall (midCentre v ϑ s t) ‖s - t‖).indicator G z :=
+        lintegral_lintegral_swap hunc
+    _ ≤ ∫⁻ z, {z | z - t ∈ cone v ϑ}.indicator
+          (fun z => G z * (ENNReal.ofReal (chainConst' d ϑ α * ‖z - t‖ ^ (-(d : ℝ) - α)) *
+            unitBallVol d)) z := by
+        refine lintegral_mono fun z => ?_
+        have hfibmeas : MeasurableSet {s : EuclideanSpace ℝ (Fin d) |
+            z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖} := by
+          have h1 : Continuous fun s : EuclideanSpace ℝ (Fin d) =>
+              dist z (midCentre v ϑ s t) := by unfold midCentre; fun_prop
+          have h2 : Continuous fun s : EuclideanSpace ℝ (Fin d) => ‖s - t‖ := by fun_prop
+          simpa [Metric.mem_closedBall] using (isClosed_le h1 h2).measurableSet
+        have hpw : ∀ s, w s * (closedBall (midCentre v ϑ s t) ‖s - t‖).indicator G z
+            = {s | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖}.indicator
+              (fun s => G z * w s) s := by
+          intro s
+          by_cases hp : z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖
+          · rw [Set.indicator_of_mem hp,
+              Set.indicator_of_mem (show s ∈ {s | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖}
+                from hp)]
+            ring
+          · rw [Set.indicator_of_notMem hp,
+              Set.indicator_of_notMem (show s ∉ {s | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖}
+                from hp)]
+            simp
+        have hfib : ∫⁻ s, w s * (closedBall (midCentre v ϑ s t) ‖s - t‖).indicator G z
+            = G z * ∫⁻ s in {s | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖}, w s := by
+          calc ∫⁻ s, w s * (closedBall (midCentre v ϑ s t) ‖s - t‖).indicator G z
+              = ∫⁻ s, {s | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖}.indicator
+                  (fun s => G z * w s) s := lintegral_congr hpw
+            _ = ∫⁻ s in {s | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖}, G z * w s :=
+                lintegral_indicator hfibmeas _
+            _ = G z * ∫⁻ s in {s | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖}, w s :=
+                lintegral_const_mul _ hwmeas
+        rw [hfib]
+        by_cases hzc : z - t ∈ cone v ϑ
+        · rw [Set.indicator_of_mem (show z ∈ {z | z - t ∈ cone v ϑ} from hzc)]
+          exact mul_le_mul' le_rfl (lintegral_midBall_fibre_le' hv hϑ hϑ' hα hd t z)
+        · rw [Set.indicator_of_notMem (show z ∉ {z | z - t ∈ cone v ϑ} from hzc)]
+          have hball0 : volume (closedBall t (0 : ℝ)) = 0 := by
+            rw [volume_closedBall_eq _ le_rfl, zero_pow (Nat.ne_of_gt hd), ENNReal.ofReal_zero,
+              zero_mul]
+          have hnull : volume {s : EuclideanSpace ℝ (Fin d) |
+              z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖} = 0 :=
+            measure_mono_null
+              (le_trans (fibre_subset_singleton_of_notMem_cone' hv hϑ hϑ' hzc) (by simp)) hball0
+          rw [setLIntegral_measure_zero _ _ hnull, mul_zero]
+    _ = ∫⁻ z in {z | z - t ∈ cone v ϑ},
+          G z * (ENNReal.ofReal (chainConst' d ϑ α * ‖z - t‖ ^ (-(d : ℝ) - α)) *
+            unitBallVol d) := lintegral_indicator hconeMeas _
+    _ = ENNReal.ofReal (chainConst' d ϑ α) * unitBallVol d *
+          ∫⁻ z in {z | z - t ∈ cone v ϑ},
+            G z * ENNReal.ofReal (‖z - t‖ ^ (-(d : ℝ) - α)) := by
+        rw [← lintegral_const_mul' _ _
+          (ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top)]
+        refine lintegral_congr fun z => ?_
+        rw [ENNReal.ofReal_mul hcc]
+        ring
+
+
+/-! ## Assembling the local Poincaré inequality
+
+Averaging bounds the oscillation pointwise; the two exchanges dispose of the two
+terms of the chained integrand. Tonelli in the outer pair, once in each order,
+puts each term in front of the exchange that handles it. -/
+
+/-- The averaging integral is measurable in the pair, so Tonelli applies to it. -/
+theorem measurable_param_midBall {d : ℕ} (v : EuclideanSpace ℝ (Fin d)) (ϑ : ℝ)
+    {H : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hH : Measurable H) :
+    Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ∫⁻ z in closedBall (midCentre v ϑ p.1 p.2) ‖p.1 - p.2‖, H (p, z) := by
+  have hset : MeasurableSet {q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+      EuclideanSpace ℝ (Fin d) | q.2 ∈ closedBall (midCentre v ϑ q.1.1 q.1.2) ‖q.1.1 - q.1.2‖} := by
+    have h1 : Continuous fun q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+        EuclideanSpace ℝ (Fin d) => dist q.2 (midCentre v ϑ q.1.1 q.1.2) := by
+      unfold midCentre; fun_prop
+    have h2 : Continuous fun q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+        EuclideanSpace ℝ (Fin d) => ‖q.1.1 - q.1.2‖ := by fun_prop
+    simpa [Metric.mem_closedBall] using (isClosed_le h1 h2).measurableSet
+  have heq : (fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ∫⁻ z in closedBall (midCentre v ϑ p.1 p.2) ‖p.1 - p.2‖, H (p, z))
+      = fun p => ∫⁻ z, {q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+          EuclideanSpace ℝ (Fin d) |
+          q.2 ∈ closedBall (midCentre v ϑ q.1.1 q.1.2) ‖q.1.1 - q.1.2‖}.indicator H (p, z) := by
+    funext p
+    rw [← lintegral_indicator measurableSet_closedBall]
+    refine lintegral_congr fun z => ?_
+    by_cases hz : z ∈ closedBall (midCentre v ϑ p.1 p.2) ‖p.1 - p.2‖
+    · rw [Set.indicator_of_mem hz, Set.indicator_of_mem (show (p, z) ∈ {q :
+      (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) × EuclideanSpace ℝ (Fin d) |
+      q.2 ∈ closedBall (midCentre v ϑ q.1.1 q.1.2) ‖q.1.1 - q.1.2‖} from hz)]
+    · rw [Set.indicator_of_notMem hz, Set.indicator_of_notMem (show (p, z) ∉ {q :
+        (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) × EuclideanSpace ℝ (Fin d) |
+        q.2 ∈ closedBall (midCentre v ϑ q.1.1 q.1.2) ‖q.1.1 - q.1.2‖} from hz)]
+  rw [heq]
+  exact (hH.indicator hset).lintegral_prod_right'
+
+/-- **The local Poincaré inequality, for pairs sharing a cone direction.**
+
+The flat oscillation of `f` against the weight `‖s − t‖^{-d-α}`, over *all* pairs,
+is bounded by the same quantity restricted to pairs that see the cone `Ṽ(v,ϑ)`.
+Since the lower bound of (1.4) turns the cone-restricted weight into `k`, this is
+`(★)` for a set of points all of whose cones contain a common direction. -/
+theorem localPoincare_sameDirection {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1)
+    {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α) (hd : 0 < d)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f) :
+    unitBallVol d * ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+        ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+          ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(d : ℝ) - α))
+      ≤ ENNReal.ofReal (chainConst d ϑ α) * unitBallVol d *
+          (∫⁻ s, ∫⁻ z in {z | z - s ∈ cone v ϑ},
+            ENNReal.ofReal (2 * (f z - f s) ^ 2) *
+              ENNReal.ofReal (‖z - s‖ ^ (-(d : ℝ) - α)))
+        + ENNReal.ofReal (chainConst' d ϑ α) * unitBallVol d *
+          (∫⁻ t, ∫⁻ z in {z | z - t ∈ cone v ϑ},
+            ENNReal.ofReal (2 * (f t - f z) ^ 2) *
+              ENNReal.ofReal (‖z - t‖ ^ (-(d : ℝ) - α))) := by
+  set A : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞ := fun p =>
+    ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(2 * (d : ℝ)) - α)) *
+      ∫⁻ z in closedBall (midCentre v ϑ p.1 p.2) ‖p.1 - p.2‖,
+        ENNReal.ofReal (2 * (f z - f p.1) ^ 2) with hAdef
+  set B : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞ := fun p =>
+    ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(2 * (d : ℝ)) - α)) *
+      ∫⁻ z in closedBall (midCentre v ϑ p.1 p.2) ‖p.1 - p.2‖,
+        ENNReal.ofReal (2 * (f p.2 - f z) ^ 2) with hBdef
+  have hw2m : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(2 * (d : ℝ)) - α)) := by fun_prop
+  have hHA : Measurable fun q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+      EuclideanSpace ℝ (Fin d) => ENNReal.ofReal (2 * (f q.2 - f q.1.1) ^ 2) := by fun_prop
+  have hHB : Measurable fun q : (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ×
+      EuclideanSpace ℝ (Fin d) => ENNReal.ofReal (2 * (f q.1.2 - f q.2) ^ 2) := by fun_prop
+  have hGs : ∀ s : EuclideanSpace ℝ (Fin d),
+      Measurable fun z => ENNReal.ofReal (2 * (f z - f s) ^ 2) := by intro s; fun_prop
+  have hGt : ∀ t : EuclideanSpace ℝ (Fin d),
+      Measurable fun z => ENNReal.ofReal (2 * (f t - f z) ^ 2) := by intro t; fun_prop
+  have hAm : Measurable A := by
+    rw [hAdef]; exact hw2m.mul (measurable_param_midBall v ϑ hHA)
+  have hBm : Measurable B := by
+    rw [hBdef]; exact hw2m.mul (measurable_param_midBall v ϑ hHB)
+  -- the pointwise bound
+  have hptwise : ∀ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+        ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(d : ℝ) - α)) * unitBallVol d ≤ A p + B p := by
+    rintro ⟨s, t⟩
+    refine le_trans (osc_weighted_le v ϑ hα f s t) (le_of_eq ?_)
+    rw [hAdef, hBdef, ← mul_add]
+    congr 1
+    rw [← lintegral_add_left (by fun_prop)]
+    refine setLIntegral_congr_fun measurableSet_closedBall fun z _ => ?_
+    rw [← ENNReal.ofReal_add (by positivity) (by positivity)]
+  calc unitBallVol d * ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(d : ℝ) - α))
+      = ∫⁻ p, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+          ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(d : ℝ) - α)) * unitBallVol d := by
+        rw [← lintegral_const_mul' _ _ unitBallVol_ne_top]
+        exact lintegral_congr fun p => by ring
+    _ ≤ ∫⁻ p, (A p + B p) := lintegral_mono hptwise
+    _ = (∫⁻ p, A p) + ∫⁻ p, B p := lintegral_add_left hAm _
+    _ ≤ ENNReal.ofReal (chainConst d ϑ α) * unitBallVol d *
+          (∫⁻ s, ∫⁻ z in {z | z - s ∈ cone v ϑ},
+            ENNReal.ofReal (2 * (f z - f s) ^ 2) *
+              ENNReal.ofReal (‖z - s‖ ^ (-(d : ℝ) - α)))
+        + ENNReal.ofReal (chainConst' d ϑ α) * unitBallVol d *
+          (∫⁻ t, ∫⁻ z in {z | z - t ∈ cone v ϑ},
+            ENNReal.ofReal (2 * (f t - f z) ^ 2) *
+              ENNReal.ofReal (‖z - t‖ ^ (-(d : ℝ) - α))) := by
+        refine add_le_add ?_ ?_
+        · rw [Measure.volume_eq_prod, lintegral_prod _ hAm.aemeasurable,
+            ← lintegral_const_mul' _ _
+              (ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top)]
+          exact lintegral_mono fun s => lintegral_swap_fibre hv hϑ hϑ' hα hd s (hGs s)
+        · rw [Measure.volume_eq_prod, lintegral_prod_symm _ hBm.aemeasurable,
+            ← lintegral_const_mul' _ _
+              (ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top)]
+          exact lintegral_mono fun t => lintegral_swap_fibre' hv hϑ hϑ' hα hd t (hGt t)
 
 end QFS
