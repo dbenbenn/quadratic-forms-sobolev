@@ -48,8 +48,8 @@ precisely why it goes through `ℤ^d` — and reproducing it in the continuum is
 open research problem, not a gap in this formalisation.
 -/
 
-open Metric Set
-open scoped Real InnerProductSpace
+open Metric Set MeasureTheory
+open scoped Real InnerProductSpace ENNReal
 
 namespace QFS
 
@@ -165,6 +165,33 @@ theorem mem_two_cones_of_mem_midBall {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ 
     have h3 : 3 * ‖s - t‖ / Real.sin ϑ = 3 / Real.sin ϑ * ‖s - t‖ := by ring
     rw [h3]; nlinarith
 
+/-- The norm bounds of `mem_two_cones_of_mem_midBall`, stated without needing
+`s ≠ t`: a point of the averaging ball is at distance `O(‖s − t‖ / sin ϑ)` from
+both `s` and `t`. Both directions of this comparison are needed for the
+chaining average — the upper bound to keep the chain inside a slightly enlarged
+cube, the resulting lower bound on `‖s − t‖` to control the fibre integral. -/
+theorem norm_sub_le_of_mem_midBall {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) {s t z : E}
+    (hz : z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖) :
+    ‖z - s‖ ≤ (1 + 3 / Real.sin ϑ) * ‖s - t‖ ∧
+      ‖z - t‖ ≤ (2 + 3 / Real.sin ϑ) * ‖s - t‖ := by
+  have hsin : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [Real.pi_pos])
+  have hlam : 0 ≤ 3 * ‖s - t‖ / Real.sin ϑ := by positivity
+  rw [Metric.mem_closedBall, dist_eq_norm, midCentre] at hz
+  set q : E := z - (s + (3 * ‖s - t‖ / Real.sin ϑ) • v) with hqdef
+  have hzs : z - s = q + (3 * ‖s - t‖ / Real.sin ϑ) • v := by rw [hqdef]; abel
+  have hzt : z - t = (q + (s - t)) + (3 * ‖s - t‖ / Real.sin ϑ) • v := by rw [hqdef]; abel
+  have hq' : ‖q + (s - t)‖ ≤ 2 * ‖s - t‖ := le_trans (norm_add_le _ _) (by linarith)
+  have hsmul : ‖(3 * ‖s - t‖ / Real.sin ϑ) • v‖ = 3 / Real.sin ϑ * ‖s - t‖ := by
+    rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg hlam, hv, mul_one]; ring
+  constructor
+  · rw [hzs]
+    refine le_trans (norm_add_le _ _) ?_
+    rw [hsmul]; linarith
+  · rw [hzt]
+    refine le_trans (norm_add_le _ _) ?_
+    rw [hsmul]; linarith
+
 /-- **The slice bound.** For fixed `s` and `z`, the points `t` for which `z` is
 one of their common cone-neighbours have `‖s − t‖` pinned to within a factor two
 by `⟪v, z − s⟫`.
@@ -229,5 +256,98 @@ theorem volume_midBall {d : ℕ} (v : EuclideanSpace ℝ (Fin d)) (ϑ : ℝ)
     MeasureTheory.volume (closedBall (midCentre v ϑ s t) ‖s - t‖)
       = ENNReal.ofReal (‖s - t‖ ^ d) * unitBallVol d :=
   volume_closedBall_eq _ (norm_nonneg _)
+
+
+/-! ## The fibre estimate
+
+The chaining average is exchanged with the integration in `t` by Tonelli, and
+what has to survive that exchange is the weight. This is the estimate that makes
+it work, and it is the reason the argument is scale-invariant: the singular
+weight `‖s − t‖^{-2d-α}` integrated over the `t`-fibre above a point `z` comes
+back as `‖z − s‖^{-d-α}`, exactly the weight of the `H_k` form on the pair
+`(s,z)` — which the lower bound of (1.4) then converts into `k(s,z)`. -/
+
+/-- The constant in the fibre estimate: `(1 + 3/sin ϑ)^{2d+α} / (3/sin ϑ − 1)^d`. -/
+noncomputable def chainConst (d : ℕ) (ϑ α : ℝ) : ℝ :=
+  (1 + 3 / Real.sin ϑ) ^ (2 * (d : ℝ) + α) / (3 / Real.sin ϑ - 1) ^ d
+
+/-- **The fibre estimate.** Integrating `‖s − t‖^{-2d-α}` over the set of `t` for
+which `z` is a common cone-neighbour of `s` and `t` returns `‖z − s‖^{-d-α}`, up
+to a constant depending only on `d`, `ϑ` and `α`. -/
+theorem lintegral_midBall_fibre_le {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1)
+    {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α) (hd : 0 < d)
+    (s z : EuclideanSpace ℝ (Fin d)) :
+    ∫⁻ t in {t | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖},
+        ENNReal.ofReal (‖s - t‖ ^ (-(2 * (d : ℝ)) - α))
+      ≤ ENNReal.ofReal (chainConst d ϑ α * ‖z - s‖ ^ (-(d : ℝ) - α)) * unitBallVol d := by
+  have hsin : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [Real.pi_pos])
+  have hsin1 : Real.sin ϑ ≤ 1 := Real.sin_le_one ϑ
+  have h3 : (3 : ℝ) ≤ 3 / Real.sin ϑ := by
+    have hnn : (0 : ℝ) ≤ 3 * (1 - Real.sin ϑ) / Real.sin ϑ := div_nonneg (by linarith) hsin.le
+    have heq : 3 + 3 * (1 - Real.sin ϑ) / Real.sin ϑ = 3 / Real.sin ϑ := by field_simp; ring
+    linarith [heq]
+  have hA : (0 : ℝ) < 1 + 3 / Real.sin ϑ := by linarith
+  have hB : (0 : ℝ) < 3 / Real.sin ϑ - 1 := by linarith
+  have hsub := midBall_fibre_subset_closedBall hv hϑ hϑ' s z
+  -- the fibre is closed, hence measurable
+  have hmeas : MeasurableSet {t : EuclideanSpace ℝ (Fin d) |
+      z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖} := by
+    have h1 : Continuous fun t : EuclideanSpace ℝ (Fin d) => dist z (midCentre v ϑ s t) := by
+      unfold midCentre; fun_prop
+    have h2 : Continuous fun t : EuclideanSpace ℝ (Fin d) => ‖s - t‖ := by fun_prop
+    simpa [Metric.mem_closedBall] using (isClosed_le h1 h2).measurableSet
+  rcases eq_or_ne z s with rfl | hzs
+  · have hnull : volume {t : EuclideanSpace ℝ (Fin d) |
+        z ∈ closedBall (midCentre v ϑ z t) ‖z - t‖} = 0 := by
+      have hball0 : volume (closedBall z (0 : ℝ)) = 0 := by
+        rw [volume_closedBall_eq _ le_rfl, zero_pow (Nat.ne_of_gt hd), ENNReal.ofReal_zero,
+          zero_mul]
+      refine measure_mono_null (le_trans hsub (le_of_eq ?_)) hball0
+      simp
+    rw [setLIntegral_measure_zero _ _ hnull]
+    simp
+  · have hn : 0 < ‖z - s‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hzs
+    have hexp : -(2 * (d : ℝ)) - α ≤ 0 := by
+      have : (0 : ℝ) ≤ (d : ℝ) := Nat.cast_nonneg d
+      linarith
+    have hquot : 0 < ‖z - s‖ / (1 + 3 / Real.sin ϑ) := by positivity
+    -- the scalar identity behind the constant
+    have hAe : (1 + 3 / Real.sin ϑ) ^ (-(2 * (d : ℝ)) - α)
+        = ((1 + 3 / Real.sin ϑ) ^ (2 * (d : ℝ) + α))⁻¹ := by
+      rw [show -(2 * (d : ℝ)) - α = -(2 * (d : ℝ) + α) from by ring, Real.rpow_neg hA.le]
+    have hxe : ‖z - s‖ ^ (-(2 * (d : ℝ)) - α) * ‖z - s‖ ^ ((d : ℕ) : ℝ)
+        = ‖z - s‖ ^ (-(d : ℝ) - α) := by
+      rw [← Real.rpow_add hn]; congr 1; ring
+    have hscalar : (‖z - s‖ / (1 + 3 / Real.sin ϑ)) ^ (-(2 * (d : ℝ)) - α) *
+        (‖z - s‖ ^ d / (3 / Real.sin ϑ - 1) ^ d)
+        = chainConst d ϑ α * ‖z - s‖ ^ (-(d : ℝ) - α) := by
+      have e1 : (‖z - s‖ / (1 + 3 / Real.sin ϑ)) ^ (-(2 * (d : ℝ)) - α)
+          = ‖z - s‖ ^ (-(2 * (d : ℝ)) - α) * (1 + 3 / Real.sin ϑ) ^ (2 * (d : ℝ) + α) := by
+        rw [Real.div_rpow hn.le hA.le, hAe, div_eq_mul_inv, inv_inv]
+      rw [e1, ← Real.rpow_natCast ‖z - s‖ d, chainConst]
+      rw [show ‖z - s‖ ^ (-(2 * (d : ℝ)) - α) * (1 + 3 / Real.sin ϑ) ^ (2 * (d : ℝ) + α) *
+            (‖z - s‖ ^ ((d : ℕ) : ℝ) / (3 / Real.sin ϑ - 1) ^ d)
+          = (‖z - s‖ ^ (-(2 * (d : ℝ)) - α) * ‖z - s‖ ^ ((d : ℕ) : ℝ)) *
+            ((1 + 3 / Real.sin ϑ) ^ (2 * (d : ℝ) + α) / (3 / Real.sin ϑ - 1) ^ d) from by ring,
+        hxe]
+      ring
+    calc ∫⁻ t in {t | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖},
+            ENNReal.ofReal (‖s - t‖ ^ (-(2 * (d : ℝ)) - α))
+        ≤ ∫⁻ _ in {t | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖},
+            ENNReal.ofReal ((‖z - s‖ / (1 + 3 / Real.sin ϑ)) ^ (-(2 * (d : ℝ)) - α)) := by
+          refine lintegral_mono_ae ?_
+          filter_upwards [ae_restrict_mem hmeas] with t ht
+          obtain ⟨h1, -⟩ := norm_sub_le_of_mem_midBall hv hϑ hϑ' ht
+          refine ENNReal.ofReal_le_ofReal (Real.rpow_le_rpow_of_nonpos hquot ?_ hexp)
+          rw [div_le_iff₀ hA]
+          linarith [h1]
+      _ = ENNReal.ofReal ((‖z - s‖ / (1 + 3 / Real.sin ϑ)) ^ (-(2 * (d : ℝ)) - α)) *
+            volume {t | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖} := setLIntegral_const _ _
+      _ ≤ ENNReal.ofReal ((‖z - s‖ / (1 + 3 / Real.sin ϑ)) ^ (-(2 * (d : ℝ)) - α)) *
+            volume (closedBall s (‖z - s‖ / (3 / Real.sin ϑ - 1))) :=
+          mul_le_mul' le_rfl (measure_mono hsub)
+      _ = ENNReal.ofReal (chainConst d ϑ α * ‖z - s‖ ^ (-(d : ℝ) - α)) * unitBallVol d := by
+          rw [volume_closedBall_eq _ (by positivity), ← mul_assoc,
+            ← ENNReal.ofReal_mul (Real.rpow_nonneg hquot.le _), div_pow, hscalar]
 
 end QFS
