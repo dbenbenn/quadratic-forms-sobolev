@@ -1234,4 +1234,49 @@ theorem discreteFormOn_eq_tsum {h : ℝ} (S : Set (EuclideanSpace ℝ (Fin d))) 
     (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
       ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * ω q.1 q.2)).symm
 
+
+/-- The same total sum, indexed by the tiling's index set: the summand also
+vanishes off the lattice, and `hℤ^d ≃ ℤ^d`. -/
+theorem tsum_discreteC_eq_tsum_index {h : ℝ} (hh : h ≠ 0)
+    (S : Set (EuclideanSpace ℝ (Fin d))) (R₀ : ℝ)
+    (ω : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) :
+    ∑' p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d), discreteC d h S R₀ ω f p
+      = ∑' nm : (Fin d → ℤ) × (Fin d → ℤ),
+        discreteC d h S R₀ ω f (latticePt d h nm.1, latticePt d h nm.2) := by
+  have hsupp : Function.support (discreteC d h S R₀ ω f)
+      ⊆ scaledLattice d h ×ˢ scaledLattice d h := by
+    intro p hp
+    by_contra hc
+    refine hp ?_
+    rw [discreteC, Set.indicator_of_notMem]
+    intro hmem
+    exact hc ⟨hmem.1.2, hmem.2.1.2⟩
+  rw [← tsum_subtype_eq_of_support_subset hsupp]
+  set e : (Fin d → ℤ) × (Fin d → ℤ) ≃
+      ↥(scaledLattice d h ×ˢ scaledLattice d h) :=
+    ((latticeEquiv d hh).prodCongr (latticeEquiv d hh)).trans
+      (Equiv.Set.prod (scaledLattice d h) (scaledLattice d h)).symm with he
+  refine (Equiv.tsum_eq e (fun q => discreteC d h S R₀ ω f q)).symm.trans ?_
+  refine tsum_congr fun nm => ?_
+  rfl
+
+
+/-- **The discrete form is an integral.** Corollary 3.1's sum over pairs of
+lattice points, scaled by the volume `h^{2d}` of a product tile, is the integral
+of the step function it induces. This is the conversion §3.2 performs silently
+when it writes `(discret)` as an inequality between integrals of `g_h` and
+`g̃_h`. -/
+theorem discreteFormOn_mul_eq_lintegral {h : ℝ} (hh : 0 < h)
+    (S : Set (EuclideanSpace ℝ (Fin d))) (R₀ : ℝ)
+    (ω : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) :
+    discreteFormOn (scaledLattice d h) S R₀ ω f *
+        (ENNReal.ofReal (h ^ d) * ENNReal.ofReal (h ^ d))
+      = ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+        discreteC d h S R₀ ω f (stepIndex d h p.1, stepIndex d h p.2) := by
+  rw [lintegral_stepFun₂ hh (fun x y => discreteC d h S R₀ ω f (x, y)),
+    discreteFormOn_eq_tsum, tsum_discreteC_eq_tsum_index (ne_of_gt hh),
+    ENNReal.tsum_mul_right]
+
 end QFS
