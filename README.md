@@ -126,6 +126,7 @@ The pieces, all proved:
 | **`(★)` for a common cone direction** | `QFS.localPoincare_sameDirection` | ✅ **proved** |
 | **`H_k ⊆ H^{α/2}` for a common cone direction** | `QFS.formHs_le_form_of_commonDirection` | ✅ **proved** |
 | **The same, with both endpoints confined to a set `U`** — the diagonal blocks of the type decomposition | `QFS.localPoincare_sameDirection_on`, `QFS.formHs_le_form_of_commonDirection_on` | ✅ **proved** |
+| **Every diagonal block of the canonical decomposition is controlled, by one constant** | `QFS.diagonal_blocks_of_bounded` | ✅ **proved** |
 | **One intermediate point provably cannot do the cross blocks** | `QFS.no_common_neighbour_of_skew_axes`, `QFS.abs_inner_gt_of_mem_doubleCone` | ✅ **proved** (a disproof) |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
@@ -158,7 +159,13 @@ settles every **diagonal** block `U_m × U_m`. What remains is the `L² − L`
 **cross** blocks `U_m × U_{m'}`, `m ≠ m'`, where the two endpoints admit no
 common cone direction.
 
-That case is not merely harder — one intermediate point provably cannot do it,
+`QFS.diagonal_blocks_of_bounded` makes that precise: Corollary 2.4 supplies the
+finite family of reference cones of aperture `ϑ/3`, Debreu's condition (as the
+hypothesis `QFS.CondMeas`) makes the pieces measurable, and every diagonal block
+is controlled by a *single* constant — `chainConst` depends on the aperture,
+`ϑ/3` throughout, and not on the axis.
+
+The cross case is not merely harder — one intermediate point provably cannot do it,
 and `QFS.no_common_neighbour_of_skew_axes` proves so: in `ℝ³`, for `ϑ < π/4`, the
 double cone about `e₁` at the origin and the one about `e₂` at `e₃` are
 **disjoint**, so the set the averaging ball would live in is empty. Chains of
