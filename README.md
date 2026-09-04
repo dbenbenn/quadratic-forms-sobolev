@@ -102,13 +102,23 @@ of chains. Chaining needs three quantitative inputs, and all three are proved:
 | The compression bound: for fixed `s`, `z`, the admissible `t` lie in a ball of radius comparable to `‖z−s‖` | `QFS.midBall_fibre_subset_closedBall`, `QFS.inner_mem_Icc_of_mem_midBall` | ✅ proved |
 | The averaging ball has volume exactly `c_d‖s−t‖^d` | `QFS.volume_midBall` | ✅ proved |
 | **The fibre estimate**: `∫_{t : z ∈ W(s,t)} ‖s−t‖^{-2d-α} dt ≤ C(d,ϑ,α)·‖z−s‖^{-d-α}` | `QFS.lintegral_midBall_fibre_le`, `QFS.chainConst` | ✅ proved |
+| **The averaging step**: `(f(t)−f(s))²·|W(s,t)| ≤ ∫_{W(s,t)} 2(f(z)−f(s))² + 2(f(t)−f(z))²` | `QFS.osc_mul_volume_le`, `QFS.osc_weighted_le` | ✅ proved |
+| **The exchange at fixed `s`**: Tonelli plus the fibre estimate, returning the weight `‖z−s‖^{-d-α}` | `QFS.lintegral_swap_fibre` | ✅ proved |
 
-The last is what has to survive the exchange of the chaining average with the
+The fibre estimate is what has to survive the exchange of the chaining average with the
 integration in `t`, and it is why the argument is scale-invariant: the singular
 weight comes back as exactly the weight of the `H_k` form on the pair `(s,z)`,
-which the lower bound of (1.4) then converts into `k(s,z)`. With it, the
-same-cone-direction case of `(★)` needs only the Tonelli assembly — which is not
-yet written.
+which the lower bound of (1.4) then converts into `k(s,z)`.
+
+**Where the same-cone-direction case stands.** Averaging, exchange and fibre
+estimate are all proved, and `QFS.lintegral_swap_fibre` performs the Tonelli
+swap. What is left is bookkeeping: the chained integrand
+`2(f(z)−f(s))² + 2(f(t)−f(z))²` must be split, the exchange applied to the first
+term, and the fibre lemmas mirrored on the `t` side for the second — the mirror
+statements are the same computation with `⟪v, z − t⟫ ∈ [δ(3/sin ϑ − 2),
+δ(3/sin ϑ + 2)]` in place of `⟪v, z − s⟫ ∈ [δ(3/sin ϑ − 1), δ(3/sin ϑ + 1)]`.
+Then the cone membership `z − s ∈ Ṽ(v,ϑ) ⊆ Γ(s)` converts `‖z−s‖^{-d-α}` into
+`Λ k(s,z)` and `(★)` follows for pairs sharing a cone direction.
 
 The first input is the substantive one. The paper's Lemma 4.3 produces a *single*
 intermediate point; a point is a null set and cannot absorb an average, so a
