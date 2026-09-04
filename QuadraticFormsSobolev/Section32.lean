@@ -1309,4 +1309,36 @@ theorem discret_lintegral (ϑ Λ α R₀ : ℝ) (hϑ : 0 < ϑ) (hΛ : 1 ≤ Λ) 
   refine le_trans hscaled (le_of_eq ?_)
   rw [mul_assoc, discreteFormOn_mul_eq_lintegral hh]
 
+
+/-! ## The step index converges to the identity
+
+Everything in the limit `h → 0` rests on the tiling shrinking to points. -/
+
+/-- The point of the tiling nearest `s` is within `√d·h/2` of it. -/
+theorem norm_stepIndex_sub_le {h : ℝ} (hh : 0 < h) (s : EuclideanSpace ℝ (Fin d)) :
+    ‖stepIndex d h s - s‖ ≤ Real.sqrt d * h / 2 := by
+  have hmem : s ∈ closedCube h (stepIndex d h s) := mem_closedCube_stepIndex hh s
+  have hinf : infNorm (s - stepIndex d h s) ≤ h / 2 := hmem
+  have h1 : ‖s - stepIndex d h s‖ ≤ Real.sqrt d * infNorm (s - stepIndex d h s) :=
+    norm_le_sqrt_dim_mul_infNorm _
+  rw [← norm_neg, neg_sub]
+  have h2 : Real.sqrt d * infNorm (s - stepIndex d h s) ≤ Real.sqrt d * (h / 2) :=
+    mul_le_mul_of_nonneg_left hinf (Real.sqrt_nonneg _)
+  calc ‖s - stepIndex d h s‖ ≤ Real.sqrt d * infNorm (s - stepIndex d h s) := h1
+    _ ≤ Real.sqrt d * (h / 2) := h2
+    _ = Real.sqrt d * h / 2 := by ring
+
+/-- Along any sequence of scales tending to zero, the tiling's points converge to
+the point they surround. -/
+theorem tendsto_stepIndex {ι : Type*} {l : Filter ι} (hn : ι → ℝ) (hpos : ∀ i, 0 < hn i)
+    (hlim : Filter.Tendsto hn l (nhds 0)) (s : EuclideanSpace ℝ (Fin d)) :
+    Filter.Tendsto (fun i => stepIndex d (hn i) s) l (nhds s) := by
+  rw [tendsto_iff_dist_tendsto_zero]
+  refine squeeze_zero (fun i => dist_nonneg) (fun i => ?_)
+    (by simpa using (hlim.const_mul (Real.sqrt d / 2)))
+  rw [dist_eq_norm]
+  have := norm_stepIndex_sub_le (d := d) (hpos i) s
+  calc ‖stepIndex d (hn i) s - s‖ ≤ Real.sqrt d * hn i / 2 := this
+    _ = Real.sqrt d / 2 * hn i := by ring
+
 end QFS
