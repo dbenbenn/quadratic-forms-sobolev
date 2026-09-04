@@ -138,6 +138,7 @@ The pieces, all proved:
 | **The planar cross blocks are controlled** | `QFS.formHs_le_form_planar_cross` | ✅ **proved** |
 | **The dichotomy that closes the plane** | `QFS.cross2_ne_zero_or_carrier_eq`, `QFS.eq_or_eq_neg_of_cross2_eq_zero` | ✅ **proved** |
 | **Every block of the planar decomposition is controlled** | `QFS.planar_block_le`, `QFS.unitBallVol_ne_zero` | ✅ **proved** |
+| **`H_k ⊆ H^{α/2}` on `ℝ²`, for every admissible configuration** | `QFS.sobolevInclusion_planar` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
 integration in `t`, and it is why the argument is scale-invariant: the singular
@@ -228,8 +229,22 @@ parallel, hence the two double cones equal, hence the block diagonal, and there
 is no third possibility. That is exactly why the argument closes here and not in
 higher dimensions.
 
-What is left is a finite sum: Corollary 2.4 covers `ℝ²` by finitely many pieces
-`U_V`, the squares of that cover exhaust `ℝ² × ℝ²`, and the blocks add up.
+The finite sum is done, and with it the plane:
+
+> **`QFS.sobolevInclusion_planar`** — for every `ϑ`-bounded configuration on `ℝ²`
+> satisfying Debreu's condition, every kernel satisfying (1.4) and every
+> measurable `f`, `|f|²_{H^{α/2}(ℝ²)} ≤ C·|f|²_{H_k(ℝ²)}` for a finite `C`.
+
+**That is exactly the statement §3.2 needs and never establishes, proved for all
+admissible configurations in dimension two.** Corollary 2.4 covers `ℝ²` by
+finitely many pieces `U_V`, the squares of that cover exhaust `ℝ² × ℝ²`,
+`QFS.planar_block_le` controls every block, and a finite sum of finite constants
+is finite.
+
+In dimension three and above the statement remains open, and
+`QFS.no_common_neighbour_of_skew_axes` says why the method used here — averaging
+over a positive-measure set of common cone-neighbours — cannot reach it: there
+the two cones can be disjoint, so no such set exists.
 
 The analytic machinery is stated abstractly enough to be reused: the exchange
 asks only that a family of averaging sets have measurable graph and a fibre
