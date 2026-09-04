@@ -10,8 +10,10 @@ import QuadraticFormsSobolev.Section32
 None of it appears in arXiv:1707.09277, in any form: not the statements, not the
 constants, not the proofs. It is an attempt to close the one gap the
 formalisation of that paper leaves open, and it should be read as new (and
-incomplete) research rather than as a record of what the authors wrote. Nothing
-elsewhere in this repository depends on this file.
+incomplete) research rather than as a record of what the authors wrote. No
+mathematics elsewhere in this repository depends on this file: deleting it would
+leave the certification of the paper intact. (The root module imports it, and
+`ref_cones'`, in `RefCones`, is infrastructure added for it.)
 
 ## The problem
 
@@ -19,7 +21,9 @@ Section 3.2's dominated-convergence step needs an a priori hypothesis its own
 argument never establishes: that `f ∈ H_k(B*)` already lies in `H^{α/2}(B*)`.
 The formalisation of that step (`QFS.limsup_lintegral_stepG_le`) and of the
 whole of §3.2 (`QFS.formHs_ball_le_form_of_formHs_ne_top`) carries the
-hypothesis explicitly. This file discharges it in dimension two.
+hypothesis explicitly. This file discharges it in dimension two, in several
+regimes in every dimension, and reduces it in general to one integrability
+condition.
 
 ## What this file proves
 
@@ -36,33 +40,58 @@ both cones — a positive-measure strengthening of the paper's Lemma 4.3, which
 produces a single point. In the plane the same is true without a shared
 direction (`mem_two_cones_of_mem_planarBall`), because two non-parallel lines
 meet; that is what closes dimension two, and `no_common_neighbour_of_skew_axes`
-proves it cannot be done this way in dimension three.
+proves that *this* construction cannot be pushed to dimension three.
 
-Downstream of the inclusion, this file also carries the consequences that the
-paper's own machinery then yields in the plane:
+Stripped of hypotheses, what the chaining gives is one inequality
+(`lintegral_visibility_le`): for every configuration satisfying the standing
+assumptions — the kernel bounds (1.4) and condition (M) — the `H^{α/2}` energy of
+a pair, weighted by how much of its averaging ball can see both endpoints, is at
+most `C·|f|²_{H_k}`. Everything else here exhibits sets of pairs on which that
+weight is bounded below:
 
-* `sobolevInclusion_planar` — `H_k(ℝ²) ⊆ H^{α/2}(ℝ²)`, and
-  `formHs_ball_ne_top_of_planar` — its ball form, which is exactly §3.2's
-  missing hypothesis;
-* `formHs_ball_le_form_planar` and `theoremOneOneBallCondMeas_two` — Theorem
-  1.1's enlarged-ball form in the plane, in the paper's own shape;
-* `formHs_le_form_planar`, `Hk_ball_eq_Hs_ball_planar` — Theorem 1.1 and
-  Lemma 3.7 on the same ball, granted the Whitney/Dyda input Lemma 7.1 quotes;
-* `formHs_univ_le_form_univ_planar`, `Hk_univ_eq_Hs_univ_planar`,
-  `Hk_domain_eq_Hs_domain_planar` — Theorem 1.4 for `ℝ²` and for a domain with a
-  Whitney family.
+* **dimension two**: `sobolevInclusion_planar`, `formHs_ball_ne_top_of_planar`,
+  `formHs_ball_le_form_planar`, `theoremOneOneBallCondMeas_two`,
+  `formHs_le_form_planar`, `Hk_ball_eq_Hs_ball_planar`,
+  `formHs_univ_le_form_univ_planar`, `Hk_univ_eq_Hs_univ_planar`,
+  `Hk_domain_eq_Hs_domain_planar` — Theorems 1.1 and 1.4 in the plane, granted
+  the Whitney/Dyda input Lemma 7.1 quotes;
+* **dimension one**: `formHs_le_form_dim_one`, where every cone is `ℝ ∖ {0}`;
+* **small axis spread** — the cone axes at most `γ` apart as lines with
+  `γ < 2ϑ`: `sobolevInclusion_of_axisSpread` and the chain behind it
+  (`formHs_ball_le_form_spread`, `Hk_univ_eq_Hs_univ_spread`,
+  `Hk_domain_eq_Hs_domain_spread`). **Wide cones** (apex above `π/4`) are the
+  case `γ = π/2`, and `sobolevInclusion_wide` is now derived from it;
+* **pairwise overlapping cone types**: `sobolevInclusion_of_overlapping`, with
+  `exists_narrow_overlapping_cones_without_common_direction` showing that this
+  is strictly weaker than a common direction;
+* **a densely visible type**, and its exact reach:
+  `formHs_le_form_of_visibleDense`, `formHs_le_form_of_ae_commonDirection`;
+* **local domination**, where the dominating type may vary from pair to pair:
+  `LocallyDominatedRad`, `formHs_ball_le_form_locallyDominated`, together with
+  two families that satisfy it — every uniformly continuous configuration
+  (`formHs_ball_le_form_of_uniformContinuous`) and two arbitrary narrow cone
+  types split by a hyperplane (`formHs_ball_le_form_twoSide`);
+* **every admissible configuration**, up to one condition on `f`: there is an
+  explicit measurable domination radius `ρ > 0`
+  (`exists_measurable_dominationRadius`) with Theorem 1.1's enlarged-ball form
+  for every `f` such that `∫ f²ρ^{-α} < ∞`
+  (`formHs_ball_le_form_of_dominationRadius`).
 
-`planar_hypotheses_nonvacuous` records that none of this is vacuous.
+`planar_hypotheses_nonvacuous` and `wide_hypotheses_nonvacuous` record that none
+of this is vacuous.
 
 ## What this file does not prove
 
-Dimension three and above. Two thin double cones with skew axes need not meet at
-all, so one intermediate point cannot suffice and genuinely longer chains are
-required; producing them, with a uniform bound on the length and with positive
-measure at every link, is the continuous analogue of the paper's §§5–6. The
-paper establishes that machinery only in the discrete setting — which is
-precisely why it goes through `ℤ^d` — and reproducing it in the continuum is an
-open research problem, not a gap in this formalisation.
+The general narrow case in dimension three and above: cones of apex at most `π/4`
+whose types neither overlap nor are locally dominated. What is missing there is
+precisely the size of the domination radius — that `∫ f²ρ^{-α} < ∞` for every
+`f ∈ H_k`. Two thin double cones with skew axes need not meet at all, so one
+intermediate point cannot suffice and genuinely longer chains would be required;
+producing them, with a uniform bound on the length and with positive measure at
+every link, is the continuous analogue of the paper's §§5–6. The paper
+establishes that machinery only in the discrete setting — which is precisely why
+it goes through `ℤ^d` — and reproducing it in the continuum is an open research
+problem, not a gap in this formalisation.
 -/
 
 open Metric Set MeasureTheory
@@ -2612,8 +2641,9 @@ theorem formHs_le_form_planar_cross {vs vt : EuclideanSpace ℝ (Fin 2)} (hvs : 
 Two reference cones of the same aperture either have non-parallel axes — and then
 `formHs_le_form_planar_cross` applies — or they are the *same* double cone, and
 then the block is diagonal and `formHs_le_form_of_commonDirection_on` applies. In
-the plane there is no third possibility, which is exactly why the argument
-closes here and not in higher dimensions. -/
+the plane there is no third possibility, which is exactly why *this* argument
+closes here and not in higher dimensions; the higher-dimensional regimes are
+reached below by other means. -/
 
 /-- **Parallel unit vectors in the plane.** If the cross product vanishes, the
 two axes agree up to sign — and then the double cones coincide. -/
@@ -2776,8 +2806,9 @@ satisfying Debreu's measurability condition.
 
 This is the statement §3.2 needs, proved in the plane for *all* admissible
 configurations — not only those with a common cone direction. In dimension three
-and above it remains open, and `no_common_neighbour_of_skew_axes` shows why the
-method used here cannot reach it. -/
+and above this particular argument does not reach it, for the reason in
+`no_common_neighbour_of_skew_axes`; what does reach it there, in the regimes
+listed at the head of this file, is the later material below. -/
 theorem sobolevInclusion_planar {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hα : 0 ≤ α)
     {Γ : Configuration (EuclideanSpace ℝ (Fin 2))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
     {k : EuclideanSpace ℝ (Fin 2) → EuclideanSpace ℝ (Fin 2) → ℝ≥0∞}
@@ -3212,6 +3243,8 @@ theorem Hk_ball_eq_Hs_ball_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤
   rw [htop, ENNReal.mul_top (by simpa using hcpos)] at hbound
   exact hfform (top_le_iff.mp hbound)
 
+/-! ### The planar hypotheses are satisfiable -/
+
 /-- **The hypotheses of the planar theorems are satisfiable.** The constant
 configuration and the plain jump kernel satisfy every one of them, so none of
 the statements above is vacuous. -/
@@ -3437,8 +3470,10 @@ theorem wide_block_le {d : ℕ} (hd : 0 < d) {α Λ θ : ℝ} (hθ1 : π / 4 < �
 
 /-! ## Pairwise overlapping cones: narrow cones without a common direction
 
-Chains of length three or more cannot help (see the note below), but chains of
-length two reach further than the wide-cone case suggests. All they need is that
+Chains of length three or more are what the general narrow case would need (see
+the note below), and they are out of reach here: their interior legs run between
+two intermediate points whose types the configuration assigns adversarially. But
+chains of length two reach further than the wide-cone case suggests. All they need is that
 the two cones **overlap** — the intermediate point is then seen by both
 endpoints' own cones, and no constraint is placed on its type. Overlapping is
 strictly weaker than sharing a direction: three cones can pairwise overlap with
@@ -3446,8 +3481,8 @@ no direction common to all three, and that happens for narrow cones in dimension
 three and above. -/
 
 /-- **A block of two overlapping types is controlled.** The hypothesis is a cone
-`Ṽ(u,η)` inside the cones of every point of `A` and of every point of `B`; no
-apex angle and no dimension enters. -/
+`Ṽ(u,η)` inside the cones of every point of `A` and of every point of `B`; the
+apex angle of `Γ` and the dimension are otherwise unconstrained. -/
 theorem overlap_block_le {d : ℕ} (hd : 0 < d) {α Λ η : ℝ} (hη0 : 0 < η) (hη2 : η ≤ π / 2)
     (hα : 0 ≤ α)
     {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
@@ -4259,6 +4294,8 @@ theorem formHs_le_form_dim_one {α Λ : ℝ} (hα : 0 ≤ α)
       lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
 
 
+/-! ### The wide-cone hypotheses are satisfiable -/
+
 /-- **The wide-cone hypotheses are satisfiable.** The constant configuration with
 apex angle `π/2` is `ϑ`-bounded for every `ϑ ≤ π/2`, in particular for a
 `ϑ > π/4`, and the plain jump kernel satisfies (1.4) with `Λ = 2`. -/
@@ -4356,6 +4393,9 @@ theorem osc_weighted_le_visible {d : ℕ} (v : EuclideanSpace ℝ (Fin d)) (ϑ :
         rw [heq]
 
 
+/-- **The local Poincaré inequality with a densely visible type**, in the form the
+`H_k` side consumes: the whole-space version of
+`QFS.localPoincare_visible_on`. -/
 theorem localPoincare_visible {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1)
     {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α c₀ : ℝ} (hα : 0 ≤ α) (hd : 0 < d)
     (hc₀ : 0 ≤ c₀) {U : Set (EuclideanSpace ℝ (Fin d))} (hUm : MeasurableSet U)
@@ -4600,15 +4640,14 @@ theorem formHs_le_form_of_visibleDense {d : ℕ} {v : EuclideanSpace ℝ (Fin d)
           unitBallVol d * form Set.univ k f := by ring
 
 
-
-
 /-! ### The same, for one pair at a time and on a set of pairs
 
 The density of the visible type is used only at the ball the chaining averages
 over, once per pair. Isolating that is what lets the type vary from pair to
 pair. -/
 
-/-- **The averaging step, over the common neighbours of the visible type.** -/
+/-- **The averaging step, for a single pair.** The density of the visible type is
+consumed only at that pair's own averaging ball. -/
 theorem osc_weighted_le_visible' {d : ℕ} (v : EuclideanSpace ℝ (Fin d)) (ϑ : ℝ) {α c₀ : ℝ}
     (hc₀ : 0 ≤ c₀) {U : Set (EuclideanSpace ℝ (Fin d))} (hUm : MeasurableSet U)
     (f : EuclideanSpace ℝ (Fin d) → ℝ) {s t : EuclideanSpace ℝ (Fin d)} (hst : s ≠ t)
@@ -4833,8 +4872,10 @@ theorem localPoincare_vol {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v�
               (ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top)]
           exact lintegral_mono fun t => lintegral_swap_fibre' hv hϑ hϑ' hα hd t (hGt t)
 
-/-- **The visibility-weighted energy of one type is controlled by the `H_k` form**,
-for every admissible configuration and with no hypothesis at all. -/
+/-- **The visibility-weighted energy of one type is controlled by the `H_k` form.**
+Beyond the standing assumptions — the kernel bounds (1.4), Debreu's condition and
+measurability — nothing is assumed of `Γ`: no lower bound on its apex angles, no
+relation between its cone directions, and no restriction on the dimension. -/
 theorem formHs_le_form_of_vol {d : ℕ} {v : EuclideanSpace ℝ (Fin d)}
     (hv : ‖v‖ = 1)
     {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α) (hd : 0 < d)
@@ -5072,6 +5113,9 @@ theorem localPoincare_visible_on {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv 
               (ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top)]
           exact lintegral_mono fun t => lintegral_swap_fibre' hv hϑ hϑ' hα hd t (hGt t)
 
+/-- **`H_k` controls the `H^{α/2}` energy of a chosen set of pairs**, whenever each
+of them has a `c₀`-fraction of its averaging ball inside the visible type. The
+set-of-pairs form of `QFS.formHs_le_form_of_visibleDense`. -/
 theorem formHs_le_form_of_visibleDense_on {d : ℕ} {v : EuclideanSpace ℝ (Fin d)}
     (hv : ‖v‖ = 1)
     {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α) (hd : 0 < d)
@@ -5178,7 +5222,6 @@ theorem formHs_le_form_of_visibleDense_on {d : ℕ} {v : EuclideanSpace ℝ (Fin
           unitBallVol d * form Set.univ k f := by ring
 
 
-
 /-! ## Local domination: the type may vary from point to point
 
 The chaining needs, for each pair `(s,t)`, only that *some* reference cone is
@@ -5222,8 +5265,9 @@ def LocallyDominatedRad {d : ℕ} (Γ : Configuration (EuclideanSpace ℝ (Fin d
       volume ({x : EuclideanSpace ℝ (Fin d) | doubleCone q.2 q.1 ⊆ (Γ x).carrier} ∩
         closedBall (midCentre q.2 q.1 s t) ‖s - t‖)
 
-/-- **The visibility-weighted energy is controlled, for every configuration and
-with no hypothesis at all.** The weight of a pair is the total volume, across the
+/-- **The visibility-weighted energy is controlled, for every configuration.**
+Beyond the standing assumptions — the kernel bounds (1.4), Debreu's condition and
+measurability — nothing is assumed of `Γ`. The weight of a pair is the total volume, across the
 finitely many reference types and apertures, of the points of that type in the
 ball the chaining averages over — that is, how much of the pair is *seen*. The
 dominated-pair theorem is the special case where this weight is bounded below. -/
@@ -5286,9 +5330,10 @@ lemma measurableSet_dominatedPairs {d : ℕ} {Γ : Configuration (EuclideanSpace
   refine MeasurableSet.biUnion (Θ ×ˢ S).countable_toSet fun q _ => ?_
   exact measurableSet_le (by fun_prop) (measurable_midBall_inter_volume q.2 q.1 (hmeas _))
 
-/-- **The dominated pairs are always controlled**, for every admissible
-configuration and with no hypothesis whatever: their `H^{α/2}` energy is bounded
-by the `H_k` form. Everything the local-domination hypotheses below do is to say
+/-- **The dominated pairs are always controlled**: for every configuration
+satisfying the standing assumptions — the kernel bounds (1.4), Debreu's condition
+and measurability — and with nothing else assumed of `Γ`, their `H^{α/2}` energy
+is bounded by the `H_k` form. Everything the local-domination hypotheses below do is to say
 that a given set of pairs is dominated. -/
 theorem lintegral_dominatedPairs_le {d : ℕ} (hd : 0 < d)
     {α Λ c₀ : ℝ} {Θ : Finset ℝ} (hΘ : ∀ θ ∈ Θ, 0 < θ ∧ θ ≤ π / 2)
@@ -5397,6 +5442,9 @@ def LocallyDominatedAt {d : ℕ} (Γ : Configuration (EuclideanSpace ℝ (Fin d)
     (S : Finset (EuclideanSpace ℝ (Fin d))) (Θ : Finset ℝ) (c₀ r₀ : ℝ) : Prop :=
   LocallyDominatedRad Γ S Θ c₀ (fun _ => r₀)
 
+/-- **The near-diagonal energy under multi-scale local domination**, out to a
+fixed radius `r₀` — the case `ρ ≡ r₀` of
+`QFS.lintegral_near_le_form_of_locallyDominatedRad`. -/
 theorem lintegral_near_le_form_of_locallyDominatedAt {d : ℕ} (hd : 0 < d)
     {α Λ c₀ r₀ : ℝ} {Θ : Finset ℝ} (hΘ : ∀ θ ∈ Θ, 0 < θ ∧ θ ≤ π / 2)
     (hα : 0 ≤ α) (hc₀ : 0 < c₀)
@@ -5435,8 +5483,9 @@ lemma LocallyDominated.locallyDominatedAt {d : ℕ}
   obtain ⟨v, hvS, hv⟩ := hs t hst
   exact ⟨(θ, v), by simp [hvS], hv⟩
 
-/-- **The near-diagonal energy is controlled under local domination**, in every
-dimension and at any apex angle: the type may vary from pair to pair. -/
+/-- **The near-diagonal energy under single-scale local domination** — the case
+`Θ = {θ}` of `QFS.lintegral_near_le_form_of_locallyDominatedRad`, with the radius
+constant. -/
 theorem lintegral_near_le_form_of_locallyDominated {d : ℕ} (hd : 0 < d)
     {θ α Λ c₀ r₀ : ℝ} (hθ : 0 < θ) (hθ' : θ ≤ π / 2) (hα : 0 ≤ α) (hc₀ : 0 < c₀)
     {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
@@ -5735,8 +5784,6 @@ theorem ae_exists_dominating_type {d : ℕ} (hd : 0 < d) {ϑ θ : ℝ} (hϑ' : �
 
 The same cutoff argument as in the wide and small-spread regimes, with the extra
 `L²` term of `QFS.formHs_univ_le_of_locallyDominated` absorbed. -/
-
-
 
 
 set_option maxHeartbeats 1000000 in
@@ -6204,6 +6251,9 @@ theorem formHs_ball_ne_top_of_locallyDominatedAt {d : ℕ} (hd : 0 < d) {α Λ c
     congr 1
     exact Finset.sum_congr rfl fun q _ => by ring
 
+/-- **Theorem 1.1's enlarged-ball form under multi-scale local domination**, in
+every dimension `d ≥ 2`: the pair may be served at any of the finitely many
+apertures in `Θ`. -/
 theorem formHs_ball_le_form_locallyDominatedAt {d : ℕ} (hd : 2 ≤ d) {ϑ α Λ c₀ r₀ : ℝ}
     {Θ : Finset ℝ} (hΘ : ∀ θ ∈ Θ, 0 < θ ∧ θ ≤ π / 2)
     (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hα : 0 < α)
@@ -6328,6 +6378,9 @@ theorem formHs_ball_le_form_locallyDominatedRad {d : ℕ} (hd : 2 ≤ d) {ϑ α 
   refine le_trans (hmain Γ hΓ hmeas k hk hkm x₀ R hR f hfm hf hfin) (mul_le_mul' le_rfl ?_)
   exact form_mono_set hsub k f
 
+/-- **Theorem 1.1's enlarged-ball form under local domination**, in every
+dimension `d ≥ 2` — the single-aperture case, and the statement on which the
+two-sided and uniformly continuous examples rest. -/
 theorem formHs_ball_le_form_locallyDominated {d : ℕ} (hd : 2 ≤ d) {ϑ θ α Λ c₀ r₀ : ℝ}
     (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hθ : 0 < θ) (hθ' : θ ≤ π / 2) (hα : 0 < α)
     (hα2 : α < 2) (hΛ : 1 ≤ Λ) (hc₀ : 0 < c₀) (hr₀ : 0 < r₀)
@@ -6363,7 +6416,6 @@ theorem formHs_ball_le_form_locallyDominated {d : ℕ} (hd : 2 ≤ d) {ϑ θ α 
       (show ρ < 2 * (κ + Real.sqrt (d : ℝ)) * R by rw [hρ]; nlinarith) hL2 htop
   refine le_trans (hmain Γ hΓ hmeas k hk hkm x₀ R hR f hfm hf hfin) (mul_le_mul' le_rfl ?_)
   exact form_mono_set hsub k f
-
 
 
 /-! ### A configuration no earlier theorem reaches
@@ -6626,7 +6678,6 @@ theorem formHs_ball_le_form_twoSide {d : ℕ} (hd : 2 ≤ d)
       k hk hkm x₀ R hR f hfm hfl hL2⟩
 
 
-
 /-! ### Continuous configurations are locally dominated
 
 If the cone axis varies uniformly continuously, then near any point every cone
@@ -6782,7 +6833,6 @@ theorem formHs_ball_le_form_of_uniformContinuous {d : ℕ} (hd : 2 ≤ d) {ϑ α
     H Γ hΓ hmeas hdom k hk hkm x₀ R hR f hfm hfl hL2⟩
 
 
-
 /-! ### A measurable domination radius, for every configuration
 
 The pointwise radius of `QFS.ae_exists_dominating_type` is not measurable as it
@@ -6871,8 +6921,6 @@ lemma midBall_inter_half' {θ : ℝ} (hθ : 0 < θ) (hθ' : θ ≤ π / 2)
       _ = volume (U ∩ W) + volume (W \ U) := hsplitW.symm
       _ ≤ volume (U ∩ W) + (1 / 2 : ℝ≥0∞) * volume W := add_le_add le_rfl hdefW
   exact (ENNReal.add_le_add_iff_right hfinW).mp hcalc
-
-/-! ### A measurable domination radius -/
 
 /-- The points at which `U` fills all but an `η`-fraction of every ball of radius
 `K·2^{-m}` with `m ≥ n`. -/
