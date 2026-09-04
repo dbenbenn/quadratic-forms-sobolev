@@ -942,4 +942,165 @@ theorem lintegral_cutoff_error_le' {Γ : Configuration (EuclideanSpace ℝ (Fin 
         rw [lintegral_congr hindeq, lintegral_indicator hSm]
         ring
 
+
+/-- A scalar bookkeeping step for the cutoff estimate. -/
+lemma ofReal_le_two_add_split {A B1 B2 M x : ℝ} (hA : 0 ≤ A) (hB1 : 0 ≤ B1)
+    (hB2 : 0 ≤ B2) (hM : 0 ≤ M) (h : x ≤ 2 * A + 2 * (B1 + B2) * M) :
+    ENNReal.ofReal x
+      ≤ 2 * ENNReal.ofReal A + 2 * ENNReal.ofReal (B1 * M) + 2 * ENNReal.ofReal (B2 * M) := by
+  refine le_trans (ENNReal.ofReal_le_ofReal h) (le_of_eq ?_)
+  rw [show 2 * A + 2 * (B1 + B2) * M = 2 * A + 2 * (B1 * M) + 2 * (B2 * M) from by ring,
+    ENNReal.ofReal_add (by nlinarith) (by nlinarith),
+    ENNReal.ofReal_add (by nlinarith) (by nlinarith),
+    ENNReal.ofReal_mul (by norm_num : (0:ℝ) ≤ 2),
+    ENNReal.ofReal_mul (by norm_num : (0:ℝ) ≤ 2),
+    ENNReal.ofReal_mul (by norm_num : (0:ℝ) ≤ 2)]
+  norm_num
+
+/-- Additivity of the lower integral for three doubled summands. -/
+lemma lintegral_two_add_two_add_two {α : Type*} [MeasurableSpace α] {μ : Measure α}
+    {F G H : α → ℝ≥0∞} (hF : Measurable F) (hG : Measurable G) (hH : Measurable H) :
+    ∫⁻ a, (2 * F a + 2 * G a + 2 * H a) ∂μ
+      = 2 * (∫⁻ a, F a ∂μ) + 2 * (∫⁻ a, G a ∂μ) + 2 * ∫⁻ a, H a ∂μ := by
+  have h12 : Measurable fun a => 2 * F a + 2 * G a := (hF.const_mul 2).add (hG.const_mul 2)
+  rw [lintegral_add_left h12, lintegral_add_left (hF.const_mul 2),
+    lintegral_const_mul _ hF, lintegral_const_mul _ hG, lintegral_const_mul _ hH]
+
+/-- The pointwise form of the cutoff estimate, weighted by the kernel. -/
+theorem ofReal_sq_cutoff_mul_le
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ} (hRR : R < R')
+    (f : EuclideanSpace ℝ (Fin d) → ℝ)
+    (p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) :
+    ENNReal.ofReal ((cutoff x₀ R R' p.2 * f p.2 - cutoff x₀ R R' p.1 * f p.1) ^ 2) *
+        k p.1 p.2
+      ≤ 2 * (ENNReal.ofReal ((ball x₀ R' ×ˢ ball x₀ R').indicator
+            (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+              (f q.2 - f q.1) ^ 2) p) * k p.1 p.2)
+        + 2 * (ENNReal.ofReal ((ball x₀ R').indicator (fun z => f z ^ 2) p.1 *
+            min (‖p.1 - p.2‖ ^ 2 / (R' - R) ^ 2) 1) * k p.1 p.2)
+        + 2 * (ENNReal.ofReal ((ball x₀ R').indicator (fun z => f z ^ 2) p.2 *
+            min (‖p.1 - p.2‖ ^ 2 / (R' - R) ^ 2) 1) * k p.1 p.2) := by
+  have hmin0 : (0 : ℝ) ≤ min (‖p.1 - p.2‖ ^ 2 / (R' - R) ^ 2) 1 :=
+    le_min (by positivity) zero_le_one
+  have hind : ∀ z, (0 : ℝ) ≤ (ball x₀ R').indicator (fun z => f z ^ 2) z := by
+    intro z
+    by_cases hz : z ∈ ball x₀ R'
+    · rw [Set.indicator_of_mem hz]; positivity
+    · rw [Set.indicator_of_notMem hz]
+  have hindprod : (0 : ℝ) ≤ (ball x₀ R' ×ˢ ball x₀ R').indicator
+      (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+        (f q.2 - f q.1) ^ 2) p := by
+    by_cases hp : p ∈ ball x₀ R' ×ˢ ball x₀ R'
+    · rw [Set.indicator_of_mem hp]; positivity
+    · rw [Set.indicator_of_notMem hp]
+  have hsplit := ofReal_le_two_add_split hindprod (hind p.1) (hind p.2) hmin0
+    (sq_cutoff_mul_sub_le (x₀ := x₀) hRR f p.1 p.2)
+  calc ENNReal.ofReal ((cutoff x₀ R R' p.2 * f p.2 -
+        cutoff x₀ R R' p.1 * f p.1) ^ 2) * k p.1 p.2
+      ≤ (2 * ENNReal.ofReal ((ball x₀ R' ×ˢ ball x₀ R').indicator
+            (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+              (f q.2 - f q.1) ^ 2) p)
+          + 2 * ENNReal.ofReal ((ball x₀ R').indicator (fun z => f z ^ 2) p.1 *
+              min (‖p.1 - p.2‖ ^ 2 / (R' - R) ^ 2) 1)
+          + 2 * ENNReal.ofReal ((ball x₀ R').indicator (fun z => f z ^ 2) p.2 *
+              min (‖p.1 - p.2‖ ^ 2 / (R' - R) ^ 2) 1)) * k p.1 p.2 :=
+        mul_le_mul' hsplit le_rfl
+    _ = _ := by ring
+
+
+/-- **The cost of the cutoff.** The `H_k` form of `χf` over the whole space is
+bounded by twice the `H_k` form of `f` over the outer ball, plus an `L²` term. -/
+theorem form_cutoff_le {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {α Λ : ℝ}
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hd : 0 < d) (hα : 0 < α) (hα2 : α < 2)
+    {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ} (hRR : R < R')
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      k p.1 p.2) :
+    form Set.univ k (fun x => cutoff x₀ R R' x * f x)
+      ≤ 2 * form (ball x₀ R') k f
+        + 2 * (ENNReal.ofReal Λ *
+            (∫⁻ u : EuclideanSpace ℝ (Fin d),
+              ENNReal.ofReal (min (‖u‖ ^ 2 / (R' - R) ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α))) *
+            ∫⁻ x in ball x₀ R', ENNReal.ofReal (f x ^ 2))
+        + 2 * (ENNReal.ofReal Λ *
+            (∫⁻ u : EuclideanSpace ℝ (Fin d),
+              ENNReal.ofReal (min (‖u‖ ^ 2 / (R' - R) ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α))) *
+            ∫⁻ x in ball x₀ R', ENNReal.ofReal (f x ^ 2)) := by
+  have hδ : 0 < R' - R := by linarith
+  have hBm : MeasurableSet (ball x₀ R' : Set (EuclideanSpace ℝ (Fin d))) := measurableSet_ball
+  have hI1m : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((ball x₀ R' ×ˢ ball x₀ R').indicator
+        (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          (f q.2 - f q.1) ^ 2) p) * k p.1 p.2 := by
+    refine Measurable.mul (ENNReal.measurable_ofReal.comp ?_) hkm
+    exact (((hf.comp measurable_snd).sub (hf.comp measurable_fst)).pow_const 2).indicator
+      (hBm.prod hBm)
+  have hI2m : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((ball x₀ R').indicator (fun z => f z ^ 2) p.1 *
+        min (‖p.1 - p.2‖ ^ 2 / (R' - R) ^ 2) 1) * k p.1 p.2 := by
+    refine Measurable.mul (ENNReal.measurable_ofReal.comp (Measurable.mul ?_ (by fun_prop))) hkm
+    exact ((hf.pow_const 2).indicator hBm).comp measurable_fst
+  have hI3m : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((ball x₀ R').indicator (fun z => f z ^ 2) p.2 *
+        min (‖p.1 - p.2‖ ^ 2 / (R' - R) ^ 2) 1) * k p.1 p.2 := by
+    refine Measurable.mul (ENNReal.measurable_ofReal.comp (Measurable.mul ?_ (by fun_prop))) hkm
+    exact ((hf.pow_const 2).indicator hBm).comp measurable_snd
+  have hfirst : ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      ENNReal.ofReal ((ball x₀ R' ×ˢ ball x₀ R').indicator
+        (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          (f q.2 - f q.1) ^ 2) p) * k p.1 p.2 = form (ball x₀ R') k f := by
+    have hrw : ∀ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+        ENNReal.ofReal ((ball x₀ R' ×ˢ ball x₀ R').indicator
+          (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+            (f q.2 - f q.1) ^ 2) p) * k p.1 p.2
+          = (ball x₀ R' ×ˢ ball x₀ R').indicator
+            (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+              ENNReal.ofReal ((f q.2 - f q.1) ^ 2) * k q.1 q.2) p := by
+      intro p
+      by_cases hp : p ∈ ball x₀ R' ×ˢ ball x₀ R'
+      · rw [Set.indicator_of_mem hp, Set.indicator_of_mem hp]
+      · rw [Set.indicator_of_notMem hp, Set.indicator_of_notMem hp, ENNReal.ofReal_zero,
+          zero_mul]
+    rw [lintegral_congr hrw, lintegral_indicator (hBm.prod hBm)]
+    rfl
+  calc form Set.univ k (fun x => cutoff x₀ R R' x * f x)
+      = ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+          ENNReal.ofReal ((cutoff x₀ R R' p.2 * f p.2 -
+          cutoff x₀ R R' p.1 * f p.1) ^ 2) * k p.1 p.2 := by
+        rw [form, Set.univ_prod_univ, setLIntegral_univ]
+    _ ≤ ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+          (2 * (ENNReal.ofReal ((ball x₀ R' ×ˢ ball x₀ R').indicator
+            (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+              (f q.2 - f q.1) ^ 2) p) * k p.1 p.2)
+          + 2 * (ENNReal.ofReal ((ball x₀ R').indicator (fun z => f z ^ 2) p.1 *
+              min (‖p.1 - p.2‖ ^ 2 / (R' - R) ^ 2) 1) * k p.1 p.2)
+          + 2 * (ENNReal.ofReal ((ball x₀ R').indicator (fun z => f z ^ 2) p.2 *
+              min (‖p.1 - p.2‖ ^ 2 / (R' - R) ^ 2) 1) * k p.1 p.2)) :=
+        lintegral_mono fun p => ofReal_sq_cutoff_mul_le hRR f p
+    _ = 2 * (∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+          ENNReal.ofReal ((ball x₀ R' ×ˢ ball x₀ R').indicator
+            (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+              (f q.2 - f q.1) ^ 2) p) * k p.1 p.2)
+        + 2 * (∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+            ENNReal.ofReal ((ball x₀ R').indicator (fun z => f z ^ 2) p.1 *
+            min (‖p.1 - p.2‖ ^ 2 / (R' - R) ^ 2) 1) * k p.1 p.2)
+        + 2 * ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+            ENNReal.ofReal ((ball x₀ R').indicator (fun z => f z ^ 2) p.2 *
+            min (‖p.1 - p.2‖ ^ 2 / (R' - R) ^ 2) 1) * k p.1 p.2 :=
+        lintegral_two_add_two_add_two hI1m hI2m hI3m
+    _ ≤ 2 * form (ball x₀ R') k f
+        + 2 * (ENNReal.ofReal Λ *
+            (∫⁻ u : EuclideanSpace ℝ (Fin d),
+              ENNReal.ofReal (min (‖u‖ ^ 2 / (R' - R) ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α))) *
+            ∫⁻ x in ball x₀ R', ENNReal.ofReal (f x ^ 2))
+        + 2 * (ENNReal.ofReal Λ *
+            (∫⁻ u : EuclideanSpace ℝ (Fin d),
+              ENNReal.ofReal (min (‖u‖ ^ 2 / (R' - R) ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α))) *
+            ∫⁻ x in ball x₀ R', ENNReal.ofReal (f x ^ 2)) :=
+        add_le_add (add_le_add (le_of_eq (by rw [hfirst]))
+          (mul_le_mul' le_rfl (lintegral_cutoff_error_le hk hd hδ hα hα2 hf hkm _ hBm)))
+          (mul_le_mul' le_rfl (lintegral_cutoff_error_le' hk hd hδ hα hα2 hf hkm _ hBm))
+
 end QFS
