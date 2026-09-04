@@ -695,4 +695,94 @@ theorem sq_cutoff_sub_le {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ} (hRR :
       _ ≤ 1 * 1 := hm
       _ = 1 := by norm_num
 
+
+/-! ## The cutoff estimate, pointwise
+
+Multiplying by the cutoff costs two things: the oscillation of `f` on the outer
+ball, and an `L²` term weighted by the cutoff factor. The point of the case
+analysis below is that **neither ever sees `f` outside the outer ball** — where
+one endpoint escapes, the cutoff vanishes there and the surviving term is
+`χ(x)² f(x)²` with `x` inside, and `χ(x)² = (χ(x) − χ(y))²` is again bounded by
+the cutoff factor. That is what makes the zero-extension legitimate here, where
+a sharp cutoff would fail. -/
+theorem sq_cutoff_mul_sub_le {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ} (hRR : R < R')
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) (x y : EuclideanSpace ℝ (Fin d)) :
+    (cutoff x₀ R R' y * f y - cutoff x₀ R R' x * f x) ^ 2
+      ≤ 2 * (ball x₀ R' ×ˢ ball x₀ R').indicator
+            (fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+              (f p.2 - f p.1) ^ 2) (x, y)
+        + 2 * ((ball x₀ R').indicator (fun z => f z ^ 2) x +
+               (ball x₀ R').indicator (fun z => f z ^ 2) y) *
+          min (‖x - y‖ ^ 2 / (R' - R) ^ 2) 1 := by
+  have hcut := sq_cutoff_sub_le (x₀ := x₀) hRR x y
+  have hmin0 : 0 ≤ min (‖x - y‖ ^ 2 / (R' - R) ^ 2) 1 :=
+    le_min (by positivity) zero_le_one
+  have hx1 : cutoff x₀ R R' x ≤ 1 := cutoff_le_one x₀ R R' x
+  have hy1 : cutoff x₀ R R' y ≤ 1 := cutoff_le_one x₀ R R' y
+  have hx0 : 0 ≤ cutoff x₀ R R' x := cutoff_nonneg x₀ R R' x
+  have hy0 : 0 ≤ cutoff x₀ R R' y := cutoff_nonneg x₀ R R' y
+  have hout : ∀ z : EuclideanSpace ℝ (Fin d), z ∉ ball x₀ R' → cutoff x₀ R R' z = 0 := by
+    intro z hz
+    refine cutoff_eq_zero hRR ?_
+    rw [Metric.mem_ball, dist_eq_norm] at hz
+    linarith [not_lt.mp hz]
+  by_cases hxB : x ∈ ball x₀ R' <;> by_cases hyB : y ∈ ball x₀ R'
+  · -- both inside
+    rw [Set.indicator_of_mem (show (x, y) ∈ ball x₀ R' ×ˢ ball x₀ R' from ⟨hxB, hyB⟩),
+      Set.indicator_of_mem hxB, Set.indicator_of_mem hyB]
+    have hdecomp : cutoff x₀ R R' y * f y - cutoff x₀ R R' x * f x
+        = cutoff x₀ R R' x * (f y - f x) + f y * (cutoff x₀ R R' y - cutoff x₀ R R' x) := by
+      ring
+    rw [hdecomp]
+    have hsq : ∀ a b : ℝ, (a + b) ^ 2 ≤ 2 * a ^ 2 + 2 * b ^ 2 := by
+      intro a b; nlinarith [sq_nonneg (a - b)]
+    refine le_trans (hsq _ _) ?_
+    have hchisq : cutoff x₀ R R' x ^ 2 ≤ 1 := by nlinarith [hx0, hx1]
+    have h1 : (cutoff x₀ R R' x * (f y - f x)) ^ 2 ≤ (f y - f x) ^ 2 := by
+      have he : (cutoff x₀ R R' x * (f y - f x)) ^ 2
+          = cutoff x₀ R R' x ^ 2 * (f y - f x) ^ 2 := by ring
+      rw [he]
+      calc cutoff x₀ R R' x ^ 2 * (f y - f x) ^ 2 ≤ 1 * (f y - f x) ^ 2 :=
+            mul_le_mul_of_nonneg_right hchisq (sq_nonneg _)
+        _ = (f y - f x) ^ 2 := one_mul _
+    have h2 : (f y * (cutoff x₀ R R' y - cutoff x₀ R R' x)) ^ 2
+        ≤ f y ^ 2 * min (‖x - y‖ ^ 2 / (R' - R) ^ 2) 1 := by
+      have : (f y * (cutoff x₀ R R' y - cutoff x₀ R R' x)) ^ 2
+          = f y ^ 2 * (cutoff x₀ R R' y - cutoff x₀ R R' x) ^ 2 := by ring
+      rw [this]
+      have hswap : (cutoff x₀ R R' y - cutoff x₀ R R' x) ^ 2
+          = (cutoff x₀ R R' x - cutoff x₀ R R' y) ^ 2 := by ring
+      rw [hswap]
+      exact mul_le_mul_of_nonneg_left hcut (sq_nonneg _)
+    nlinarith [h1, h2, mul_nonneg (sq_nonneg (f x)) hmin0]
+  · -- `x` inside, `y` outside
+    rw [Set.indicator_of_notMem (show (x, y) ∉ ball x₀ R' ×ˢ ball x₀ R' from
+        fun h => hyB h.2), Set.indicator_of_mem hxB, Set.indicator_of_notMem hyB]
+    rw [hout y hyB, zero_mul, zero_sub, neg_sq]
+    have hxsq : cutoff x₀ R R' x ^ 2 ≤ min (‖x - y‖ ^ 2 / (R' - R) ^ 2) 1 := by
+      have hz : cutoff x₀ R R' x ^ 2 = (cutoff x₀ R R' x - cutoff x₀ R R' y) ^ 2 := by
+        rw [hout y hyB, sub_zero]
+      rw [hz]; exact hcut
+    have hprod : (cutoff x₀ R R' x * f x) ^ 2 = cutoff x₀ R R' x ^ 2 * f x ^ 2 := by ring
+    rw [hprod]
+    nlinarith [hxsq, sq_nonneg (f x), hmin0]
+  · -- `x` outside, `y` inside
+    rw [Set.indicator_of_notMem (show (x, y) ∉ ball x₀ R' ×ˢ ball x₀ R' from
+        fun h => hxB h.1), Set.indicator_of_notMem hxB, Set.indicator_of_mem hyB]
+    rw [hout x hxB, zero_mul, sub_zero]
+    have hysq : cutoff x₀ R R' y ^ 2 ≤ min (‖x - y‖ ^ 2 / (R' - R) ^ 2) 1 := by
+      have hz : cutoff x₀ R R' y ^ 2 = (cutoff x₀ R R' x - cutoff x₀ R R' y) ^ 2 := by
+        rw [hout x hxB, zero_sub, neg_sq]
+      rw [hz]; exact hcut
+    have hprod : (cutoff x₀ R R' y * f y) ^ 2 = cutoff x₀ R R' y ^ 2 * f y ^ 2 := by ring
+    rw [hprod]
+    nlinarith [hysq, sq_nonneg (f y), hmin0]
+  · -- both outside
+    rw [hout x hxB, hout y hyB, zero_mul, zero_mul, sub_zero]
+    rw [Set.indicator_of_notMem (show (x, y) ∉ ball x₀ R' ×ˢ ball x₀ R' from
+        fun h => hxB h.1), Set.indicator_of_notMem hxB, Set.indicator_of_notMem hyB]
+    simp only [zero_pow, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, mul_zero, add_zero,
+      zero_add]
+    positivity
+
 end QFS
