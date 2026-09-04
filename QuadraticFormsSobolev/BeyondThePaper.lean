@@ -3368,7 +3368,7 @@ theorem exists_common_subcone {v w : E} (hv : ‖v‖ = 1) (hw : ‖w‖ = 1) {�
     (hθ : π / 4 < θ) (hθ' : θ ≤ π / 2) :
     ∃ u : E, ‖u‖ = 1 ∧ doubleCone u (θ - π / 4) ⊆ doubleCone v θ ∧
       doubleCone u (θ - π / 4) ⊆ doubleCone w θ := by
-  by_cases h : (0:ℝ) ≤ ⟪v, w⟫_ℝ
+  by_cases h : (0 : ℝ) ≤ ⟪v, w⟫_ℝ
   · exact exists_common_subcone_aux hv hw h hθ hθ'
   · have hlt : ⟪v, w⟫_ℝ < 0 := not_le.mp h
     have hnw : ‖(-w : E)‖ = 1 := by simpa using hw
@@ -4305,5 +4305,360 @@ theorem formHs_le_form_of_ae_commonDirection {d : ℕ} {v : EuclideanSpace ℝ (
     (c₀ := (unitBallVol d).toReal) ENNReal.toReal_nonneg hk
       hmeas (visibleDense_of_ae hae) hf hkm
   rwa [ENNReal.ofReal_toReal (unitBallVol_ne_top (d := d))] at hmain
+
+
+/-! ## Pairwise overlapping cones: narrow cones without a common direction
+
+Chains of length three or more cannot help (see the note below), but chains of
+length two reach further than the wide-cone case suggests. All they need is that
+the two cones **overlap** — the intermediate point is then seen by both
+endpoints' own cones, and no constraint is placed on its type. Overlapping is
+strictly weaker than sharing a direction: three cones can pairwise overlap with
+no direction common to all three, and that happens for narrow cones in dimension
+three and above. -/
+
+/-- **A block of two overlapping types is controlled.** The hypothesis is a cone
+`Ṽ(u,η)` inside the cones of every point of `A` and of every point of `B`; no
+apex angle and no dimension enters. -/
+theorem overlap_block_le {d : ℕ} (hd : 0 < d) {α Λ η : ℝ} (hη0 : 0 < η) (hη2 : η ≤ π / 2)
+    (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2)
+    {A B : Set (EuclideanSpace ℝ (Fin d))} (hAm : MeasurableSet A) (hBm : MeasurableSet B)
+    {u : EuclideanSpace ℝ (Fin d)} (hu : ‖u‖ = 1)
+    (hA : ∀ x ∈ A, cone u η ⊆ (Γ x).carrier)
+    (hB : ∀ x ∈ B, cone u η ⊆ (Γ x).carrier) :
+    ∃ C : ℝ≥0∞, C ≠ ∞ ∧
+      ∫⁻ p in A ×ˢ B, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+        ≤ C * form Set.univ k f := by
+  set U : Set (EuclideanSpace ℝ (Fin d)) := A ∪ B with hU
+  have hUm : MeasurableSet U := hAm.union hBm
+  have hcommon : ∀ x ∈ U, cone u η ⊆ (Γ x).carrier := by
+    intro x hx
+    rcases hx with hx | hx
+    · exact hA x hx
+    · exact hB x hx
+  have hmain := formHs_le_form_of_commonDirection_on hu hη0 hη2 hα hd hk hUm hcommon hf hkm
+  set K : ℝ≥0∞ := ENNReal.ofReal (2 * Λ) *
+    (ENNReal.ofReal (chainConst d η α) + ENNReal.ofReal (chainConst' d η α)) *
+    unitBallVol d with hK
+  have hKtop : K ≠ ∞ := by
+    rw [hK]
+    exact ENNReal.mul_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top
+      (ENNReal.add_ne_top.mpr ⟨ENNReal.ofReal_ne_top, ENNReal.ofReal_ne_top⟩))
+      unitBallVol_ne_top
+  refine ⟨(unitBallVol d)⁻¹ * K, ENNReal.mul_ne_top
+    (ENNReal.inv_ne_top.mpr (unitBallVol_ne_zero d)) hKtop, ?_⟩
+  have hsub : A ×ˢ B ⊆ U ×ˢ U :=
+    Set.prod_mono Set.subset_union_left Set.subset_union_right
+  calc ∫⁻ p in A ×ˢ B, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+      ≤ ∫⁻ p in U ×ˢ U, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 :=
+        lintegral_mono_set hsub
+    _ = (unitBallVol d)⁻¹ * (unitBallVol d *
+          ∫⁻ p in U ×ˢ U, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2) := by
+        rw [← mul_assoc, ENNReal.inv_mul_cancel (unitBallVol_ne_zero d) unitBallVol_ne_top,
+          one_mul]
+    _ ≤ (unitBallVol d)⁻¹ * (K * form Set.univ k f) := mul_le_mul' le_rfl hmain
+    _ = (unitBallVol d)⁻¹ * K * form Set.univ k f := by rw [hK]; ring
+
+/-- **`H_k ⊆ H^{α/2}` for a pairwise overlapping family of cone types**, in every
+dimension and at any apex angle.
+
+The family `W` need not have a direction common to all of it: pairwise overlap
+suffices, and pairwise overlap does not imply a common direction — three cones
+of apex `θ` whose axes form a spherical triangle of side just under `2θ` overlap
+pairwise, while their circumradius exceeds `θ`. -/
+theorem sobolevInclusion_of_overlapping {d : ℕ} (hd : 0 < d) {α Λ η : ℝ}
+    (hη0 : 0 < η) (hη2 : η ≤ π / 2) (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    {ι : Type} [Finite ι] (W : ι → Set (EuclideanSpace ℝ (Fin d)))
+    (hcover : ∀ x : EuclideanSpace ℝ (Fin d), ∃ i, W i ⊆ (Γ x).carrier)
+    (hcompat : ∀ i j : ι, ∃ u : EuclideanSpace ℝ (Fin d), ‖u‖ = 1 ∧
+      cone u η ⊆ W i ∧ cone u η ⊆ W j)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
+    ∃ C : ℝ≥0∞, C ≠ ∞ ∧ formHs Set.univ α f ≤ C * form Set.univ k f := by
+  classical
+  have : Fintype ι := Fintype.ofFinite ι
+  set blk : ι × ι → Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) := fun i =>
+    {x | W i.1 ⊆ (Γ x).carrier} ×ˢ {x | W i.2 ⊆ (Γ x).carrier} with hblk
+  have hcover' : (⋃ i, blk i) = Set.univ := by
+    refine Set.eq_univ_of_forall fun p => ?_
+    obtain ⟨i, hi⟩ := hcover p.1
+    obtain ⟨j, hj⟩ := hcover p.2
+    exact Set.mem_iUnion.mpr ⟨(i, j), hi, hj⟩
+  choose u hu h1 h2 using hcompat
+  choose C hCtop hCle using fun i : ι × ι =>
+    overlap_block_le hd hη0 hη2 hα hk hf hkm (hmeas (W i.1)) (hmeas (W i.2)) (hu i.1 i.2)
+      (fun x hx => le_trans (h1 i.1 i.2) hx) (fun x hx => le_trans (h2 i.1 i.2) hx)
+  refine ⟨∑' i, C i, ?_, ?_⟩
+  · rw [tsum_fintype]
+    exact (ENNReal.sum_lt_top.mpr fun i _ => (hCtop i).lt_top).ne
+  · have hlhs : formHs Set.univ α f
+        = ∫⁻ p in ⋃ i, blk i,
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 := by
+      rw [hcover', formHs, form, Set.univ_prod_univ]
+    rw [hlhs]
+    calc ∫⁻ p in ⋃ i, blk i,
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+        ≤ ∑' i, ∫⁻ p in blk i,
+            ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 :=
+          lintegral_iUnion_le _ _
+      _ ≤ ∑' i, C i * form Set.univ k f := ENNReal.tsum_le_tsum hCle
+      _ = (∑' i, C i) * form Set.univ k f := ENNReal.tsum_mul_right
+
+
+/-! ### When do two cones overlap?
+
+The bisector argument of `exists_common_subcone` is not about `π/4`: two double
+cones of apex `θ` overlap in a cone of aperture `θ − β`, where `β` is half the
+angle between their axes. The `π/4` threshold is what makes *every* pair overlap;
+a particular pair needs only its own axes to be close. -/
+
+/-- An inner product at least `cos c` between unit vectors means an angle at most
+`c`. -/
+lemma angle_le_of_cos_le_inner {v u : E} (hv : ‖v‖ = 1) (hu : ‖u‖ = 1) {c : ℝ}
+    (hc0 : 0 ≤ c) (hcπ : c ≤ π) (h : Real.cos c ≤ ⟪v, u⟫_ℝ) :
+    InnerProductGeometry.angle v u ≤ c := by
+  rw [InnerProductGeometry.angle, hv, hu, one_mul, div_one]
+  exact le_trans (Real.arccos_le_arccos h) (le_of_eq (Real.arccos_cos hc0 hcπ))
+
+private theorem exists_common_subcone_aux' {v w : E} (hv : ‖v‖ = 1) (hw : ‖w‖ = 1)
+    (hc : (0 : ℝ) ≤ ⟪v, w⟫_ℝ) {θ η : ℝ} (hη : 0 < η) (hθ : θ ≤ π / 2) (hηθ : η ≤ θ)
+    (hbis : Real.cos (θ - η) ≤ Real.sqrt ((1 + ⟪v, w⟫_ℝ) / 2)) :
+    ∃ u : E, ‖u‖ = 1 ∧ doubleCone u η ⊆ doubleCone v θ ∧
+      doubleCone u η ⊆ doubleCone w θ := by
+  have hpi : (0:ℝ) < π := Real.pi_pos
+  have hvv : ⟪v, v⟫_ℝ = 1 := by rw [real_inner_self_eq_norm_sq, hv]; norm_num
+  have hww : ⟪w, w⟫_ℝ = 1 := by rw [real_inner_self_eq_norm_sq, hw]; norm_num
+  have hne : v + w ≠ 0 := by
+    intro h
+    have hwv : w = -v := by
+      have := congrArg (fun z => z - v) h
+      simpa using this
+    rw [hwv, inner_neg_right, hvv] at hc
+    linarith
+  set N : ℝ := ‖v + w‖ with hN
+  have hNpos : 0 < N := norm_pos_iff.mpr hne
+  have hNsq : N ^ 2 = 2 + 2 * ⟪v, w⟫_ℝ := by
+    rw [hN, @norm_add_sq_real, hv, hw]; ring
+  have hNval : N = Real.sqrt (2 + 2 * ⟪v, w⟫_ℝ) := by
+    rw [← hNsq, Real.sqrt_sq hNpos.le]
+  set u : E := N⁻¹ • (v + w) with hu
+  have hunorm : ‖u‖ = 1 := by rw [hu, hN]; exact norm_smul_inv_norm hne
+  have hmul : Real.sqrt ((1 + ⟪v, w⟫_ℝ) / 2) * N = 1 + ⟪v, w⟫_ℝ := by
+    rw [hNval, ← Real.sqrt_mul (by positivity)]
+    rw [show (1 + ⟪v, w⟫_ℝ) / 2 * (2 + 2 * ⟪v, w⟫_ℝ) = (1 + ⟪v, w⟫_ℝ) ^ 2 from by ring]
+    exact Real.sqrt_sq (by linarith)
+  have hkey : ∀ x : E, ⟪x, v⟫_ℝ + ⟪x, w⟫_ℝ = 1 + ⟪v, w⟫_ℝ →
+      ⟪x, u⟫_ℝ = Real.sqrt ((1 + ⟪v, w⟫_ℝ) / 2) := by
+    intro x hx
+    rw [hu, real_inner_smul_right, inner_add_right, hx, inv_mul_eq_div,
+      div_eq_iff (ne_of_gt hNpos)]
+    exact hmul.symm
+  have hvu : Real.cos (θ - η) ≤ ⟪v, u⟫_ℝ := by
+    rw [hkey v (by rw [hvv])]; exact hbis
+  have hwu : Real.cos (θ - η) ≤ ⟪w, u⟫_ℝ := by
+    rw [hkey w (by rw [hww, real_inner_comm]; ring)]; exact hbis
+  have hrange : (0:ℝ) ≤ θ - η := by linarith
+  have hrange' : θ - η ≤ π := by linarith
+  have hdv : dangle v u ≤ θ - η :=
+    le_trans (min_le_left _ _) (angle_le_of_cos_le_inner hv hunorm hrange hrange' hvu)
+  have hdw : dangle w u ≤ θ - η :=
+    le_trans (min_le_left _ _) (angle_le_of_cos_le_inner hw hunorm hrange hrange' hwu)
+  refine ⟨u, hunorm, ?_, ?_⟩
+  · have := doubleCone_subset_of_dangle_le hv hunorm (a := θ - η) (η := η) hrange hη.le
+      (by linarith) hdv
+    rwa [show θ - η + η = θ from by ring] at this
+  · have := doubleCone_subset_of_dangle_le hw hunorm (a := θ - η) (η := η) hrange hη.le
+      (by linarith) hdw
+    rwa [show θ - η + η = θ from by ring] at this
+
+/-- **Two double cones overlap when their axes are close.** If the bisector's
+inner product with each axis is at least `cos (θ − η)`, the cone of aperture `η`
+about the bisector lies in both. -/
+theorem exists_common_subcone_of_inner {v w : E} (hv : ‖v‖ = 1) (hw : ‖w‖ = 1)
+    {θ η : ℝ} (hη : 0 < η) (hθ : θ ≤ π / 2) (hηθ : η ≤ θ)
+    (hbis : Real.cos (θ - η) ≤ Real.sqrt ((1 + |⟪v, w⟫_ℝ|) / 2)) :
+    ∃ u : E, ‖u‖ = 1 ∧ doubleCone u η ⊆ doubleCone v θ ∧ doubleCone u η ⊆ doubleCone w θ := by
+  have hpi : (0:ℝ) < π := Real.pi_pos
+  -- replace `w` by `-w` if necessary, so that the inner product is nonnegative
+  by_cases hsign : (0 : ℝ) ≤ ⟪v, w⟫_ℝ
+  · have habs : |⟪v, w⟫_ℝ| = ⟪v, w⟫_ℝ := abs_of_nonneg hsign
+    rw [habs] at hbis
+    exact exists_common_subcone_aux' hv hw hsign hη hθ hηθ hbis
+  · have hneg : ⟪v, w⟫_ℝ < 0 := not_le.mp hsign
+    have hnw : ‖(-w : E)‖ = 1 := by simpa using hw
+    have hsign' : (0:ℝ) ≤ ⟪v, -w⟫_ℝ := by rw [inner_neg_right]; linarith
+    have habs : |⟪v, w⟫_ℝ| = ⟪v, -w⟫_ℝ := by
+      rw [inner_neg_right, abs_of_neg hneg]
+    rw [habs] at hbis
+    obtain ⟨u, hu, h1, h2⟩ := exists_common_subcone_aux' hv hnw hsign' hη hθ hηθ hbis
+    exact ⟨u, hu, h1, by rwa [doubleCone_neg] at h2⟩
+
+/-! ### The overlap hypothesis is not vacuous, and is strictly weaker
+
+Three unit vectors in `ℝ³` with pairwise inner product `8/9`, and the apex
+`θ = arccos √(14/15) ≈ 15°` — far below the `π/4` at which every pair of double
+cones is forced to meet. The three cones still overlap pairwise, because half the
+angle between two axes is `arccos √(17/18) < θ`; but no direction lies in all
+three at once, because for a unit `u`
+
+  `∑ᵢ ⟪vᵢ, u⟫² = (8 (u₀+u₁+u₂)² + 1)/9 ≤ 25/9 < 3 · 14/15`,
+
+so some `|⟪vᵢ, u⟫|` falls below `cos θ = √(14/15)`. Neither
+`sobolevInclusion_wide` nor `formHs_le_form_of_commonDirection` applies to such a
+configuration; `sobolevInclusion_of_overlapping` does. -/
+
+noncomputable def exAxis : Fin 3 → EuclideanSpace ℝ (Fin 3)
+  | 0 => !₂[1/3, 2/3, 2/3]
+  | 1 => !₂[2/3, 1/3, 2/3]
+  | 2 => !₂[2/3, 2/3, 1/3]
+
+noncomputable def exApex : ℝ := Real.arccos (Real.sqrt (14/15))
+
+noncomputable def exAperture : ℝ := exApex - Real.arccos (Real.sqrt (17/18))
+
+lemma exAxis_norm (i : Fin 3) : ‖exAxis i‖ = 1 := by
+  have h : ‖exAxis i‖ ^ 2 = 1 := by
+    rw [EuclideanSpace.real_norm_sq_eq]
+    fin_cases i <;> simp [exAxis, Fin.sum_univ_three] <;> norm_num
+  nlinarith [norm_nonneg (exAxis i)]
+
+lemma exAxis_inner_ge (i j : Fin 3) : (8 : ℝ) / 9 ≤ ⟪exAxis i, exAxis j⟫_ℝ := by
+  fin_cases i <;> fin_cases j <;>
+    simp only [exAxis, PiLp.inner_apply, RCLike.inner_apply, conj_trivial,
+      Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons] <;> norm_num
+
+lemma sqrt_14_15_le_one : Real.sqrt (14/15) ≤ 1 := by
+  rw [show (1:ℝ) = Real.sqrt 1 from (Real.sqrt_one).symm]
+  exact Real.sqrt_le_sqrt (by norm_num)
+
+lemma sqrt_17_18_le_one : Real.sqrt (17/18) ≤ 1 := by
+  rw [show (1:ℝ) = Real.sqrt 1 from (Real.sqrt_one).symm]
+  exact Real.sqrt_le_sqrt (by norm_num)
+
+lemma cos_exApex : Real.cos exApex = Real.sqrt (14/15) :=
+  Real.cos_arccos (le_trans (by norm_num) (Real.sqrt_nonneg _)) sqrt_14_15_le_one
+
+lemma exApex_lt_pi_div_four : exApex < π / 4 := by
+  have h1 : Real.sqrt 2 / 2 < Real.sqrt (14/15) := by
+    nlinarith [Real.sq_sqrt (by norm_num : (2:ℝ) ≥ 0),
+      Real.sq_sqrt (by norm_num : (14:ℝ)/15 ≥ 0), Real.sqrt_nonneg 2,
+      Real.sqrt_nonneg ((14:ℝ)/15)]
+  calc exApex < Real.arccos (Real.sqrt 2 / 2) :=
+        Real.arccos_lt_arccos (x := Real.sqrt 2 / 2) (y := Real.sqrt (14/15))
+          (by linarith [Real.sqrt_nonneg 2]) h1 sqrt_14_15_le_one
+    _ ≤ π / 4 := Real.arccos_le_pi_div_four.mpr le_rfl
+
+lemma exApex_pos : 0 < exApex := by
+  rw [exApex, Real.arccos_pos]
+  nlinarith [Real.sq_sqrt (by norm_num : (14:ℝ)/15 ≥ 0), Real.sqrt_nonneg ((14:ℝ)/15)]
+
+lemma exAperture_pos : 0 < exAperture := by
+  have h : Real.arccos (Real.sqrt (17/18)) < exApex :=
+    Real.arccos_lt_arccos (x := Real.sqrt (14/15)) (y := Real.sqrt (17/18))
+      (le_trans (by norm_num) (Real.sqrt_nonneg _))
+      (Real.sqrt_lt_sqrt (by norm_num) (by norm_num)) sqrt_17_18_le_one
+  simpa [exAperture, sub_pos] using h
+
+lemma exAperture_le_exApex : exAperture ≤ exApex := by
+  have := Real.arccos_nonneg (Real.sqrt (17/18))
+  simp only [exAperture]
+  linarith
+
+/-- The cones of the example overlap pairwise. -/
+theorem ex_overlap (i j : Fin 3) :
+    ∃ u : EuclideanSpace ℝ (Fin 3), ‖u‖ = 1 ∧
+      doubleCone u exAperture ⊆ doubleCone (exAxis i) exApex ∧
+      doubleCone u exAperture ⊆ doubleCone (exAxis j) exApex := by
+  refine exists_common_subcone_of_inner (exAxis_norm i) (exAxis_norm j) exAperture_pos
+    (le_of_lt (lt_trans exApex_lt_pi_div_four (by linarith [Real.pi_pos])))
+    exAperture_le_exApex ?_
+  have hsub : exApex - exAperture = Real.arccos (Real.sqrt (17/18)) := by
+    simp [exAperture]
+  rw [hsub, Real.cos_arccos (le_trans (by norm_num) (Real.sqrt_nonneg _)) sqrt_17_18_le_one]
+  have ht : (8:ℝ)/9 ≤ |⟪exAxis i, exAxis j⟫_ℝ| :=
+    le_trans (exAxis_inner_ge i j) (le_abs_self _)
+  exact Real.sqrt_le_sqrt (by linarith)
+
+/-- No direction lies in all three cones of the example. -/
+theorem ex_no_common_direction (u : EuclideanSpace ℝ (Fin 3)) (hu : ‖u‖ = 1) :
+    ∃ i, u ∉ doubleCone (exAxis i) exApex := by
+  by_contra hcon
+  push Not at hcon
+  have key : ∀ i, 14/15 < (⟪exAxis i, u⟫_ℝ) ^ 2 := by
+    intro i
+    have hmem := hcon i
+    rw [mem_doubleCone_iff] at hmem
+    have habs : Real.sqrt (14/15) < |⟪exAxis i, u⟫_ℝ| := by
+      rcases hmem with h | h
+      · have h2 := h.2
+        rw [hu, div_one, cos_exApex] at h2
+        exact lt_of_lt_of_le h2 (le_abs_self _)
+      · have h2 := h.2
+        rw [norm_neg, hu, div_one, inner_neg_right, cos_exApex] at h2
+        exact lt_of_lt_of_le h2 (neg_le_abs _)
+    have h0 : (0:ℝ) ≤ Real.sqrt (14/15) := Real.sqrt_nonneg _
+    nlinarith [Real.sq_sqrt (by norm_num : (14:ℝ)/15 ≥ 0), abs_nonneg (⟪exAxis i, u⟫_ℝ),
+      sq_abs (⟪exAxis i, u⟫_ℝ)]
+  have hnorm : (u 0) ^ 2 + (u 1) ^ 2 + (u 2) ^ 2 = 1 := by
+    have := EuclideanSpace.real_norm_sq_eq u
+    rw [hu] at this
+    simpa [Fin.sum_univ_three] using this.symm
+  have e0 := key 0
+  have e1 := key 1
+  have e2 := key 2
+  simp only [exAxis, PiLp.inner_apply, RCLike.inner_apply, conj_trivial,
+    Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.head_cons, Matrix.cons_val_two, Matrix.tail_cons] at e0 e1 e2
+  nlinarith [sq_nonneg (u 0 - u 1), sq_nonneg (u 1 - u 2), sq_nonneg (u 0 - u 2)]
+
+/-- **Narrow cones that overlap pairwise without a common direction.** The apex
+is below `π/4`, every pair of cones contains a common cone of aperture `η > 0`,
+and no unit vector lies in all three cones. -/
+theorem exists_narrow_overlapping_cones_without_common_direction :
+    ∃ (v : Fin 3 → EuclideanSpace ℝ (Fin 3)) (θ η : ℝ),
+      0 < θ ∧ θ < π / 4 ∧ 0 < η ∧ (∀ i, ‖v i‖ = 1) ∧
+      (∀ i j, ∃ u : EuclideanSpace ℝ (Fin 3), ‖u‖ = 1 ∧
+        cone u η ⊆ doubleCone (v i) θ ∧ cone u η ⊆ doubleCone (v j) θ) ∧
+      (∀ u : EuclideanSpace ℝ (Fin 3), ‖u‖ = 1 → ∃ i, u ∉ doubleCone (v i) θ) := by
+  refine ⟨exAxis, exApex, exAperture, exApex_pos, exApex_lt_pi_div_four, exAperture_pos,
+    exAxis_norm, fun i j => ?_, ex_no_common_direction⟩
+  obtain ⟨u, hu, h1, h2⟩ := ex_overlap i j
+  exact ⟨u, hu, le_trans Set.subset_union_left h1, le_trans Set.subset_union_left h2⟩
+
+/-- **Theorem 1.1 for a narrow, direction-less configuration in dimension three.**
+Every point's cone contains one of the three `≈ 15°` double cones of the example
+above; no direction is common to all three, so neither the paper's §3.2 (which
+needs condition (M) at every point) nor `sobolevInclusion_wide` (which needs an
+apex above `π/4`) covers this case. -/
+theorem sobolevInclusion_narrow_example {α Λ : ℝ} (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin 3))} (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin 3) → EuclideanSpace ℝ (Fin 3) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    (hcover : ∀ x : EuclideanSpace ℝ (Fin 3),
+      ∃ i : Fin 3, doubleCone (exAxis i) exApex ⊆ (Γ x).carrier)
+    {f : EuclideanSpace ℝ (Fin 3) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin 3) × EuclideanSpace ℝ (Fin 3) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
+    ∃ C : ℝ≥0∞, C ≠ ∞ ∧ formHs Set.univ α f ≤ C * form Set.univ k f := by
+  have hη2 : exAperture ≤ π / 2 := by
+    have := exApex_lt_pi_div_four
+    have := exAperture_le_exApex
+    have := Real.pi_pos
+    linarith
+  refine sobolevInclusion_of_overlapping (by norm_num) exAperture_pos hη2 hα hmeas hk
+    (fun i : Fin 3 => doubleCone (exAxis i) exApex) hcover (fun i j => ?_) hf hkm
+  obtain ⟨u, hu, h1, h2⟩ := ex_overlap i j
+  exact ⟨u, hu, le_trans Set.subset_union_left h1, le_trans Set.subset_union_left h2⟩
 
 end QFS

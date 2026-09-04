@@ -202,6 +202,11 @@ The pieces, all proved:
 | **Chaining through the intermediate point's own cone**: the averaging step and the local Poincaré inequality when the intermediate points are confined to a set of positive density | `QFS.VisibleDense`, `QFS.osc_weighted_le_visible`, `QFS.localPoincare_visible` | ✅ **proved** |
 | **`H_k ⊆ H^{α/2}` when one type is densely visible** — every dimension, any apex angle | `QFS.formHs_le_form_of_visibleDense` | ✅ **proved** |
 | **The exact reach of that method**: a set of uniform positive density at every scale is co-null (Lebesgue density), so the hypothesis is a.e. visibility | `QFS.null_compl_of_uniform_density`, `QFS.visibleDense_of_ae`, `QFS.formHs_le_form_of_ae_commonDirection` | ✅ **proved** |
+| **Two double cones overlap when their axes are close** — the bisector argument with the `π/4` threshold removed | `QFS.exists_common_subcone_of_inner`, `QFS.angle_le_of_cos_le_inner` | ✅ **proved** |
+| **A block of two *overlapping* types is controlled**, at any apex angle and in any dimension | `QFS.overlap_block_le` | ✅ **proved** |
+| **`H_k ⊆ H^{α/2}` for a pairwise overlapping family of cone types** — no direction common to the whole family is needed | `QFS.sobolevInclusion_of_overlapping` | ✅ **proved** |
+| **Pairwise overlap is strictly weaker than a common direction**: three cones in `ℝ³` of apex `arccos √(14/15) ≈ 15° < π/4`, overlapping pairwise, with no unit vector in all three | `QFS.exAxis`, `QFS.exApex`, `QFS.exAperture`, `QFS.ex_overlap`, `QFS.ex_no_common_direction`, `QFS.exists_narrow_overlapping_cones_without_common_direction` | ✅ **proved** |
+| **Theorem 1.1 for a narrow, direction-less configuration in `ℝ³`** — a case outside both §3.2 and the wide-cone theorem | `QFS.sobolevInclusion_narrow_example` | ✅ **proved** |
 | The Lipschitz cutoff and its cost | `QFS.cutoff`, `QFS.sq_cutoff_sub_le`, `QFS.sq_cutoff_mul_sub_le`, `QFS.form_cutoff_le`, `QFS.lintegral_cutoff_error_le`, `QFS.lintegral_cutoff_error_le'` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
@@ -357,7 +362,8 @@ finitely many pieces `U_V`, the squares of that cover exhaust `ℝ² × ℝ²`,
 `QFS.planar_block_le` controls every block, and a finite sum of finite constants
 is finite.
 
-In dimension three and above the statement remains open **for narrow cones**,
+In dimension three and above the statement remains open **for narrow cones**
+(except when the cone types overlap pairwise, `QFS.sobolevInclusion_of_overlapping`),
 and `QFS.no_common_neighbour_of_skew_axes` says why the method used here —
 averaging over a positive-measure set of common cone-neighbours — cannot reach
 them: there the two cones can be disjoint, so no such set exists. That
@@ -1139,7 +1145,11 @@ the ball form holds unconditionally (`QFS.formHs_ball_le_form_planar`). In
 dimension three and above it is open **for narrow cones only**: if the apex
 angles exceed `π/4` then any two double cones overlap, and the same argument
 closes the statement in every dimension (`QFS.sobolevInclusion_wide`,
-`QFS.Hk_univ_eq_Hs_univ_wide`). Through Lemma 7.1's chain the planar
+`QFS.Hk_univ_eq_Hs_univ_wide`). Overlap, not width, is what that argument needs,
+so narrow cones are also covered whenever the finitely many cone types overlap
+pairwise (`QFS.sobolevInclusion_of_overlapping`) — a condition strictly weaker
+than a common direction
+(`QFS.exists_narrow_overlapping_cones_without_common_direction`). Through Lemma 7.1's chain the planar
 result also gives the same-ball statement there (`QFS.formHs_le_form_planar`),
 so in the plane the whole road from Theorem 1.3 to Theorem 1.1, and on to
 Theorem 1.4 for `ℝ²` (`QFS.Hk_univ_eq_Hs_univ_planar`), is machine-checked, with
@@ -1827,6 +1837,20 @@ proved in Lean:
    aperture between `π/4` and `ϑ`, not at the `ϑ/3` of Lemma 2.2, which is what
    `QFS.ref_cones'` supplies.
 
+10. **Overlapping cones, narrow included.** What step 9 actually uses is that
+    the two cones *overlap*, not that they are wide: two double cones of apex
+    `θ` meet in a cone of aperture `θ − β` about their bisector, `β` being half
+    the angle between their axes (`QFS.exists_common_subcone_of_inner`). So
+    every block is controlled once the two types' cones overlap
+    (`QFS.overlap_block_le`), and a finite family of pairwise overlapping types
+    gives `H_k ⊆ H^{α/2}` at any apex angle and in any dimension
+    (`QFS.sobolevInclusion_of_overlapping`). This is strictly more than step 9:
+    three cones of apex `≈ 15°` in `ℝ³` can overlap pairwise with no direction
+    common to all three
+    (`QFS.exists_narrow_overlapping_cones_without_common_direction`), and such a
+    configuration satisfies Theorem 1.1 (`QFS.sobolevInclusion_narrow_example`)
+    while lying outside everything above.
+
 **The narrow-cone case, attacked.** The obstruction in dimension three and above
 is that the cones at `s` and at `t` can be disjoint. But the chaining never
 needed the intermediate point to be seen by the *endpoints'* cones: a pair
@@ -1853,6 +1877,46 @@ cone at `t`, the middle pair is a cone pair only if the cones at `z₁` and `z�
 cooperate, which nothing forces. That is precisely what §§5–6 arrange on the
 lattice, by majority and renormalisation.
 
+**Overlapping cones: narrow cones in `d ≥ 3`, without a common direction.**
+Chains of length two reach further than the wide-cone case suggests. What the
+chaining theorem consumes is a cone `Ṽ(u,η)` lying inside the cones of *both*
+endpoints; the wide-cone argument produced one from the `π/4` threshold, but the
+threshold is not what the argument needs. Two double cones of apex `θ` overlap in
+a cone of aperture `θ − β` about their bisector, where `β` is half the angle
+between their axes (`QFS.exists_common_subcone_of_inner`); the `π/4` is only what
+makes *every* pair overlap. So a block `U_m × U_{m'}` is controlled as soon as
+those two types' cones overlap (`QFS.overlap_block_le`), and if a finite family
+of types covers the configuration and overlaps **pairwise**, every block is
+controlled and `H_k ⊆ H^{α/2}` follows in any dimension and at any apex angle
+(`QFS.sobolevInclusion_of_overlapping`).
+
+Pairwise overlap is strictly weaker than sharing a direction, and the gap is
+exactly where narrow cones live. Take the three unit vectors of `ℝ³` with
+pairwise inner product `8/9` and apex `θ = arccos √(14/15) ≈ 15°`, well below
+`π/4`. Half the angle between two axes is `arccos √(17/18) < θ`, so the cones
+overlap pairwise in a cone of positive aperture; but for any unit `u`,
+
+  `∑ᵢ ⟪vᵢ,u⟫² = (8(u₀+u₁+u₂)² + 1)/9 ≤ 25/9 < 3·(14/15)`,
+
+so some `|⟪vᵢ,u⟫| < cos θ` and no direction lies in all three cones
+(`QFS.exists_narrow_overlapping_cones_without_common_direction`). A
+configuration in `ℝ³` whose cone at each point contains one of these three
+therefore satisfies Theorem 1.1 (`QFS.sobolevInclusion_narrow_example`) while
+lying outside §3.2, outside `QFS.sobolevInclusion_wide`, and outside the
+common-direction theorem. What is still missing is the general narrow case,
+where the reference cones of Corollary 2.4 need not overlap pairwise at all.
+
+**Why longer chains do not close the gap.** A chain with two or more interior
+points has an interior leg whose two endpoints are both intermediate, so both
+their types are chosen by the configuration; making such a leg a cone pair
+requires interior points of cooperating types to be available at every scale,
+which — by the density argument above — forces those types to be available almost
+everywhere, and then a chain of length two already suffices. Chaining at a scale
+much coarser than the pair separation fails on the weights instead: the fibre
+estimate returns `‖z−s‖^{-d-α}`, which is the `H_k` weight only when `‖z−s‖` is
+comparable to `‖s−t‖`. The one route left is the multi-scale recursion described
+next.
+
 **A route not attempted, and why.** The natural attack on the remaining case is
 multi-scale: split the `H^{α/2}` energy by dyadic distance, chain each pair
 through *lattice* points at a finer scale `ρ = ε|s−t|` — where Theorem 5.15
@@ -1873,7 +1937,8 @@ Cauchy–Schwarz and scale bookkeeping on the order of §§5–6 themselves. It 
 recorded here, not attempted.
 
 **What is still not done.** Narrow cones (apex `≤ π/4`) in dimension three and
-above — and only those: dimension one is trivial (`QFS.formHs_le_form_dim_one`:
+above, apart from the pairwise-overlapping families just described — and only
+those: dimension one is trivial (`QFS.formHs_le_form_dim_one`:
 on the line every double cone is `ℝ ∖ {0}`, so every pair is a cone pair and
 (1.4)'s lower bound gives the inclusion outright), dimension two is step 6, and
 wide cones are step 9. The remaining case fails for the reason in step 5 —
