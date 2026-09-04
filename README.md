@@ -228,6 +228,8 @@ The pieces, all proved:
 | **The whole chain for multi-scale local domination** | `QFS.lintegral_near_le_form_of_locallyDominatedAt`, `QFS.formHs_univ_le_of_locallyDominatedAt`, `QFS.formHs_ball_ne_top_of_locallyDominatedAt`, `QFS.formHs_ball_le_form_locallyDominatedAt` | ✅ **proved** |
 | The cutoff step, abstracted: any `H^{α/2} ≤ C·H_k + C'·L²` bound gives §3.2's input | `QFS.formHs_ball_ne_top_of_L2inclusion` | ✅ **proved** |
 | **Every uniformly continuous configuration is locally dominated**, hence satisfies Theorem 1.1 — every dimension, any apex angle | `QFS.dangle_le_of_norm_sub_le`, `QFS.locallyDominated_of_uniformContinuous`, `QFS.formHs_ball_le_form_of_uniformContinuous` | ✅ **proved** |
+| **Every admissible configuration has an explicit, measurable, everywhere-positive domination radius** — the density requirement restricted to dyadic scales | `QFS.denseFrom`, `QFS.measurableSet_denseFrom`, `QFS.ae_exists_denseFrom`, `QFS.domRadius`, `QFS.measurable_domRadius`, `QFS.domRadius_pos`, `QFS.exists_measurable_dominationRadius`, `QFS.measurable_volume_inter_closedBall`, `QFS.exists_dyadic_scale`, `QFS.midBall_inter_half'` | ✅ **proved** |
+| **Theorem 1.1 for *every* admissible configuration, for every `f` with `∫f²ρ^{-α} < ∞`** — the only remaining condition is on `f`, against that radius | `QFS.formHs_ball_le_form_of_dominationRadius` | ✅ **proved** |
 | **The dominated pairs are controlled unconditionally** — for every admissible configuration, with no hypothesis at all | `QFS.dominatedPairs`, `QFS.measurableSet_dominatedPairs`, `QFS.lintegral_dominatedPairs_le` | ✅ **proved** |
 | **Local domination out to a radius that varies from point to point** | `QFS.LocallyDominatedRad`, `QFS.lintegral_near_le_form_of_locallyDominatedRad` | ✅ **proved** |
 | The far pairs with a variable cut-off radius, and the swap symmetry of the pair integral | `QFS.lintegral_far_var_le`, `QFS.lintegral_far_var_le'`, `QFS.setLIntegral_swap_pairs` | ✅ **proved** |
@@ -2046,6 +2048,31 @@ for **every** admissible configuration, what separates the open statement from a
 theorem is now: a measurable selection of that `ρ`, and the finiteness of
 `∫ f²ρ^{-α}`. A counterexample would have to put the `L²` mass of `f` exactly
 where the domination radius degenerates, fast enough to make that integral
+diverge.
+
+**The radius is explicit and measurable.** The radius produced by the density
+theorem is pointwise, and not measurable as it stands. Restricting the density
+requirement to the dyadic scales `2^{-m}` fixes that: the sets `QFS.denseFrom` are
+measurable (`QFS.measurableSet_denseFrom`, via the measurability of the volume of
+a fixed set met by a moving ball, `QFS.measurable_volume_inter_closedBall`),
+almost every point of a type belongs to one of them
+(`QFS.ae_exists_denseFrom`), and their union over the finitely many types yields
+an explicit radius `QFS.domRadius`, measurable and positive everywhere, below
+which the chaining always serves the pair — a dyadic scale straddling `‖s−t‖`
+(`QFS.exists_dyadic_scale`) transfers the density to the pair's own ball
+(`QFS.midBall_inter_half'`). That is `QFS.exists_measurable_dominationRadius`, and
+it holds for **every** admissible configuration.
+
+Putting it together:
+
+> `QFS.formHs_ball_le_form_of_dominationRadius` — for every `ϑ`-admissible `Γ`
+> satisfying condition (M) there are an explicit measurable `ρ > 0` and constants
+> `κ, c` such that Theorem 1.1's enlarged-ball inequality holds for **every** `f`
+> with `∫_{B_{κR}} f²ρ^{-α} < ∞`.
+
+So the residue of the open statement is a single integrability condition on `f`
+against a radius computed from `Γ` alone. A counterexample must put the `L²` mass
+of `f` exactly where that radius degenerates, and fast enough to make the integral
 diverge.
 
 **A configuration no earlier theorem reaches.** Take `V(v₁,ϑ)` where `⟪n,x⟫ ≥ 0`

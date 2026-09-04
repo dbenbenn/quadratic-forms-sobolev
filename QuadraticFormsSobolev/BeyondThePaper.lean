@@ -6466,6 +6466,406 @@ theorem formHs_ball_le_form_of_uniformContinuous {d : ℕ} (hd : 2 ≤ d) {ϑ α
   exact ⟨κ, c, hκ, hc, fun k hk hkm x₀ R hR f hfm hfl hL2 =>
     H Γ hΓ hmeas hdom k hk hkm x₀ R hR f hfm hfl hL2⟩
 
+
+
+/-! ### A measurable domination radius, for every configuration
+
+The pointwise radius of `QFS.ae_exists_dominating_type` is not measurable as it
+stands. Restricting the density requirement to the dyadic scales makes the sets
+`QFS.denseFrom` measurable, and their union over the finitely many types gives an
+explicit measurable radius `QFS.domRadius` which is positive everywhere and below
+which the chaining always serves the pair. What is left of the open statement is
+then the size of that radius: `∫ f²ρ^{-α} < ∞`. -/
+
+/-- The volume of a fixed set met by a moving ball is a measurable function of the
+centre. -/
+lemma measurable_volume_inter_closedBall {U : Set (EuclideanSpace ℝ (Fin d))}
+    (hU : MeasurableSet U) (r : ℝ) :
+    Measurable fun s : EuclideanSpace ℝ (Fin d) => volume (U ∩ closedBall s r) := by
+  have hset : MeasurableSet {q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+      q.2 ∈ U ∧ dist q.2 q.1 ≤ r} :=
+    (hU.preimage measurable_snd).inter
+      (measurableSet_le (measurable_snd.dist measurable_fst) measurable_const)
+  have h : Measurable fun s : EuclideanSpace ℝ (Fin d) =>
+      volume (Prod.mk s ⁻¹' {q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+        q.2 ∈ U ∧ dist q.2 q.1 ≤ r}) :=
+    measurable_measure_prodMk_left hset
+  have heq : ∀ s : EuclideanSpace ℝ (Fin d),
+      Prod.mk s ⁻¹' {q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+        q.2 ∈ U ∧ dist q.2 q.1 ≤ r} = U ∩ closedBall s r := by
+    intro s
+    ext x
+    simp [Metric.mem_closedBall]
+  simpa [heq] using h
+
+/-- `QFS.midBall_inter_half` with the density taken at any radius beyond the
+chaining ball. -/
+lemma midBall_inter_half' {θ : ℝ} (hθ : 0 < θ) (hθ' : θ ≤ π / 2)
+    {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1)
+    {U : Set (EuclideanSpace ℝ (Fin d))} (hUm : MeasurableSet U)
+    {s t : EuclideanSpace ℝ (Fin d)} (hst : s ≠ t) {η : ℝ≥0∞} {R : ℝ}
+    (hR : (1 + 3 / Real.sin θ) * ‖s - t‖ ≤ R)
+    (hη : η * ENNReal.ofReal (R ^ d) ≤ (1 / 2 : ℝ≥0∞) * ENNReal.ofReal (‖s - t‖ ^ d))
+    (hdens : volume (closedBall s R)
+      ≤ volume (U ∩ closedBall s R) + η * volume (closedBall s R)) :
+    (1 / 2 : ℝ≥0∞) * volume (closedBall (midCentre v θ s t) ‖s - t‖)
+      ≤ volume (U ∩ closedBall (midCentre v θ s t) ‖s - t‖) := by
+  have hδ : 0 < ‖s - t‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hst
+  have hsin : 0 < Real.sin θ := Real.sin_pos_of_pos_of_lt_pi hθ (by linarith [Real.pi_pos])
+  have hK1 : (1:ℝ) ≤ 1 + 3 / Real.sin θ := by
+    have : 0 < 3 / Real.sin θ := by positivity
+    linarith
+  have hRpos : 0 < R := lt_of_lt_of_le (by nlinarith) hR
+  set W : Set (EuclideanSpace ℝ (Fin d)) := closedBall (midCentre v θ s t) ‖s - t‖ with hW
+  set B : Set (EuclideanSpace ℝ (Fin d)) := closedBall s R with hB
+  have hWB : W ⊆ B := by
+    intro z hz
+    have h := (mem_two_cones_of_mem_midBall hv hθ hθ' hst hz).2.2.1
+    rw [hB, Metric.mem_closedBall, dist_eq_norm]
+    linarith
+  have hvolW : volume W = ENNReal.ofReal (‖s - t‖ ^ d) * unitBallVol d := volume_midBall v θ s t
+  have hvolB : volume B = ENNReal.ofReal (R ^ d) * unitBallVol d :=
+    volume_closedBall_eq s hRpos.le
+  have hWtop : volume W ≠ ∞ := by
+    rw [hvolW]; exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top
+  have hBtop : volume B ≠ ∞ := by
+    rw [hvolB]; exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top
+  have hsplitB : volume (U ∩ B) + volume (B \ U) = volume B := by
+    rw [Set.inter_comm]; exact measure_inter_add_sdiff B hUm
+  have hdefB : volume (B \ U) ≤ η * volume B := by
+    have hle : volume (U ∩ B) + volume (B \ U) ≤ volume (U ∩ B) + η * volume B := by
+      rw [hsplitB]; exact hdens
+    have hfin : volume (U ∩ B) ≠ ∞ :=
+      ne_top_of_le_ne_top hBtop (measure_mono Set.inter_subset_right)
+    exact (ENNReal.add_le_add_iff_left hfin).mp hle
+  have hsplitW : volume (U ∩ W) + volume (W \ U) = volume W := by
+    rw [Set.inter_comm]; exact measure_inter_add_sdiff W hUm
+  have hdefW : volume (W \ U) ≤ (1 / 2 : ℝ≥0∞) * volume W := by
+    calc volume (W \ U) ≤ volume (B \ U) := measure_mono (Set.sdiff_subset_sdiff_left hWB)
+      _ ≤ η * volume B := hdefB
+      _ = η * ENNReal.ofReal (R ^ d) * unitBallVol d := by rw [hvolB, mul_assoc]
+      _ ≤ (1 / 2 : ℝ≥0∞) * ENNReal.ofReal (‖s - t‖ ^ d) * unitBallVol d :=
+          mul_le_mul' hη le_rfl
+      _ = (1 / 2 : ℝ≥0∞) * volume W := by rw [hvolW, mul_assoc]
+  have hhalf : volume W = (1 / 2 : ℝ≥0∞) * volume W + (1 / 2 : ℝ≥0∞) * volume W := by
+    rw [← add_mul, one_div, ENNReal.inv_two_add_inv_two, one_mul]
+  have hfinW : (1 / 2 : ℝ≥0∞) * volume W ≠ ∞ := ENNReal.mul_ne_top (by norm_num) hWtop
+  have hcalc : (1 / 2 : ℝ≥0∞) * volume W + (1 / 2 : ℝ≥0∞) * volume W
+      ≤ volume (U ∩ W) + (1 / 2 : ℝ≥0∞) * volume W :=
+    calc (1 / 2 : ℝ≥0∞) * volume W + (1 / 2 : ℝ≥0∞) * volume W = volume W := hhalf.symm
+      _ = volume (U ∩ W) + volume (W \ U) := hsplitW.symm
+      _ ≤ volume (U ∩ W) + (1 / 2 : ℝ≥0∞) * volume W := add_le_add le_rfl hdefW
+  exact (ENNReal.add_le_add_iff_right hfinW).mp hcalc
+
+/-! ### A measurable domination radius -/
+
+/-- The points at which `U` fills all but an `η`-fraction of every ball of radius
+`K·2^{-m}` with `m ≥ n`. -/
+def denseFrom (U : Set (EuclideanSpace ℝ (Fin d))) (K : ℝ) (η : ℝ≥0∞) (n : ℕ) :
+    Set (EuclideanSpace ℝ (Fin d)) :=
+  {s | ∀ m : ℕ, n ≤ m →
+    volume (closedBall s (K * (1 / 2 : ℝ) ^ m))
+      ≤ volume (U ∩ closedBall s (K * (1 / 2 : ℝ) ^ m))
+        + η * volume (closedBall s (K * (1 / 2 : ℝ) ^ m))}
+
+lemma measurableSet_denseFrom {U : Set (EuclideanSpace ℝ (Fin d))} (hU : MeasurableSet U)
+    (K : ℝ) (η : ℝ≥0∞) (n : ℕ) : MeasurableSet (denseFrom U K η n) := by
+  have : denseFrom U K η n = ⋂ m : ℕ, ⋂ _ : n ≤ m,
+      {s : EuclideanSpace ℝ (Fin d) | volume (closedBall s (K * (1 / 2 : ℝ) ^ m))
+        ≤ volume (U ∩ closedBall s (K * (1 / 2 : ℝ) ^ m))
+          + η * volume (closedBall s (K * (1 / 2 : ℝ) ^ m))} := by
+    ext s
+    simp only [denseFrom, Set.mem_ofPred_eq, Set.mem_iInter]
+  rw [this]
+  refine MeasurableSet.iInter fun m => MeasurableSet.iInter fun _ => ?_
+  have hconst : ∀ s : EuclideanSpace ℝ (Fin d),
+      volume (closedBall s (K * (1 / 2 : ℝ) ^ m))
+        = volume (closedBall (0 : EuclideanSpace ℝ (Fin d)) (K * (1 / 2 : ℝ) ^ m)) := by
+    intro s
+    rcases le_or_gt (K * (1 / 2 : ℝ) ^ m) 0 with h | h
+    · rcases lt_or_eq_of_le h with h' | h'
+      · rw [Metric.closedBall_eq_empty.mpr h', Metric.closedBall_eq_empty.mpr h']
+      · rw [h']
+        simp
+    · rw [volume_closedBall_eq s h.le, volume_closedBall_eq _ h.le]
+  simp only [hconst]
+  exact measurableSet_le measurable_const
+    ((measurable_volume_inter_closedBall hU _).add measurable_const)
+
+lemma denseFrom_mono {U : Set (EuclideanSpace ℝ (Fin d))} {K : ℝ} {η : ℝ≥0∞} {n : ℕ} :
+    denseFrom U K η n ⊆ denseFrom U K η (n + 1) := by
+  intro s hs m hm
+  exact hs m (by omega)
+
+/-- **Almost every point of a type is dense in it from some scale on.** -/
+lemma ae_exists_denseFrom {U : Set (EuclideanSpace ℝ (Fin d))} (hU : MeasurableSet U)
+    {K : ℝ} (hK : 0 < K) {η : ℝ≥0∞} (hη : η ≠ 0) :
+    ∀ᵐ s : EuclideanSpace ℝ (Fin d), s ∈ U → ∃ n : ℕ, s ∈ denseFrom U K η n := by
+  have hdens : ∀ᵐ s : EuclideanSpace ℝ (Fin d), s ∈ U →
+      Filter.Tendsto (fun r => volume (U ∩ closedBall s r) / volume (closedBall s r))
+        (nhdsWithin 0 (Set.Ioi 0)) (nhds 1) :=
+    (ae_restrict_iff' hU).mp (Besicovitch.ae_tendsto_measure_inter_div volume U)
+  filter_upwards [hdens] with s hs
+  intro hsU
+  obtain ⟨ρ, hρ0, hρ⟩ := exists_dense_radius (hs hsU) hη
+  obtain ⟨n, hn⟩ : ∃ n : ℕ, K * (1 / 2 : ℝ) ^ n ≤ ρ := by
+    obtain ⟨n, hn⟩ := exists_pow_lt_of_lt_one (by positivity : (0:ℝ) < ρ / K)
+      (by norm_num : (1 / 2 : ℝ) < 1)
+    refine ⟨n, ?_⟩
+    rw [lt_div_iff₀ hK] at hn
+    nlinarith
+  refine ⟨n, fun m hm => ?_⟩
+  have hmono : K * (1 / 2 : ℝ) ^ m ≤ K * (1 / 2 : ℝ) ^ n := by
+    have : (1 / 2 : ℝ) ^ m ≤ (1 / 2 : ℝ) ^ n :=
+      pow_le_pow_of_le_one (by norm_num) (by norm_num) hm
+    nlinarith
+  exact hρ _ (by positivity) (le_trans hmono hn)
+
+/-- The union over the finitely many types of the sets `denseFrom`. -/
+def denseUnion (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    (S : Finset (EuclideanSpace ℝ (Fin d))) (θ K : ℝ) (η : ℝ≥0∞) (n : ℕ) :
+    Set (EuclideanSpace ℝ (Fin d)) :=
+  ⋃ v ∈ S, denseFrom {x : EuclideanSpace ℝ (Fin d) | doubleCone v θ ⊆ (Γ x).carrier} K η n
+
+lemma measurableSet_denseUnion {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    (hmeas : CondMeas Γ) (S : Finset (EuclideanSpace ℝ (Fin d))) (θ K : ℝ) (η : ℝ≥0∞)
+    (n : ℕ) : MeasurableSet (denseUnion Γ S θ K η n) := by
+  classical
+  exact MeasurableSet.biUnion S.countable_toSet fun v _ =>
+    measurableSet_denseFrom (hmeas _) K η n
+
+/-- **A measurable radius below which the chaining is served.** -/
+noncomputable def domRadius (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    (S : Finset (EuclideanSpace ℝ (Fin d))) (θ K : ℝ) (η : ℝ≥0∞)
+    (s : EuclideanSpace ℝ (Fin d)) : ℝ :=
+  (⨆ n : ℕ, (denseUnion Γ S θ K η n).indicator (fun _ => (1 / 2 : ℝ) ^ n) s)
+    + (⋃ n : ℕ, denseUnion Γ S θ K η n)ᶜ.indicator (fun _ => (1 : ℝ)) s
+
+lemma measurable_domRadius {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    (hmeas : CondMeas Γ) (S : Finset (EuclideanSpace ℝ (Fin d))) (θ K : ℝ) (η : ℝ≥0∞) :
+    Measurable (domRadius Γ S θ K η) := by
+  classical
+  refine Measurable.add ?_ ?_
+  · exact Measurable.iSup fun n =>
+      measurable_const.indicator (measurableSet_denseUnion hmeas S θ K η n)
+  · exact measurable_const.indicator
+      (MeasurableSet.iUnion fun n => measurableSet_denseUnion hmeas S θ K η n).compl
+
+lemma domRadius_bddAbove {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {S : Finset (EuclideanSpace ℝ (Fin d))} {θ K : ℝ} {η : ℝ≥0∞}
+    (s : EuclideanSpace ℝ (Fin d)) :
+    BddAbove (Set.range fun n : ℕ =>
+      (denseUnion Γ S θ K η n).indicator (fun _ => (1 / 2 : ℝ) ^ n) s) := by
+  classical
+  refine ⟨1, ?_⟩
+  rintro x ⟨n, rfl⟩
+  by_cases hn : s ∈ denseUnion Γ S θ K η n
+  · simp only [Set.indicator_of_mem hn]
+    exact pow_le_one₀ (by norm_num) (by norm_num)
+  · simp only [Set.indicator_of_notMem hn]
+    norm_num
+
+lemma domRadius_pos {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {S : Finset (EuclideanSpace ℝ (Fin d))} {θ K : ℝ} {η : ℝ≥0∞}
+    (s : EuclideanSpace ℝ (Fin d)) : 0 < domRadius Γ S θ K η s := by
+  classical
+  have hsup : 0 ≤ ⨆ n : ℕ, (denseUnion Γ S θ K η n).indicator (fun _ => (1 / 2 : ℝ) ^ n) s := by
+    refine le_ciSup_of_le (domRadius_bddAbove s) 0 ?_
+    by_cases h0 : s ∈ denseUnion Γ S θ K η 0
+    · simp only [Set.indicator_of_mem h0]
+      norm_num
+    · simp only [Set.indicator_of_notMem h0]
+      exact le_rfl
+  by_cases hs : s ∈ ⋃ n : ℕ, denseUnion Γ S θ K η n
+  · obtain ⟨n, hn⟩ := Set.mem_iUnion.mp hs
+    have hpos : (0:ℝ) < (denseUnion Γ S θ K η n).indicator (fun _ => (1 / 2 : ℝ) ^ n) s := by
+      simp only [Set.indicator_of_mem hn]
+      positivity
+    have hle : (denseUnion Γ S θ K η n).indicator (fun _ => (1 / 2 : ℝ) ^ n) s
+        ≤ ⨆ m : ℕ, (denseUnion Γ S θ K η m).indicator (fun _ => (1 / 2 : ℝ) ^ m) s :=
+      le_ciSup (domRadius_bddAbove s) n
+    have hnn : (0:ℝ) ≤ (⋃ n : ℕ, denseUnion Γ S θ K η n)ᶜ.indicator (fun _ => (1 : ℝ)) s := by
+      by_cases hc : s ∈ (⋃ n : ℕ, denseUnion Γ S θ K η n)ᶜ
+      · simp only [Set.indicator_of_mem hc]
+        norm_num
+      · simp only [Set.indicator_of_notMem hc]
+        exact le_rfl
+    rw [domRadius]
+    linarith
+  · have hc : s ∈ (⋃ n : ℕ, denseUnion Γ S θ K η n)ᶜ := hs
+    rw [domRadius, Set.indicator_of_mem hc]
+    linarith
+
+/-- Below the radius, some scale of the grid still serves the pair. -/
+lemma exists_scale_of_le_domRadius {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {S : Finset (EuclideanSpace ℝ (Fin d))} {θ K : ℝ} {η : ℝ≥0∞}
+    {s : EuclideanSpace ℝ (Fin d)} (hs : s ∈ ⋃ n : ℕ, denseUnion Γ S θ K η n)
+    {δ : ℝ} (hδ : 0 < δ) (hlt : δ < domRadius Γ S θ K η s) :
+    ∃ n : ℕ, s ∈ denseUnion Γ S θ K η n ∧ δ < (1 / 2 : ℝ) ^ n := by
+  classical
+  have hc : s ∉ (⋃ n : ℕ, denseUnion Γ S θ K η n)ᶜ := by simpa using hs
+  rw [domRadius, Set.indicator_of_notMem hc, add_zero] at hlt
+  obtain ⟨n, hn⟩ := exists_lt_of_lt_ciSup hlt
+  by_cases hmem : s ∈ denseUnion Γ S θ K η n
+  · exact ⟨n, hmem, by rwa [Set.indicator_of_mem hmem] at hn⟩
+  · rw [Set.indicator_of_notMem hmem] at hn
+    exact absurd hn (not_lt.mpr hδ.le)
+
+/-- A dyadic scale straddling `δ`, no coarser than `2^{-n}`. -/
+lemma exists_dyadic_scale {δ : ℝ} (hδ : 0 < δ) {n : ℕ} (hlt : δ < (1 / 2 : ℝ) ^ n) :
+    ∃ m : ℕ, n ≤ m ∧ δ ≤ (1 / 2 : ℝ) ^ m ∧ (1 / 2 : ℝ) ^ m ≤ 2 * δ := by
+  classical
+  have hex : ∃ m : ℕ, (1 / 2 : ℝ) ^ m ≤ 2 * δ := by
+    obtain ⟨m, hm⟩ := exists_pow_lt_of_lt_one (by positivity : (0:ℝ) < 2 * δ)
+      (by norm_num : (1 / 2 : ℝ) < 1)
+    exact ⟨m, hm.le⟩
+  set m := Nat.find hex with hmdef
+  have hmspec : (1 / 2 : ℝ) ^ m ≤ 2 * δ := Nat.find_spec hex
+  have hnm : n ≤ m := by
+    by_contra hcon
+    have hmn : m + 1 ≤ n := by omega
+    have h1 : (1 / 2 : ℝ) ^ n ≤ (1 / 2 : ℝ) ^ (m + 1) :=
+      pow_le_pow_of_le_one (by norm_num) (by norm_num) hmn
+    have h2 : (1 / 2 : ℝ) ^ (m + 1) = (1 / 2 : ℝ) ^ m / 2 := by
+      rw [pow_succ]; ring
+    rw [h2] at h1
+    linarith
+  refine ⟨m, hnm, ?_, hmspec⟩
+  rcases Nat.eq_zero_or_pos m with h0 | hpos
+  · rw [h0, pow_zero]
+    have : (1 / 2 : ℝ) ^ n ≤ 1 := pow_le_one₀ (by norm_num) (by norm_num)
+    linarith
+  · have hk : ¬ ((1 / 2 : ℝ) ^ (m - 1) ≤ 2 * δ) := Nat.find_min hex (by omega)
+    push Not at hk
+    have h2 : (1 / 2 : ℝ) ^ m = (1 / 2 : ℝ) ^ (m - 1) / 2 := by
+      conv_lhs => rw [show m = (m - 1) + 1 from by omega]
+      rw [pow_succ]
+      ring
+    rw [h2]
+    linarith
+
+/-- **Every admissible configuration has a measurable domination radius.** There
+are finitely many reference directions and a measurable `ρ > 0` such that every
+pair `(s,t)` with `‖s−t‖ ≤ ρ s` is served by the chaining. Only the size of `ρ`
+is at issue: the open statement asks for `∫ f²ρ^{-α} < ∞`. -/
+theorem exists_measurable_dominationRadius (hd : 0 < d) {ϑ θ : ℝ} (hϑ' : ϑ ≤ π / 2)
+    (hθ0 : 0 < θ) (hθϑ : θ < ϑ)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ) :
+    ∃ (S : Finset (EuclideanSpace ℝ (Fin d))) (ρ : EuclideanSpace ℝ (Fin d) → ℝ),
+      (∀ v ∈ S, ‖v‖ = 1) ∧ Measurable ρ ∧ (∀ s, 0 < ρ s) ∧
+      LocallyDominatedRad Γ S {θ} ((unitBallVol d).toReal / 2) ρ := by
+  classical
+  have hpi : (0:ℝ) < π := Real.pi_pos
+  have hsin : 0 < Real.sin θ := Real.sin_pos_of_pos_of_lt_pi hθ0 (by linarith)
+  set K : ℝ := 1 + 3 / Real.sin θ with hK
+  have hK1 : (1:ℝ) ≤ K := by
+    have : 0 < 3 / Real.sin θ := by positivity
+    rw [hK]; linarith
+  have hKpos : (0:ℝ) < K := by linarith
+  set η : ℝ≥0∞ := ENNReal.ofReal (1 / (2 * (2 * K) ^ d)) with hηdef
+  have hη0 : η ≠ 0 := by
+    rw [hηdef, ne_eq, ENNReal.ofReal_eq_zero, not_le]
+    positivity
+  obtain ⟨S, hSu, hcov⟩ :=
+    ref_cones' (E := EuclideanSpace ℝ (Fin d)) (ϑ := ϑ) (θ := θ) hϑ' hθ0 hθϑ
+  refine ⟨S, fun s => domRadius Γ S θ K η s / 2, hSu,
+    (measurable_domRadius hmeas S θ K η).div_const 2,
+    fun s => by have := domRadius_pos (Γ := Γ) (S := S) (θ := θ) (K := K) (η := η) s; linarith,
+    ?_⟩
+  -- almost every point is dense in its own type from some scale on
+  have hall : ∀ᵐ s : EuclideanSpace ℝ (Fin d), ∀ v ∈ S,
+      s ∈ {x : EuclideanSpace ℝ (Fin d) | doubleCone v θ ⊆ (Γ x).carrier} →
+        ∃ n : ℕ, s ∈ denseFrom {x : EuclideanSpace ℝ (Fin d) |
+          doubleCone v θ ⊆ (Γ x).carrier} K η n :=
+    (Filter.eventually_all_finset S).mpr fun v _ =>
+      ae_exists_denseFrom (hmeas _) hKpos hη0
+  filter_upwards [hall] with s hs
+  intro t hst
+  by_cases hts : s = t
+  · subst hts
+    obtain ⟨v, hvS, -⟩ := hcov Γ hΓ s
+    refine ⟨(θ, v), by simp [hvS], ?_⟩
+    simp only [sub_self, norm_zero]
+    rw [show ((unitBallVol d).toReal / 2) * (0:ℝ) ^ d = 0 from by
+      rw [zero_pow (by omega : d ≠ 0)]; ring, ENNReal.ofReal_zero]
+    exact bot_le
+  · have hst' : s ≠ t := hts
+    have hδ : 0 < ‖s - t‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hst'
+    -- the point lies in some `denseUnion`, and the pair is below the radius
+    obtain ⟨v₀, hv₀S, hv₀⟩ := hcov Γ hΓ s
+    obtain ⟨n₀, hn₀⟩ := hs v₀ hv₀S hv₀
+    have hsU : s ∈ ⋃ n : ℕ, denseUnion Γ S θ K η n :=
+      Set.mem_iUnion.mpr ⟨n₀, Set.mem_biUnion hv₀S hn₀⟩
+    have hlt : ‖s - t‖ < domRadius Γ S θ K η s := by
+      have hpos := domRadius_pos (Γ := Γ) (S := S) (θ := θ) (K := K) (η := η) s
+      have : ‖s - t‖ ≤ domRadius Γ S θ K η s / 2 := hst
+      linarith
+    obtain ⟨n, hnU, hnlt⟩ := exists_scale_of_le_domRadius hsU hδ hlt
+    obtain ⟨v, hvS, hv⟩ : ∃ v ∈ S, s ∈ denseFrom {x : EuclideanSpace ℝ (Fin d) |
+        doubleCone v θ ⊆ (Γ x).carrier} K η n := by
+      simpa [denseUnion, Set.mem_iUnion, exists_prop] using hnU
+    obtain ⟨m, hnm, hδm, hm2⟩ := exists_dyadic_scale hδ hnlt
+    have hdens := hv m hnm
+    refine ⟨(θ, v), by simp [hvS], ?_⟩
+    rw [← half_volume_midBall (θ := θ) v s t]
+    refine midBall_inter_half' hθ0 (by linarith) (hSu v hvS) (hmeas _) hst' ?_ ?_ hdens
+    · calc (1 + 3 / Real.sin θ) * ‖s - t‖ = K * ‖s - t‖ := by rw [hK]
+        _ ≤ K * (1 / 2 : ℝ) ^ m := by nlinarith
+    · have hRle : (K * (1 / 2 : ℝ) ^ m) ^ d ≤ (2 * K) ^ d * ‖s - t‖ ^ d := by
+        have h1 : K * (1 / 2 : ℝ) ^ m ≤ (2 * K) * ‖s - t‖ := by nlinarith
+        calc (K * (1 / 2 : ℝ) ^ m) ^ d ≤ ((2 * K) * ‖s - t‖) ^ d :=
+              pow_le_pow_left₀ (by positivity) h1 d
+          _ = (2 * K) ^ d * ‖s - t‖ ^ d := by rw [mul_pow]
+      calc η * ENNReal.ofReal ((K * (1 / 2 : ℝ) ^ m) ^ d)
+          ≤ η * ENNReal.ofReal ((2 * K) ^ d * ‖s - t‖ ^ d) :=
+            mul_le_mul' le_rfl (ENNReal.ofReal_le_ofReal hRle)
+        _ = ENNReal.ofReal (1 / (2 * (2 * K) ^ d) * ((2 * K) ^ d * ‖s - t‖ ^ d)) := by
+            rw [hηdef, ← ENNReal.ofReal_mul (by positivity)]
+        _ = ENNReal.ofReal (‖s - t‖ ^ d / 2) := by
+            congr 1
+            field_simp
+        _ = (1 / 2 : ℝ≥0∞) * ENNReal.ofReal (‖s - t‖ ^ d) := by
+            rw [ENNReal.ofReal_div_of_pos two_pos, ENNReal.ofReal_ofNat, div_eq_mul_inv,
+              one_div]
+            ring
+
+/-- **Theorem 1.1 for every admissible configuration, for every `f` whose `L²`
+mass is integrable against the domination radius.** The radius `ρ` is explicit,
+measurable and positive everywhere, and is produced from the configuration alone;
+the only condition left is on `f`. -/
+theorem formHs_ball_le_form_of_dominationRadius {d : ℕ} (hd : 2 ≤ d) {ϑ α Λ : ℝ}
+    (hϑ' : ϑ ≤ π / 2) (hα : 0 < α) (hα2 : α < 2) (hΛ : 1 ≤ Λ)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ) :
+    ∃ (ρ : EuclideanSpace ℝ (Fin d) → ℝ) (κ c : ℝ), Measurable ρ ∧ (∀ s, 0 < ρ s) ∧
+      1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ, Measurable f → LocallyIntegrable f volume →
+        (∫⁻ x in ball x₀ (κ * R), ENNReal.ofReal (f x ^ 2)) ≠ ⊤ →
+        (∫⁻ x in ball x₀ (κ * R),
+          ENNReal.ofReal (f x ^ 2) * ENNReal.ofReal (ρ x ^ (-α))) ≠ ⊤ →
+        formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
+  classical
+  have hd0 : 0 < d := by omega
+  have hϑ0 : 0 < ϑ := hΓ.1
+  have hunit : 0 < (unitBallVol d).toReal := by
+    rw [ENNReal.toReal_pos_iff]
+    exact ⟨pos_iff_ne_zero.mpr (unitBallVol_ne_zero d),
+      lt_of_le_of_ne le_top unitBallVol_ne_top⟩
+  obtain ⟨S, ρ, hSu, hρm, hρ, hdom⟩ := exists_measurable_dominationRadius hd0 hϑ'
+    (θ := ϑ / 2) (by linarith) (by linarith) hΓ hmeas
+  obtain ⟨κ, c, hκ, hc, H⟩ := formHs_ball_le_form_locallyDominatedRad (d := d) hd hρm hρ
+    (Θ := {ϑ / 2}) (fun x hx => by
+      rw [Finset.mem_singleton] at hx
+      subst hx
+      exact ⟨by linarith, by linarith⟩)
+    hϑ0 hϑ' hα hα2 hΛ (c₀ := (unitBallVol d).toReal / 2) (by positivity) hSu
+  exact ⟨ρ, κ, c, hρm, hρ, hκ, hc, fun k hk hkm x₀ R hR f hfm hfl hL2 hL2w =>
+    H Γ hΓ hmeas hdom k hk hkm x₀ R hR f hfm hfl hL2 hL2w⟩
+
 /-! ### How far the one-point chaining reaches
 
 The hypothesis of `formHs_le_form_of_visibleDense` asks for density at *every*
