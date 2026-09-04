@@ -122,6 +122,7 @@ The pieces, all proved:
 | On a cone pair, `jumpKernel ≤ Λ·k` | `QFS.jumpKernel_le_of_mem_coneAt` | ✅ proved |
 | **The fibre estimate**: `∫_{t : z ∈ W(s,t)} ‖s−t‖^{-2d-α} dt ≤ C(d,ϑ,α)·‖z−s‖^{-d-α}` | `QFS.lintegral_midBall_fibre_le`, `QFS.chainConst` | ✅ proved |
 | **The averaging step**: `(f(t)−f(s))²·|W(s,t)| ≤ ∫_{W(s,t)} 2(f(z)−f(s))² + 2(f(t)−f(z))²` | `QFS.osc_mul_volume_le`, `QFS.osc_weighted_le` | ✅ proved |
+| **The exchange, abstractly**: any measurable family of averaging sets with a fibre bound | `QFS.lintegral_swap_of_fibre_bound` | ✅ proved |
 | **The exchange at fixed `s`**: Tonelli plus the fibre estimate, returning the weight `‖z−s‖^{-d-α}` | `QFS.lintegral_swap_fibre`, `QFS.lintegral_swap_fibre'` | ✅ proved |
 | **`(★)` for a common cone direction** | `QFS.localPoincare_sameDirection` | ✅ **proved** |
 | **`H_k ⊆ H^{α/2}` for a common cone direction** | `QFS.formHs_le_form_of_commonDirection` | ✅ **proved** |
@@ -173,6 +174,11 @@ length at least two are unavoidable, and their middle edge runs between two
 points whose cones the configuration assigns arbitrarily. That is the continuous
 analogue of §§5–6, which the paper establishes only in the discrete setting;
 going through `ℤ^d` is precisely how it avoids this.
+
+The analytic machinery is stated abstractly enough to be reused: the exchange
+asks only that a family of averaging sets have measurable graph and a fibre
+bound (`QFS.lintegral_swap_of_fibre_bound`), so an attack on the cross blocks
+need only supply a construction of averaging sets — the analysis is done.
 
 Nothing here is claimed beyond what Lean checks: every row of the table above is
 proved, including `(★)` and the inclusion `H_k ⊆ H^{α/2}` for a common cone
