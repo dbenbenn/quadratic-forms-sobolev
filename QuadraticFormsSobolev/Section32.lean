@@ -1468,4 +1468,52 @@ theorem tendsto_discreteC_jump {ι : Type} {l : Filter ι} (hn : ι → ℝ)
   filter_upwards [hcon] with i hi
   rw [discreteC, Set.indicator_of_mem hi]
 
+
+/-! ## Measurability of the discretized integrands
+
+Fatou's lemma and the dominated convergence theorem both want the functions
+they are applied to to be measurable.  A function of the two lattice indices
+is measurable for a soft reason, whatever it does on the lattice: it is
+constant on each product cube of the tiling, and the tiling is countable. -/
+
+/-- `stepIndex` sends a point to the lattice point given by its rounded
+coordinates. -/
+lemma stepIndex_eq_latticePt {h : ℝ} (s : EuclideanSpace ℝ (Fin d)) :
+    stepIndex d h s = latticePt d h (fun i => round (s i / h)) := rfl
+
+/-- **Any** function of the two lattice indices is measurable. -/
+theorem measurable_stepFun₂ {h : ℝ} (hh : 0 < h) {β : Type*} [MeasurableSpace β]
+    (c : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → β) :
+    Measurable (fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      c (stepIndex d h p.1) (stepIndex d h p.2)) := by
+  intro S _
+  have hpre : (fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+        c (stepIndex d h p.1) (stepIndex d h p.2)) ⁻¹' S
+      = ⋃ nm ∈ {nm : (Fin d → ℤ) × (Fin d → ℤ) |
+          c (latticePt d h nm.1) (latticePt d h nm.2) ∈ S},
+        halfClosedCube h (latticePt d h nm.1) ×ˢ halfClosedCube h (latticePt d h nm.2) := by
+    ext p
+    simp only [Set.mem_preimage, Set.mem_iUnion, Set.mem_setOf_eq, exists_prop]
+    constructor
+    · intro hp
+      refine ⟨(fun i => round (p.1 i / h), fun i => round (p.2 i / h)), ?_, ?_, ?_⟩
+      · rw [← stepIndex_eq_latticePt, ← stepIndex_eq_latticePt]; exact hp
+      · rw [← stepIndex_eq_latticePt]; exact mem_halfClosedCube_stepIndex hh p.1
+      · rw [← stepIndex_eq_latticePt]; exact mem_halfClosedCube_stepIndex hh p.2
+    · rintro ⟨nm, hS, h1, h2⟩
+      rwa [stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h nm.1) h1,
+        stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h nm.2) h2]
+  rw [hpre]
+  exact MeasurableSet.biUnion (Set.to_countable _) fun nm _ =>
+    (measurableSet_halfClosedCube h _).prod (measurableSet_halfClosedCube h _)
+
+/-- The discretized integrand of `(discret)` is measurable. -/
+theorem measurable_discreteC_stepIndex {h : ℝ} (hh : 0 < h)
+    (S : Set (EuclideanSpace ℝ (Fin d))) (R₀ : ℝ)
+    (ω : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) :
+    Measurable (fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      discreteC d h S R₀ ω f (stepIndex d h p.1, stepIndex d h p.2)) :=
+  measurable_stepFun₂ hh (fun x y => discreteC d h S R₀ ω f (x, y))
+
 end QFS
