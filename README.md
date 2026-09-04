@@ -254,6 +254,12 @@ whole-space theorem — now has its analytic input:
 `L²` term — which is all §3.2 needs, since the quantitative constant comes from
 the discrete argument afterwards.
 
+The cutoff itself is now built (`QFS.cutoff`) with the estimate the kernel wants,
+`QFS.sq_cutoff_sub_le`. So the route has all its analytic inputs; what remains is
+the algebra `(χf(x) − χf(y))² ≤ 2χ(x)²(f(x)−f(y))² + 2f(y)²(χ(x)−χ(y))²` and the
+bookkeeping of where each term lives — on `B*×B*` both terms involve `f` only on
+`B*`, and off it the vanishing of `χ` and the bound `χ(x) ≤ ‖x−y‖/δ` do the rest.
+
 Corollary 2.4 covers `ℝ²` by
 finitely many pieces `U_V`, the squares of that cover exhaust `ℝ² × ℝ²`,
 `QFS.planar_block_le` controls every block, and a finite sum of finite constants
@@ -399,6 +405,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **Generalized (Vitali) dominated convergence, dominants allowed to move** | §3.2 | `QFS.limsup_lintegral_le_of_dominant` | ✅ **proved** |
 | **A Lipschitz function has finite `H^{α/2}` seminorm on a ball (`α < 2`)** | §3.2 | `QFS.formHs_lt_top_of_lipschitzOn`, `QFS.lintegral_ball_rpow_lt_top` | ✅ **proved** |
 | **The jump kernel off a ball, and against a Lipschitz cutoff** | §3.2 | `QFS.lintegral_compl_ball_rpow_lt_top`, `QFS.lintegral_cutoff_kernel_lt_top` | ✅ **proved** |
+| **A Lipschitz cutoff, and `(χ(x)−χ(y))² ≤ min(‖x−y‖²/δ², 1)`** | §3.2 | `QFS.cutoff`, `QFS.cutoff_eq_one`, `QFS.cutoff_eq_zero`, `QFS.abs_cutoff_sub_le`, `QFS.sq_cutoff_sub_le`, `QFS.abs_clamp_sub_le` | ✅ **proved** |
 | **Pairs in a common tile; the tiling of pairs** | §3.2 | `QFS.sameTile`, `QFS.sameTile_eq_iUnion`, `QFS.measurableSet_sameTile`, `QFS.norm_sub_le_of_sameTile`, `QFS.coneSet` | ✅ **proved** |
 | **On close cone pairs the kernel dominates the flat measure** | §3.2 (new) | `QFS.lintegral_sq_le_form_of_close` | ✅ **proved** |
 | **The cone part of the modulus `A_h` is bounded uniformly in `h`** | §3.2 (new) | `QFS.oscillation_sameTile_le_form` | ✅ **proved** |
