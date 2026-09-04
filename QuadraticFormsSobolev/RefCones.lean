@@ -96,6 +96,19 @@ lemma doubleCone_subset_of_axis_mem {v w : E} (hv : ‖v‖ = 1) (hw : ‖w‖ =
         exact add_lt_add hwv.2 hh.2
     _ ≤ ϑ := by linarith
 
+/-- If the axis `u` is within `a` of `v` and `a + η ≤ π`, then
+`V(u, η) ⊆ V(v, a + η)`. The two-parameter form of
+`doubleCone_subset_of_axis_mem`. -/
+lemma doubleCone_subset_of_dangle_le {v u : E} (hv : ‖v‖ = 1) (hu : ‖u‖ = 1)
+    {a η : ℝ} (ha : 0 ≤ a) (hη : 0 ≤ η) (haη : a + η ≤ π) (h : dangle v u ≤ a) :
+    doubleCone u η ⊆ doubleCone v (a + η) := by
+  intro p hp
+  rw [mem_doubleCone_iff_dangle hu hη (by linarith)] at hp
+  rw [mem_doubleCone_iff_dangle hv (by linarith) haη]
+  refine ⟨hp.1, ?_⟩
+  calc dangle v p ≤ dangle v u + dangle u p := dangle_triangle v u p
+    _ < a + η := by linarith [hp.2]
+
 /-! ## Lemma 2.2: the finite family of reference cones -/
 
 variable [FiniteDimensional ℝ E]
@@ -147,6 +160,66 @@ theorem ref_cones {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
   exact doubleCone_subset_of_axis_mem (hS v hvS) (Γ x).norm_axis (by positivity)
     (Γ x).apex_le_pi hv (by linarith [hΓ.2 x])
 
+
+/-! ## Lemma 2.2 at an arbitrary aperture
+
+The proof of Lemma 2.2 uses `ϑ/3` only through `2·(ϑ/3) ≤ ϑ`; a net of mesh
+`ϑ − θ` gives reference cones of any aperture `θ < ϑ`, at the cost of a larger
+family. Nothing in the paper needs this, but `BeyondThePaper` does. -/
+
+/-- The covering step of Lemma 2.2 at an arbitrary mesh. -/
+theorem exists_finite_axes' {ε : ℝ} (hε : 0 < ε) (hε' : ε ≤ π / 2) :
+    ∃ S : Finset E, (∀ v ∈ S, ‖v‖ = 1) ∧
+      ∀ w : E, ‖w‖ = 1 → ∃ v ∈ S, w ∈ doubleCone v ε := by
+  classical
+  have hcomp : IsCompact (sphere (0 : E) 1) := isCompact_sphere 0 1
+  have hcover : sphere (0 : E) 1 ⊆ ⋃ v : sphere (0 : E) 1, doubleCone (v : E) ε := by
+    intro w hw
+    refine Set.mem_iUnion.mpr ⟨⟨w, hw⟩, ?_⟩
+    have hw1 : ‖w‖ = 1 := by simpa [dist_zero_right] using hw
+    have hne : w ≠ 0 := by intro h; rw [h] at hw1; simp at hw1
+    rw [mem_doubleCone_iff_angle hw1 (by positivity) (by linarith [pi_pos])]
+    exact ⟨hne, Or.inl (by rw [angle_self hne]; positivity)⟩
+  obtain ⟨t, ht⟩ := hcomp.elim_finite_subcover
+    (fun v : sphere (0 : E) 1 => doubleCone (v : E) ε)
+    (fun v => isOpen_doubleCone (v : E) ε) hcover
+  refine ⟨t.image Subtype.val, ?_, ?_⟩
+  · intro v hv
+    rw [Finset.mem_image] at hv
+    obtain ⟨a, -, ha⟩ := hv
+    rw [← ha]
+    simp
+  · intro w hw
+    have hws : w ∈ sphere (0 : E) 1 := by simpa [dist_zero_right] using hw
+    obtain ⟨v, hv⟩ := Set.mem_iUnion.mp (ht hws)
+    obtain ⟨hvt, hmem⟩ := Set.mem_iUnion.mp hv
+    exact ⟨(v : E), Finset.mem_image_of_mem Subtype.val hvt, hmem⟩
+
+/-- **Lemma 2.2 at an arbitrary aperture** `θ < ϑ`: finitely many double cones of
+apex `θ`, one inside every `Γ(x)`. For `θ = ϑ/3` this is `QFS.ref_cones`. -/
+theorem ref_cones' {ϑ θ : ℝ} (hϑ' : ϑ ≤ π / 2) (hθ : 0 < θ) (hθϑ : θ < ϑ) :
+    ∃ S : Finset E, (∀ v ∈ S, ‖v‖ = 1) ∧
+      ∀ Γ : Configuration E, IsBounded Γ ϑ →
+        ∀ x : E, ∃ v ∈ S, doubleCone v θ ⊆ (Γ x).carrier := by
+  obtain ⟨S, hS, hcov⟩ := exists_finite_axes' (E := E) (ε := ϑ - θ) (by linarith)
+    (by linarith)
+  refine ⟨S, hS, fun Γ hΓ x => ?_⟩
+  obtain ⟨v, hvS, hv⟩ := hcov (Γ x).axis (Γ x).norm_axis
+  refine ⟨v, hvS, ?_⟩
+  have hdang : dangle v (Γ x).axis ≤ ϑ - θ := by
+    rw [mem_doubleCone_iff_dangle (hS v hvS) (by linarith) (by linarith [pi_pos])] at hv
+    exact le_of_lt hv.2
+  have hdang' : dangle (Γ x).axis v ≤ ϑ - θ := by rw [dangle_comm]; exact hdang
+  have hsub := doubleCone_subset_of_dangle_le (Γ x).norm_axis (hS v hvS)
+    (a := ϑ - θ) (η := θ) (by linarith) (by linarith) (by linarith [pi_pos]) hdang'
+  rw [show ϑ - θ + θ = ϑ from by ring] at hsub
+  refine hsub.trans ?_
+  intro p hp
+  rw [mem_doubleCone_iff_dangle (Γ x).norm_axis (by linarith) (by linarith [pi_pos])] at hp
+  rw [DCone.carrier,
+    mem_doubleCone_iff_dangle (Γ x).norm_axis (le_of_lt (Γ x).apex_pos)
+      (by linarith [pi_pos, (Γ x).apex_le])]
+  exact ⟨hp.1, lt_of_lt_of_le hp.2 (hΓ.2 x)⟩
 
 /-! ## Definition 2.3: the family of reference cones -/
 

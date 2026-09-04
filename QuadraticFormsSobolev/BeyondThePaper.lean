@@ -3286,4 +3286,260 @@ theorem theoremOneOneCondMeas_two
     _ ≤ ENNReal.ofReal (max c₀⁻¹ 1) * form (ball x₀ R) k f :=
         mul_le_mul' (ENNReal.ofReal_le_ofReal (le_max_left _ _)) le_rfl
 
+
+/-! ## Wide cones: dimension three and above
+
+The obstruction to the cross blocks is that two double cones with skew axes can
+be disjoint (`no_common_neighbour_of_skew_axes`). That cannot happen when the
+cones are **wide**: the angle between two axes, read as an angle between lines,
+is at most `π/2`, so two double cones of apex angle more than `π/4` always
+overlap in a cone of aperture `apex − π/4`. Their bisector is its axis.
+
+Everything else is already in place: the chaining machinery
+(`formHs_le_form_of_commonDirection_on`) asks only that the two ends admit a
+*common* cone, not that the configuration be constant, so with the bisector in
+hand every block — diagonal or cross — is controlled, in every dimension. -/
+
+/-- An inner product at least `√2/2` between unit vectors means an angle at most
+`π/4`. -/
+lemma angle_le_pi_div_four_of_inner {v u : E} (hv : ‖v‖ = 1) (hu : ‖u‖ = 1)
+    (h : Real.sqrt 2 / 2 ≤ ⟪v, u⟫_ℝ) : InnerProductGeometry.angle v u ≤ π / 4 := by
+  have hpi : (π / 4 : ℝ) = Real.arccos (Real.sqrt 2 / 2) := by
+    rw [← Real.cos_pi_div_four, Real.arccos_cos (by positivity) (by linarith [Real.pi_pos])]
+  rw [InnerProductGeometry.angle, hv, hu, one_mul, div_one, hpi]
+  exact Real.arccos_le_arccos h
+
+private theorem exists_common_subcone_aux {v w : E} (hv : ‖v‖ = 1) (hw : ‖w‖ = 1)
+    (hc : 0 ≤ ⟪v, w⟫_ℝ) {θ : ℝ} (hθ : π / 4 < θ) (hθ' : θ ≤ π / 2) :
+    ∃ u : E, ‖u‖ = 1 ∧ doubleCone u (θ - π / 4) ⊆ doubleCone v θ ∧
+      doubleCone u (θ - π / 4) ⊆ doubleCone w θ := by
+  have hvv : ⟪v, v⟫_ℝ = 1 := by
+    rw [real_inner_self_eq_norm_sq, hv]; norm_num
+  have hww : ⟪w, w⟫_ℝ = 1 := by
+    rw [real_inner_self_eq_norm_sq, hw]; norm_num
+  have hne : v + w ≠ 0 := by
+    intro h
+    have hwv : w = -v := by
+      have := congrArg (fun z => z - v) h
+      simpa using this
+    rw [hwv, inner_neg_right, hvv] at hc
+    linarith
+  set N : ℝ := ‖v + w‖ with hN
+  have hNpos : 0 < N := norm_pos_iff.mpr hne
+  have hNsq : N ^ 2 = 2 + 2 * ⟪v, w⟫_ℝ := by
+    rw [hN, @norm_add_sq_real, hv, hw]
+    ring
+  set u : E := N⁻¹ • (v + w) with hu
+  have hunorm : ‖u‖ = 1 := by
+    rw [hu, hN]
+    exact norm_smul_inv_norm hne
+  -- both inner products are `(1 + ⟪v,w⟫)/N`
+  have hkey : ∀ x : E, ⟪x, v⟫_ℝ + ⟪x, w⟫_ℝ = 1 + ⟪v, w⟫_ℝ → Real.sqrt 2 / 2 ≤ ⟪x, u⟫_ℝ := by
+    intro x hx
+    have hxu : ⟪x, u⟫_ℝ = N⁻¹ * (1 + ⟪v, w⟫_ℝ) := by
+      rw [hu, real_inner_smul_right, inner_add_right, hx]
+    rw [hxu, ← div_eq_inv_mul, le_div_iff₀ hNpos]
+    have hX0 : 0 ≤ Real.sqrt 2 / 2 * N := by positivity
+    have hs2 : Real.sqrt 2 ^ 2 = 2 := Real.sq_sqrt (by norm_num)
+    have hXsq : (Real.sqrt 2 / 2 * N) ^ 2 = 1 + ⟪v, w⟫_ℝ := by
+      rw [mul_pow, div_pow, hs2, hNsq]; ring
+    have hX1 : 1 ≤ Real.sqrt 2 / 2 * N := by nlinarith [hXsq, hc, hX0]
+    nlinarith [hXsq, hX1, hX0]
+  have hvu : Real.sqrt 2 / 2 ≤ ⟪v, u⟫_ℝ := hkey v (by rw [hvv])
+  have hwu : Real.sqrt 2 / 2 ≤ ⟪w, u⟫_ℝ := by
+    refine hkey w ?_
+    rw [hww, real_inner_comm]
+    ring
+  refine ⟨u, hunorm, ?_, ?_⟩
+  · have hd : dangle v u ≤ π / 4 :=
+      le_trans (min_le_left _ _) (angle_le_pi_div_four_of_inner hv hunorm hvu)
+    have := doubleCone_subset_of_dangle_le hv hunorm (a := π / 4) (η := θ - π / 4)
+      (by positivity) (by linarith) (by linarith [Real.pi_pos]) hd
+    rwa [show π / 4 + (θ - π / 4) = θ from by ring] at this
+  · have hd : dangle w u ≤ π / 4 :=
+      le_trans (min_le_left _ _) (angle_le_pi_div_four_of_inner hw hunorm hwu)
+    have := doubleCone_subset_of_dangle_le hw hunorm (a := π / 4) (η := θ - π / 4)
+      (by positivity) (by linarith) (by linarith [Real.pi_pos]) hd
+    rwa [show π / 4 + (θ - π / 4) = θ from by ring] at this
+
+/-- **Any two double cones of apex angle more than `π/4` share a subcone**, of
+aperture `apex − π/4`, whatever their axes. -/
+theorem exists_common_subcone {v w : E} (hv : ‖v‖ = 1) (hw : ‖w‖ = 1) {θ : ℝ}
+    (hθ : π / 4 < θ) (hθ' : θ ≤ π / 2) :
+    ∃ u : E, ‖u‖ = 1 ∧ doubleCone u (θ - π / 4) ⊆ doubleCone v θ ∧
+      doubleCone u (θ - π / 4) ⊆ doubleCone w θ := by
+  by_cases h : (0:ℝ) ≤ ⟪v, w⟫_ℝ
+  · exact exists_common_subcone_aux hv hw h hθ hθ'
+  · have hlt : ⟪v, w⟫_ℝ < 0 := not_le.mp h
+    have hnw : ‖(-w : E)‖ = 1 := by simpa using hw
+    obtain ⟨u, hu, h1, h2⟩ := exists_common_subcone_aux hv hnw
+      (by rw [inner_neg_right]; linarith) hθ hθ'
+    exact ⟨u, hu, h1, by rwa [doubleCone_neg] at h2⟩
+
+
+/-- **Every block is controlled when the cones are wide.** For two reference
+cones of apex `θ > π/4` — with *any* axes, parallel or not — the `H^{α/2}` energy
+of the block they cut out is bounded by the `H_k` form. The bisector supplies a
+common direction, so the same-direction theorem applies, on the union of the two
+pieces. -/
+theorem wide_block_le {d : ℕ} (hd : 0 < d) {α Λ θ : ℝ} (hθ1 : π / 4 < θ) (hθ2 : θ ≤ π / 2)
+    (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hmeas : CondMeas Γ)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2)
+    {v w : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1) (hw : ‖w‖ = 1) :
+    ∃ C : ℝ≥0∞, C ≠ ∞ ∧
+      ∫⁻ p in {x | doubleCone v θ ⊆ (Γ x).carrier} ×ˢ
+          {x | doubleCone w θ ⊆ (Γ x).carrier},
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+        ≤ C * form Set.univ k f := by
+  obtain ⟨u, hu, h1, h2⟩ := exists_common_subcone hv hw hθ1 hθ2
+  set η : ℝ := θ - π / 4 with hη
+  have hη0 : 0 < η := by rw [hη]; linarith
+  have hη2 : η ≤ π / 2 := by rw [hη]; linarith [Real.pi_pos]
+  set U : Set (EuclideanSpace ℝ (Fin d)) :=
+    {x | doubleCone v θ ⊆ (Γ x).carrier} ∪ {x | doubleCone w θ ⊆ (Γ x).carrier} with hU
+  have hUm : MeasurableSet U := (hmeas _).union (hmeas _)
+  have hcommon : ∀ x ∈ U, cone u η ⊆ (Γ x).carrier := by
+    intro x hx
+    rcases hx with hx | hx
+    · exact le_trans (le_trans Set.subset_union_left h1) hx
+    · exact le_trans (le_trans Set.subset_union_left h2) hx
+  have hmain := formHs_le_form_of_commonDirection_on hu hη0 hη2 hα hd hk hUm hcommon hf hkm
+  set K : ℝ≥0∞ := ENNReal.ofReal (2 * Λ) *
+    (ENNReal.ofReal (chainConst d η α) + ENNReal.ofReal (chainConst' d η α)) *
+    unitBallVol d with hK
+  have hKtop : K ≠ ∞ := by
+    rw [hK]
+    exact ENNReal.mul_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top
+      (ENNReal.add_ne_top.mpr ⟨ENNReal.ofReal_ne_top, ENNReal.ofReal_ne_top⟩))
+      unitBallVol_ne_top
+  refine ⟨(unitBallVol d)⁻¹ * K, ENNReal.mul_ne_top
+    (ENNReal.inv_ne_top.mpr (unitBallVol_ne_zero d)) hKtop, ?_⟩
+  have hsub : {x | doubleCone v θ ⊆ (Γ x).carrier} ×ˢ
+      {x | doubleCone w θ ⊆ (Γ x).carrier} ⊆ U ×ˢ U :=
+    Set.prod_mono Set.subset_union_left Set.subset_union_right
+  calc ∫⁻ p in {x | doubleCone v θ ⊆ (Γ x).carrier} ×ˢ
+        {x | doubleCone w θ ⊆ (Γ x).carrier},
+        ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+      ≤ ∫⁻ p in U ×ˢ U, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 :=
+        lintegral_mono_set hsub
+    _ = (unitBallVol d)⁻¹ * (unitBallVol d *
+          ∫⁻ p in U ×ˢ U, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2) := by
+        rw [← mul_assoc, ENNReal.inv_mul_cancel (unitBallVol_ne_zero d) unitBallVol_ne_top,
+          one_mul]
+    _ ≤ (unitBallVol d)⁻¹ * (K * form Set.univ k f) := mul_le_mul' le_rfl hmain
+    _ = (unitBallVol d)⁻¹ * K * form Set.univ k f := by rw [hK]; ring
+
+
+/-- **`H_k ⊆ H^{α/2}` in every dimension, for wide cones.** If the apex angles
+of `Γ` are bounded below by some `ϑ > π/4`, then
+
+  `|f|²_{H^{α/2}(ℝ^d)} ≤ C·|f|²_{H_k(ℝ^d)}`
+
+for a finite `C`. No planarity, and no common direction: `exists_common_subcone`
+supplies one for every pair of reference cones, because cones this wide always
+overlap. -/
+theorem sobolevInclusion_wide {d : ℕ} (hd : 0 < d) {ϑ α Λ : ℝ} (hϑ : π / 4 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
+    ∃ C : ℝ≥0∞, C ≠ ∞ ∧ formHs Set.univ α f ≤ C * form Set.univ k f := by
+  classical
+  set θ : ℝ := (π / 4 + ϑ) / 2 with hθdef
+  have hθ1 : π / 4 < θ := by rw [hθdef]; linarith
+  have hθ2 : θ ≤ π / 2 := by rw [hθdef]; linarith
+  have hθ3 : θ < ϑ := by rw [hθdef]; linarith
+  have hθ0 : 0 < θ := by linarith [Real.pi_pos]
+  obtain ⟨S, hS, hcov⟩ :=
+    ref_cones' (E := EuclideanSpace ℝ (Fin d)) (ϑ := ϑ) (θ := θ) hϑ' hθ0 hθ3
+  set blk : ↥S × ↥S → Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) := fun i =>
+    {x | doubleCone (i.1 : EuclideanSpace ℝ (Fin d)) θ ⊆ (Γ x).carrier} ×ˢ
+      {x | doubleCone (i.2 : EuclideanSpace ℝ (Fin d)) θ ⊆ (Γ x).carrier} with hblk
+  have hcover : (⋃ i, blk i) = Set.univ := by
+    refine Set.eq_univ_of_forall fun p => ?_
+    obtain ⟨v, hvS, hv⟩ := hcov Γ hΓ p.1
+    obtain ⟨w, hwS, hw⟩ := hcov Γ hΓ p.2
+    exact Set.mem_iUnion.mpr ⟨(⟨v, hvS⟩, ⟨w, hwS⟩), hv, hw⟩
+  choose C hCtop hCle using fun i : ↥S × ↥S =>
+    wide_block_le hd hθ1 hθ2 hα hk hmeas hf hkm (hS _ i.1.2) (hS _ i.2.2)
+  refine ⟨∑' i, C i, ?_, ?_⟩
+  · rw [tsum_fintype]
+    exact (ENNReal.sum_lt_top.mpr fun i _ => (hCtop i).lt_top).ne
+  · have hlhs : formHs Set.univ α f
+        = ∫⁻ p in ⋃ i, blk i,
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 := by
+      rw [hcover, formHs, form, Set.univ_prod_univ]
+    rw [hlhs]
+    calc ∫⁻ p in ⋃ i, blk i,
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+        ≤ ∑' i, ∫⁻ p in blk i,
+            ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 :=
+          lintegral_iUnion_le _ _
+      _ ≤ ∑' i, C i * form Set.univ k f := ENNReal.tsum_le_tsum hCle
+      _ = (∑' i, C i) * form Set.univ k f := ENNReal.tsum_mul_right
+
+/-- **The inclusion §3.2 needs, for wide cones, in every dimension.** If `f` has
+finite `L²` norm and finite `H_k` form on the outer ball, then its `H^{α/2}` form
+on the inner ball is finite. -/
+theorem formHs_ball_ne_top_of_wide {d : ℕ} (hd : 0 < d) {ϑ α Λ : ℝ} (hϑ : π / 4 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) (hα : 0 < α) (hα2 : α < 2)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      k p.1 p.2)
+    {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ} (hRR : R < R')
+    (hL2 : ∫⁻ x in ball x₀ R', ENNReal.ofReal (f x ^ 2) ≠ ∞)
+    (hHk : form (ball x₀ R') k f ≠ ∞) :
+    formHs (ball x₀ R) α f ≠ ∞ := by
+  have hδ : 0 < R' - R := by linarith
+  have hcm : Measurable (cutoff x₀ R R') := by unfold cutoff; fun_prop
+  set g : EuclideanSpace ℝ (Fin d) → ℝ := fun x => cutoff x₀ R R' x * f x with hgdef
+  have hgm : Measurable g := by rw [hgdef]; exact hcm.mul hf
+  have hkmg : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((g p.2 - g p.1) ^ 2) * k p.1 p.2 := by
+    refine Measurable.mul (ENNReal.measurable_ofReal.comp ?_) hkm
+    exact ((hgm.comp measurable_snd).sub (hgm.comp measurable_fst)).pow_const 2
+  -- on the inner ball `g` agrees with `f`
+  have hcongr : formHs (ball x₀ R) α f = formHs (ball x₀ R) α g := by
+    refine setLIntegral_congr_fun (measurableSet_ball.prod measurableSet_ball) ?_
+    rintro ⟨u, v⟩ ⟨hu, hv⟩
+    have hu1 : cutoff x₀ R R' u = 1 := by
+      refine cutoff_eq_one hRR ?_
+      rw [Metric.mem_ball, dist_eq_norm] at hu
+      linarith
+    have hv1 : cutoff x₀ R R' v = 1 := by
+      refine cutoff_eq_one hRR ?_
+      rw [Metric.mem_ball, dist_eq_norm] at hv
+      linarith
+    simp only [hgdef, hu1, hv1, one_mul]
+  -- the whole-space theorem, applied to `g`
+  obtain ⟨C, hCtop, hC⟩ := sobolevInclusion_wide hd hϑ hϑ' hα.le hΓ hmeas hk hgm hkmg
+  have hmono : formHs (ball x₀ R) α g ≤ formHs Set.univ α g := by
+    refine lintegral_mono_set ?_
+    exact Set.prod_mono (Set.subset_univ _) (Set.subset_univ _)
+  have hCδ : (∫⁻ u : EuclideanSpace ℝ (Fin d),
+      ENNReal.ofReal (min (‖u‖ ^ 2 / (R' - R) ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α))) ≠ ∞ :=
+    (lintegral_cutoff_kernel_lt_top hd hδ hα hα2).ne
+  have hcost := form_cutoff_le (x₀ := x₀) hk hd hα hα2 hRR hf hkm
+  have hbound : formHs (ball x₀ R) α f ≤ C * form Set.univ k g :=
+    le_trans (le_of_eq hcongr) (le_trans hmono hC)
+  refine ne_of_lt (lt_of_le_of_lt hbound ?_)
+  refine ENNReal.mul_lt_top hCtop.lt_top (lt_of_le_of_lt hcost ?_)
+  refine ENNReal.add_lt_top.mpr ⟨ENNReal.add_lt_top.mpr ⟨?_, ?_⟩, ?_⟩
+  · exact ENNReal.mul_lt_top (by norm_num) hHk.lt_top
+  · exact ENNReal.mul_lt_top (by norm_num)
+      (ENNReal.mul_lt_top (ENNReal.mul_lt_top ENNReal.ofReal_lt_top hCδ.lt_top) hL2.lt_top)
+  · exact ENNReal.mul_lt_top (by norm_num)
+      (ENNReal.mul_lt_top (ENNReal.mul_lt_top ENNReal.ofReal_lt_top hCδ.lt_top) hL2.lt_top)
+
 end QFS
