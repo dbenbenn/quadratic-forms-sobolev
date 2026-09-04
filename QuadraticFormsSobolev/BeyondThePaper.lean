@@ -2630,4 +2630,121 @@ theorem cross2_ne_zero_or_carrier_eq {v w : EuclideanSpace ℝ (Fin 2)} (hv : �
     · exact doubleCone_neg v ϑ
   · exact Or.inl h
 
+
+/-! ### One block of the planar decomposition -/
+
+lemma unitBallVol_ne_zero (d : ℕ) : unitBallVol d ≠ 0 := by
+  rw [unitBallVol]
+  exact (measure_closedBall_pos volume (0 : EuclideanSpace ℝ (Fin d)) one_pos).ne'
+
+/-- **Every block of the planar decomposition is controlled**, diagonal or cross.
+The dichotomy `cross2_ne_zero_or_carrier_eq` decides which theorem applies. -/
+theorem planar_block_le {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin 2))} {Λ : ℝ}
+    {k : EuclideanSpace ℝ (Fin 2) → EuclideanSpace ℝ (Fin 2) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hmeas : CondMeas Γ)
+    {f : EuclideanSpace ℝ (Fin 2) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2)
+    (V W : DCone (EuclideanSpace ℝ (Fin 2))) (hVW : V.apex = W.apex) :
+    ∃ C : ℝ≥0∞, C ≠ ∞ ∧
+      ∫⁻ p in {x | V.carrier ⊆ (Γ x).carrier} ×ˢ {x | W.carrier ⊆ (Γ x).carrier},
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+            ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(2 : ℝ) - α))
+        ≤ C * form Set.univ k f := by
+  have hVpos : 0 < V.apex := V.apex_pos
+  have hVle : V.apex ≤ π / 2 := V.apex_le
+  have hUVm : MeasurableSet {x | V.carrier ⊆ (Γ x).carrier} := hmeas _
+  have hUWm : MeasurableSet {x | W.carrier ⊆ (Γ x).carrier} := hmeas _
+  have hsin : 0 < Real.sin V.apex :=
+    Real.sin_pos_of_pos_of_lt_pi hVpos (by linarith [Real.pi_pos])
+  rcases cross2_ne_zero_or_carrier_eq V.norm_axis W.norm_axis V.apex with hD | hcar
+  · -- the axes are not parallel: a cross block
+    have hUs : ∀ x ∈ {x | V.carrier ⊆ (Γ x).carrier}, doubleCone V.axis V.apex ⊆ (Γ x).carrier :=
+      fun x hx => hx
+    have hUt : ∀ y ∈ {x | W.carrier ⊆ (Γ x).carrier}, doubleCone W.axis V.apex ⊆ (Γ y).carrier := by
+      intro y hy
+      rw [hVW]
+      exact hy
+    have hmain := formHs_le_form_planar_cross V.norm_axis W.norm_axis hVpos hVle hα hD hk
+      hUVm hUWm hUs hUt hf hkm
+    set κ : ℝ≥0∞ := ENNReal.ofReal (Real.sin V.apex ^ 4 / 4) * unitBallVol 2 with hκ
+    have hκ0 : κ ≠ 0 := by
+      rw [hκ]
+      exact mul_ne_zero (by simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; positivity)
+        (unitBallVol_ne_zero 2)
+    have hκtop : κ ≠ ∞ :=
+      ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top
+    refine ⟨κ⁻¹ * (ENNReal.ofReal (planarConst V.axis W.axis V.apex α) * unitBallVol 2 *
+        ENNReal.ofReal (2 * Λ) + ENNReal.ofReal (planarConst V.axis W.axis V.apex α) *
+        unitBallVol 2 * ENNReal.ofReal (2 * Λ) +
+        ENNReal.ofReal (Real.sin V.apex ^ 4 / 4) * unitBallVol 2 * ENNReal.ofReal Λ), ?_, ?_⟩
+    · refine ENNReal.mul_ne_top (ENNReal.inv_ne_top.mpr hκ0) ?_
+      refine ENNReal.add_ne_top.mpr ⟨ENNReal.add_ne_top.mpr ⟨?_, ?_⟩, ?_⟩ <;>
+        exact ENNReal.mul_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top)
+          ENNReal.ofReal_ne_top
+    · calc ∫⁻ p in {x | V.carrier ⊆ (Γ x).carrier} ×ˢ {x | W.carrier ⊆ (Γ x).carrier},
+            ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+              ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(2 : ℝ) - α))
+          = κ⁻¹ * (κ * ∫⁻ p in {x | V.carrier ⊆ (Γ x).carrier} ×ˢ
+              {x | W.carrier ⊆ (Γ x).carrier},
+              ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+                ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(2 : ℝ) - α))) := by
+            rw [← mul_assoc, ENNReal.inv_mul_cancel hκ0 hκtop, one_mul]
+        _ ≤ κ⁻¹ * (ENNReal.ofReal (planarConst V.axis W.axis V.apex α) * unitBallVol 2 *
+              (ENNReal.ofReal (2 * Λ) * form Set.univ k f)
+            + ENNReal.ofReal (planarConst V.axis W.axis V.apex α) * unitBallVol 2 *
+              (ENNReal.ofReal (2 * Λ) * form Set.univ k f)
+            + ENNReal.ofReal (Real.sin V.apex ^ 4 / 4) * unitBallVol 2 * ENNReal.ofReal Λ *
+              form Set.univ k f) := mul_le_mul' le_rfl hmain
+        _ = κ⁻¹ * (ENNReal.ofReal (planarConst V.axis W.axis V.apex α) * unitBallVol 2 *
+              ENNReal.ofReal (2 * Λ) + ENNReal.ofReal (planarConst V.axis W.axis V.apex α) *
+              unitBallVol 2 * ENNReal.ofReal (2 * Λ) +
+              ENNReal.ofReal (Real.sin V.apex ^ 4 / 4) * unitBallVol 2 * ENNReal.ofReal Λ) *
+            form Set.univ k f := by ring
+  · -- the two cones coincide: a diagonal block
+    have hcarrier : W.carrier = V.carrier := by
+      rw [DCone.carrier, DCone.carrier, ← hVW]
+      exact hcar
+    have hsets : {x | W.carrier ⊆ (Γ x).carrier} = {x | V.carrier ⊆ (Γ x).carrier} := by
+      rw [hcarrier]
+    have hcommon : ∀ x ∈ {x | V.carrier ⊆ (Γ x).carrier},
+        cone V.axis V.apex ⊆ (Γ x).carrier :=
+      fun x hx => le_trans Set.subset_union_left hx
+    have hmain := formHs_le_form_of_commonDirection_on V.norm_axis hVpos hVle hα two_pos hk
+      hUVm hcommon hf hkm
+    refine ⟨(unitBallVol 2)⁻¹ * (ENNReal.ofReal (2 * Λ) *
+      (ENNReal.ofReal (chainConst 2 V.apex α) + ENNReal.ofReal (chainConst' 2 V.apex α)) *
+      unitBallVol 2), ?_, ?_⟩
+    · exact ENNReal.mul_ne_top (ENNReal.inv_ne_top.mpr (unitBallVol_ne_zero 2))
+        (ENNReal.mul_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top
+          (ENNReal.add_ne_top.mpr ⟨ENNReal.ofReal_ne_top, ENNReal.ofReal_ne_top⟩))
+          unitBallVol_ne_top)
+    · rw [hsets]
+      have hconv : ∫⁻ p in {x | V.carrier ⊆ (Γ x).carrier} ×ˢ
+          {x | V.carrier ⊆ (Γ x).carrier},
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+            ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(2 : ℝ) - α))
+          = ∫⁻ p in {x | V.carrier ⊆ (Γ x).carrier} ×ˢ {x | V.carrier ⊆ (Γ x).carrier},
+            ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel 2 α p.1 p.2 := by
+        refine lintegral_congr fun p => ?_
+        rw [jumpKernel]
+        norm_num
+      rw [hconv]
+      calc ∫⁻ p in {x | V.carrier ⊆ (Γ x).carrier} ×ˢ {x | V.carrier ⊆ (Γ x).carrier},
+            ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel 2 α p.1 p.2
+          = (unitBallVol 2)⁻¹ * (unitBallVol 2 *
+              ∫⁻ p in {x | V.carrier ⊆ (Γ x).carrier} ×ˢ {x | V.carrier ⊆ (Γ x).carrier},
+                ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel 2 α p.1 p.2) := by
+            rw [← mul_assoc, ENNReal.inv_mul_cancel (unitBallVol_ne_zero 2) unitBallVol_ne_top,
+              one_mul]
+        _ ≤ (unitBallVol 2)⁻¹ * (ENNReal.ofReal (2 * Λ) *
+              (ENNReal.ofReal (chainConst 2 V.apex α) +
+                ENNReal.ofReal (chainConst' 2 V.apex α)) *
+              unitBallVol 2 * form Set.univ k f) := mul_le_mul' le_rfl hmain
+        _ = (unitBallVol 2)⁻¹ * (ENNReal.ofReal (2 * Λ) *
+              (ENNReal.ofReal (chainConst 2 V.apex α) +
+                ENNReal.ofReal (chainConst' 2 V.apex α)) * unitBallVol 2) *
+            form Set.univ k f := by ring
+
 end QFS
