@@ -125,6 +125,8 @@ The pieces, all proved:
 | **The exchange at fixed `s`**: Tonelli plus the fibre estimate, returning the weight `‖z−s‖^{-d-α}` | `QFS.lintegral_swap_fibre`, `QFS.lintegral_swap_fibre'` | ✅ proved |
 | **`(★)` for a common cone direction** | `QFS.localPoincare_sameDirection` | ✅ **proved** |
 | **`H_k ⊆ H^{α/2}` for a common cone direction** | `QFS.formHs_le_form_of_commonDirection` | ✅ **proved** |
+| **The same, with both endpoints confined to a set `U`** — the diagonal blocks of the type decomposition | `QFS.localPoincare_sameDirection_on`, `QFS.formHs_le_form_of_commonDirection_on` | ✅ **proved** |
+| **One intermediate point provably cannot do the cross blocks** | `QFS.no_common_neighbour_of_skew_axes`, `QFS.abs_inner_gt_of_mem_doubleCone` | ✅ **proved** (a disproof) |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
 integration in `t`, and it is why the argument is scale-invariant: the singular
@@ -149,15 +151,21 @@ that `coneGap` increases by exactly `sin ϑ` per unit step along the axis
 walking `3‖s−t‖/sin ϑ` from `s` opens the cone past `3‖s−t‖`, leaving `‖s−t‖` of
 room for the ball and `2‖s−t‖` to absorb the displacement from `s` to `t`.
 
-**What is not proved, and is open.** Two points whose cones share no direction.
-In dimension three two thin double cones with skew axes need not meet at all —
-take `s = 0` with axis `e₁` and `t = e₃` with axis `e₂` — so one intermediate
-point cannot suffice, and uniformly bounded *longer* chains are required, with
-positive measure at every link. That is the continuous analogue of §§5–6, which
-the paper establishes only in the discrete setting; going through `ℤ^d` is
-precisely how it avoids this. Corollary 2.4 (`QFS.ref_config`) reduces the
-configuration to finitely many cone types, so the residue is exactly the
-*cross-type* pairs within a single tile.
+**What is not proved, and is open.** Corollary 2.4 (`QFS.ref_config`) reduces a
+configuration to finitely many cone types, splitting `ℝ^d` into measurable pieces
+`U_1, …, U_L` and the `H^{α/2}` energy into `L²` blocks. The localised theorem
+settles every **diagonal** block `U_m × U_m`. What remains is the `L² − L`
+**cross** blocks `U_m × U_{m'}`, `m ≠ m'`, where the two endpoints admit no
+common cone direction.
+
+That case is not merely harder — one intermediate point provably cannot do it,
+and `QFS.no_common_neighbour_of_skew_axes` proves so: in `ℝ³`, for `ϑ < π/4`, the
+double cone about `e₁` at the origin and the one about `e₂` at `e₃` are
+**disjoint**, so the set the averaging ball would live in is empty. Chains of
+length at least two are unavoidable, and their middle edge runs between two
+points whose cones the configuration assigns arbitrarily. That is the continuous
+analogue of §§5–6, which the paper establishes only in the discrete setting;
+going through `ℤ^d` is precisely how it avoids this.
 
 Nothing here is claimed beyond what Lean checks: every row of the table above is
 proved, including `(★)` and the inclusion `H_k ⊆ H^{α/2}` for a common cone
