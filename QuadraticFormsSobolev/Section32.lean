@@ -1103,4 +1103,68 @@ theorem form_cutoff_le {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {α Λ 
           (mul_le_mul' le_rfl (lintegral_cutoff_error_le hk hd hδ hα hα2 hf hkm _ hBm)))
           (mul_le_mul' le_rfl (lintegral_cutoff_error_le' hk hd hδ hα hα2 hf hkm _ hBm))
 
+
+/-! ## The tiling of pairs
+
+§3.2's `(discret)` is an inequality between sums over pairs of lattice points,
+and the limit acts on integrals. The bridge is the product tiling: `ℝ^d × ℝ^d`
+is tiled by the products `Ã_h(x) × Ã_h(y)`, so a function constant on each such
+product integrates to the corresponding sum times `h^{2d}`. -/
+
+lemma iUnion_halfClosedCube₂ {h : ℝ} (hh : 0 < h) :
+    (⋃ nm : (Fin d → ℤ) × (Fin d → ℤ),
+      halfClosedCube h (latticePt d h nm.1) ×ˢ halfClosedCube h (latticePt d h nm.2))
+      = Set.univ := by
+  refine Set.eq_univ_of_forall fun p => ?_
+  refine Set.mem_iUnion.mpr ⟨(fun i => round (p.1 i / h), fun i => round (p.2 i / h)), ?_⟩
+  exact ⟨mem_halfClosedCube_stepIndex hh p.1, mem_halfClosedCube_stepIndex hh p.2⟩
+
+lemma pairwiseDisjoint_halfClosedCube₂ {h : ℝ} (hh : 0 < h) :
+    Pairwise (Function.onFun Disjoint
+      (fun nm : (Fin d → ℤ) × (Fin d → ℤ) =>
+        halfClosedCube h (latticePt d h nm.1) ×ˢ halfClosedCube h (latticePt d h nm.2))) := by
+  intro nm nm' hne
+  refine Set.disjoint_left.mpr (fun p hp hp' => ?_)
+  have h1 := stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h nm.1) hp.1
+  have h2 := stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h nm'.1) hp'.1
+  have h3 := stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h nm.2) hp.2
+  have h4 := stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h nm'.2) hp'.2
+  refine hne (Prod.ext ?_ ?_)
+  · exact latticePt_injective (ne_of_gt hh) (h1.symm.trans h2)
+  · exact latticePt_injective (ne_of_gt hh) (h3.symm.trans h4)
+
+/-- The integral over `ℝ^d × ℝ^d` splits along the product tiling. -/
+theorem lintegral_eq_tsum_halfClosedCube₂ {h : ℝ} (hh : 0 < h)
+    (F : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞) :
+    ∫⁻ p, F p = ∑' nm : (Fin d → ℤ) × (Fin d → ℤ),
+      ∫⁻ p in halfClosedCube h (latticePt d h nm.1) ×ˢ
+        halfClosedCube h (latticePt d h nm.2), F p := by
+  rw [← setLIntegral_univ F, ← iUnion_halfClosedCube₂ (d := d) hh,
+    lintegral_iUnion (fun nm => (measurableSet_halfClosedCube h _).prod
+      (measurableSet_halfClosedCube h _)) (pairwiseDisjoint_halfClosedCube₂ hh)]
+
+/-- **A function constant on the tiles of pairs integrates to the corresponding
+sum times `h^{2d}`.** This is the identity that turns the sums of `(discret)`
+into the integrals the limit acts on. -/
+theorem lintegral_stepFun₂ {h : ℝ} (hh : 0 < h)
+    (c : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞) :
+    ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+        c (stepIndex d h p.1) (stepIndex d h p.2)
+      = ∑' nm : (Fin d → ℤ) × (Fin d → ℤ),
+        c (latticePt d h nm.1) (latticePt d h nm.2) *
+          (ENNReal.ofReal (h ^ d) * ENNReal.ofReal (h ^ d)) := by
+  rw [lintegral_eq_tsum_halfClosedCube₂ hh]
+  refine tsum_congr fun nm => ?_
+  have hcongr : ∀ p ∈ halfClosedCube h (latticePt d h nm.1) ×ˢ
+      halfClosedCube h (latticePt d h nm.2),
+      c (stepIndex d h p.1) (stepIndex d h p.2)
+        = c (latticePt d h nm.1) (latticePt d h nm.2) := by
+    intro p hp
+    rw [stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h nm.1) hp.1,
+      stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h nm.2) hp.2]
+  rw [setLIntegral_congr_fun ((measurableSet_halfClosedCube h _).prod
+      (measurableSet_halfClosedCube h _)) hcongr,
+    setLIntegral_const, Measure.volume_eq_prod, Measure.prod_prod,
+    volume_halfClosedCube hh.le, volume_halfClosedCube hh.le]
+
 end QFS
