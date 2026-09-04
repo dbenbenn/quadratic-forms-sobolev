@@ -228,6 +228,10 @@ The pieces, all proved:
 | **The whole chain for multi-scale local domination** | `QFS.lintegral_near_le_form_of_locallyDominatedAt`, `QFS.formHs_univ_le_of_locallyDominatedAt`, `QFS.formHs_ball_ne_top_of_locallyDominatedAt`, `QFS.formHs_ball_le_form_locallyDominatedAt` | ✅ **proved** |
 | The cutoff step, abstracted: any `H^{α/2} ≤ C·H_k + C'·L²` bound gives §3.2's input | `QFS.formHs_ball_ne_top_of_L2inclusion` | ✅ **proved** |
 | **Every uniformly continuous configuration is locally dominated**, hence satisfies Theorem 1.1 — every dimension, any apex angle | `QFS.dangle_le_of_norm_sub_le`, `QFS.locallyDominated_of_uniformContinuous`, `QFS.formHs_ball_le_form_of_uniformContinuous` | ✅ **proved** |
+| **Local domination out to a radius that varies from point to point** | `QFS.LocallyDominatedRad`, `QFS.lintegral_near_le_form_of_locallyDominatedRad` | ✅ **proved** |
+| The far pairs with a variable cut-off radius, and the swap symmetry of the pair integral | `QFS.lintegral_far_var_le`, `QFS.lintegral_far_var_le'`, `QFS.setLIntegral_swap_pairs` | ✅ **proved** |
+| **`H^{α/2} ≤ C·H_k + C'·∫f²ρ^{-α}` for a variable domination radius `ρ`** — the degeneration of `ρ` is paid for by an integrability condition on `f`, not by a uniform bound | `QFS.formHs_univ_le_of_locallyDominatedRad` | ✅ **proved** |
+| **§3.2's input and Theorem 1.1's enlarged-ball form under a variable radius** | `QFS.formHs_ball_ne_top_of_locallyDominatedRad`, `QFS.formHs_ball_le_form_locallyDominatedRad` | ✅ **proved** |
 | The Lipschitz cutoff and its cost | `QFS.cutoff`, `QFS.sq_cutoff_sub_le`, `QFS.sq_cutoff_mul_sub_le`, `QFS.form_cutoff_le`, `QFS.lintegral_cutoff_error_le`, `QFS.lintegral_cutoff_error_le'` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
@@ -2009,6 +2013,26 @@ further out at the same radius, so each pair may be served by any of a finite se
 `QFS.formHs_ball_le_form_locallyDominatedAt`) and the constant summed over `Θ`.
 The single-scale hypothesis is the case `Θ = {θ}`.
 
+**Trading uniformity for integrability.** The radius need not be uniform at all.
+`QFS.LocallyDominatedRad` asks only for a measurable `ρ > 0` such that every pair
+with `‖s−t‖ ≤ ρ s` is dominated, and then
+
+> `QFS.formHs_univ_le_of_locallyDominatedRad` —
+> `|f|²_{H^{α/2}} ≤ C·|f|²_{H_k} + C'·∫ f(s)²·ρ(s)^{-α} ds`,
+
+with `§3.2`'s input and Theorem 1.1's enlarged-ball form behind it
+(`QFS.formHs_ball_ne_top_of_locallyDominatedRad`,
+`QFS.formHs_ball_le_form_locallyDominatedRad`). The proof pays the pairs closer
+than `ρ` at either endpoint by chaining — the pair integral is symmetric under
+swapping the two points (`QFS.setLIntegral_swap_pairs`) — and everything else by
+the kernel tail with a variable radius (`QFS.lintegral_far_var_le`). Since
+`QFS.ae_exists_dominating_type` produces such a `ρ`, positive almost everywhere,
+for **every** admissible configuration, what separates the open statement from a
+theorem is now: a measurable selection of that `ρ`, and the finiteness of
+`∫ f²ρ^{-α}`. A counterexample would have to put the `L²` mass of `f` exactly
+where the domination radius degenerates, fast enough to make that integral
+diverge.
+
 **A configuration no earlier theorem reaches.** Take `V(v₁,ϑ)` where `⟪n,x⟫ ≥ 0`
 and `V(v₂,ϑ)` elsewhere, with `v₁`, `v₂` arbitrary and `ϑ` as small as one likes.
 The two double cones can be disjoint, so neither the common-direction theorem, nor
@@ -2053,9 +2077,9 @@ recorded here, not attempted.
 
 **What is still not done.** Narrow cones (apex `≤ π/4`) in dimension three and
 above, apart from the pairwise-overlapping families, the small-spread
-configurations and the locally dominated ones just described — the residue is a
-uniformity statement, `QFS.LocallyDominated`, whose pointwise form is a theorem
-(`QFS.ae_exists_dominating_type`) — and only those: dimension one is trivial (`QFS.formHs_le_form_dim_one`:
+configurations and the locally dominated ones just described — the residue is the
+integrability of `f²ρ^{-α}` against the domination radius `ρ`, whose pointwise
+positivity is a theorem (`QFS.ae_exists_dominating_type`) — and only those: dimension one is trivial (`QFS.formHs_le_form_dim_one`:
 on the line every double cone is `ℝ ∖ {0}`, so every pair is a cone pair and
 (1.4)'s lower bound gives the inclusion outright), dimension two is step 6, and
 wide cones are step 9. The remaining case fails for the reason in step 5 —
