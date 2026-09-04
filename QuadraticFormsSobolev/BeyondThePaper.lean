@@ -1,3 +1,4 @@
+import QuadraticFormsSobolev.Section3Kernel
 import QuadraticFormsSobolev.Section32
 
 /-!
@@ -1295,5 +1296,57 @@ theorem no_common_neighbour_of_skew_axes {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ < 
   have hz1 : 0 < (z 1) ^ 2 := by positivity
   nlinarith [hA, hB, hz0, hz1, hlt2, hsc, sq_nonneg (z 2), sq_nonneg (z 2 - 1),
     mul_pos hz0 hz1]
+
+
+/-! ## The diagonal blocks of the canonical decomposition
+
+Corollary 2.4 supplies, for any `ϑ`-bounded configuration, a finite family of
+reference cones of aperture `ϑ/3` covering it pointwise. The sets
+`U_V = {x | V ⊆ Γ(x)}` are measurable by Debreu's condition (carried, as
+elsewhere in this repository, as the explicit hypothesis `QFS.CondMeas`), they
+cover `ℝ^d`, and on each of them a common cone direction is available. So every
+diagonal block is controlled, with **one constant** for all of them: `chainConst`
+depends on the aperture, which is `ϑ/3` throughout, and not on the axis. -/
+
+/-- **Every diagonal block of the canonical finite decomposition is controlled.**
+
+The residue of the open statement is therefore exactly the cross blocks
+`U_V × U_W` with `V ≠ W`, on which `no_common_neighbour_of_skew_axes` shows the
+method of this file cannot work. -/
+theorem diagonal_blocks_of_bounded {d : ℕ} (hd : 0 < d) {ϑ α Λ : ℝ}
+    (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
+    ∃ 𝒱 : Set (DCone (EuclideanSpace ℝ (Fin d))), 𝒱.Finite ∧
+      (∀ x, ∃ V ∈ 𝒱, V.carrier ⊆ (Γ x).carrier) ∧
+      (∀ V ∈ 𝒱, V.apex = ϑ / 3) ∧
+      ∀ V ∈ 𝒱, unitBallVol d *
+          ∫⁻ p in {x | V.carrier ⊆ (Γ x).carrier} ×ˢ {x | V.carrier ⊆ (Γ x).carrier},
+            ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+        ≤ ENNReal.ofReal (2 * Λ) *
+            (ENNReal.ofReal (chainConst d (ϑ / 3) α) +
+              ENNReal.ofReal (chainConst' d (ϑ / 3) α)) *
+            unitBallVol d * form Set.univ k f := by
+  obtain ⟨Γ', hfin, hsub, hapex, -⟩ := ref_config hϑ hϑ' Γ hΓ
+  refine ⟨Set.range Γ', hfin, fun x => ⟨Γ' x, ⟨x, rfl⟩, hsub x⟩, ?_, ?_⟩
+  · rintro V ⟨x, rfl⟩
+    exact hapex x
+  · rintro V ⟨x, rfl⟩
+    have hv : ‖(Γ' x).axis‖ = 1 := (Γ' x).norm_axis
+    have hθ : 0 < ϑ / 3 := by positivity
+    have hθ' : ϑ / 3 ≤ π / 2 := by linarith [Real.pi_pos]
+    have hcommon : ∀ y ∈ {x' | (Γ' x).carrier ⊆ (Γ x').carrier},
+        cone (Γ' x).axis (ϑ / 3) ⊆ (Γ y).carrier := by
+      intro y hy
+      refine le_trans ?_ hy
+      rw [← hapex x]
+      exact Set.subset_union_left
+    have := formHs_le_form_of_commonDirection_on (v := (Γ' x).axis) hv hθ hθ' hα hd hk
+      (U := {x' | (Γ' x).carrier ⊆ (Γ x').carrier}) (hmeas _) hcommon hf hkm
+    simpa [hapex x] using this
 
 end QFS
