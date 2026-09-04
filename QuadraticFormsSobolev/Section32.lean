@@ -1759,4 +1759,182 @@ theorem tendsto_tileAvg₂
     simp only [hΦ'def, ENNReal.ofReal_toReal hpfin]] at h2
   exact h2.congr fun i => (hcube (hpos i) _).symm
 
+
+/-! ## Jensen's inequality for the step function
+
+The step function is an average, so the square of a difference of its values is
+at most the average of the squares of the differences.  That is what makes the
+tile average a dominant for the discretized integrand. -/
+
+/-- Cauchy–Schwarz against the constant `1`, proved by completing the square:
+for a set of finite measure, `(∫_s g)² ≤ μ(s) ∫_s g²`. -/
+theorem sq_setIntegral_le_measure_mul {X : Type*} [MeasurableSpace X] {μ : Measure X}
+    {s : Set X} (hs : μ s ≠ ∞) {g : X → ℝ} (hg : IntegrableOn g s μ)
+    (hg2 : IntegrableOn (fun x => g x ^ 2) s μ) :
+    (∫ x in s, g x ∂μ) ^ 2 ≤ (μ s).toReal * ∫ x in s, g x ^ 2 ∂μ := by
+  set m : ℝ := (μ s).toReal with hm
+  set B : ℝ := ∫ x in s, g x ∂μ with hB
+  set A : ℝ := ∫ x in s, g x ^ 2 ∂μ with hA
+  have hm0 : 0 ≤ m := ENNReal.toReal_nonneg
+  have hA0 : 0 ≤ A := setIntegral_nonneg_of_ae_restrict
+    (Filter.Eventually.of_forall (fun x => sq_nonneg (g x)))
+  haveI : IsFiniteMeasure (μ.restrict s) :=
+    ⟨by rw [Measure.restrict_apply_univ]; exact lt_of_le_of_ne le_top hs⟩
+  rcases eq_or_lt_of_le hm0 with hmz | hmpos
+  · have hμ0 : μ s = 0 := by
+      have hz : (μ s).toReal = 0 := hmz.symm
+      exact ((ENNReal.toReal_eq_zero_iff _).mp hz).resolve_right hs
+    have hB0 : B = 0 := by
+      rw [hB, Measure.restrict_eq_zero.mpr hμ0, integral_zero_measure]
+    rw [hB0]
+    nlinarith [hA0, hm0]
+  · -- complete the square at `t = B / m`
+    have hmne : m ≠ 0 := ne_of_gt hmpos
+    set t : ℝ := B / m with ht
+    have hexp : (0:ℝ) ≤ ∫ x in s, (g x - t) ^ 2 ∂μ :=
+      setIntegral_nonneg_of_ae_restrict
+        (Filter.Eventually.of_forall (fun x => sq_nonneg (g x - t)))
+    have hsplit : ∫ x in s, (g x - t) ^ 2 ∂μ = A - 2 * t * B + t ^ 2 * m := by
+      have hfun : ∀ x, (g x - t) ^ 2 = g x ^ 2 - 2 * t * g x + t ^ 2 := by
+        intro x; ring
+      rw [show (fun x => (g x - t) ^ 2) = fun x => (g x ^ 2 - 2 * t * g x) + t ^ 2 from by
+        funext x; rw [hfun x]]
+      have hi1 : IntegrableOn (fun x => g x ^ 2 - 2 * t * g x) s μ :=
+        hg2.sub (hg.const_mul (2 * t))
+      have hi2 : IntegrableOn (fun _ : X => t ^ 2) s μ := integrable_const _
+      rw [integral_add hi1 hi2, integral_sub hg2 (hg.const_mul (2 * t)), integral_const,
+        integral_const_mul]
+      simp only [smul_eq_mul, hm, hA, hB, measureReal_def, Measure.restrict_apply_univ]
+      ring
+    have h1 : A - 2 * t * B + t ^ 2 * m = A - B ^ 2 / m := by
+      rw [ht]; field_simp; ring
+    have h2 : 0 ≤ A - B ^ 2 / m := by rw [← h1, ← hsplit]; exact hexp
+    rw [sub_nonneg, div_le_iff₀ hmpos] at h2
+    calc B ^ 2 ≤ A * m := h2
+      _ = m * A := mul_comm _ _
+
+/-- Cubes are compact. -/
+lemma isCompact_closedCube {h : ℝ} (hh : 0 < h) (u : EuclideanSpace ℝ (Fin d)) :
+    IsCompact (closedCube h u) := by
+  refine Metric.isCompact_of_isClosed_isBounded (isClosed_closedCube hh.le u) ?_
+  refine Bornology.IsBounded.subset (Metric.isBounded_closedBall (x := u) (r := h * Real.sqrt d)) ?_
+  exact closedCube_subset_closedBall_of_mem (cube_subset_closedCube h u (mem_cube_self hh u))
+
+
+/-- The integral of `f(u) − f(v)` over a product of two cubes, by Fubini. -/
+theorem setIntegral_sub_prod {h : ℝ} (hh : 0 < h) {f : EuclideanSpace ℝ (Fin d) → ℝ}
+    (hf : LocallyIntegrable f volume) (x y : EuclideanSpace ℝ (Fin d))
+    (hint : IntegrableOn (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      f q.1 - f q.2) (closedCube h x ×ˢ closedCube h y) volume) :
+    ∫ q in closedCube h x ×ˢ closedCube h y, (f q.1 - f q.2)
+      = h ^ d * ((∫ u in closedCube h x, f u) - ∫ v in closedCube h y, f v) := by
+  have hfx : IntegrableOn f (closedCube h x) volume :=
+    hf.integrableOn_isCompact (isCompact_closedCube hh x)
+  have hfy : IntegrableOn f (closedCube h y) volume :=
+    hf.integrableOn_isCompact (isCompact_closedCube hh y)
+  haveI : IsFiniteMeasure (volume.restrict (closedCube h x)) :=
+    ⟨by rw [Measure.restrict_apply_univ, volume_closedCube hh.le]; exact ENNReal.ofReal_lt_top⟩
+  haveI : IsFiniteMeasure (volume.restrict (closedCube h y)) :=
+    ⟨by rw [Measure.restrict_apply_univ, volume_closedCube hh.le]; exact ENNReal.ofReal_lt_top⟩
+  have hmeasure : (volume.restrict (closedCube h x)).prod (volume.restrict (closedCube h y))
+      = volume.restrict (closedCube h x ×ˢ closedCube h y) := by
+    rw [Measure.prod_restrict, Measure.volume_eq_prod]
+  have hint' : Integrable (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      f q.1 - f q.2)
+      ((volume.restrict (closedCube h x)).prod (volume.restrict (closedCube h y))) := by
+    rw [hmeasure]; exact hint
+  have hvolx : ((volume.restrict (closedCube h x)) Set.univ).toReal = h ^ d := by
+    rw [Measure.restrict_apply_univ, volume_closedCube hh.le,
+      ENNReal.toReal_ofReal (by positivity)]
+  have hvoly : ((volume.restrict (closedCube h y)) Set.univ).toReal = h ^ d := by
+    rw [Measure.restrict_apply_univ, volume_closedCube hh.le,
+      ENNReal.toReal_ofReal (by positivity)]
+  calc ∫ q in closedCube h x ×ˢ closedCube h y, (f q.1 - f q.2)
+      = ∫ q, (f q.1 - f q.2)
+          ∂((volume.restrict (closedCube h x)).prod (volume.restrict (closedCube h y))) := by
+        rw [hmeasure]
+    _ = ∫ u, (∫ v, (f u - f v) ∂(volume.restrict (closedCube h y)))
+          ∂(volume.restrict (closedCube h x)) := integral_prod _ hint'
+    _ = ∫ u in closedCube h x, (h ^ d * f u - ∫ v in closedCube h y, f v) := by
+        refine integral_congr_ae (Filter.Eventually.of_forall fun u => ?_)
+        show ∫ v in closedCube h y, (f u - f v) = h ^ d * f u - ∫ v in closedCube h y, f v
+        rw [integral_sub (integrable_const _) hfy, integral_const, measureReal_def, hvoly,
+          smul_eq_mul]
+    _ = h ^ d * ((∫ u in closedCube h x, f u) - ∫ v in closedCube h y, f v) := by
+        rw [integral_sub (hfx.const_mul (h ^ d)) (integrable_const _), integral_const_mul,
+          integral_const, measureReal_def, hvolx, smul_eq_mul]
+        ring
+
+
+/-- **Jensen's inequality for the step function.** The square of a difference of
+tile averages is at most the tile average of the squares of the differences.
+This is the pointwise bound that makes `tileAvg₂` a dominant for the
+discretized integrand of Section 3.2. -/
+theorem ofReal_sq_cubeAvg_sub_le {h : ℝ} (hh : 0 < h) {f : EuclideanSpace ℝ (Fin d) → ℝ}
+    (hfm : Measurable f) (hf : LocallyIntegrable f volume)
+    (x y : EuclideanSpace ℝ (Fin d)) :
+    ENNReal.ofReal ((cubeAvg d h f x - cubeAvg d h f y) ^ 2)
+      ≤ (ENNReal.ofReal (h ^ (2 * d)))⁻¹ *
+        ∫⁻ q in closedCube h x ×ˢ closedCube h y, ENNReal.ofReal ((f q.1 - f q.2) ^ 2) := by
+  set S := closedCube h x ×ˢ closedCube h y with hSdef
+  set G : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ :=
+    fun q => f q.1 - f q.2 with hGdef
+  have hGm : Measurable G := (hfm.comp measurable_fst).sub (hfm.comp measurable_snd)
+  by_cases htop : ∫⁻ q in S, ENNReal.ofReal (G q ^ 2) = ⊤
+  · rw [htop, ENNReal.mul_top (ENNReal.inv_ne_zero.mpr ENNReal.ofReal_ne_top)]
+    exact le_top
+  have hvolS : volume S = ENNReal.ofReal (h ^ (2 * d)) := by
+    rw [hSdef, Measure.volume_eq_prod, Measure.prod_prod, volume_closedCube hh.le,
+      volume_closedCube hh.le, two_mul, pow_add, ENNReal.ofReal_mul (by positivity)]
+  haveI : IsFiniteMeasure (volume.restrict S) :=
+    ⟨by rw [Measure.restrict_apply_univ, hvolS]; exact ENNReal.ofReal_lt_top⟩
+  have hG2 : IntegrableOn (fun q => G q ^ 2) S volume := by
+    refine ⟨(hGm.pow_const 2).aestronglyMeasurable, ?_⟩
+    have hen : ∫⁻ q in S, ‖G q ^ 2‖ₑ = ∫⁻ q in S, ENNReal.ofReal (G q ^ 2) :=
+      lintegral_congr fun q => Real.enorm_eq_ofReal (sq_nonneg _)
+    rw [HasFiniteIntegral, hen]
+    exact lt_top_iff_ne_top.mpr htop
+  have hGint : IntegrableOn G S volume := by
+    refine Integrable.mono (g := fun q => (1 + G q ^ 2) / 2)
+      (((integrable_const (1:ℝ)).add hG2).div_const 2) hGm.aestronglyMeasurable ?_
+    refine Filter.Eventually.of_forall fun q => ?_
+    have h0 : (0:ℝ) ≤ (1 + G q ^ 2) / 2 := by nlinarith [sq_nonneg (G q)]
+    rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_of_nonneg h0]
+    nlinarith [sq_nonneg (|G q| - 1), abs_nonneg (G q), sq_abs (G q)]
+  have hcx : cubeAvg d h f x = (h ^ d)⁻¹ * ∫ u in closedCube h x, f u := by
+    rw [cubeAvg, setAverage_eq, measureReal_def, volume_closedCube hh.le,
+      ENNReal.toReal_ofReal (by positivity), smul_eq_mul]
+  have hcy : cubeAvg d h f y = (h ^ d)⁻¹ * ∫ v in closedCube h y, f v := by
+    rw [cubeAvg, setAverage_eq, measureReal_def, volume_closedCube hh.le,
+      ENNReal.toReal_ofReal (by positivity), smul_eq_mul]
+  have hfub : ∫ q in S, G q
+      = h ^ d * ((∫ u in closedCube h x, f u) - ∫ v in closedCube h y, f v) :=
+    setIntegral_sub_prod hh hf x y hGint
+  have hhd : (0:ℝ) < h ^ d := by positivity
+  have hh2d : (0:ℝ) < h ^ (2 * d) := by positivity
+  have hpow : h ^ (2 * d) = h ^ d * h ^ d := by rw [two_mul, pow_add]
+  have hdiff : cubeAvg d h f x - cubeAvg d h f y = (h ^ (2 * d))⁻¹ * ∫ q in S, G q := by
+    rw [hcx, hcy, hfub, hpow]
+    field_simp
+  have hreal : (volume S).toReal = h ^ (2 * d) := by
+    rw [hvolS, ENNReal.toReal_ofReal (by positivity)]
+  have hCS := sq_setIntegral_le_measure_mul (s := S)
+    (by rw [hvolS]; exact ENNReal.ofReal_ne_top) hGint hG2
+  rw [hreal] at hCS
+  have hfinal : (cubeAvg d h f x - cubeAvg d h f y) ^ 2
+      ≤ (h ^ (2 * d))⁻¹ * ∫ q in S, G q ^ 2 := by
+    rw [hdiff, mul_pow]
+    calc ((h ^ (2 * d))⁻¹) ^ 2 * (∫ q in S, G q) ^ 2
+        ≤ ((h ^ (2 * d))⁻¹) ^ 2 * (h ^ (2 * d) * ∫ q in S, G q ^ 2) :=
+          mul_le_mul_of_nonneg_left hCS (by positivity)
+      _ = (h ^ (2 * d))⁻¹ * ∫ q in S, G q ^ 2 := by field_simp
+  calc ENNReal.ofReal ((cubeAvg d h f x - cubeAvg d h f y) ^ 2)
+      ≤ ENNReal.ofReal ((h ^ (2 * d))⁻¹ * ∫ q in S, G q ^ 2) :=
+        ENNReal.ofReal_le_ofReal hfinal
+    _ = (ENNReal.ofReal (h ^ (2 * d)))⁻¹ * ENNReal.ofReal (∫ q in S, G q ^ 2) := by
+        rw [ENNReal.ofReal_mul (by positivity), ENNReal.ofReal_inv_of_pos hh2d]
+    _ = (ENNReal.ofReal (h ^ (2 * d)))⁻¹ * ∫⁻ q in S, ENNReal.ofReal (G q ^ 2) := by
+        rw [ofReal_integral_eq_lintegral_ofReal hG2
+          (Filter.Eventually.of_forall fun q => sq_nonneg _)]
+
 end QFS
