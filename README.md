@@ -128,7 +128,8 @@ The pieces, all proved:
 | **`H_k ⊆ H^{α/2}` for a common cone direction** | `QFS.formHs_le_form_of_commonDirection` | ✅ **proved** |
 | **The same, with both endpoints confined to a set `U`** — the diagonal blocks of the type decomposition | `QFS.localPoincare_sameDirection_on`, `QFS.formHs_le_form_of_commonDirection_on` | ✅ **proved** |
 | **Every diagonal block of the canonical decomposition is controlled, by one constant** | `QFS.diagonal_blocks_of_bounded` | ✅ **proved** |
-| **One intermediate point provably cannot do the cross blocks** | `QFS.no_common_neighbour_of_skew_axes`, `QFS.abs_inner_gt_of_mem_doubleCone` | ✅ **proved** (a disproof) |
+| **One intermediate point provably cannot do the cross blocks in `d ≥ 3`** | `QFS.no_common_neighbour_of_skew_axes`, `QFS.abs_inner_gt_of_mem_doubleCone` | ✅ **proved** (a disproof) |
+| **…but in the plane it can**: a ball of common cone-neighbours for cross-direction pairs | `QFS.exists_ball_in_two_cones_two`, `QFS.abs_cross_ge_of_notMem_doubleCone`, `QFS.cramer2`, `QFS.perp2`, `QFS.cross2` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
 integration in `t`, and it is why the argument is scale-invariant: the singular
@@ -174,6 +175,18 @@ length at least two are unavoidable, and their middle edge runs between two
 points whose cones the configuration assigns arbitrarily. That is the continuous
 analogue of §§5–6, which the paper establishes only in the discrete setting;
 going through `ℤ^d` is precisely how it avoids this.
+
+**Dimension two is different, and its geometry is now done.** Two non-parallel
+lines in the plane meet, so `QFS.exists_ball_in_two_cones_two` produces a ball of
+common cone-neighbours of radius `‖t−s‖ sin²ϑ / 2` for cross-direction pairs —
+exactly the object the `d = 3` disproof rules out. Its two hypotheses are the
+right ones: parallel axes fall under the common-direction theorem, and a pair
+that is *already* a cone pair needs no chaining. What makes it quantitative is
+that "not already a cone pair" forces the component of `t − s` across each axis
+to be at least `‖t−s‖ sin ϑ`, which keeps the intersection point of the two
+axis-lines away from both endpoints. What remains for `d = 2` is to feed this
+family of balls through the exchange — a fibre bound, in the sense of
+`QFS.lintegral_swap_of_fibre_bound`.
 
 The analytic machinery is stated abstractly enough to be reused: the exchange
 asks only that a family of averaging sets have measurable graph and a fibre
