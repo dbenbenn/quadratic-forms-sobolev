@@ -2805,4 +2805,70 @@ theorem sobolevInclusion_planar {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ �
       _ ≤ ∑' i, C i * form Set.univ k f := ENNReal.tsum_le_tsum (fun i => hCle i)
       _ = (∑' i, C i) * form Set.univ k f := ENNReal.tsum_mul_right
 
+
+/-! ## The ball-localised form, in dimension two
+
+§3.2 consumes the inclusion on a ball, not on the whole plane. A Lipschitz
+cutoff bridges the two: `χf` agrees with `f` on the inner ball and is supported
+in the outer one, so the whole-space theorem applies to it, and
+`form_cutoff_le` says the cost is the `H_k` form on the outer ball plus an `L²`
+term. Both are finite for `f ∈ H_k(B*)`, which is exactly the hypothesis §3.2
+has. -/
+
+/-- **The inclusion §3.2 needs, in the plane.** If `f` has finite `L²` norm and
+finite `H_k` form on the outer ball, then its `H^{α/2}` form on the inner ball is
+finite: `f ∈ H_k(B*) ⟹ f ∈ H^{α/2}(B)`. -/
+theorem formHs_ball_ne_top_of_planar {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
+    (hα : 0 < α) (hα2 : α < 2)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin 2))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin 2) → EuclideanSpace ℝ (Fin 2) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    {f : EuclideanSpace ℝ (Fin 2) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+      k p.1 p.2)
+    {x₀ : EuclideanSpace ℝ (Fin 2)} {R R' : ℝ} (hRR : R < R')
+    (hL2 : ∫⁻ x in ball x₀ R', ENNReal.ofReal (f x ^ 2) ≠ ∞)
+    (hHk : form (ball x₀ R') k f ≠ ∞) :
+    formHs (ball x₀ R) α f ≠ ∞ := by
+  have hδ : 0 < R' - R := by linarith
+  have hcm : Measurable (cutoff x₀ R R') := by unfold cutoff; fun_prop
+  set g : EuclideanSpace ℝ (Fin 2) → ℝ := fun x => cutoff x₀ R R' x * f x with hgdef
+  have hgm : Measurable g := by rw [hgdef]; exact hcm.mul hf
+  have hkmg : Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+      ENNReal.ofReal ((g p.2 - g p.1) ^ 2) * k p.1 p.2 := by
+    refine Measurable.mul (ENNReal.measurable_ofReal.comp ?_) hkm
+    exact ((hgm.comp measurable_snd).sub (hgm.comp measurable_fst)).pow_const 2
+  -- on the inner ball `g` agrees with `f`
+  have hcongr : formHs (ball x₀ R) α f = formHs (ball x₀ R) α g := by
+    refine setLIntegral_congr_fun (measurableSet_ball.prod measurableSet_ball) ?_
+    rintro ⟨u, v⟩ ⟨hu, hv⟩
+    have hu1 : cutoff x₀ R R' u = 1 := by
+      refine cutoff_eq_one hRR ?_
+      rw [Metric.mem_ball, dist_eq_norm] at hu
+      linarith
+    have hv1 : cutoff x₀ R R' v = 1 := by
+      refine cutoff_eq_one hRR ?_
+      rw [Metric.mem_ball, dist_eq_norm] at hv
+      linarith
+    simp only [hgdef, hu1, hv1, one_mul]
+  -- the whole-space theorem, applied to `g`
+  obtain ⟨C, hCtop, hC⟩ := sobolevInclusion_planar hϑ hϑ' hα.le hΓ hmeas hk hgm hkmg
+  have hmono : formHs (ball x₀ R) α g ≤ formHs Set.univ α g := by
+    refine lintegral_mono_set ?_
+    exact Set.prod_mono (Set.subset_univ _) (Set.subset_univ _)
+  have hCδ : (∫⁻ u : EuclideanSpace ℝ (Fin 2),
+      ENNReal.ofReal (min (‖u‖ ^ 2 / (R' - R) ^ 2) 1 * ‖u‖ ^ (-(2 : ℝ) - α))) ≠ ∞ :=
+    (lintegral_cutoff_kernel_lt_top two_pos hδ hα hα2).ne
+  have hcost := form_cutoff_le (x₀ := x₀) hk two_pos hα hα2 hRR hf hkm
+  have hbound : formHs (ball x₀ R) α f ≤ C * form Set.univ k g :=
+    le_trans (le_of_eq hcongr) (le_trans hmono hC)
+  refine ne_of_lt (lt_of_le_of_lt hbound ?_)
+  refine ENNReal.mul_lt_top hCtop.lt_top (lt_of_le_of_lt hcost ?_)
+  refine ENNReal.add_lt_top.mpr ⟨ENNReal.add_lt_top.mpr ⟨?_, ?_⟩, ?_⟩
+  · exact ENNReal.mul_lt_top (by norm_num) hHk.lt_top
+  · exact ENNReal.mul_lt_top (by norm_num)
+      (ENNReal.mul_lt_top (ENNReal.mul_lt_top ENNReal.ofReal_lt_top hCδ.lt_top) hL2.lt_top)
+  · exact ENNReal.mul_lt_top (by norm_num)
+      (ENNReal.mul_lt_top (ENNReal.mul_lt_top ENNReal.ofReal_lt_top hCδ.lt_top) hL2.lt_top)
+
 end QFS
