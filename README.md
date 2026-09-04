@@ -73,6 +73,57 @@ and the rest are gaps or slips repaired silently:
   5.15 does not provide (Deviation 17).
 * Four smaller printed slips are listed in Deviation 19.
 
+## Beyond the paper — new mathematics, clearly separated
+
+**One file, `QuadraticFormsSobolev/BeyondThePaper.lean`, is not a formalisation
+of Bux–Kassmann–Schulze.** Nothing in it appears in arXiv:1707.09277 — not the
+statements, not the constants, not the proofs. It is an attempt at the single
+open statement recorded under *What remains*, and it should be read as new and
+**incomplete** research, not as a record of what the authors wrote.
+
+Its results are deliberately **excluded from the coverage and detail tables
+below**, which are the audit instrument for the paper and must stay that way: a
+table that credits the repository with results the paper does not contain is
+exactly the drift those tables exist to catch. Nothing else in the repository
+depends on this file, so deleting it would leave the certification intact.
+
+The route it attempts is a local Poincaré inequality on a cube `Q` of side `h`,
+
+  (★)  `∫∫_{Q×Q}(f(s) − f(t))² ≤ C(d,ϑ,α,Λ)·h^{d+α}·∫∫_{Q*×Q*}(f(s) − f(t))²k(s,t)`,
+
+which summed over the tiles bounds `A_h` uniformly and closes the theorem with
+Fatou alone. `(★)` would follow by chaining: join `s` to `t` through intermediate
+points that *do* see the relevant cones, and average over a positive-measure set
+of chains. Chaining needs three quantitative inputs, and all three are proved:
+
+| Input | Lean | State |
+| --- | --- | --- |
+| A **ball** of common cone-neighbours of `s` and `t`, radius `‖s−t‖`, inside both cones and within `O(‖s−t‖/sin ϑ)` of each | `QFS.exists_ball_in_two_cones`, `QFS.mem_two_cones_of_mem_midBall` | ✅ proved |
+| The compression bound: for fixed `s`, `z`, the admissible `t` lie in a ball of radius comparable to `‖z−s‖` | `QFS.midBall_fibre_subset_closedBall`, `QFS.inner_mem_Icc_of_mem_midBall` | ✅ proved |
+| The averaging ball has volume exactly `c_d‖s−t‖^d` | `QFS.volume_midBall` | ✅ proved |
+
+The first is the substantive one. The paper's Lemma 4.3 produces a *single*
+intermediate point; a point is a null set and cannot absorb an average, so a
+chaining argument needs a set of positive measure. The construction exploits
+that `coneGap` increases by exactly `sin ϑ` per unit step along the axis
+(`QFS.coneGap_add_smul_axis`, which the formalisation of §5 already needed):
+walking `3‖s−t‖/sin ϑ` from `s` opens the cone past `3‖s−t‖`, leaving `‖s−t‖` of
+room for the ball and `2‖s−t‖` to absorb the displacement from `s` to `t`.
+
+**What is not proved, and is open.** Two points whose cones share no direction.
+In dimension three two thin double cones with skew axes need not meet at all —
+take `s = 0` with axis `e₁` and `t = e₃` with axis `e₂` — so one intermediate
+point cannot suffice, and uniformly bounded *longer* chains are required, with
+positive measure at every link. That is the continuous analogue of §§5–6, which
+the paper establishes only in the discrete setting; going through `ℤ^d` is
+precisely how it avoids this. Corollary 2.4 (`QFS.ref_config`) reduces the
+configuration to finitely many cone types, so the residue is exactly the
+*cross-type* pairs within a single tile.
+
+Nothing here is claimed to be correct beyond what Lean checks: the three lemmas
+above are proved, the assembly of `(★)` from them is not, and the cross-type case
+is open.
+
 ## Coverage: every numbered result in the paper
 
 One row per numbered statement, including the ones not attempted. ✅ proved,
@@ -743,6 +794,10 @@ convergence and no limit on the right — as soon as
 
 > **Enough.** `liminf_{h→0} h^{-α}‖f − E_hf‖²_{L²(B*)} < ∞` for `f ∈ H_k(B*)`.
 
+An attempt on this, which is **new mathematics rather than formalisation**, is in
+`BeyondThePaper.lean`; see *Beyond the paper* above for what it does and does not
+establish.
+
 `A_h` is an `L²` modulus of continuity at one scale, a Besov `B^{α/2}_{2,∞}`
 quantity with no singular kernel in it — strictly weaker than the
 `B^{α/2}_{2,2} = H^{α/2}` membership the paper's argument silently assumes.
@@ -1329,6 +1384,7 @@ printed statement where one exists.
 | `Section3` | lattices, Lemmas 3.2 and 3.4, cube volumes, the tiling |
 | `Section32` | §3.2: the moving dominant, generalized dominated convergence, Lipschitz functions in `H^{α/2}`, and the circularity of the mollification route |
 | `Section7` | Theorem 1.4 on `ℝ^d`, and the finite-overlap chain (6.14) of Lemma 7.1 |
+| `BeyondThePaper` | **not the paper** — new, incomplete research on the open statement; see *Beyond the paper* |
 | `ThinCones` | Lemma 3.3 for `d ≥ 2` |
 | `Section4` | the continuous prelude; Theorem 4.1 |
 | `Section5` | Lemmas 5.1–5.7, Corollary 5.8 |
