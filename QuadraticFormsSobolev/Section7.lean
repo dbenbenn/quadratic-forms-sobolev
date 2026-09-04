@@ -246,7 +246,7 @@ The measurability hypothesis on the integrand is where the paper's assumption
 that `k` be measurable — which `QFS.KernelBounds` drops, see Deviation 20 — is
 actually needed: without it the family of integrals over the Whitney balls
 cannot be summed. -/
-theorem formHs_le_form_of_ballComparability {α κ c₀ : ℝ} (hκ : 1 ≤ κ) (hc₀ : 1 ≤ c₀)
+theorem formHs_le_form_of_ballComparability {α κ c₀ : ℝ} (hc₀ : 1 ≤ c₀)
     (W : WhitneyBallData d α κ)
     {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
     {f : EuclideanSpace ℝ (Fin d) → ℝ}
@@ -317,7 +317,7 @@ theorem formHs_le_form_of_theoremOneOneBall (h : TheoremOneOneBall d)
   refine ⟨c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ),
     div_pos (mul_pos (inv_pos.mpr hc₀pos) W.dydaConst_pos) hMR, ?_⟩
   intro Γ hΓ k hk x₀ R hR f hf hFmeas
-  exact formHs_le_form_of_ballComparability hκ hc₀ W
+  exact formHs_le_form_of_ballComparability hc₀ W
     (fun y₀ S hS hmem => H Γ hΓ k hk y₀ S hS f hmem) x₀ R hR hf hFmeas
 
 
@@ -382,7 +382,7 @@ structure WhitneyDomainData (d : ℕ) (α κ : ℝ) (Ω : Set (EuclideanSpace �
 /-- **Lemma 7.1 for a domain**: the enlarged-ball comparability, a Whitney
 family for `Ω` and Dyda's inequality give the comparability on `Ω`. -/
 theorem formHs_le_form_domain {Ω : Set (EuclideanSpace ℝ (Fin d))} {α κ c₀ : ℝ}
-    (hκ : 1 ≤ κ) (hc₀ : 1 ≤ c₀) (hΩ : MeasurableSet Ω) (W : WhitneyDomainData d α κ Ω)
+    (hc₀ : 1 ≤ c₀) (hΩ : MeasurableSet Ω) (W : WhitneyDomainData d α κ Ω)
     {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
     {f : EuclideanSpace ℝ (Fin d) → ℝ}
     (H : ∀ (y₀ : EuclideanSpace ℝ (Fin d)) (S : ℝ), 0 < S →

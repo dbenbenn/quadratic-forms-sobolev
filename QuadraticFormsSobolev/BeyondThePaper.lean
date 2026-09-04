@@ -2996,7 +2996,7 @@ theorem formHs_le_form_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ Rea
   refine ⟨c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ),
     div_pos (mul_pos (inv_pos.mpr hc₀pos) W.dydaConst_pos) hMR,
     fun Γ hΓ hmeas k hk hkm x₀ R hR f hf hFmeas => ?_⟩
-  exact formHs_le_form_of_ballComparability hκ hc₀ W
+  exact formHs_le_form_of_ballComparability hc₀ W
     (fun y₀ S hS hmem => H Γ hΓ hmeas k hk hkm y₀ S hS f hmem) x₀ R hR hf hFmeas
 
 
@@ -3109,7 +3109,7 @@ theorem formHs_le_form_domain_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ)
   obtain ⟨κ, c₀, hκ, hc₀, H⟩ := theoremOneOneBallCondMeas_two ϑ Λ α hϑ hϑ' hΛ hα hα2
   refine ⟨κ, c₀, hκ, hc₀,
     fun Γ hΓ hmeas k hk hkm Ω hΩ W f hf hFmeas => ?_⟩
-  exact formHs_le_form_domain hκ hc₀ hΩ W
+  exact formHs_le_form_domain hc₀ hΩ W
     (fun y₀ S hS hmem => H Γ hΓ hmeas k hk hkm y₀ S hS f hmem) hf hFmeas
 
 /-- **Theorem 1.4 for a planar domain**: `H_k(Ω) = H^{α/2}(Ω)` for every
@@ -3149,7 +3149,7 @@ theorem Hk_domain_eq_Hs_domain_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ)
       ENNReal.ofReal ((g p.2 - g p.1) ^ 2) * k p.1 p.2 :=
     (ENNReal.measurable_ofReal.comp
       (((hgm.comp measurable_snd).sub (hgm.comp measurable_fst)).pow_const 2)).mul hkm
-  have hbound := formHs_le_form_domain hκ hc₀ hΩ W
+  have hbound := formHs_le_form_domain hc₀ hΩ W
     (fun y₀ S hS hmem => H Γ hΓ hmeas k hk hkm y₀ S hS g hmem) hgL2 hFmeas
   have hform : form Ω k g = form Ω k f := (form_congr_ae k hae).symm
   have hformHs : formHs Ω α g = formHs Ω α f := (formHs_congr_ae α hae).symm
@@ -3627,7 +3627,7 @@ theorem formHs_le_form_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ} (hϑ : π 
   refine ⟨c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ),
     div_pos (mul_pos (inv_pos.mpr hc₀pos) W.dydaConst_pos) hMR,
     fun Γ hΓ hmeas k hk hkm x₀ R hR f hf hFmeas => ?_⟩
-  exact formHs_le_form_of_ballComparability hκ hc₀ W
+  exact formHs_le_form_of_ballComparability hc₀ W
     (fun y₀ S hS hmem => H Γ hΓ hmeas k hk hkm y₀ S hS f hmem) x₀ R hR hf hFmeas
 
 
@@ -3765,8 +3765,8 @@ theorem doubleCone_dim_one {v : EuclideanSpace ℝ (Fin 1)} (hv : ‖v‖ = 1) {
 
 /-- On the line every pair of distinct points is a cone pair, so the lower bound
 of (1.4) alone gives `jumpKernel ≤ (Λ/2) k`. -/
-theorem jumpKernel_le_of_dim_one {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hα : 0 ≤ α)
-    {Γ : Configuration (EuclideanSpace ℝ (Fin 1))} (hΓ : IsBounded Γ ϑ)
+theorem jumpKernel_le_of_dim_one {α Λ : ℝ} (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin 1))}
     {k : EuclideanSpace ℝ (Fin 1) → EuclideanSpace ℝ (Fin 1) → ℝ≥0∞}
     (hk : KernelBounds Γ α Λ k) (x y : EuclideanSpace ℝ (Fin 1)) :
     jumpKernel 1 α x y ≤ ENNReal.ofReal (Λ / 2) * k x y := by
@@ -3812,8 +3812,8 @@ theorem jumpKernel_le_of_dim_one {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hα : 0 ≤ α
 
 /-- **The inclusion is trivial on the line**: `|f|²_{H^{α/2}(Ω)} ≤ (Λ/2)·|f|²_{H_k(Ω)}`
 for every `Ω`, with no chaining at all. -/
-theorem formHs_le_form_dim_one {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hα : 0 ≤ α)
-    {Γ : Configuration (EuclideanSpace ℝ (Fin 1))} (hΓ : IsBounded Γ ϑ)
+theorem formHs_le_form_dim_one {α Λ : ℝ} (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin 1))}
     {k : EuclideanSpace ℝ (Fin 1) → EuclideanSpace ℝ (Fin 1) → ℝ≥0∞}
     (hk : KernelBounds Γ α Λ k) (Ω : Set (EuclideanSpace ℝ (Fin 1)))
     (f : EuclideanSpace ℝ (Fin 1) → ℝ) :
@@ -3826,7 +3826,7 @@ theorem formHs_le_form_dim_one {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hα : 0 ≤ α)
         rw [show ENNReal.ofReal (Λ / 2) * (ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2)
           = ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * (ENNReal.ofReal (Λ / 2) * k p.1 p.2) from
           by ring]
-        exact mul_le_mul' le_rfl (jumpKernel_le_of_dim_one hϑ hα hΓ hk p.1 p.2)
+        exact mul_le_mul' le_rfl (jumpKernel_le_of_dim_one hα hk p.1 p.2)
     _ = ENNReal.ofReal (Λ / 2) *
         ∫⁻ p in Ω ×ˢ Ω, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2 :=
       lintegral_const_mul' _ _ ENNReal.ofReal_ne_top

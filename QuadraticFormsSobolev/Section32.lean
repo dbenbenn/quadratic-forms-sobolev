@@ -1388,7 +1388,8 @@ theorem ae_prod_both {P : EuclideanSpace ℝ (Fin d) → Prop}
 /-- Almost every pair has distinct coordinates. -/
 theorem ae_prod_ne (hd : 0 < d) :
     ∀ᵐ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d), p.1 ≠ p.2 := by
-  have hsing : ∀ x : EuclideanSpace ℝ (Fin d), volume ({x} : Set (EuclideanSpace ℝ (Fin d))) = 0 := by
+  have hsing : ∀ x : EuclideanSpace ℝ (Fin d),
+      volume ({x} : Set (EuclideanSpace ℝ (Fin d))) = 0 := by
     intro x
     have he : ({x} : Set (EuclideanSpace ℝ (Fin d))) = closedBall x 0 := by simp
     rw [he, volume_closedBall_eq _ le_rfl, zero_pow (Nat.ne_of_gt hd), ENNReal.ofReal_zero,
@@ -1437,7 +1438,7 @@ theorem tendsto_jumpKernel {ι : Type*} {l : Filter ι} {α : ℝ}
 interior to the ball. -/
 theorem tendsto_discreteC_jump {ι : Type} {l : Filter ι} (hn : ι → ℝ)
     (hpos : ∀ i, 0 < hn i) (hlim : Filter.Tendsto hn l (nhds 0))
-    {α R₀ : ℝ} (hR₀ : 0 < R₀) {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ}
+    {α R₀ : ℝ} {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ}
     {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : LocallyIntegrable f volume) (hd : 0 < d) :
     ∀ᵐ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
       p ∈ ball x₀ R ×ˢ ball x₀ R →
@@ -1511,7 +1512,7 @@ theorem measurable_stepFun₂ {h : ℝ} (hh : 0 < h) {β : Type*} [MeasurableSpa
           c (latticePt d h nm.1) (latticePt d h nm.2) ∈ S},
         halfClosedCube h (latticePt d h nm.1) ×ˢ halfClosedCube h (latticePt d h nm.2) := by
     ext p
-    simp only [Set.mem_preimage, Set.mem_iUnion, Set.mem_setOf_eq, exists_prop]
+    simp only [Set.mem_preimage, Set.mem_iUnion, Set.mem_ofPred_eq, exists_prop]
     constructor
     · intro hp
       refine ⟨(fun i => round (p.1 i / h), fun i => round (p.2 i / h)), ?_, ?_, ?_⟩
@@ -1563,14 +1564,14 @@ Inside the ball the limit is the integrand of `formHs`; outside the closed ball
 the discretized integrand is eventually zero; the sphere is null. -/
 theorem tendsto_discreteC_jump_ae {ι : Type} {l : Filter ι} (hn : ι → ℝ)
     (hpos : ∀ i, 0 < hn i) (hlim : Filter.Tendsto hn l (nhds 0))
-    {α R₀ : ℝ} (hR₀ : 0 < R₀) {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ}
+    {α R₀ : ℝ} {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ}
     {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : LocallyIntegrable f volume) (hd : 0 < d) :
     ∀ᵐ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
       Filter.Tendsto (fun i => discreteC d (hn i) (ball x₀ R) (R₀ * hn i) (jumpKernel d α)
           (cubeAvg d (hn i) f) (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2)) l
         (nhds ((ball x₀ R ×ˢ ball x₀ R).indicator
           (fun q => ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * jumpKernel d α q.1 q.2) p)) := by
-  filter_upwards [tendsto_discreteC_jump hn hpos hlim (α := α) hR₀ hf hd,
+  filter_upwards [tendsto_discreteC_jump hn hpos hlim (α := α) hf hd,
     ae_prod_both (ae_notMem_sphere (d := d) hd x₀ R)] with p hin hsph
   by_cases hmem : p ∈ ball x₀ R ×ˢ ball x₀ R
   · rw [Set.indicator_of_mem hmem]; exact hin hmem
@@ -1631,13 +1632,13 @@ theorem formHs_ball_eq_lintegral_indicator (α : ℝ) (x₀ : EuclideanSpace ℝ
 /-- **Fatou for the discretization.** -/
 theorem formHs_ball_le_liminf {ι : Type} {l : Filter ι} [l.NeBot] [l.IsCountablyGenerated]
     (hn : ι → ℝ) (hpos : ∀ i, 0 < hn i) (hlim : Filter.Tendsto hn l (nhds 0))
-    {α R₀ : ℝ} (hR₀ : 0 < R₀) {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ}
+    {α R₀ : ℝ} {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ}
     {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : LocallyIntegrable f volume) (hd : 0 < d) :
     formHs (ball x₀ R) α f
       ≤ Filter.liminf (fun i => ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
           discreteC d (hn i) (ball x₀ R) (R₀ * hn i) (jumpKernel d α) (cubeAvg d (hn i) f)
             (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2)) l := by
-  have hae := tendsto_discreteC_jump_ae hn hpos hlim (α := α) hR₀ hf hd (x₀ := x₀) (R := R)
+  have hae := tendsto_discreteC_jump_ae hn hpos hlim (α := α) (R₀ := R₀) hf hd (x₀ := x₀) (R := R)
   rw [formHs_ball_eq_lintegral_indicator]
   calc ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
           (ball x₀ R ×ˢ ball x₀ R).indicator
@@ -1669,8 +1670,8 @@ theorem setLIntegral_congr_of_subset {X : Type*} [MeasurableSpace X] {μ : Measu
     (F : X → ℝ≥0∞) : ∫⁻ q in t, F q ∂μ = ∫⁻ q in s, F q ∂μ := by
   refine setLIntegral_congr ?_
   refine (MeasureTheory.ae_eq_set).mpr ⟨?_, ?_⟩
-  · rw [measure_diff hsub hs.nullMeasurableSet hfin, hvol, tsub_self]
-  · rw [Set.diff_eq_empty.mpr hsub, measure_empty]
+  · rw [measure_sdiff hsub hs.nullMeasurableSet hfin, hvol, tsub_self]
+  · rw [Set.sdiff_eq_empty.mpr hsub, measure_empty]
 
 lemma lintegral_closedCube_eq_halfClosedCube {h : ℝ} (hh : 0 < h)
     (u : EuclideanSpace ℝ (Fin d)) (F : EuclideanSpace ℝ (Fin d) → ℝ≥0∞) :
@@ -1762,7 +1763,8 @@ theorem tendsto_tileAvg₂
       rw [ofReal_integral_eq_lintegral_ofReal hint.restrict
         (Filter.Eventually.of_forall (fun q => ENNReal.toReal_nonneg))]
       exact (lintegral_congr_ae (ae_restrict_of_ae hofReal)).symm
-    rw [h1, setAverage_eq, measureReal_def, volume_closedCube₂ hh.le, ENNReal.toReal_ofReal (by positivity),
+    rw [h1, setAverage_eq, measureReal_def, volume_closedCube₂ hh.le,
+      ENNReal.toReal_ofReal (by positivity),
       smul_eq_mul, ENNReal.ofReal_mul (by positivity),
       ENNReal.ofReal_inv_of_pos (by positivity)]
   filter_upwards [lemma_lebesgue_diff₂ hint.locallyIntegrable, hfin] with p hp hpfin
@@ -1795,7 +1797,7 @@ theorem sq_setIntegral_le_measure_mul {X : Type*} [MeasurableSpace X] {μ : Meas
   have hm0 : 0 ≤ m := ENNReal.toReal_nonneg
   have hA0 : 0 ≤ A := setIntegral_nonneg_of_ae_restrict
     (Filter.Eventually.of_forall (fun x => sq_nonneg (g x)))
-  haveI : IsFiniteMeasure (μ.restrict s) :=
+  have : IsFiniteMeasure (μ.restrict s) :=
     ⟨by rw [Measure.restrict_apply_univ]; exact lt_of_le_of_ne le_top hs⟩
   rcases eq_or_lt_of_le hm0 with hmz | hmpos
   · have hμ0 : μ s = 0 := by
@@ -1849,9 +1851,9 @@ theorem setIntegral_sub_prod {h : ℝ} (hh : 0 < h) {f : EuclideanSpace ℝ (Fin
     hf.integrableOn_isCompact (isCompact_closedCube hh x)
   have hfy : IntegrableOn f (closedCube h y) volume :=
     hf.integrableOn_isCompact (isCompact_closedCube hh y)
-  haveI : IsFiniteMeasure (volume.restrict (closedCube h x)) :=
+  have : IsFiniteMeasure (volume.restrict (closedCube h x)) :=
     ⟨by rw [Measure.restrict_apply_univ, volume_closedCube hh.le]; exact ENNReal.ofReal_lt_top⟩
-  haveI : IsFiniteMeasure (volume.restrict (closedCube h y)) :=
+  have : IsFiniteMeasure (volume.restrict (closedCube h y)) :=
     ⟨by rw [Measure.restrict_apply_univ, volume_closedCube hh.le]; exact ENNReal.ofReal_lt_top⟩
   have hmeasure : (volume.restrict (closedCube h x)).prod (volume.restrict (closedCube h y))
       = volume.restrict (closedCube h x ×ˢ closedCube h y) := by
@@ -1874,7 +1876,8 @@ theorem setIntegral_sub_prod {h : ℝ} (hh : 0 < h) {f : EuclideanSpace ℝ (Fin
           ∂(volume.restrict (closedCube h x)) := integral_prod _ hint'
     _ = ∫ u in closedCube h x, (h ^ d * f u - ∫ v in closedCube h y, f v) := by
         refine integral_congr_ae (Filter.Eventually.of_forall fun u => ?_)
-        show ∫ v in closedCube h y, (f u - f v) = h ^ d * f u - ∫ v in closedCube h y, f v
+        change ∫ v in closedCube h y, (f u - f v)
+          = h ^ d * f u - ∫ v in closedCube h y, f v
         rw [integral_sub (integrable_const _) hfy, integral_const, measureReal_def, hvoly,
           smul_eq_mul]
     _ = h ^ d * ((∫ u in closedCube h x, f u) - ∫ v in closedCube h y, f v) := by
@@ -1903,7 +1906,7 @@ theorem ofReal_sq_cubeAvg_sub_le {h : ℝ} (hh : 0 < h) {f : EuclideanSpace ℝ 
   have hvolS : volume S = ENNReal.ofReal (h ^ (2 * d)) := by
     rw [hSdef, Measure.volume_eq_prod, Measure.prod_prod, volume_closedCube hh.le,
       volume_closedCube hh.le, two_mul, pow_add, ENNReal.ofReal_mul (by positivity)]
-  haveI : IsFiniteMeasure (volume.restrict S) :=
+  have : IsFiniteMeasure (volume.restrict S) :=
     ⟨by rw [Measure.restrict_apply_univ, hvolS]; exact ENNReal.ofReal_lt_top⟩
   have hG2 : IntegrableOn (fun q => G q ^ 2) S volume := by
     refine ⟨(hGm.pow_const 2).aestronglyMeasurable, ?_⟩
@@ -2085,7 +2088,8 @@ theorem stepG_le_tileAvg₂ {h α Λ : ℝ} (hh : 0 < h) (hα : 0 ≤ α)
     -- the pointwise comparison inside the tile
     have hinner : ∀ q ∈ closedCube h (stepIndex d h p.1) ×ˢ closedCube h (stepIndex d h p.2),
         ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * jumpKernel d α p.1 p.2
-          ≤ ENNReal.ofReal (2 ^ ((d : ℝ) + α)) * ballIntegrand d (jumpKernel d α) (ball x₀ R') f q := by
+          ≤ ENNReal.ofReal (2 ^ ((d : ℝ) + α)) *
+              ballIntegrand d (jumpKernel d α) (ball x₀ R') f q := by
       intro q hq
       have hq1 : q.1 ∈ ball x₀ R' := hcube _ hx hq.1
       have hq2 : q.2 ∈ ball x₀ R' := hcube _ hy hq.2
@@ -2116,7 +2120,8 @@ theorem stepG_le_tileAvg₂ {h α Λ : ℝ} (hh : 0 < h) (hα : 0 ≤ α)
           ring
       _ ≤ ENNReal.ofReal Λ * ((ENNReal.ofReal (h ^ (2 * d)))⁻¹ *
             ∫⁻ q in closedCube h (stepIndex d h p.1) ×ˢ closedCube h (stepIndex d h p.2),
-              ENNReal.ofReal (2 ^ ((d : ℝ) + α)) * ballIntegrand d (jumpKernel d α) (ball x₀ R') f q) := by
+              ENNReal.ofReal (2 ^ ((d : ℝ) + α)) *
+                ballIntegrand d (jumpKernel d α) (ball x₀ R') f q) := by
           refine mul_le_mul' le_rfl (mul_le_mul' le_rfl ?_)
           exact lintegral_mono_ae
             ((ae_restrict_iff' hCmeas).mpr (Filter.Eventually.of_forall hinner))
@@ -2153,7 +2158,8 @@ theorem tendsto_stepG_ae {ι : Type} {l : Filter ι} (hn : ι → ℝ)
     have hr : (0 : ℝ) < ‖p.1 - p.2‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hne
     have hkne : k p.1 p.2 ≠ ∞ := by
       refine ne_top_of_le_ne_top ?_ (hk p.1 p.2)
-      exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top (by rw [jumpKernel]; exact ENNReal.ofReal_ne_top)
+      exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top
+        (by rw [jumpKernel]; exact ENNReal.ofReal_ne_top)
     -- the constraint eventually holds
     have hb1 : ∀ᶠ i in l, stepIndex d (hn i) p.1 ∈ ball x₀ R :=
       hs1.eventually (isOpen_ball.mem_nhds hmem.1)
@@ -2519,7 +2525,7 @@ theorem formHs_ball_le_form_of_formHs_ne_top {ϑ α Λ : ℝ} (hϑ : 0 < ϑ)
     exact hineq
   -- Fatou on the left
   have hfatou : formHs (ball x₀ R) α f ≤ Filter.liminf L Filter.atTop :=
-    formHs_ball_le_liminf hn hpos hlim (R₀ := 3 * Real.sqrt d) (by positivity) hf hd1
+    formHs_ball_le_liminf hn hpos hlim (R₀ := 3 * Real.sqrt d) hf hd1
   -- dominated convergence on the right
   have hSG : Filter.limsup SG Filter.atTop ≤ form (ball x₀ (κ * R)) k f := by
     refine limsup_lintegral_stepG_le hα.le hk.upper hkm hfm hf hd1 hn hpos hlim ?_ hfin
@@ -2602,7 +2608,7 @@ theorem exists_measurable_repr {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ}
       (∫⁻ x in ball x₀ R, ENNReal.ofReal (g x ^ 2)) ≠ ⊤ := by
   classical
   have hball : volume (ball x₀ R) ≠ ∞ := measure_ball_lt_top.ne
-  haveI : IsFiniteMeasure (volume.restrict (ball x₀ R)) :=
+  have : IsFiniteMeasure (volume.restrict (ball x₀ R)) :=
     ⟨by rw [Measure.restrict_apply_univ]; exact lt_of_le_of_ne le_top hball⟩
   set f₀ : EuclideanSpace ℝ (Fin d) → ℝ := hf.1.mk f with hf₀
   have hf₀m : Measurable f₀ := hf.1.stronglyMeasurable_mk.measurable
@@ -2719,14 +2725,14 @@ theorem lintegral_compl_ball_rpow_scale {α r : ℝ} (hr : 0 < r) :
     simp only [hG, hF]
     by_cases hz : (1:ℝ) < ‖z‖
     · have hrz : r • z ∈ {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖} := by
-        rw [Set.mem_setOf_eq, hnorm]
+        rw [Set.mem_ofPred_eq, hnorm]
         nlinarith
       rw [Set.indicator_of_mem hrz,
         Set.indicator_of_mem (show z ∈ {u : EuclideanSpace ℝ (Fin d) | 1 < ‖u‖} from hz),
         hnorm, Real.mul_rpow hr.le (norm_nonneg _), ENNReal.ofReal_mul (by positivity)]
     · have hrz : r • z ∉ {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖} := by
-        rw [Set.mem_setOf_eq, hnorm]
-        push_neg at hz ⊢
+        rw [Set.mem_ofPred_eq, hnorm]
+        push Not at hz ⊢
         nlinarith [norm_nonneg z]
       rw [Set.indicator_of_notMem hrz,
         Set.indicator_of_notMem (show z ∉ {u : EuclideanSpace ℝ (Fin d) | 1 < ‖u‖} from hz),
@@ -2845,7 +2851,6 @@ lies in `S` and which are at distance more than `r`, the integral of anything
 depending only on the first coordinate, against the kernel, is at most
 `Λ C(d,α) r^{-α}` times its integral over `S`. -/
 theorem lintegral_far_weight_le (hd : 0 < d) {α Λ r : ℝ} (hr : 0 < r) (hα : 0 < α)
-    (hΛ : 0 ≤ Λ)
     {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
     (hk : ∀ a b, k a b ≤ ENNReal.ofReal Λ * jumpKernel d α a b)
     (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
@@ -2926,7 +2931,6 @@ theorem lintegral_far_weight_le (hd : 0 < d) {α Λ r : ℝ} (hr : 0 < r) (hα :
 /-- The mirror of `lintegral_far_weight_le`, with the second coordinate carrying
 the function. -/
 theorem lintegral_far_weight_le' (hd : 0 < d) {α Λ r : ℝ} (hr : 0 < r) (hα : 0 < α)
-    (hΛ : 0 ≤ Λ)
     {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
     (hk : ∀ a b, k a b ≤ ENNReal.ofReal Λ * jumpKernel d α a b)
     (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
@@ -2984,7 +2988,7 @@ theorem lintegral_far_weight_le' (hd : 0 < d) {α Λ r : ℝ} (hr : 0 < r) (hα 
         _ = ENNReal.ofReal Λ * (ENNReal.ofReal (r ^ (-α)) * kernelTail d α) := by
             have hset : {s : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}
                 = {s : EuclideanSpace ℝ (Fin d) | r < ‖t - s‖} := by
-              ext s; rw [Set.mem_setOf_eq, Set.mem_setOf_eq, norm_sub_rev]
+              ext s; rw [Set.mem_ofPred_eq, Set.mem_ofPred_eq, norm_sub_rev]
             have hker : ∀ s : EuclideanSpace ℝ (Fin d),
                 jumpKernel d α s t = jumpKernel d α t s := by
               intro s; rw [jumpKernel, jumpKernel, norm_sub_rev]
@@ -3018,7 +3022,7 @@ theorem measurable_stepFun {h : ℝ} (hh : 0 < h) {β : Type*} [MeasurableSpace 
       = ⋃ n ∈ {n : Fin d → ℤ | c (latticePt d h n) ∈ S},
         halfClosedCube h (latticePt d h n) := by
     ext s
-    simp only [Set.mem_preimage, Set.mem_iUnion, Set.mem_setOf_eq, exists_prop]
+    simp only [Set.mem_preimage, Set.mem_iUnion, Set.mem_ofPred_eq, exists_prop]
     constructor
     · intro hs
       exact ⟨fun i => round (s i / h), by rw [← stepIndex_eq_latticePt]; exact hs,
@@ -3030,7 +3034,7 @@ theorem measurable_stepFun {h : ℝ} (hh : 0 < h) {β : Type*} [MeasurableSpace 
     measurableSet_halfClosedCube h _
 
 /-- The scaled lattice is countable, hence measurable. -/
-theorem measurableSet_scaledLattice {h : ℝ} (hh : 0 < h) :
+theorem measurableSet_scaledLattice (d : ℕ) (h : ℝ) :
     MeasurableSet (scaledLattice d h) := by
   have hcount : (scaledLattice d h).Countable := by
     have himg : scaledLattice d h = Set.range (latticePt d h) := by
@@ -3046,15 +3050,15 @@ theorem measurableSet_scaledLattice {h : ℝ} (hh : 0 < h) :
   exact hcount.measurableSet
 
 /-- The constraint set of the discrete form is measurable. -/
-theorem measurableSet_discretePairs {h : ℝ} (hh : 0 < h)
+theorem measurableSet_discretePairs (h : ℝ)
     {S : Set (EuclideanSpace ℝ (Fin d))} (hS : MeasurableSet S) (R₀ : ℝ) :
     MeasurableSet (discretePairs d h S R₀) := by
-  have h1 : MeasurableSet (S ∩ scaledLattice d h) := hS.inter (measurableSet_scaledLattice hh)
+  have h1 : MeasurableSet (S ∩ scaledLattice d h) := hS.inter (measurableSet_scaledLattice d h)
   have hset : discretePairs d h S R₀
       = (Prod.fst ⁻¹' (S ∩ scaledLattice d h)) ∩ (Prod.snd ⁻¹' (S ∩ scaledLattice d h)) ∩
         {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) | R₀ < ‖p.1 - p.2‖} := by
     ext p
-    simp only [discretePairs, Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_preimage]
+    simp only [discretePairs, Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_preimage]
     tauto
   rw [hset]
   exact ((h1.preimage measurable_fst).inter (h1.preimage measurable_snd)).inter
@@ -3129,7 +3133,6 @@ oscillation of `f` there. No dominant and no a priori hypothesis: Fatou on the
 left of `(discret)` then needs only that `h^{-α}·tileOsc` stay bounded along a
 sequence. -/
 theorem lintegral_stepG_le_split (hd : 0 < d) {h α Λ R : ℝ} (hh : 0 < h) (hα : 0 < α)
-    (hΛ : 0 ≤ Λ)
     {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
     (hk : ∀ a b, k a b ≤ ENNReal.ofReal Λ * jumpKernel d α a b)
     (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
@@ -3154,7 +3157,7 @@ theorem lintegral_stepG_le_split (hd : 0 < d) {h α Λ R : ℝ} (hh : 0 < h) (h�
   have hCm : MeasurableSet C :=
     (measurable_stepFun₂ hh (fun x y => ((x, y) :
       EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d))))
-      (measurableSet_discretePairs hh measurableSet_ball _)
+      (measurableSet_discretePairs h measurableSet_ball _)
   -- the three pieces
   set g : EuclideanSpace ℝ (Fin d) → ℝ≥0∞ := fun s =>
     ENNReal.ofReal ((cubeAvg d h f (stepIndex d h s) - f s) ^ 2) with hg
@@ -3201,12 +3204,12 @@ theorem lintegral_stepG_le_split (hd : 0 < d) {h α Λ R : ℝ} (hh : 0 < h) (h�
   -- integrate
   have hb1 : ∫⁻ p in C, g p.1 * k p.1 p.2 ≤ W * tileOsc d h (ball x₀ R') f := by
     refine le_trans (lintegral_mono_set ?_)
-      (lintegral_far_weight_le hd hr hα hΛ hk hkm hgm measurableSet_ball)
+      (lintegral_far_weight_le hd hr hα hk hkm hgm measurableSet_ball)
     intro p hp
     exact ⟨(constraintSet_subset hd hh x₀ hp).1, (constraintSet_subset hd hh x₀ hp).2.2⟩
   have hb3 : ∫⁻ p in C, g p.2 * k p.1 p.2 ≤ W * tileOsc d h (ball x₀ R') f := by
     refine le_trans (lintegral_mono_set ?_)
-      (lintegral_far_weight_le' hd hr hα hΛ hk hkm hgm measurableSet_ball)
+      (lintegral_far_weight_le' hd hr hα hk hkm hgm measurableSet_ball)
     intro p hp
     exact ⟨(constraintSet_subset hd hh x₀ hp).2.1, (constraintSet_subset hd hh x₀ hp).2.2⟩
   have hb2 : ∫⁻ p in C, ENNReal.ofReal ((f p.1 - f p.2) ^ 2) * k p.1 p.2
@@ -3279,7 +3282,7 @@ theorem formHs_ball_ne_top_of_osc_bounded (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ :
           discreteC d (hn n) (ball x₀ R) (3 * Real.sqrt d * hn n) (jumpKernel d α)
             (cubeAvg d (hn n) f) (stepIndex d (hn n) p.1, stepIndex d (hn n) p.2))
         Filter.atTop :=
-    formHs_ball_le_liminf hn hpos hlim (R₀ := 3 * Real.sqrt d) (by positivity) hf hd1
+    formHs_ball_le_liminf hn hpos hlim (R₀ := 3 * Real.sqrt d) hf hd1
   -- the discrete inequality and the splitting bound, at each scale
   set K : ℝ≥0∞ := ENNReal.ofReal c * (3 * form (ball x₀ ρ) k f
     + (3 * (ENNReal.ofReal Λ * (ENNReal.ofReal ((2 * Real.sqrt d) ^ (-α)) *
@@ -3295,7 +3298,7 @@ theorem formHs_ball_ne_top_of_osc_bounded (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ :
       (cubeAvg d (hn n) f) hR
     rw [← lintegral_stepG_eq (hpos n)] at hdisc
     refine le_trans hdisc (mul_le_mul' le_rfl ?_)
-    refine le_trans (lintegral_stepG_le_split hd1 (hpos n) hα (by linarith) hk.upper hkm
+    refine le_trans (lintegral_stepG_le_split hd1 (hpos n) hα hk.upper hkm
       hfm x₀) ?_
     -- the ball and the oscillation, at this scale
     have hsub : ball x₀ (κ * R + Real.sqrt d * hn n) ⊆ ball x₀ ρ := by
