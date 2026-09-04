@@ -2590,4 +2590,44 @@ theorem formHs_le_form_planar_cross {vs vt : EuclideanSpace ℝ (Fin 2)} (hvs : 
       _ = ENNReal.ofReal (Real.sin ϑ ^ 4 / 4) * unitBallVol 2 * ENNReal.ofReal Λ *
             form Set.univ k f := by ring
 
+
+/-! ### The dichotomy in the plane
+
+Two reference cones of the same aperture either have non-parallel axes — and then
+`formHs_le_form_planar_cross` applies — or they are the *same* double cone, and
+then the block is diagonal and `formHs_le_form_of_commonDirection_on` applies. In
+the plane there is no third possibility, which is exactly why the argument
+closes here and not in higher dimensions. -/
+
+/-- **Parallel unit vectors in the plane.** If the cross product vanishes, the
+two axes agree up to sign — and then the double cones coincide. -/
+lemma eq_or_eq_neg_of_cross2_eq_zero {v w : EuclideanSpace ℝ (Fin 2)} (hv : ‖v‖ = 1)
+    (hw : ‖w‖ = 1) (h : cross2 v w = 0) : w = v ∨ w = -v := by
+  have hperp : ⟪perp2 v, w⟫_ℝ = 0 := by
+    rw [inner_perp2_eq_neg_cross]
+    have hswap : cross2 w v = -cross2 v w := by rw [cross2, cross2]; ring
+    rw [hswap, h, neg_zero, neg_zero]
+  have hdec := decomp_two hv w
+  rw [hperp, zero_smul, add_zero] at hdec
+  have hnorm : |⟪v, w⟫_ℝ| = 1 := by
+    have h1 : ‖w‖ = |⟪v, w⟫_ℝ| * ‖v‖ := by
+      conv_lhs => rw [hdec]
+      rw [norm_smul, Real.norm_eq_abs]
+    rw [hv, hw, mul_one] at h1
+    exact h1.symm
+  rcases abs_eq (by norm_num : (0:ℝ) ≤ 1) |>.mp hnorm with h1 | h1
+  · left; rw [hdec, h1, one_smul]
+  · right; rw [hdec, h1, neg_one_smul]
+
+/-- The dichotomy, in the form the assembly uses. -/
+theorem cross2_ne_zero_or_carrier_eq {v w : EuclideanSpace ℝ (Fin 2)} (hv : ‖v‖ = 1)
+    (hw : ‖w‖ = 1) (ϑ : ℝ) :
+    cross2 v w ≠ 0 ∨ doubleCone w ϑ = doubleCone v ϑ := by
+  by_cases h : cross2 v w = 0
+  · refine Or.inr ?_
+    rcases eq_or_eq_neg_of_cross2_eq_zero hv hw h with rfl | rfl
+    · rfl
+    · exact doubleCone_neg v ϑ
+  · exact Or.inl h
+
 end QFS
