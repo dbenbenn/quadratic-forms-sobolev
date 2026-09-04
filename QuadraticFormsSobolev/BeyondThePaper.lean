@@ -2983,12 +2983,11 @@ theorem formHs_le_form_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ Rea
         KernelBounds Γ α Λ k →
         (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
           k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin 2)) (R : ℝ), 0 < R →
       ∀ f : EuclideanSpace ℝ (Fin 2) → ℝ,
-        (∀ (y₀ : EuclideanSpace ℝ (Fin 2)) (S : ℝ), 0 < S →
-          MemLp f 2 (volume.restrict (ball y₀ S))) →
+        MemLp f 2 (volume.restrict (ball x₀ R)) →
         (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
           ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
-      ∀ (x₀ : EuclideanSpace ℝ (Fin 2)) (R : ℝ), 0 < R →
         ENNReal.ofReal c * formHs (ball x₀ R) α f ≤ form (ball x₀ R) k f := by
   obtain ⟨κ, c₀, hκ, hc₀, H⟩ := theoremOneOneBallCondMeas_two ϑ Λ α hϑ hϑ' hΛ hα hα2
   obtain ⟨W⟩ := hW κ hκ
@@ -2996,9 +2995,9 @@ theorem formHs_le_form_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ Rea
   have hMR : (0 : ℝ) < (W.overlapBound : ℝ) := by exact_mod_cast W.overlapBound_pos
   refine ⟨c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ),
     div_pos (mul_pos (inv_pos.mpr hc₀pos) W.dydaConst_pos) hMR,
-    fun Γ hΓ hmeas k hk hkm f hf hFmeas x₀ R hR => ?_⟩
+    fun Γ hΓ hmeas k hk hkm x₀ R hR f hf hFmeas => ?_⟩
   exact formHs_le_form_of_ballComparability hκ hc₀ W
-    (fun y₀ S hS hmem => H Γ hΓ hmeas k hk hkm y₀ S hS f hmem) hf hFmeas x₀ R hR
+    (fun y₀ S hS hmem => H Γ hΓ hmeas k hk hkm y₀ S hS f hmem) x₀ R hR hf hFmeas
 
 
 /-! ## Theorem 1.4 for `Ω = ℝ²`
@@ -3033,7 +3032,7 @@ theorem formHs_univ_le_form_univ_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ)
   rw [form_univ_eq_iSup, form_univ_eq_iSup, ENNReal.mul_iSup]
   refine iSup_mono fun n => ?_
   have hR : (0 : ℝ) < (n : ℝ) + 1 := by positivity
-  have h1 := H Γ hΓ hmeas k hk hkm f hf hFmeas 0 ((n : ℝ) + 1) hR
+  have h1 := H Γ hΓ hmeas k hk hkm 0 ((n : ℝ) + 1) hR f (hf 0 _ hR) hFmeas
   have hstep : formHs (ball (0 : EuclideanSpace ℝ (Fin 2)) ((n : ℝ) + 1)) α f
       ≤ ENNReal.ofReal c₀⁻¹ * form (ball (0 : EuclideanSpace ℝ (Fin 2)) ((n : ℝ) + 1)) k f := by
     calc formHs (ball (0 : EuclideanSpace ℝ (Fin 2)) ((n : ℝ) + 1)) α f
@@ -3099,18 +3098,17 @@ theorem formHs_le_form_domain_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ)
         KernelBounds Γ α Λ k →
         (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
           k p.1 p.2) →
-      ∀ f : EuclideanSpace ℝ (Fin 2) → ℝ,
-        (∀ (y₀ : EuclideanSpace ℝ (Fin 2)) (S : ℝ), 0 < S →
-          MemLp f 2 (volume.restrict (ball y₀ S))) →
-        (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
-          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
       ∀ Ω : Set (EuclideanSpace ℝ (Fin 2)), MeasurableSet Ω →
       ∀ W : WhitneyDomainData 2 α κ Ω,
+      ∀ f : EuclideanSpace ℝ (Fin 2) → ℝ,
+        MemLp f 2 (volume.restrict Ω) →
+        (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
         ENNReal.ofReal (c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ)) * formHs Ω α f
           ≤ form Ω k f := by
   obtain ⟨κ, c₀, hκ, hc₀, H⟩ := theoremOneOneBallCondMeas_two ϑ Λ α hϑ hϑ' hΛ hα hα2
   refine ⟨κ, c₀, hκ, hc₀,
-    fun Γ hΓ hmeas k hk hkm f hf hFmeas Ω hΩ W => ?_⟩
+    fun Γ hΓ hmeas k hk hkm Ω hΩ W f hf hFmeas => ?_⟩
   exact formHs_le_form_domain hκ hc₀ hΩ W
     (fun y₀ S hS hmem => H Γ hΓ hmeas k hk hkm y₀ S hS f hmem) hf hFmeas
 
@@ -3146,9 +3144,7 @@ theorem Hk_domain_eq_Hs_domain_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ)
     rw [hx1, hx2]
   have hgglob : MemLp g 2 volume :=
     (memLp_indicator_iff_restrict hΩ).mpr (hfL2.ae_eq hfL2.1.ae_eq_mk)
-  have hgL2 : ∀ (y₀ : EuclideanSpace ℝ (Fin 2)) (S : ℝ), 0 < S →
-      MemLp g 2 (volume.restrict (ball y₀ S)) := fun y₀ S _ =>
-    hgglob.mono_measure (Measure.restrict_le_self)
+  have hgL2 : MemLp g 2 (volume.restrict Ω) := hgglob.mono_measure Measure.restrict_le_self
   have hFmeas : Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
       ENNReal.ofReal ((g p.2 - g p.1) ^ 2) * k p.1 p.2 :=
     (ENNReal.measurable_ofReal.comp
@@ -3201,14 +3197,13 @@ theorem Hk_ball_eq_Hs_ball_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤
     rw [hx1, hx2]
   have hgglob : MemLp g 2 volume :=
     (memLp_indicator_iff_restrict measurableSet_ball).mpr (hfL2.ae_eq hfL2.1.ae_eq_mk)
-  have hgL2 : ∀ (y₀ : EuclideanSpace ℝ (Fin 2)) (S : ℝ), 0 < S →
-      MemLp g 2 (volume.restrict (ball y₀ S)) := fun y₀ S _ =>
+  have hgL2 : MemLp g 2 (volume.restrict (ball x₀ R)) :=
     hgglob.mono_measure Measure.restrict_le_self
   have hFmeas : Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
       ENNReal.ofReal ((g p.2 - g p.1) ^ 2) * k p.1 p.2 :=
     (ENNReal.measurable_ofReal.comp
       (((hgm.comp measurable_snd).sub (hgm.comp measurable_fst)).pow_const 2)).mul hkm
-  have hbound := H Γ hΓ hmeas k hk hkm g hgL2 hFmeas x₀ R hR
+  have hbound := H Γ hΓ hmeas k hk hkm x₀ R hR g hgL2 hFmeas
   have hform : form (ball x₀ R) k g = form (ball x₀ R) k f := (form_congr_ae k hae).symm
   have hformHs : formHs (ball x₀ R) α g = formHs (ball x₀ R) α f :=
     (formHs_congr_ae α hae).symm
@@ -3229,5 +3224,66 @@ theorem planar_hypotheses_nonvacuous {ϑ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤
         k p.1 p.2) :=
   ⟨constConfig ⟨v, hv, ϑ, hϑ, hϑ'⟩, jumpKernel 2 α, isBounded_constConfig hϑ hϑ' hv,
     condMeas_constConfig _, kernelBounds_jumpKernel _ α, measurable_jumpKernel 2 α⟩
+
+
+/-! ## Theorem 1.1 itself, in the plane
+
+Everything above assembles into the paper's own Theorem 1.1, in dimension two,
+with the two hypotheses this formalisation carries and the one input Lemma 7.1
+quotes. -/
+
+/-- **Theorem 1.1 in the plane**, in the paper's own statement
+(`QFS.TheoremOneOneCondMeas`): for every `ϑ`-bounded configuration satisfying
+Debreu's condition and every measurable kernel satisfying (1.4) there is a
+`c ≥ 1`, depending only on `ϑ`, `Λ` and `α`, with
+
+  `|f|²_{H^{α/2}(B)} ≤ c |f|²_{H_k(B)}`
+
+for every ball `B` and every `f ∈ L²(B)`.
+
+Granted the Whitney family and Dyda's inequality (13), which the paper quotes
+rather than proves and which are carried here as `QFS.WhitneyBallData`. -/
+theorem theoremOneOneCondMeas_two
+    (hW : ∀ (α κ : ℝ), 1 ≤ κ → Nonempty (WhitneyBallData 2 α κ)) :
+    TheoremOneOneCondMeas 2 := by
+  intro ϑ Λ α hϑ hΛ hα hα2
+  by_cases hϑ' : ϑ ≤ Real.pi / 2
+  swap
+  · -- no configuration is `ϑ`-bounded for `ϑ > π/2`, so the statement is vacuous
+    exact ⟨1, le_rfl, fun Γ hΓ _ k _ _ x₀ R _ f _ =>
+      absurd (le_pi_div_two_of_isBounded hΓ) hϑ'⟩
+  obtain ⟨c₀, hc₀pos, H⟩ :=
+    formHs_le_form_planar (ϑ := ϑ) (Λ := Λ) (α := α) hϑ hϑ' hΛ hα hα2 (hW α)
+  refine ⟨max c₀⁻¹ 1, le_max_right _ _, fun Γ hΓ hmeas k hk hkm x₀ R hR f hf => ?_⟩
+  -- a measurable representative supported in the ball
+  set g : EuclideanSpace ℝ (Fin 2) → ℝ := (ball x₀ R).indicator (hf.1.mk f) with hgdef
+  have hgm : Measurable g := hf.1.stronglyMeasurable_mk.measurable.indicator measurableSet_ball
+  have hae : ∀ᵐ x ∂(volume.restrict (ball x₀ R)), f x = g x := by
+    have h1 : ∀ᵐ x ∂(volume.restrict (ball x₀ R)), f x = hf.1.mk f x := hf.1.ae_eq_mk
+    have h2 : ∀ᵐ x ∂(volume.restrict (ball x₀ R)), hf.1.mk f x = g x :=
+      (ae_restrict_iff' measurableSet_ball).mpr (Filter.Eventually.of_forall fun x hx => by
+        rw [hgdef, Set.indicator_of_mem hx])
+    filter_upwards [h1, h2] with x hx1 hx2
+    rw [hx1, hx2]
+  have hgL2 : MemLp g 2 (volume.restrict (ball x₀ R)) :=
+    ((memLp_indicator_iff_restrict measurableSet_ball).mpr
+      (hf.ae_eq hf.1.ae_eq_mk)).mono_measure Measure.restrict_le_self
+  have hFmeas : Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+      ENNReal.ofReal ((g p.2 - g p.1) ^ 2) * k p.1 p.2 :=
+    (ENNReal.measurable_ofReal.comp
+      (((hgm.comp measurable_snd).sub (hgm.comp measurable_fst)).pow_const 2)).mul hkm
+  have hbound := H Γ hΓ hmeas k hk hkm x₀ R hR g hgL2 hFmeas
+  have hform : form (ball x₀ R) k g = form (ball x₀ R) k f := (form_congr_ae k hae).symm
+  have hformHs : formHs (ball x₀ R) α g = formHs (ball x₀ R) α f :=
+    (formHs_congr_ae α hae).symm
+  rw [hformHs, hform] at hbound
+  -- invert the constant
+  calc formHs (ball x₀ R) α f
+      = ENNReal.ofReal c₀⁻¹ * (ENNReal.ofReal c₀ * formHs (ball x₀ R) α f) := by
+        rw [← mul_assoc, ← ENNReal.ofReal_mul (le_of_lt (inv_pos.mpr hc₀pos)),
+          inv_mul_cancel₀ (ne_of_gt hc₀pos), ENNReal.ofReal_one, one_mul]
+    _ ≤ ENNReal.ofReal c₀⁻¹ * form (ball x₀ R) k f := mul_le_mul' le_rfl hbound
+    _ ≤ ENNReal.ofReal (max c₀⁻¹ 1) * form (ball x₀ R) k f :=
+        mul_le_mul' (ENNReal.ofReal_le_ofReal (le_max_left _ _)) le_rfl
 
 end QFS

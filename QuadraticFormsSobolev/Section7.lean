@@ -253,11 +253,10 @@ theorem formHs_le_form_of_ballComparability {α κ c₀ : ℝ} (hκ : 1 ≤ κ) 
     (H : ∀ (y₀ : EuclideanSpace ℝ (Fin d)) (S : ℝ), 0 < S →
       MemLp f 2 (volume.restrict (ball y₀ (κ * S))) →
       formHs (ball y₀ S) α f ≤ ENNReal.ofReal c₀ * form (ball y₀ (κ * S)) k f)
-    (hf : ∀ (y₀ : EuclideanSpace ℝ (Fin d)) (S : ℝ), 0 < S →
-      MemLp f 2 (volume.restrict (ball y₀ S)))
+    (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ) (hR : 0 < R)
+    (hf : MemLp f 2 (volume.restrict (ball x₀ R)))
     (hFmeas : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
-      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2)
-    (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ) (hR : 0 < R) :
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
     ENNReal.ofReal (c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ)) * formHs (ball x₀ R) α f
       ≤ form (ball x₀ R) k f := by
   have hcount := W.countable
@@ -271,7 +270,8 @@ theorem formHs_le_form_of_ballComparability {α κ c₀ : ℝ} (hκ : 1 ≤ κ) 
       ≤ form (ball (W.ctr x₀ R i) (κ * W.rad x₀ R i)) k f := by
     intro i
     by_cases hri : 0 < W.rad x₀ R i
-    · have h2 := H (W.ctr x₀ R i) (W.rad x₀ R i) hri (hf _ _ (by nlinarith))
+    · have h2 := H (W.ctr x₀ R i) (W.rad x₀ R i) hri
+        (hf.mono_measure (Measure.restrict_mono (W.enlarged_subset x₀ R hR i) le_rfl))
       calc ENNReal.ofReal c₀⁻¹ * formHs (ball (W.ctr x₀ R i) (W.rad x₀ R i)) α f
           ≤ ENNReal.ofReal c₀⁻¹ * (ENNReal.ofReal c₀ *
               form (ball (W.ctr x₀ R i) (κ * W.rad x₀ R i)) k f) := mul_le_mul' le_rfl h2
@@ -304,12 +304,11 @@ theorem formHs_le_form_of_theoremOneOneBall (h : TheoremOneOneBall d)
     ∃ c : ℝ, 0 < c ∧
       ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsAdmissible Γ ϑ →
       ∀ k, KernelBounds Γ α Λ k →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
       ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
-        (∀ (y₀ : EuclideanSpace ℝ (Fin d)) (S : ℝ), 0 < S →
-          MemLp f 2 (volume.restrict (ball y₀ S))) →
+        MemLp f 2 (volume.restrict (ball x₀ R)) →
         (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
           ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
-      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
         ENNReal.ofReal c * formHs (ball x₀ R) α f ≤ form (ball x₀ R) k f := by
   obtain ⟨κ, c₀, hκ, hc₀, H⟩ := h ϑ Λ α hϑ hΛ hα hα2
   obtain ⟨W⟩ := hW κ hκ
@@ -317,9 +316,9 @@ theorem formHs_le_form_of_theoremOneOneBall (h : TheoremOneOneBall d)
   have hMR : (0 : ℝ) < (W.overlapBound : ℝ) := by exact_mod_cast W.overlapBound_pos
   refine ⟨c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ),
     div_pos (mul_pos (inv_pos.mpr hc₀pos) W.dydaConst_pos) hMR, ?_⟩
-  intro Γ hΓ k hk f hf hFmeas x₀ R hR
+  intro Γ hΓ k hk x₀ R hR f hf hFmeas
   exact formHs_le_form_of_ballComparability hκ hc₀ W
-    (fun y₀ S hS hmem => H Γ hΓ k hk y₀ S hS f hmem) hf hFmeas x₀ R hR
+    (fun y₀ S hS hmem => H Γ hΓ k hk y₀ S hS f hmem) x₀ R hR hf hFmeas
 
 
 /-- **The Whitney data is satisfiable**, so the theorem above is not vacuous: for
@@ -389,8 +388,7 @@ theorem formHs_le_form_domain {Ω : Set (EuclideanSpace ℝ (Fin d))} {α κ c�
     (H : ∀ (y₀ : EuclideanSpace ℝ (Fin d)) (S : ℝ), 0 < S →
       MemLp f 2 (volume.restrict (ball y₀ (κ * S))) →
       formHs (ball y₀ S) α f ≤ ENNReal.ofReal c₀ * form (ball y₀ (κ * S)) k f)
-    (hf : ∀ (y₀ : EuclideanSpace ℝ (Fin d)) (S : ℝ), 0 < S →
-      MemLp f 2 (volume.restrict (ball y₀ S)))
+    (hf : MemLp f 2 (volume.restrict Ω))
     (hFmeas : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
       ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
     ENNReal.ofReal (c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ)) * formHs Ω α f
@@ -406,7 +404,8 @@ theorem formHs_le_form_domain {Ω : Set (EuclideanSpace ℝ (Fin d))} {α κ c�
       ≤ form (ball (W.ctr i) (κ * W.rad i)) k f := by
     intro i
     by_cases hri : 0 < W.rad i
-    · have h2 := H (W.ctr i) (W.rad i) hri (hf _ _ (by nlinarith))
+    · have h2 := H (W.ctr i) (W.rad i) hri
+        (hf.mono_measure (Measure.restrict_mono (W.enlarged_subset i) le_rfl))
       calc ENNReal.ofReal c₀⁻¹ * formHs (ball (W.ctr i) (W.rad i)) α f
           ≤ ENNReal.ofReal c₀⁻¹ * (ENNReal.ofReal c₀ *
               form (ball (W.ctr i) (κ * W.rad i)) k f) := mul_le_mul' le_rfl h2

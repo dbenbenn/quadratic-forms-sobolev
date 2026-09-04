@@ -2629,4 +2629,28 @@ theorem exists_measurable_repr {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ}
   rw [← heq]
   exact ENNReal.ofReal_ne_top
 
+
+/-- **Theorem 1.1 itself**, with the two hypotheses this formalisation carries:
+Debreu's measurability condition in place of condition (M), and the
+measurability of `k`, which the paper leaves implicit. Everything else is
+`QFS.TheoremOneOne` verbatim — same quantifier order, same `f ∈ L²(B)`, same
+conclusion on the same ball. -/
+def TheoremOneOneCondMeas (d : ℕ) : Prop :=
+  ∀ ϑ Λ α : ℝ, 0 < ϑ → 1 ≤ Λ → 0 < α → α < 2 →
+    ∃ c : ℝ, 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
+        MemLp f 2 (volume.restrict (ball x₀ R)) →
+        formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ R) k f
+
+/-- A `ϑ`-bounded configuration has `ϑ ≤ π/2`, since every apex angle does. -/
+lemma le_pi_div_two_of_isBounded {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {ϑ : ℝ}
+    (hΓ : IsBounded Γ ϑ) : ϑ ≤ Real.pi / 2 :=
+  le_trans (hΓ.2 0) (Γ 0).apex_le
+
 end QFS
