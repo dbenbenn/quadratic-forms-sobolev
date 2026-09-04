@@ -16,18 +16,34 @@ one by letting `h → 0`. On the left it uses Fatou. On the right it asserts
 without exhibiting a dominating function, and none is available unconditionally
 (see the README).
 
-This file supplies the missing ingredient in the form the argument can use. The
-point is that a *varying* dominant suffices, and that the tile-averaging
-operator `tileAvg` provides one: it is an averaging (conditional expectation)
-operator, so it **preserves the integral exactly** (`lintegral_tileAvg`), and it
-converges almost everywhere by Lemma 7.2. Together with
-`limsup_lintegral_le_of_dominant` — the generalized (Vitali) form of dominated
-convergence, in which the dominants are allowed to move — this justifies the
-paper's step for every `f` lying in `H^{α/2}` of the enlarged ball.
+This file carries out the whole procedure, supplying the missing ingredient
+along the way.
 
-That hypothesis is exactly the conclusion of Theorem 1.1, so this is an a priori
-estimate rather than a proof of the theorem; see the README for why the natural
-routes to removing it are circular.
+**The dominant.** A *varying* dominant suffices, and the tile-averaging operator
+provides one. For a function of a pair it is `tileAvg₂`: an averaging
+(conditional expectation) operator, so it **preserves the integral exactly**
+(`lintegral_tileAvg₂`), and it converges almost everywhere by Lemma 7.2 on the
+product space (`tendsto_tileAvg₂`). Jensen's inequality for the step function
+(`ofReal_sq_cubeAvg_sub_le`) and the comparability of the jump kernel across a
+well-separated pair of tiles (`jumpKernel_le_of_mem_cubes`) show that it
+dominates the paper's `g_h` up to the constant `Λ2^{d+α}`
+(`stepG_le_tileAvg₂`). With `limsup_lintegral_le_of_dominant` — the generalized
+(Vitali) form of dominated convergence, in which the dominants are allowed to
+move — this justifies the paper's step for every `f` lying in `H^{α/2}` of the
+enlarged ball (`limsup_lintegral_stepG_le`).
+
+**The rest of the procedure.** `(discret)` becomes an inequality between
+integrals (`discret_lintegral`); the left-hand integrand converges almost
+everywhere (`tendsto_discreteC_jump_ae`) so Fatou applies
+(`formHs_ball_le_liminf`); the right-hand one is the integral of `g_h`
+(`lintegral_stepG_eq`), whose limit the dominant controls. The assembly is
+`formHs_ball_le_form_of_formHs_ne_top`: Lemma 3.7's enlarged-ball form, with
+`κ` and `c` depending only on `ϑ`, `Λ` and `α`.
+
+The one hypothesis that remains is that `f` already lie in `H^{α/2}` of the
+enlarged ball — exactly what the paper's dominated-convergence step needs and
+does not supply. See the README for why the natural routes to removing it are
+circular, and `BeyondThePaper.lean` for its proof in dimension two.
 -/
 
 open MeasureTheory Filter Set Metric
