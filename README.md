@@ -34,7 +34,8 @@ unless `f` is already known to lie in `H^{α/2}` of the larger ball. So the
 enlarged-ball form of Theorem 1.1 is proved here for every
 `f ∈ H_k(B_{κR}) ∩ H^{α/2}(B_{(κ+√d)R})`, with the paper's scale-invariant
 enlargement and with `κ` and `c` independent of the ball, of `f` and of the
-scale. In **dimension two** that hypothesis is itself a theorem — by new
+scale. In **dimension two**, and in **every dimension when the cones are wide**
+(apex angles above `π/4`), that hypothesis is itself a theorem — by new
 mathematics, kept in a separate file and excluded from the tables below — so
 there the ball form holds with no hypothesis beyond `f ∈ L²(B_{κR})`
 (`QFS.theoremOneOneBallCondMeas_two`, which is the paper's
@@ -162,6 +163,12 @@ The pieces, all proved:
 | **Theorem 1.1 in the plane, in the paper's own statement** | `QFS.theoremOneOneCondMeas_two` | ✅ **proved** |
 | **Lemma 3.7's own statement in the plane**: `H_k(B) = H^{α/2}(B)` | `QFS.Hk_ball_eq_Hs_ball_planar` | ✅ **proved** |
 | **The hypotheses of all of the above are satisfiable** | `QFS.planar_hypotheses_nonvacuous` | ✅ **proved** |
+| **Any two double cones of apex `> π/4` share a subcone**, whatever their axes | `QFS.exists_common_subcone`, `QFS.angle_le_pi_div_four_of_inner` | ✅ **proved** |
+| Lemma 2.2 at an arbitrary aperture `θ < ϑ` | `QFS.ref_cones'`, `QFS.exists_finite_axes'`, `QFS.doubleCone_subset_of_dangle_le` | ✅ **proved** |
+| **Every block is controlled for wide cones**, in every dimension | `QFS.wide_block_le` | ✅ **proved** |
+| **`H_k(ℝ^d) ⊆ H^{α/2}(ℝ^d)` for `ϑ > π/4`, every `d`** | `QFS.sobolevInclusion_wide`, `QFS.formHs_ball_ne_top_of_wide` | ✅ **proved** |
+| **Theorem 1.1 for wide cones**: enlarged ball, `L²` form, same ball | `QFS.formHs_ball_le_form_wide`, `QFS.ballComparability_wide`, `QFS.formHs_le_form_wide` | ✅ **proved** |
+| **Theorem 1.4 for `ℝ^d`, wide cones** | `QFS.formHs_univ_le_form_univ_wide`, `QFS.Hk_univ_eq_Hs_univ_wide` | ✅ **proved** |
 | The Lipschitz cutoff and its cost | `QFS.cutoff`, `QFS.sq_cutoff_sub_le`, `QFS.sq_cutoff_mul_sub_le`, `QFS.form_cutoff_le`, `QFS.lintegral_cutoff_error_le`, `QFS.lintegral_cutoff_error_le'` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
@@ -317,10 +324,15 @@ finitely many pieces `U_V`, the squares of that cover exhaust `ℝ² × ℝ²`,
 `QFS.planar_block_le` controls every block, and a finite sum of finite constants
 is finite.
 
-In dimension three and above the statement remains open, and
-`QFS.no_common_neighbour_of_skew_axes` says why the method used here — averaging
-over a positive-measure set of common cone-neighbours — cannot reach it: there
-the two cones can be disjoint, so no such set exists.
+In dimension three and above the statement remains open **for narrow cones**,
+and `QFS.no_common_neighbour_of_skew_axes` says why the method used here —
+averaging over a positive-measure set of common cone-neighbours — cannot reach
+them: there the two cones can be disjoint, so no such set exists. That
+disjointness needs the cones to be thin: two axes, as lines, are at most `π/2`
+apart, so cones of apex angle above `π/4` always overlap
+(`QFS.exists_common_subcone`), and for those the argument closes in every
+dimension (`QFS.sobolevInclusion_wide`, and Theorems 1.1 and 1.4 downstream of
+it).
 
 The analytic machinery is stated abstractly enough to be reused: the exchange
 asks only that a family of averaging sets have measurable graph and a fibre
@@ -339,10 +351,10 @@ blocked on a recorded gap, ❌ out of scope.
 
 | # | Kind | Label | State |
 | --- | --- | --- | --- |
-| 1.1 | Theorem | main comparability, continuous | 🚧 the **enlarged-ball form is proved** (`QFS.formHs_ball_le_form_of_formHs_ne_top`) under the finiteness hypothesis §3.2's own dominated-convergence step needs and the paper does not state. **In `d = 2` the theorem itself is proved** in the paper's own statement (`QFS.TheoremOneOneCondMeas`, proved as `QFS.theoremOneOneCondMeas_two`) — by new mathematics recorded outside these tables, and granted the Whitney/Dyda input Lemma 7.1 quotes. The paper's own `Prop` is `QFS.TheoremOneOne`, which differs only in using condition (M) where this formalisation uses Debreu's conclusion, and in leaving the measurability of `k` implicit |
+| 1.1 | Theorem | main comparability, continuous | 🚧 the **enlarged-ball form is proved** (`QFS.formHs_ball_le_form_of_formHs_ne_top`) under the finiteness hypothesis §3.2's own dominated-convergence step needs and the paper does not state. **In `d = 2` the theorem itself is proved** in the paper's own statement (`QFS.TheoremOneOneCondMeas`, proved as `QFS.theoremOneOneCondMeas_two`) — by new mathematics recorded outside these tables, and granted the Whitney/Dyda input Lemma 7.1 quotes. The paper's own `Prop` is `QFS.TheoremOneOne`, which differs only in using condition (M) where this formalisation uses Debreu's conclusion, and in leaving the measurability of `k` implicit Beyond `d = 2`, the same holds in **every dimension for cones of apex angle above `π/4`** (`QFS.formHs_le_form_wide`) |
 | 1.2 | Remark | strength of the hypotheses | ⚪ (condition (M) is `QFS.CondM`) |
 | 1.3 | Theorem | main comparability, discrete | ✅ **proved** (`QFS.theoremOneThree`) |
-| 1.4 | Theorem | `H_k(Ω) = H^{α/2}(Ω)` | 🚧 the case `Ω = ℝ^d` **proved** granted Theorem 1.1 (`QFS.theoremOneFourUniv_of_theoremOneOne`); **in the plane, `Ω = ℝ²` unconditionally** and **any measurable `Ω` with a Whitney family** (`QFS.Hk_univ_eq_Hs_univ_planar`, `QFS.Hk_domain_eq_Hs_domain_planar`, by new mathematics recorded outside these tables), granted the Whitney/Dyda input the paper quotes; the density assertions are quoted from [DeDe12] |
+| 1.4 | Theorem | `H_k(Ω) = H^{α/2}(Ω)` | 🚧 the case `Ω = ℝ^d` **proved** granted Theorem 1.1 (`QFS.theoremOneFourUniv_of_theoremOneOne`); **in the plane, `Ω = ℝ²` unconditionally** and **any measurable `Ω` with a Whitney family** (`QFS.Hk_univ_eq_Hs_univ_planar`, `QFS.Hk_domain_eq_Hs_domain_planar`, by new mathematics recorded outside these tables), granted the Whitney/Dyda input the paper quotes; the density assertions are quoted from [DeDe12]; and for `Ω = ℝ^d` with wide cones in every dimension (`QFS.Hk_univ_eq_Hs_univ_wide`) |
 | 1.5 | Corollary | regular Dirichlet form | ❌ out of scope |
 | 1.6 | Corollary | Harnack / Hölder regularity | ❌ out of scope (quoted from [DyKa15]) |
 | 2.1 | Definition | cones, half-cones, configurations | ✅ |
@@ -1086,7 +1098,10 @@ Theorem 1.1 for every `f` satisfying that statement. **In dimension two the
 statement is itself a theorem** — new mathematics, recorded under *Beyond the
 paper* and excluded from the tables above — so there the chain is complete and
 the ball form holds unconditionally (`QFS.formHs_ball_le_form_planar`). In
-dimension three and above it is open. Through Lemma 7.1's chain the planar
+dimension three and above it is open **for narrow cones only**: if the apex
+angles exceed `π/4` then any two double cones overlap, and the same argument
+closes the statement in every dimension (`QFS.sobolevInclusion_wide`,
+`QFS.Hk_univ_eq_Hs_univ_wide`). Through Lemma 7.1's chain the planar
 result also gives the same-ball statement there (`QFS.formHs_le_form_planar`),
 so in the plane the whole road from Theorem 1.3 to Theorem 1.1, and on to
 Theorem 1.4 for `ℝ²` (`QFS.Hk_univ_eq_Hs_univ_planar`), is machine-checked, with
@@ -1754,7 +1769,21 @@ proved in Lean:
    (`QFS.formHs_univ_le_form_univ_planar`, `QFS.Hk_univ_eq_Hs_univ_planar`) and,
    with a Whitney family, for a domain (`QFS.Hk_domain_eq_Hs_domain_planar`).
 
-**What is still not done.** Dimension three and above, for the reason in step 5 —
+9. **Wide cones, in every dimension.** The `d ≥ 3` obstruction of step 5 is
+   about *narrow* cones: two double cones whose axes are skew can be disjoint
+   only if they are thin. Two axes, read as lines, are at most `π/2` apart, so
+   any two double cones of apex angle above `π/4` overlap in a cone of aperture
+   `apex − π/4` about their bisector (`QFS.exists_common_subcone`). Since the
+   chaining theorem asks only for a cone common to both ends, applying it to the
+   *union* of the two pieces controls every block, and the whole pipeline runs
+   in any dimension: `QFS.sobolevInclusion_wide`,
+   `QFS.formHs_ball_le_form_wide`, `QFS.formHs_le_form_wide`,
+   `QFS.Hk_univ_eq_Hs_univ_wide`. The reference cones have to be taken at an
+   aperture between `π/4` and `ϑ`, not at the `ϑ/3` of Lemma 2.2, which is what
+   `QFS.ref_cones'` supplies.
+
+**What is still not done.** Narrow cones (apex `≤ π/4`) in dimension three and
+above, for the reason in step 5 —
 that needs the continuum analogue of §§5–6. And the Whitney family and Dyda's
 inequality (13) behind Lemma 7.1, which the paper quotes rather than proves and
 which are carried here as the explicit hypothesis `QFS.WhitneyBallData`.
