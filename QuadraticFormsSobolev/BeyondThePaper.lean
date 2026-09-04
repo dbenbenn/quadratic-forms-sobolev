@@ -1449,6 +1449,19 @@ lemma abs_cross_le (u w : EuclideanSpace ℝ (Fin 2)) : |cross2 u w| ≤ ‖u‖
   rw [hinner, norm_perp2] at this
   exact this
 
+/-- The coefficient placing the intersection point on the axis through `s`. -/
+noncomputable def planarA (vs vt s t : EuclideanSpace ℝ (Fin 2)) : ℝ :=
+  cross2 (t - s) vt / cross2 vs vt
+
+/-- The coefficient placing the intersection point on the axis through `t`. -/
+noncomputable def planarB (vs vt s t : EuclideanSpace ℝ (Fin 2)) : ℝ :=
+  cross2 (t - s) vs / cross2 vs vt
+
+/-- The intersection point of the two axis-lines: the centre of the planar
+averaging ball. -/
+noncomputable def planarCtr (vs vt s t : EuclideanSpace ℝ (Fin 2)) :
+    EuclideanSpace ℝ (Fin 2) := s + planarA vs vt s t • vs
+
 /-- **The planar construction.** In the plane, two points whose cone axes are not
 parallel and which are *not already a cone pair* admit a ball of common
 cone-neighbours, of radius proportional to their distance.
@@ -1460,14 +1473,13 @@ construction quantitative is that "not already a cone pair" forces the component
 of `t − s` across each axis to be at least `‖t − s‖ sin ϑ`
 (`abs_cross_ge_of_notMem_doubleCone`) — precisely the separation that keeps the
 intersection point of the two axis-lines away from both `s` and `t`. -/
-theorem exists_ball_in_two_cones_two {vs vt : EuclideanSpace ℝ (Fin 2)}
+theorem mem_two_cones_of_mem_planarBall {vs vt : EuclideanSpace ℝ (Fin 2)}
     (hvs : ‖vs‖ = 1) (hvt : ‖vt‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
     {s t : EuclideanSpace ℝ (Fin 2)} (hst : s ≠ t) (hD : cross2 vs vt ≠ 0)
-    (hns : t - s ∉ doubleCone vs ϑ) (hnt : t - s ∉ doubleCone vt ϑ) :
-    ∃ z : EuclideanSpace ℝ (Fin 2),
-      (∀ y ∈ closedBall z (‖t - s‖ * Real.sin ϑ ^ 2 / 2),
-        y - s ∈ doubleCone vs ϑ ∧ y - t ∈ doubleCone vt ϑ) ∧
-      ‖z - s‖ ≤ ‖t - s‖ / |cross2 vs vt| ∧ ‖z - t‖ ≤ ‖t - s‖ / |cross2 vs vt| := by
+    (hns : t - s ∉ doubleCone vs ϑ) (hnt : t - s ∉ doubleCone vt ϑ)
+    {y : EuclideanSpace ℝ (Fin 2)}
+    (hy : y ∈ closedBall (planarCtr vs vt s t) (‖t - s‖ * Real.sin ϑ ^ 2 / 2)) :
+    y - s ∈ doubleCone vs ϑ ∧ y - t ∈ doubleCone vt ϑ := by
   have hs : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [Real.pi_pos])
   have hδ : 0 < ‖t - s‖ := by
     rw [norm_pos_iff]; exact sub_ne_zero_of_ne (Ne.symm hst)
@@ -1532,23 +1544,155 @@ theorem exists_ball_in_two_cones_two {vs vt : EuclideanSpace ℝ (Fin 2)}
     rw [hbdef, abs_div]
     rw [le_div_iff₀ hDpos]
     nlinarith [h1, hD1, hδ, hs, abs_nonneg (cross2 (t - s) vs)]
-  refine ⟨s + a • vs, ?_, ?_, ?_⟩
-  · intro y hy
-    rw [Metric.mem_closedBall, dist_eq_norm] at hy
-    constructor
-    · refine key vs hvs a hlowa (y - s) ?_
-      have : (y - s) - a • vs = y - (s + a • vs) := by abel
-      rw [this]; exact hy
-    · refine key vt hvt b hlowb (y - t) ?_
-      have : (y - t) - b • vt = y - (s + a • vs) := by rw [← hzt]; abel
-      rw [this]; exact hy
-  · rw [hzs, norm_smul, Real.norm_eq_abs, hvs, mul_one, hadef, abs_div,
-      div_le_div_iff_of_pos_right hDpos]
-    have := abs_cross_le (t - s) vt
-    rwa [hvt, mul_one] at this
-  · rw [hzt, norm_smul, Real.norm_eq_abs, hvt, mul_one, hbdef, abs_div,
-      div_le_div_iff_of_pos_right hDpos]
-    have := abs_cross_le (t - s) vs
-    rwa [hvs, mul_one] at this
+  have hctr : planarCtr vs vt s t = s + a • vs := by
+    rw [planarCtr, planarA, ← hadef]
+  rw [Metric.mem_closedBall, dist_eq_norm, hctr] at hy
+  constructor
+  · refine key vs hvs a hlowa (y - s) ?_
+    have h : (y - s) - a • vs = y - (s + a • vs) := by abel
+    rw [h]; exact hy
+  · refine key vt hvt b hlowb (y - t) ?_
+    have h : (y - t) - b • vt = y - (s + a • vs) := by rw [← hzt]; abel
+    rw [h]; exact hy
+
+
+/-! ## The planar averaging family, named
+
+To feed the planar balls through `lintegral_swap_of_fibre_bound` they must be an
+explicit function of the pair, and the fibre estimate needs the comparability of
+`‖z − s‖`, `‖z − t‖` and `‖s − t‖` in **both** directions. -/
+
+lemma planarCtr_sub_left (vs vt s t : EuclideanSpace ℝ (Fin 2)) :
+    planarCtr vs vt s t - s = planarA vs vt s t • vs := by
+  rw [planarCtr]; abel
+
+lemma planarCtr_sub_right {vs vt : EuclideanSpace ℝ (Fin 2)} (hD : cross2 vs vt ≠ 0)
+    (s t : EuclideanSpace ℝ (Fin 2)) :
+    planarCtr vs vt s t - t = planarB vs vt s t • vt := by
+  have hcr := cramer2 (t - s) vs vt
+  have hsm : planarA vs vt s t • vs - planarB vs vt s t • vt = t - s := by
+    have h1 : planarA vs vt s t • vs
+        = (cross2 vs vt)⁻¹ • (cross2 (t - s) vt • vs) := by
+      rw [planarA, smul_smul, div_eq_inv_mul]
+    have h2 : planarB vs vt s t • vt
+        = (cross2 vs vt)⁻¹ • (cross2 (t - s) vs • vt) := by
+      rw [planarB, smul_smul, div_eq_inv_mul]
+    rw [h1, h2, ← smul_sub, hcr, smul_smul, inv_mul_cancel₀ hD, one_smul]
+  have hrw : planarCtr vs vt s t - t
+      = (planarA vs vt s t • vs - planarB vs vt s t • vt) - (t - s)
+        + planarB vs vt s t • vt := by
+    rw [planarCtr]; abel
+  rw [hrw, hsm, sub_self, zero_add]
+
+lemma norm_planarCtr_sub_left (vs vt s t : EuclideanSpace ℝ (Fin 2)) (hvs : ‖vs‖ = 1) :
+    ‖planarCtr vs vt s t - s‖ = |planarA vs vt s t| := by
+  rw [planarCtr_sub_left, norm_smul, Real.norm_eq_abs, hvs, mul_one]
+
+lemma norm_planarCtr_sub_right {vs vt : EuclideanSpace ℝ (Fin 2)} (hD : cross2 vs vt ≠ 0)
+    (s t : EuclideanSpace ℝ (Fin 2)) (hvt : ‖vt‖ = 1) :
+    ‖planarCtr vs vt s t - t‖ = |planarB vs vt s t| := by
+  rw [planarCtr_sub_right hD, norm_smul, Real.norm_eq_abs, hvt, mul_one]
+
+/-- The coefficients are comparable to `‖t − s‖`, in both directions. -/
+lemma planarA_bounds {vs vt : EuclideanSpace ℝ (Fin 2)} (hvs : ‖vs‖ = 1) (hvt : ‖vt‖ = 1)
+    {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {s t : EuclideanSpace ℝ (Fin 2)}
+    (hD : cross2 vs vt ≠ 0) (hnt : t - s ∉ doubleCone vt ϑ) :
+    ‖t - s‖ * Real.sin ϑ ≤ |planarA vs vt s t| ∧
+      |planarA vs vt s t| ≤ ‖t - s‖ / |cross2 vs vt| := by
+  have hDpos : 0 < |cross2 vs vt| := abs_pos.mpr hD
+  have hD1 : |cross2 vs vt| ≤ 1 := by
+    have h := abs_cross_le vs vt
+    rwa [hvs, hvt, mul_one] at h
+  have hlow := abs_cross_ge_of_notMem_doubleCone hvt hϑ hϑ' hnt
+  have hup : |cross2 (t - s) vt| ≤ ‖t - s‖ := by
+    have h := abs_cross_le (t - s) vt
+    rwa [hvt, mul_one] at h
+  have habs : |planarA vs vt s t| = |cross2 (t - s) vt| / |cross2 vs vt| := by
+    rw [planarA, abs_div]
+  have hsinnn : 0 ≤ Real.sin ϑ :=
+    Real.sin_nonneg_of_nonneg_of_le_pi hϑ.le (by linarith [Real.pi_pos])
+  constructor
+  · rw [habs, le_div_iff₀ hDpos]
+    calc ‖t - s‖ * Real.sin ϑ * |cross2 vs vt|
+        ≤ ‖t - s‖ * Real.sin ϑ * 1 :=
+          mul_le_mul_of_nonneg_left hD1 (by positivity)
+      _ = ‖t - s‖ * Real.sin ϑ := mul_one _
+      _ ≤ |cross2 (t - s) vt| := hlow
+  · rw [habs]
+    gcongr
+
+lemma planarB_bounds {vs vt : EuclideanSpace ℝ (Fin 2)} (hvs : ‖vs‖ = 1) (hvt : ‖vt‖ = 1)
+    {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {s t : EuclideanSpace ℝ (Fin 2)}
+    (hD : cross2 vs vt ≠ 0) (hns : t - s ∉ doubleCone vs ϑ) :
+    ‖t - s‖ * Real.sin ϑ ≤ |planarB vs vt s t| ∧
+      |planarB vs vt s t| ≤ ‖t - s‖ / |cross2 vs vt| := by
+  have hDpos : 0 < |cross2 vs vt| := abs_pos.mpr hD
+  have hD1 : |cross2 vs vt| ≤ 1 := by
+    have h := abs_cross_le vs vt
+    rwa [hvs, hvt, mul_one] at h
+  have hlow := abs_cross_ge_of_notMem_doubleCone hvs hϑ hϑ' hns
+  have hup : |cross2 (t - s) vs| ≤ ‖t - s‖ := by
+    have h := abs_cross_le (t - s) vs
+    rwa [hvs, mul_one] at h
+  have habs : |planarB vs vt s t| = |cross2 (t - s) vs| / |cross2 vs vt| := by
+    rw [planarB, abs_div]
+  have hsinnn : 0 ≤ Real.sin ϑ :=
+    Real.sin_nonneg_of_nonneg_of_le_pi hϑ.le (by linarith [Real.pi_pos])
+  constructor
+  · rw [habs, le_div_iff₀ hDpos]
+    calc ‖t - s‖ * Real.sin ϑ * |cross2 vs vt|
+        ≤ ‖t - s‖ * Real.sin ϑ * 1 :=
+          mul_le_mul_of_nonneg_left hD1 (by positivity)
+      _ = ‖t - s‖ * Real.sin ϑ := mul_one _
+      _ ≤ |cross2 (t - s) vs| := hlow
+  · rw [habs]
+    gcongr
+
+/-- **Two-sided comparability on the planar averaging ball**, the input the fibre
+estimate needs: every point of the ball is at distance comparable to `‖t − s‖`
+from both `s` and `t`, in both directions. -/
+theorem planarBall_comparable {vs vt : EuclideanSpace ℝ (Fin 2)} (hvs : ‖vs‖ = 1)
+    (hvt : ‖vt‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
+    {s t : EuclideanSpace ℝ (Fin 2)} (hD : cross2 vs vt ≠ 0)
+    (hns : t - s ∉ doubleCone vs ϑ) (hnt : t - s ∉ doubleCone vt ϑ)
+    {z : EuclideanSpace ℝ (Fin 2)}
+    (hz : z ∈ closedBall (planarCtr vs vt s t) (‖t - s‖ * Real.sin ϑ ^ 2 / 2)) :
+    ‖t - s‖ * Real.sin ϑ / 2 ≤ ‖z - s‖ ∧
+      ‖z - s‖ ≤ ‖t - s‖ * (1 / |cross2 vs vt| + 1) ∧
+      ‖t - s‖ * Real.sin ϑ / 2 ≤ ‖z - t‖ ∧
+      ‖z - t‖ ≤ ‖t - s‖ * (1 / |cross2 vs vt| + 1) := by
+  have hDpos : 0 < |cross2 vs vt| := abs_pos.mpr hD
+  have hs0 : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [Real.pi_pos])
+  have hs1 : Real.sin ϑ ≤ 1 := Real.sin_le_one ϑ
+  have hδ : 0 ≤ ‖t - s‖ := norm_nonneg _
+  obtain ⟨hAlow, hAup⟩ := planarA_bounds hvs hvt hϑ hϑ' hD hnt
+  obtain ⟨hBlow, hBup⟩ := planarB_bounds hvs hvt hϑ hϑ' hD hns
+  rw [Metric.mem_closedBall, dist_eq_norm] at hz
+  have hAeq := norm_planarCtr_sub_left vs vt s t hvs
+  have hBeq := norm_planarCtr_sub_right hD s t hvt
+  have hsplit : ∀ c : EuclideanSpace ℝ (Fin 2),
+      ‖planarCtr vs vt s t - c‖ - ‖t - s‖ * Real.sin ϑ ^ 2 / 2 ≤ ‖z - c‖ ∧
+      ‖z - c‖ ≤ ‖planarCtr vs vt s t - c‖ + ‖t - s‖ * Real.sin ϑ ^ 2 / 2 := by
+    intro c
+    have h1 : ‖z - c‖ ≤ ‖z - planarCtr vs vt s t‖ + ‖planarCtr vs vt s t - c‖ := by
+      have : z - c = (z - planarCtr vs vt s t) + (planarCtr vs vt s t - c) := by abel
+      rw [this]; exact norm_add_le _ _
+    have h2 : ‖planarCtr vs vt s t - c‖ ≤ ‖planarCtr vs vt s t - z‖ + ‖z - c‖ := by
+      have : planarCtr vs vt s t - c = (planarCtr vs vt s t - z) + (z - c) := by abel
+      rw [this]; exact norm_add_le _ _
+    rw [norm_sub_rev (planarCtr vs vt s t) z] at h2
+    constructor <;> linarith
+  obtain ⟨hL1, hU1⟩ := hsplit s
+  obtain ⟨hL2, hU2⟩ := hsplit t
+  rw [hAeq] at hL1 hU1
+  rw [hBeq] at hL2 hU2
+  have hdiv : ‖t - s‖ / |cross2 vs vt| = ‖t - s‖ * (1 / |cross2 vs vt|) := by ring
+  have hsq : Real.sin ϑ ^ 2 ≤ 1 := by nlinarith [hs0, hs1]
+  have hprod : ‖t - s‖ * Real.sin ϑ ^ 2 ≤ ‖t - s‖ * 1 := mul_le_mul_of_nonneg_left hsq hδ
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · nlinarith [hAlow, hL1, hδ, hs0, hs1]
+  · rw [hdiv] at hAup; nlinarith [hAup, hU1, hδ, hprod]
+  · nlinarith [hBlow, hL2, hδ, hs0, hs1]
+  · rw [hdiv] at hBup; nlinarith [hBup, hU2, hδ, hprod]
 
 end QFS
