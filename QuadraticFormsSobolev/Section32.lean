@@ -785,4 +785,33 @@ theorem sq_cutoff_mul_sub_le {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ} (h
       zero_add]
     positivity
 
+
+/-- The kernel integrated against the cutoff factor, at a fixed point: a finite
+constant depending only on `d`, `α`, `Λ` and the cutoff scale. -/
+theorem lintegral_cutoff_kernel_le {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {α Λ : ℝ} {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) {δ : ℝ} (hδ : 0 < δ) (x : EuclideanSpace ℝ (Fin d)) :
+    ∫⁻ y, ENNReal.ofReal (min (‖x - y‖ ^ 2 / δ ^ 2) 1) * k x y
+      ≤ ENNReal.ofReal Λ *
+        ∫⁻ u : EuclideanSpace ℝ (Fin d),
+          ENNReal.ofReal (min (‖u‖ ^ 2 / δ ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α)) := by
+  have hΛ : (0 : ℝ) ≤ Λ := le_trans zero_le_one hk.one_le
+  have hFm : Measurable fun u : EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal (min (‖u‖ ^ 2 / δ ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α)) := by fun_prop
+  calc ∫⁻ y, ENNReal.ofReal (min (‖x - y‖ ^ 2 / δ ^ 2) 1) * k x y
+      ≤ ∫⁻ y, ENNReal.ofReal (min (‖x - y‖ ^ 2 / δ ^ 2) 1) *
+          (ENNReal.ofReal Λ * jumpKernel d α x y) :=
+        lintegral_mono fun y => mul_le_mul' le_rfl (hk.upper x y)
+    _ = ENNReal.ofReal Λ * ∫⁻ y, ENNReal.ofReal (min (‖y - x‖ ^ 2 / δ ^ 2) 1 *
+          ‖y - x‖ ^ (-(d : ℝ) - α)) := by
+        rw [← lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+        refine lintegral_congr fun y => ?_
+        rw [jumpKernel, norm_sub_rev x y,
+          ENNReal.ofReal_mul (le_min (by positivity) zero_le_one)]
+        ring
+    _ = ENNReal.ofReal Λ * ∫⁻ u : EuclideanSpace ℝ (Fin d),
+          ENNReal.ofReal (min (‖u‖ ^ 2 / δ ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α)) := by
+        congr 1
+        exact (measurePreserving_sub_right volume x).lintegral_comp hFm
+
 end QFS
