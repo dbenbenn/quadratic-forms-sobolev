@@ -1026,6 +1026,36 @@ Each departure from the paper, and why.
     changed; it is what §3.2's argument proves, and in the plane it is proved
     (`QFS.theoremOneOneBallCondMeas_two`).
 
+25. **The step function is the average over the whole cube, not over its
+    intersection with `B*`.** The paper sets
+    `f_h(x) = h^{-d}∫_{A_h(x) ∩ B*} f` for `x ∈ hℤ^d ∩ B*`;
+    `QFS.cubeAvg` is `h^{-d}∫_{A_h(x)} f`, the average over the whole cube.
+    Nothing in the argument constrains this choice — Corollary 3.1 holds for an
+    arbitrary function on the lattice, and `(discret)` is applied to whichever
+    one is chosen — and the whole-cube average is what the Lebesgue
+    differentiation theorem differentiates, at every point rather than only in
+    the interior of `B*`, and what Jensen's inequality
+    (`QFS.ofReal_sq_cubeAvg_sub_le`) is stated for. The paper's convention is
+    recovered exactly where it matters: in
+    `QFS.theoremOneOneBallCondMeas_two` the function fed to the machinery is the
+    representative `1_{B_{κR}}·f` built by `QFS.exists_measurable_repr`, whose
+    cube averages *are* `h^{-d}∫_{A_h(x) ∩ B_{κR}} f`. The cube is taken closed
+    rather than open, which changes nothing (`QFS.volume_closedCube`); the
+    tiling still uses the half-closed cubes, as the paper's `Ã_h` does.
+
+26. **Lemma 3.4 is not used on the left of `(discret)`.** The paper converts
+    both sides of Corollary 3.1 from the kernel evaluated at the lattice points
+    to the kernel integrated over the pair of tiles, quoting Lemma 3.4 for the
+    comparison, and then takes limits. Here the right-hand side is converted —
+    it must be, since `ω^k_h` *is* the tile average of `k`
+    (`QFS.lintegral_stepG_eq`) — but the left-hand side is kept in Corollary
+    3.1's own form, with `|x − y|^{-d-α}` at the lattice points. Fatou applies
+    to it directly, because the tile-constant integrand converges almost
+    everywhere to the true one: off the diagonal the jump kernel is continuous
+    (`QFS.tendsto_jumpKernel`), and the lattice points converge to the point.
+    This avoids the comparison, hence one appeal to Lemma 3.4, and gives the
+    same conclusion with the same constants.
+
 ## What remains
 
 The repository now proves every link in the chain from the discrete theory to
