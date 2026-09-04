@@ -920,4 +920,116 @@ theorem localPoincare_sameDirection {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (
               (ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top)]
           exact lintegral_mono fun t => lintegral_swap_fibre' hv hϑ hϑ' hα hd t (hGt t)
 
+
+/-! ## The open statement, for configurations with a common cone direction
+
+The lower bound of (1.4) turns the cone-restricted weight into `k`, so the local
+Poincaré inequality above becomes exactly the statement §3.2 is missing —
+restricted to configurations all of whose cones share a direction. -/
+
+/-- On a cone pair the jump kernel is dominated by `Λ k`: the lower bound of
+(1.4), read in the direction that gives information. -/
+theorem jumpKernel_le_of_mem_coneAt {d : ℕ} {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {α Λ : ℝ} {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) {x y : EuclideanSpace ℝ (Fin d)} (hxy : y ∈ coneAt Γ x) :
+    jumpKernel d α x y ≤ ENNReal.ofReal Λ * k x y := by
+  have hΛ : (0 : ℝ) < Λ := lt_of_lt_of_le zero_lt_one hk.one_le
+  have hind : (1 : ℝ≥0∞) ≤ indE (coneAt Γ x) y + indE (coneAt Γ y) x := by
+    have h1 : indE (coneAt Γ x) y = 1 := by simp [indE, Set.indicator_of_mem hxy]
+    rw [h1]; exact le_self_add
+  have hlow : ENNReal.ofReal Λ⁻¹ * jumpKernel d α x y ≤ k x y := by
+    refine le_trans (mul_le_mul' le_rfl ?_) (hk.lower x y)
+    calc jumpKernel d α x y = 1 * jumpKernel d α x y := (one_mul _).symm
+      _ ≤ (indE (coneAt Γ x) y + indE (coneAt Γ y) x) * jumpKernel d α x y :=
+          mul_le_mul' hind le_rfl
+  calc jumpKernel d α x y
+      = ENNReal.ofReal Λ * (ENNReal.ofReal Λ⁻¹ * jumpKernel d α x y) := by
+        rw [← mul_assoc, ← ENNReal.ofReal_mul (le_of_lt hΛ),
+          mul_inv_cancel₀ (ne_of_gt hΛ), ENNReal.ofReal_one, one_mul]
+    _ ≤ ENNReal.ofReal Λ * k x y := mul_le_mul' le_rfl hlow
+
+/-- **The open statement of §3.2, for configurations with a common cone
+direction.** If every cone of `Γ` contains a fixed `Ṽ(v,ϑ)`, then finiteness of
+the `H_k` form forces finiteness of the `H^{α/2}` form, with an explicit
+constant.
+
+This is the model case of what §3.2 needs. The general case — points whose cones
+share no direction — remains open; see the header of this file. -/
+theorem formHs_le_form_of_commonDirection {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1)
+    {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α) (hd : 0 < d)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {Λ : ℝ}
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hcommon : ∀ x, cone v ϑ ⊆ (Γ x).carrier)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
+    unitBallVol d * formHs Set.univ α f
+      ≤ ENNReal.ofReal (2 * Λ) *
+          (ENNReal.ofReal (chainConst d ϑ α) + ENNReal.ofReal (chainConst' d ϑ α)) *
+          unitBallVol d * form Set.univ k f := by
+  have hΛ : (0 : ℝ) < Λ := lt_of_lt_of_le zero_lt_one hk.one_le
+  -- the `H_k` form as an iterated integral
+  have hform : form Set.univ k f
+      = ∫⁻ x, ∫⁻ y, ENNReal.ofReal ((f y - f x) ^ 2) * k x y := by
+    rw [form, Set.univ_prod_univ, setLIntegral_univ, Measure.volume_eq_prod,
+      lintegral_prod _ hkm.aemeasurable]
+  -- each cone-restricted term is dominated by the `H_k` form
+  have hconeMeas : ∀ x : EuclideanSpace ℝ (Fin d),
+      MeasurableSet {y : EuclideanSpace ℝ (Fin d) | y - x ∈ cone v ϑ} := fun x =>
+    ((isOpen_cone v ϑ).preimage (by fun_prop)).measurableSet
+  have hterm : ∀ (g : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ),
+      (∀ x y, (g x y) ^ 2 = (f y - f x) ^ 2) →
+      (∫⁻ x, ∫⁻ y in {y | y - x ∈ cone v ϑ},
+          ENNReal.ofReal (2 * (g x y) ^ 2) * ENNReal.ofReal (‖y - x‖ ^ (-(d : ℝ) - α)))
+        ≤ ENNReal.ofReal (2 * Λ) * form Set.univ k f := by
+    intro g hg
+    rw [hform, ← lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+    refine lintegral_mono fun x => ?_
+    rw [← lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+    calc ∫⁻ y in {y | y - x ∈ cone v ϑ},
+          ENNReal.ofReal (2 * (g x y) ^ 2) * ENNReal.ofReal (‖y - x‖ ^ (-(d : ℝ) - α))
+        ≤ ∫⁻ y in {y | y - x ∈ cone v ϑ},
+            ENNReal.ofReal (2 * Λ) * (ENNReal.ofReal ((f y - f x) ^ 2) * k x y) := by
+          refine lintegral_mono_ae ?_
+          filter_upwards [ae_restrict_mem (hconeMeas x)] with y hyc
+          have hmem : y ∈ coneAt Γ x := hcommon x hyc
+          have hjk : ENNReal.ofReal (‖y - x‖ ^ (-(d : ℝ) - α)) ≤ ENNReal.ofReal Λ * k x y := by
+            have h0 : ENNReal.ofReal (‖y - x‖ ^ (-(d : ℝ) - α)) = jumpKernel d α x y := by
+              rw [jumpKernel, norm_sub_rev]
+            rw [h0]; exact jumpKernel_le_of_mem_coneAt hk hmem
+          calc ENNReal.ofReal (2 * (g x y) ^ 2) * ENNReal.ofReal (‖y - x‖ ^ (-(d : ℝ) - α))
+              ≤ ENNReal.ofReal (2 * (f y - f x) ^ 2) * (ENNReal.ofReal Λ * k x y) := by
+                rw [hg]; exact mul_le_mul' le_rfl hjk
+            _ = ENNReal.ofReal (2 * Λ) * (ENNReal.ofReal ((f y - f x) ^ 2) * k x y) := by
+                rw [ENNReal.ofReal_mul (by norm_num : (0:ℝ) ≤ 2),
+                  ENNReal.ofReal_mul (by norm_num : (0:ℝ) ≤ 2)]
+                ring
+      _ ≤ ∫⁻ y, ENNReal.ofReal (2 * Λ) * (ENNReal.ofReal ((f y - f x) ^ 2) * k x y) := by
+          exact lintegral_mono' Measure.restrict_le_self le_rfl
+  -- assemble
+  have hlhs : unitBallVol d * formHs Set.univ α f
+      = unitBallVol d * ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) *
+            ENNReal.ofReal (‖p.1 - p.2‖ ^ (-(d : ℝ) - α)) := by
+    rw [formHs, form, Set.univ_prod_univ, setLIntegral_univ]
+    rfl
+  rw [hlhs]
+  refine le_trans (localPoincare_sameDirection hv hϑ hϑ' hα hd hf) ?_
+  have hA := hterm (fun x y => f y - f x) (fun x y => rfl)
+  have hB := hterm (fun x y => f x - f y) (fun x y => by ring)
+  calc ENNReal.ofReal (chainConst d ϑ α) * unitBallVol d *
+        (∫⁻ s, ∫⁻ z in {z | z - s ∈ cone v ϑ},
+          ENNReal.ofReal (2 * (f z - f s) ^ 2) * ENNReal.ofReal (‖z - s‖ ^ (-(d : ℝ) - α)))
+      + ENNReal.ofReal (chainConst' d ϑ α) * unitBallVol d *
+        (∫⁻ t, ∫⁻ z in {z | z - t ∈ cone v ϑ},
+          ENNReal.ofReal (2 * (f t - f z) ^ 2) * ENNReal.ofReal (‖z - t‖ ^ (-(d : ℝ) - α)))
+      ≤ ENNReal.ofReal (chainConst d ϑ α) * unitBallVol d *
+          (ENNReal.ofReal (2 * Λ) * form Set.univ k f)
+        + ENNReal.ofReal (chainConst' d ϑ α) * unitBallVol d *
+          (ENNReal.ofReal (2 * Λ) * form Set.univ k f) :=
+        add_le_add (mul_le_mul' le_rfl hA) (mul_le_mul' le_rfl hB)
+    _ = ENNReal.ofReal (2 * Λ) *
+          (ENNReal.ofReal (chainConst d ϑ α) + ENNReal.ofReal (chainConst' d ϑ α)) *
+          unitBallVol d * form Set.univ k f := by ring
+
 end QFS
