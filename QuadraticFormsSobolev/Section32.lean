@@ -477,4 +477,136 @@ theorem oscillation_sameTile_le_form {Γ : Configuration (EuclideanSpace ℝ (Fi
     exact ⟨norm_sub_le_of_sameTile hh (hA hp).1.1, (hA hp).1.2⟩
   · exact mul_le_mul' le_rfl (lintegral_mono_set (fun p hp => (hA hp).2))
 
+
+/-- The companion of `lintegral_ball_rpow_lt_top` at infinity: `‖u‖^γ` is
+integrable off a ball as soon as `γ < −d`. Both are needed by any localisation
+of the chaining estimates, where a cutoff produces one integral of each kind. -/
+theorem lintegral_compl_ball_rpow_lt_top (hd : 0 < d) {r γ : ℝ} (hr : 0 < r)
+    (hγ : γ < -(d : ℝ)) :
+    ∫⁻ u in {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖}, ENNReal.ofReal (‖u‖ ^ γ) < ∞ := by
+  have hdim : Module.finrank ℝ (EuclideanSpace ℝ (Fin d)) = d := by simp
+  have hnt : Nontrivial (EuclideanSpace ℝ (Fin d)) := by
+    rw [← Module.finrank_pos_iff (R := ℝ), hdim]; exact hd
+  have hdcast : ((d - 1 : ℕ) : ℝ) = (d : ℝ) - 1 := by
+    have h1 : 1 ≤ d := hd
+    push_cast [Nat.cast_sub h1]
+    ring
+  have hexp : ((d - 1 : ℕ) : ℝ) + γ < -1 := by rw [hdcast]; linarith
+  -- the radial integrand
+  have hrad : IntegrableOn
+      (fun y : ℝ => y ^ (Module.finrank ℝ (EuclideanSpace ℝ (Fin d)) - 1) •
+        (Set.Ioi r).indicator (fun y : ℝ => y ^ γ) y) (Set.Ioi 0) volume := by
+    rw [hdim]
+    have hcongr : ∀ y ∈ Set.Ioi (0 : ℝ),
+        y ^ (d - 1) • (Set.Ioi r).indicator (fun y : ℝ => y ^ γ) y
+          = (Set.Ioi r).indicator (fun y : ℝ => y ^ (((d - 1 : ℕ) : ℝ) + γ)) y := by
+      intro y hy
+      by_cases hyr : y ∈ Set.Ioi r
+      · rw [Set.indicator_of_mem hyr, Set.indicator_of_mem hyr, smul_eq_mul,
+          ← Real.rpow_natCast y (d - 1), ← Real.rpow_add hy]
+      · rw [Set.indicator_of_notMem hyr, Set.indicator_of_notMem hyr, smul_zero]
+    refine (integrableOn_congr_fun hcongr measurableSet_Ioi).mpr ?_
+    rw [integrableOn_indicator_iff measurableSet_Ioi]
+    have hinter : Set.Ioi r ∩ Set.Ioi (0 : ℝ) = Set.Ioi r := by
+      rw [Set.inter_eq_left]
+      exact Set.Ioi_subset_Ioi hr.le
+    rw [hinter]
+    exact integrableOn_Ioi_rpow_of_lt hexp hr
+  have hint : Integrable
+      (fun u : EuclideanSpace ℝ (Fin d) => (Set.Ioi r).indicator (fun y : ℝ => y ^ γ) ‖u‖)
+      volume :=
+    (integrable_fun_norm_addHaar volume
+      (f := fun y : ℝ => (Set.Ioi r).indicator (fun y : ℝ => y ^ γ) y)).mpr hrad
+  have hfin := hint.hasFiniteIntegral
+  have hSm : MeasurableSet {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖} :=
+    measurableSet_lt measurable_const measurable_norm
+  refine lt_of_le_of_lt ?_ hfin
+  calc ∫⁻ u in {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖}, ENNReal.ofReal (‖u‖ ^ γ)
+      = ∫⁻ u in {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖},
+          ‖(Set.Ioi r).indicator (fun y : ℝ => y ^ γ) ‖u‖‖ₑ := by
+        refine setLIntegral_congr_fun hSm fun u hu => ?_
+        rw [← ofReal_norm, Set.indicator_of_mem (show ‖u‖ ∈ Set.Ioi r from hu),
+          Real.norm_eq_abs, abs_of_nonneg (Real.rpow_nonneg (norm_nonneg u) γ)]
+    _ ≤ ∫⁻ u, ‖(Set.Ioi r).indicator (fun y : ℝ => y ^ γ) ‖u‖‖ₑ :=
+        lintegral_mono' Measure.restrict_le_self le_rfl
+
+
+/-- **The cutoff kernel is integrable.** A Lipschitz cutoff at scale `δ` produces
+the factor `min (‖u‖²/δ²) 1` against the jump kernel, and the result is
+integrable for every `α ∈ (0,2)` — the small scales by
+`lintegral_ball_rpow_lt_top` (the exponent `2 − d − α` exceeds `−d`), the large
+ones by `lintegral_compl_ball_rpow_lt_top` (the exponent `−d − α` is below `−d`).
+
+This is the estimate a localisation of the chaining results would run on: it is
+what bounds the error made by multiplying `f` by a cutoff. -/
+theorem lintegral_cutoff_kernel_lt_top (hd : 0 < d) {δ α : ℝ} (hδ : 0 < δ)
+    (hα : 0 < α) (hα2 : α < 2) :
+    ∫⁻ u : EuclideanSpace ℝ (Fin d),
+        ENNReal.ofReal (min (‖u‖ ^ 2 / δ ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α)) < ∞ := by
+  have hδ2 : (0 : ℝ) < δ ^ 2 := by positivity
+  have hcover : (Set.univ : Set (EuclideanSpace ℝ (Fin d)))
+      ⊆ ball (0 : EuclideanSpace ℝ (Fin d)) δ ∪
+        {u : EuclideanSpace ℝ (Fin d) | δ / 2 < ‖u‖} := by
+    intro u _
+    by_cases hu : ‖u‖ < δ
+    · exact Or.inl (by simpa [Metric.mem_ball, dist_zero_right] using hu)
+    · exact Or.inr (by simp only [Set.mem_ofPred_eq]; linarith [not_lt.mp hu])
+  have hmin0 : ∀ u : EuclideanSpace ℝ (Fin d), 0 ≤ min (‖u‖ ^ 2 / δ ^ 2) 1 :=
+    fun u => le_min (by positivity) zero_le_one
+  -- the small scales
+  have hsmall : ∀ u : EuclideanSpace ℝ (Fin d),
+      ENNReal.ofReal (min (‖u‖ ^ 2 / δ ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α))
+        ≤ ENNReal.ofReal ((δ ^ 2)⁻¹) *
+          ENNReal.ofReal (‖u‖ ^ (2 - (d : ℝ) - α)) := by
+    intro u
+    rw [← ENNReal.ofReal_mul (by positivity)]
+    refine ENNReal.ofReal_le_ofReal ?_
+    rcases eq_or_ne u 0 with rfl | hu
+    · simp only [norm_zero]
+      rw [show min ((0 : ℝ) ^ 2 / δ ^ 2) 1 = 0 from by norm_num, zero_mul]
+      exact mul_nonneg (by positivity) (Real.rpow_nonneg le_rfl _)
+    · have hn : 0 < ‖u‖ := norm_pos_iff.mpr hu
+      have hpow : ‖u‖ ^ (2 - (d : ℝ) - α) = ‖u‖ ^ (2 : ℕ) * ‖u‖ ^ (-(d : ℝ) - α) := by
+        rw [← Real.rpow_natCast ‖u‖ 2, ← Real.rpow_add hn]
+        congr 1
+        push_cast
+        ring
+      rw [hpow]
+      have h1 : min (‖u‖ ^ 2 / δ ^ 2) 1 ≤ ‖u‖ ^ 2 / δ ^ 2 := min_le_left _ _
+      have h2 : (0 : ℝ) ≤ ‖u‖ ^ (-(d : ℝ) - α) := Real.rpow_nonneg hn.le _
+      calc min (‖u‖ ^ 2 / δ ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α)
+          ≤ (‖u‖ ^ 2 / δ ^ 2) * ‖u‖ ^ (-(d : ℝ) - α) := mul_le_mul_of_nonneg_right h1 h2
+        _ = (δ ^ 2)⁻¹ * (‖u‖ ^ (2 : ℕ) * ‖u‖ ^ (-(d : ℝ) - α)) := by
+            field_simp
+  -- the large scales
+  have hlarge : ∀ u : EuclideanSpace ℝ (Fin d),
+      ENNReal.ofReal (min (‖u‖ ^ 2 / δ ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α))
+        ≤ ENNReal.ofReal (‖u‖ ^ (-(d : ℝ) - α)) := by
+    intro u
+    refine ENNReal.ofReal_le_ofReal ?_
+    have h1 : min (‖u‖ ^ 2 / δ ^ 2) 1 ≤ 1 := min_le_right _ _
+    have h2 : (0 : ℝ) ≤ ‖u‖ ^ (-(d : ℝ) - α) := Real.rpow_nonneg (norm_nonneg u) _
+    nlinarith [h1, h2]
+  calc ∫⁻ u : EuclideanSpace ℝ (Fin d),
+        ENNReal.ofReal (min (‖u‖ ^ 2 / δ ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α))
+      = ∫⁻ u in Set.univ, ENNReal.ofReal (min (‖u‖ ^ 2 / δ ^ 2) 1 *
+          ‖u‖ ^ (-(d : ℝ) - α)) := (setLIntegral_univ _).symm
+    _ ≤ ∫⁻ u in ball (0 : EuclideanSpace ℝ (Fin d)) δ ∪
+          {u : EuclideanSpace ℝ (Fin d) | δ / 2 < ‖u‖},
+          ENNReal.ofReal (min (‖u‖ ^ 2 / δ ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α)) :=
+        lintegral_mono_set hcover
+    _ ≤ (∫⁻ u in ball (0 : EuclideanSpace ℝ (Fin d)) δ,
+          ENNReal.ofReal (min (‖u‖ ^ 2 / δ ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α)))
+        + ∫⁻ u in {u : EuclideanSpace ℝ (Fin d) | δ / 2 < ‖u‖},
+          ENNReal.ofReal (min (‖u‖ ^ 2 / δ ^ 2) 1 * ‖u‖ ^ (-(d : ℝ) - α)) :=
+        lintegral_union_le _ _ _
+    _ < ∞ := by
+        refine ENNReal.add_lt_top.mpr ⟨?_, ?_⟩
+        · refine lt_of_le_of_lt (lintegral_mono hsmall) ?_
+          rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+          exact ENNReal.mul_lt_top ENNReal.ofReal_lt_top
+            (lintegral_ball_rpow_lt_top hd hδ (by linarith))
+        · refine lt_of_le_of_lt (lintegral_mono hlarge) ?_
+          exact lintegral_compl_ball_rpow_lt_top hd (by linarith) (by linarith)
+
 end QFS
