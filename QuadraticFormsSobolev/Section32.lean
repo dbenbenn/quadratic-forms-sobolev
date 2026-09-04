@@ -2805,4 +2805,207 @@ theorem lintegral_jumpKernel_far {α r : ℝ} (hr : 0 < r)
           (fun u => ENNReal.ofReal (‖u‖ ^ (-(d : ℝ) - α)))) (s - t) from funext hfun]
   exact lintegral_sub_left_eq_self _ s
 
+
+/-! ## The splitting route
+
+An alternative to the dominant: split
+`f_h(x) − f_h(y) = (f_h(x) − f(s)) + (f(s) − f(t)) + (f(t) − f_h(y))`. The middle
+term contributes the `H_k` form; the two outer ones contribute the tile
+oscillation of `f`, weighted by the mass of the kernel at distance more than
+`2√d h`, which `lintegral_jumpKernel_far` prices at `C h^{-α}`. Fatou on the
+left of `(discret)` then needs only `liminf_h h^{-α}‖f − E_h f‖²_{L²} < ∞`,
+which is weaker than membership of `H^{α/2}`; see the README. -/
+
+/-- The `L²` oscillation of `f` against its tile averages, over a set. -/
+noncomputable def tileOsc (d : ℕ) (h : ℝ) (S : Set (EuclideanSpace ℝ (Fin d)))
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) : ℝ≥0∞ :=
+  ∫⁻ s in S, ENNReal.ofReal ((cubeAvg d h f (stepIndex d h s) - f s) ^ 2)
+
+lemma ofReal_sq_add_three (a b c : ℝ) :
+    ENNReal.ofReal ((a + b + c) ^ 2)
+      ≤ 3 * ENNReal.ofReal (a ^ 2) + 3 * ENNReal.ofReal (b ^ 2)
+        + 3 * ENNReal.ofReal (c ^ 2) := by
+  have h1 : ENNReal.ofReal ((a + b + c) ^ 2)
+      ≤ ENNReal.ofReal (3 * a ^ 2 + 3 * b ^ 2 + 3 * c ^ 2) := by
+    refine ENNReal.ofReal_le_ofReal ?_
+    nlinarith [sq_nonneg (a - b), sq_nonneg (b - c), sq_nonneg (a - c)]
+  refine le_trans h1 (le_of_eq ?_)
+  rw [ENNReal.ofReal_add (by positivity) (by positivity),
+    ENNReal.ofReal_add (by positivity) (by positivity)]
+  congr 1
+  · congr 1 <;>
+    · rw [show (3 : ℝ) * _ = 3 * _ from rfl, ENNReal.ofReal_mul (by norm_num)]
+      norm_num
+  · rw [ENNReal.ofReal_mul (by norm_num)]
+    norm_num
+
+
+/-- **The weight a splitting argument pays.** On pairs whose first coordinate
+lies in `S` and which are at distance more than `r`, the integral of anything
+depending only on the first coordinate, against the kernel, is at most
+`Λ C(d,α) r^{-α}` times its integral over `S`. -/
+theorem lintegral_far_weight_le (hd : 0 < d) {α Λ r : ℝ} (hr : 0 < r) (hα : 0 < α)
+    (hΛ : 0 ≤ Λ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : ∀ a b, k a b ≤ ENNReal.ofReal Λ * jumpKernel d α a b)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      k p.1 p.2)
+    {g : EuclideanSpace ℝ (Fin d) → ℝ≥0∞} (hg : Measurable g)
+    {S : Set (EuclideanSpace ℝ (Fin d))} (hS : MeasurableSet S) :
+    ∫⁻ p in {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+        p.1 ∈ S ∧ r < ‖p.1 - p.2‖}, g p.1 * k p.1 p.2
+      ≤ ENNReal.ofReal Λ * (ENNReal.ofReal (r ^ (-α)) * kernelTail d α) *
+        ∫⁻ s in S, g s := by
+  set A : Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) :=
+    {p | p.1 ∈ S ∧ r < ‖p.1 - p.2‖} with hA
+  have hAm : MeasurableSet A :=
+    (hS.preimage measurable_fst).inter
+      (measurableSet_lt measurable_const (measurable_fst.sub measurable_snd).norm)
+  have hFm : Measurable (A.indicator fun p : EuclideanSpace ℝ (Fin d) ×
+      EuclideanSpace ℝ (Fin d) => g p.1 * k p.1 p.2) :=
+    ((hg.comp measurable_fst).mul hkm).indicator hAm
+  rw [← lintegral_indicator hAm, Measure.volume_eq_prod, lintegral_prod _ hFm.aemeasurable]
+  have hinner : ∀ s : EuclideanSpace ℝ (Fin d),
+      ∫⁻ t, A.indicator (fun p => g p.1 * k p.1 p.2) (s, t)
+        ≤ S.indicator (fun s => g s *
+            (ENNReal.ofReal Λ * (ENNReal.ofReal (r ^ (-α)) * kernelTail d α))) s := by
+    intro s
+    by_cases hs : s ∈ S
+    · rw [Set.indicator_of_mem hs]
+      have hmt : MeasurableSet {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖} :=
+        measurableSet_lt measurable_const (measurable_const.sub measurable_id).norm
+      have hcongr : ∀ t : EuclideanSpace ℝ (Fin d),
+          A.indicator (fun p => g p.1 * k p.1 p.2) (s, t)
+            = {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}.indicator
+                (fun t => g s * k s t) t := by
+        intro t
+        by_cases ht : r < ‖s - t‖
+        · rw [Set.indicator_of_mem (show (s, t) ∈ A from ⟨hs, ht⟩),
+            Set.indicator_of_mem (show t ∈ {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}
+              from ht)]
+        · rw [Set.indicator_of_notMem (show (s, t) ∉ A from fun hc => ht hc.2),
+            Set.indicator_of_notMem (show t ∉ {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}
+              from ht)]
+      rw [show (fun t => A.indicator (fun p => g p.1 * k p.1 p.2) (s, t))
+          = fun t => {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}.indicator
+              (fun t => g s * k s t) t from funext hcongr,
+        lintegral_indicator hmt]
+      have hks : Measurable fun t : EuclideanSpace ℝ (Fin d) => k s t :=
+        hkm.comp (measurable_const.prodMk measurable_id)
+      rw [lintegral_const_mul _ hks]
+      refine mul_le_mul' le_rfl ?_
+      calc ∫⁻ t in {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}, k s t
+          ≤ ∫⁻ t in {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖},
+              ENNReal.ofReal Λ * jumpKernel d α s t := lintegral_mono fun t => hk s t
+        _ = ENNReal.ofReal Λ *
+              ∫⁻ t in {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}, jumpKernel d α s t :=
+            lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
+        _ = ENNReal.ofReal Λ * (ENNReal.ofReal (r ^ (-α)) * kernelTail d α) := by
+            rw [lintegral_jumpKernel_far hr]
+    · have hzero : ∀ t : EuclideanSpace ℝ (Fin d),
+          A.indicator (fun p => g p.1 * k p.1 p.2) (s, t) = 0 := fun t =>
+        Set.indicator_of_notMem (fun hc => hs hc.1) _
+      rw [Set.indicator_of_notMem hs, show (fun t => A.indicator
+        (fun p => g p.1 * k p.1 p.2) (s, t)) = fun _ => 0 from funext hzero]
+      simp
+  calc ∫⁻ s, ∫⁻ t, A.indicator (fun p => g p.1 * k p.1 p.2) (s, t)
+      ≤ ∫⁻ s, S.indicator (fun s => g s *
+          (ENNReal.ofReal Λ * (ENNReal.ofReal (r ^ (-α)) * kernelTail d α))) s :=
+        lintegral_mono hinner
+    _ = ∫⁻ s in S, g s * (ENNReal.ofReal Λ *
+          (ENNReal.ofReal (r ^ (-α)) * kernelTail d α)) := lintegral_indicator hS _
+    _ = ENNReal.ofReal Λ * (ENNReal.ofReal (r ^ (-α)) * kernelTail d α) *
+          ∫⁻ s in S, g s := by
+        rw [lintegral_mul_const' _ _ (by
+          refine ENNReal.mul_ne_top ENNReal.ofReal_ne_top ?_
+          exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top
+            (ne_of_lt (kernelTail_lt_top hd hα)))]
+        ring
+
+
+/-- The mirror of `lintegral_far_weight_le`, with the second coordinate carrying
+the function. -/
+theorem lintegral_far_weight_le' (hd : 0 < d) {α Λ r : ℝ} (hr : 0 < r) (hα : 0 < α)
+    (hΛ : 0 ≤ Λ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : ∀ a b, k a b ≤ ENNReal.ofReal Λ * jumpKernel d α a b)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      k p.1 p.2)
+    {g : EuclideanSpace ℝ (Fin d) → ℝ≥0∞} (hg : Measurable g)
+    {S : Set (EuclideanSpace ℝ (Fin d))} (hS : MeasurableSet S) :
+    ∫⁻ p in {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+        p.2 ∈ S ∧ r < ‖p.1 - p.2‖}, g p.2 * k p.1 p.2
+      ≤ ENNReal.ofReal Λ * (ENNReal.ofReal (r ^ (-α)) * kernelTail d α) *
+        ∫⁻ s in S, g s := by
+  set A : Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) :=
+    {p | p.2 ∈ S ∧ r < ‖p.1 - p.2‖} with hA
+  have hAm : MeasurableSet A :=
+    (hS.preimage measurable_snd).inter
+      (measurableSet_lt measurable_const (measurable_fst.sub measurable_snd).norm)
+  have hFm : Measurable (A.indicator fun p : EuclideanSpace ℝ (Fin d) ×
+      EuclideanSpace ℝ (Fin d) => g p.2 * k p.1 p.2) :=
+    ((hg.comp measurable_snd).mul hkm).indicator hAm
+  rw [← lintegral_indicator hAm, Measure.volume_eq_prod,
+    lintegral_prod_symm _ hFm.aemeasurable]
+  have hinner : ∀ t : EuclideanSpace ℝ (Fin d),
+      ∫⁻ s, A.indicator (fun p => g p.2 * k p.1 p.2) (s, t)
+        ≤ S.indicator (fun t => g t *
+            (ENNReal.ofReal Λ * (ENNReal.ofReal (r ^ (-α)) * kernelTail d α))) t := by
+    intro t
+    by_cases ht : t ∈ S
+    · rw [Set.indicator_of_mem ht]
+      have hms : MeasurableSet {s : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖} :=
+        measurableSet_lt measurable_const (measurable_id.sub measurable_const).norm
+      have hcongr : ∀ s : EuclideanSpace ℝ (Fin d),
+          A.indicator (fun p => g p.2 * k p.1 p.2) (s, t)
+            = {s : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}.indicator
+                (fun s => g t * k s t) s := by
+        intro s
+        by_cases hst : r < ‖s - t‖
+        · rw [Set.indicator_of_mem (show (s, t) ∈ A from ⟨ht, hst⟩),
+            Set.indicator_of_mem (show s ∈ {s : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}
+              from hst)]
+        · rw [Set.indicator_of_notMem (show (s, t) ∉ A from fun hc => hst hc.2),
+            Set.indicator_of_notMem (show s ∉ {s : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}
+              from hst)]
+      have hkt : Measurable fun s : EuclideanSpace ℝ (Fin d) => k s t :=
+        hkm.comp (measurable_id.prodMk measurable_const)
+      rw [show (fun s => A.indicator (fun p => g p.2 * k p.1 p.2) (s, t))
+          = fun s => {s : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}.indicator
+              (fun s => g t * k s t) s from funext hcongr,
+        lintegral_indicator hms, lintegral_const_mul _ hkt]
+      refine mul_le_mul' le_rfl ?_
+      calc ∫⁻ s in {s : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}, k s t
+          ≤ ∫⁻ s in {s : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖},
+              ENNReal.ofReal Λ * jumpKernel d α s t := lintegral_mono fun s => hk s t
+        _ = ENNReal.ofReal Λ *
+              ∫⁻ s in {s : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}, jumpKernel d α s t :=
+            lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
+        _ = ENNReal.ofReal Λ * (ENNReal.ofReal (r ^ (-α)) * kernelTail d α) := by
+            have hset : {s : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}
+                = {s : EuclideanSpace ℝ (Fin d) | r < ‖t - s‖} := by
+              ext s; rw [Set.mem_setOf_eq, Set.mem_setOf_eq, norm_sub_rev]
+            have hker : ∀ s : EuclideanSpace ℝ (Fin d),
+                jumpKernel d α s t = jumpKernel d α t s := by
+              intro s; rw [jumpKernel, jumpKernel, norm_sub_rev]
+            rw [hset, show (fun s : EuclideanSpace ℝ (Fin d) => jumpKernel d α s t)
+              = fun s => jumpKernel d α t s from funext hker, lintegral_jumpKernel_far hr]
+    · have hzero : ∀ s : EuclideanSpace ℝ (Fin d),
+          A.indicator (fun p => g p.2 * k p.1 p.2) (s, t) = 0 := fun s =>
+        Set.indicator_of_notMem (fun hc => ht hc.1) _
+      rw [Set.indicator_of_notMem ht, show (fun s => A.indicator
+        (fun p => g p.2 * k p.1 p.2) (s, t)) = fun _ => 0 from funext hzero]
+      simp
+  calc ∫⁻ t, ∫⁻ s, A.indicator (fun p => g p.2 * k p.1 p.2) (s, t)
+      ≤ ∫⁻ t, S.indicator (fun t => g t *
+          (ENNReal.ofReal Λ * (ENNReal.ofReal (r ^ (-α)) * kernelTail d α))) t :=
+        lintegral_mono hinner
+    _ = ∫⁻ t in S, g t * (ENNReal.ofReal Λ *
+          (ENNReal.ofReal (r ^ (-α)) * kernelTail d α)) := lintegral_indicator hS _
+    _ = ENNReal.ofReal Λ * (ENNReal.ofReal (r ^ (-α)) * kernelTail d α) *
+          ∫⁻ s in S, g s := by
+        rw [lintegral_mul_const' _ _ (ENNReal.mul_ne_top ENNReal.ofReal_ne_top
+          (ENNReal.mul_ne_top ENNReal.ofReal_ne_top (ne_of_lt (kernelTail_lt_top hd hα))))]
+        ring
+
 end QFS
