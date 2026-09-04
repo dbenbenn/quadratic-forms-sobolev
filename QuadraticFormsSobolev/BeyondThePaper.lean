@@ -2879,19 +2879,20 @@ larger ball must be known to be finite before the dominated convergence step
 can run (`QFS.formHs_ball_le_form_of_formHs_ne_top`).  In the plane
 `formHs_ball_ne_top_of_planar` -- proved above, and *not* in the paper --
 supplies exactly that for every `f ∈ H_k`, so the two combine into the paper's
-statement with no hypothesis beyond `f ∈ H_k` and `f ∈ L²` on a larger ball.
+statement with no hypothesis beyond `f ∈ L²` of the larger ball.
 
 The mathematics closing the gap is new; the statement obtained is the paper's. -/
 
-/-- **Lemma 3.7 on a ball, unconditionally, in dimension two.** For every
+/-- **Theorem 1.1 on a ball, unconditionally, in dimension two.** For every
 `ϑ`-bounded configuration satisfying Debreu's measurability condition and every
-kernel satisfying (1.4), there are `κ, c ≥ 1` -- independent of the ball and of
+kernel satisfying (1.4) there are `κ, c ≥ 1` -- independent of the ball and of
 `f` -- with
 
   `|f|²_{H^{α/2}(B_R)} ≤ c |f|²_{H_k(B_{κR})}`
 
-for every measurable `f` which is locally integrable, square integrable on a
-slightly larger ball, and of finite `H_k` form there. -/
+for every measurable `f` that is locally integrable and square integrable on
+`B_{κR}`. This is the shape of `QFS.TheoremOneOneBall`, with the paper's
+scale-invariant enlargement of the ball. -/
 theorem formHs_ball_le_form_planar {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ Real.pi / 2)
     (hα : 0 < α) (hα2 : α < 2)
     {Γ : Configuration (EuclideanSpace ℝ (Fin 2))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
@@ -2902,15 +2903,30 @@ theorem formHs_ball_le_form_planar {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ �
     ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
       ∀ (x₀ : EuclideanSpace ℝ (Fin 2)) (R : ℝ), 0 < R →
       ∀ f : EuclideanSpace ℝ (Fin 2) → ℝ, Measurable f → LocallyIntegrable f volume →
-        (∫⁻ x in ball x₀ (κ * R + Real.sqrt ((2:ℕ) : ℝ) + 1),
-          ENNReal.ofReal (f x ^ 2)) ≠ ⊤ →
-        form (ball x₀ (κ * R + Real.sqrt ((2:ℕ) : ℝ) + 1)) k f ≠ ⊤ →
+        (∫⁻ x in ball x₀ (κ * R), ENNReal.ofReal (f x ^ 2)) ≠ ⊤ →
         formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
   obtain ⟨κ, c, hκ, hc, hmain⟩ :=
     formHs_ball_le_form_of_formHs_ne_top (d := 2) hϑ hϑ' le_rfl hα hα2 hΓ hmeas hk hkm
-  refine ⟨κ, c, hκ, hc, fun x₀ R hR f hfm hf hL2 hHk => ?_⟩
-  refine hmain x₀ R hR f hfm hf ?_
-  refine formHs_ball_ne_top_of_planar hϑ hϑ' hα hα2 hΓ hmeas hk hfm hkm ?_ hL2 hHk
-  linarith
+  have hs2 : (0:ℝ) ≤ Real.sqrt ((2:ℕ) : ℝ) := Real.sqrt_nonneg _
+  refine ⟨2 * (κ + Real.sqrt ((2:ℕ) : ℝ)), c, by nlinarith, hc,
+    fun x₀ R hR f hfm hf hL2 => ?_⟩
+  set ρ : ℝ := (κ + Real.sqrt ((2:ℕ) : ℝ)) * R with hρ
+  have hρpos : 0 < ρ := by rw [hρ]; nlinarith
+  have hsub : ball x₀ (κ * R) ⊆ ball x₀ (2 * (κ + Real.sqrt ((2:ℕ) : ℝ)) * R) := by
+    refine ball_subset_ball ?_
+    nlinarith
+  -- if the right-hand side is infinite there is nothing to prove
+  by_cases htop : form (ball x₀ (2 * (κ + Real.sqrt ((2:ℕ) : ℝ)) * R)) k f = ⊤
+  · rw [htop, ENNReal.mul_top (by simpa using lt_of_lt_of_le zero_lt_one hc)]
+    exact le_top
+  have hHk : form (ball x₀ ρ) k f ≠ ⊤ := by
+    refine ne_top_of_le_ne_top htop (form_mono_set (ball_subset_ball ?_) k f)
+    rw [hρ]; nlinarith
+  have hfin : formHs (ball x₀ ρ) α f ≠ ⊤ := by
+    refine formHs_ball_ne_top_of_planar hϑ hϑ' hα hα2 hΓ hmeas hk hfm hkm
+      (show ρ < 2 * (κ + Real.sqrt ((2:ℕ) : ℝ)) * R by rw [hρ]; nlinarith) hL2 ?_
+    exact htop
+  refine le_trans (hmain x₀ R hR f hfm hf hfin) (mul_le_mul' le_rfl ?_)
+  exact form_mono_set hsub k f
 
 end QFS

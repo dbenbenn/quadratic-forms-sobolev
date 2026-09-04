@@ -2458,7 +2458,7 @@ theorem formHs_ball_le_form_of_formHs_ne_top {ϑ α Λ : ℝ} (hϑ : 0 < ϑ)
     ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
       ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
       ∀ f : EuclideanSpace ℝ (Fin d) → ℝ, Measurable f → LocallyIntegrable f volume →
-        formHs (ball x₀ (κ * R + Real.sqrt d)) α f ≠ ⊤ →
+        formHs (ball x₀ ((κ + Real.sqrt d) * R)) α f ≠ ⊤ →
         formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
   have hd1 : 0 < d := by omega
   have hsd : (0:ℝ) < Real.sqrt d := Real.sqrt_pos.mpr (by exact_mod_cast hd1)
@@ -2468,17 +2468,21 @@ theorem formHs_ball_le_form_of_formHs_ne_top {ϑ α Λ : ℝ} (hϑ : 0 < ϑ)
   obtain ⟨κ, c, hκ, hc, hdiscret⟩ := discret_lintegral (d := d) θ' C α (3 * Real.sqrt d)
     hθ0 hC1 hα hα2 (by positivity)
   refine ⟨κ, c, hκ, hc, fun x₀ R hR f hfm hf hfin => ?_⟩
-  set hn : ℕ → ℝ := fun n => 1 / ((n : ℝ) + 1) with hndef
+  set hn : ℕ → ℝ := fun n => R * (1 / ((n : ℝ) + 1)) with hndef
   have hpos : ∀ n, 0 < hn n := fun n => by
     rw [hndef]; positivity
-  have hlim : Filter.Tendsto hn Filter.atTop (nhds 0) :=
-    tendsto_one_div_add_atTop_nhds_zero_nat
-  have hle1 : ∀ n, hn n ≤ 1 := fun n => by
+  have hlim : Filter.Tendsto hn Filter.atTop (nhds 0) := by
+    have h0 : Filter.Tendsto (fun n : ℕ => 1 / ((n : ℝ) + 1)) Filter.atTop (nhds 0) :=
+      tendsto_one_div_add_atTop_nhds_zero_nat
     rw [hndef]
-    have : (1:ℝ) ≤ (n : ℝ) + 1 := by
+    simpa [one_div] using h0.const_mul R
+  have hle1 : ∀ n, hn n ≤ R := fun n => by
+    rw [hndef]
+    have h1 : (1:ℝ) ≤ (n : ℝ) + 1 := by
       have := Nat.cast_nonneg (α := ℝ) n
       linarith
-    simpa using (div_le_one (by positivity)).mpr this
+    have h2 : 1 / ((n : ℝ) + 1) ≤ 1 := (div_le_one (by positivity)).mpr h1
+    nlinarith [hR.le]
   -- the two sides of `(discret)`, as functions of `n`
   set L : ℕ → ℝ≥0∞ := fun n =>
     ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
@@ -2503,10 +2507,10 @@ theorem formHs_ball_le_form_of_formHs_ne_top {ϑ α Λ : ℝ} (hϑ : 0 < ϑ)
   have hSG : Filter.limsup SG Filter.atTop ≤ form (ball x₀ (κ * R)) k f := by
     refine limsup_lintegral_stepG_le hα.le hk.upper hkm hfm hf hd1 hn hpos hlim ?_ hfin
     intro n
-    have h1 : hn n ≤ 1 := hle1 n
+    have h1 : hn n ≤ R := hle1 n
     have h2 : (0:ℝ) ≤ Real.sqrt d := Real.sqrt_nonneg _
-    have : Real.sqrt d * (hn n / 2) ≤ Real.sqrt d := by nlinarith
-    linarith [this]
+    have h3 : (0:ℝ) < hn n := hpos n
+    nlinarith
   calc formHs (ball x₀ R) α f ≤ Filter.liminf L Filter.atTop := hfatou
     _ ≤ Filter.liminf (fun n => ENNReal.ofReal c * SG n) Filter.atTop :=
         Filter.liminf_le_liminf (Filter.Eventually.of_forall hstep)
@@ -2515,5 +2519,12 @@ theorem formHs_ball_le_form_of_formHs_ne_top {ϑ α Λ : ℝ} (hϑ : 0 < ϑ)
     _ = ENNReal.ofReal c * Filter.limsup SG Filter.atTop :=
         limsup_const_mul ENNReal.ofReal_ne_top SG
     _ ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := mul_le_mul' le_rfl hSG
+
+
+/-- The form is monotone in its domain. -/
+theorem form_mono_set {Ω Ω' : Set (EuclideanSpace ℝ (Fin d))} (hsub : Ω ⊆ Ω')
+    (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) : form Ω k f ≤ form Ω' k f :=
+  lintegral_mono_set (Set.prod_mono hsub hsub)
 
 end QFS
