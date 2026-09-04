@@ -1,4 +1,5 @@
 import QuadraticFormsSobolev.LebesgueDiff
+import QuadraticFormsSobolev.LebesgueDiff2
 import QuadraticFormsSobolev.Section1
 import QuadraticFormsSobolev.Rescaling
 
@@ -1634,5 +1635,128 @@ theorem formHs_ball_le_liminf {ι : Type} {l : Filter ι} [l.NeBot] [l.IsCountab
           discreteC d (hn i) (ball x₀ R) (R₀ * hn i) (jumpKernel d α) (cubeAvg d (hn i) f)
             (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2)) l :=
         lintegral_liminf_le fun i => measurable_discreteC_stepIndex (hpos i) _ _ _ _
+
+
+/-! ## The tile average of a function of a pair
+
+The dominant Section 3.2 needs is the tile average of the `H^{α/2}` integrand,
+a function of a *pair*.  It has the two properties the generalized dominated
+convergence theorem asks of a moving dominant: its integral does not depend on
+`h` (`lintegral_tileAvg₂`), and it converges almost everywhere to the function
+it averages (`tendsto_tileAvg₂`), by Lemma 7.2 on the product. -/
+
+/-- Two sets between which nothing of positive measure fits have the same
+integrals. -/
+theorem setLIntegral_congr_of_subset {X : Type*} [MeasurableSpace X] {μ : Measure X}
+    {s t : Set X} (hs : MeasurableSet s) (hsub : s ⊆ t) (hvol : μ t = μ s) (hfin : μ s ≠ ∞)
+    (F : X → ℝ≥0∞) : ∫⁻ q in t, F q ∂μ = ∫⁻ q in s, F q ∂μ := by
+  refine setLIntegral_congr ?_
+  refine (MeasureTheory.ae_eq_set).mpr ⟨?_, ?_⟩
+  · rw [measure_diff hsub hs.nullMeasurableSet hfin, hvol, tsub_self]
+  · rw [Set.diff_eq_empty.mpr hsub, measure_empty]
+
+lemma lintegral_closedCube_eq_halfClosedCube {h : ℝ} (hh : 0 < h)
+    (u : EuclideanSpace ℝ (Fin d)) (F : EuclideanSpace ℝ (Fin d) → ℝ≥0∞) :
+    ∫⁻ q in closedCube h u, F q = ∫⁻ q in halfClosedCube h u, F q :=
+  setLIntegral_congr_of_subset (measurableSet_halfClosedCube h u)
+    (halfClosedCube_subset_closedCube hh.le u)
+    (by rw [volume_closedCube hh.le, volume_halfClosedCube hh.le])
+    (by rw [volume_halfClosedCube hh.le]; exact ENNReal.ofReal_ne_top) F
+
+lemma lintegral_closedCube₂_eq_halfClosedCube₂ {h : ℝ} (hh : 0 < h)
+    (u v : EuclideanSpace ℝ (Fin d))
+    (F : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞) :
+    ∫⁻ q in closedCube h u ×ˢ closedCube h v, F q
+      = ∫⁻ q in halfClosedCube h u ×ˢ halfClosedCube h v, F q := by
+  have hvol : ∀ a b : EuclideanSpace ℝ (Fin d),
+      volume (halfClosedCube h a ×ˢ halfClosedCube h b)
+        = ENNReal.ofReal (h ^ d) * ENNReal.ofReal (h ^ d) := by
+    intro a b
+    rw [Measure.volume_eq_prod, Measure.prod_prod, volume_halfClosedCube hh.le,
+      volume_halfClosedCube hh.le]
+  refine setLIntegral_congr_of_subset
+    ((measurableSet_halfClosedCube h u).prod (measurableSet_halfClosedCube h v))
+    (Set.prod_mono (halfClosedCube_subset_closedCube hh.le u)
+      (halfClosedCube_subset_closedCube hh.le v)) ?_ ?_ F
+  · rw [hvol, Measure.volume_eq_prod, Measure.prod_prod, volume_closedCube hh.le,
+      volume_closedCube hh.le]
+  · rw [hvol]; exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top ENNReal.ofReal_ne_top
+
+/-- The tile average of a function of a pair. -/
+noncomputable def tileAvg₂ (d : ℕ) (h : ℝ)
+    (Φ : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    (p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) : ℝ≥0∞ :=
+  (ENNReal.ofReal (h ^ (2 * d)))⁻¹ *
+    ∫⁻ q in closedCube₂ h (stepIndex d h p.1, stepIndex d h p.2), Φ q
+
+/-- **Tile-averaging preserves the integral**, on the product. -/
+theorem lintegral_tileAvg₂ {h : ℝ} (hh : 0 < h)
+    (Φ : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞) :
+    ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d), tileAvg₂ d h Φ p
+      = ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d), Φ p := by
+  have hpow : ENNReal.ofReal (h ^ d) * ENNReal.ofReal (h ^ d)
+      = ENNReal.ofReal (h ^ (2 * d)) := by
+    rw [← ENNReal.ofReal_mul (by positivity), two_mul, pow_add]
+  have hne0 : ENNReal.ofReal (h ^ (2 * d)) ≠ 0 := by
+    simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]
+    positivity
+  have hnetop : ENNReal.ofReal (h ^ (2 * d)) ≠ ∞ := ENNReal.ofReal_ne_top
+  have key : ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d), tileAvg₂ d h Φ p
+      = ∑' nm : (Fin d → ℤ) × (Fin d → ℤ),
+        ((ENNReal.ofReal (h ^ (2 * d)))⁻¹ *
+            ∫⁻ q in closedCube h (latticePt d h nm.1) ×ˢ closedCube h (latticePt d h nm.2), Φ q) *
+          (ENNReal.ofReal (h ^ d) * ENNReal.ofReal (h ^ d)) :=
+    lintegral_stepFun₂ hh (fun x y => (ENNReal.ofReal (h ^ (2 * d)))⁻¹ *
+      ∫⁻ q in closedCube h x ×ˢ closedCube h y, Φ q)
+  rw [key, lintegral_eq_tsum_halfClosedCube₂ hh]
+  refine tsum_congr fun nm => ?_
+  rw [lintegral_closedCube₂_eq_halfClosedCube₂ hh, hpow, mul_comm, ← mul_assoc,
+    ENNReal.mul_inv_cancel hne0 hnetop, one_mul]
+
+
+/-- **The tile average converges to the function it averages**, almost
+everywhere: Lemma 7.2 on the product, transferred to `ℝ≥0∞`. -/
+theorem tendsto_tileAvg₂
+    {Φ : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hΦm : Measurable Φ)
+    (hΦ : ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d), Φ p ≠ ⊤) :
+    ∀ᵐ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      ∀ {ι : Type} {l : Filter ι} (hn : ι → ℝ), (∀ i, 0 < hn i) →
+        Filter.Tendsto hn l (nhds 0) →
+        Filter.Tendsto (fun i => tileAvg₂ d (hn i) Φ p) l (nhds (Φ p)) := by
+  set Φ' : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ :=
+    fun q => (Φ q).toReal with hΦ'def
+  have hint : Integrable Φ' volume :=
+    integrable_toReal_of_lintegral_ne_top hΦm.aemeasurable hΦ
+  have hfin : ∀ᵐ q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d), Φ q ≠ ⊤ := by
+    filter_upwards [ae_lt_top hΦm hΦ] with q hq using hq.ne
+  have hofReal : ∀ᵐ q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      ENNReal.ofReal (Φ' q) = Φ q := by
+    filter_upwards [hfin] with q hq
+    simp only [hΦ'def, ENNReal.ofReal_toReal hq]
+  -- the tile average is the `ofReal` of the ordinary average
+  have hcube : ∀ {h : ℝ}, 0 < h →
+      ∀ u : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      (ENNReal.ofReal (h ^ (2 * d)))⁻¹ * ∫⁻ q in closedCube₂ h u, Φ q
+        = ENNReal.ofReal (⨍ q in closedCube₂ h u, Φ' q) := by
+    intro h hh u
+    have h1 : ∫⁻ q in closedCube₂ h u, Φ q
+        = ENNReal.ofReal (∫ q in closedCube₂ h u, Φ' q) := by
+      rw [ofReal_integral_eq_lintegral_ofReal hint.restrict
+        (Filter.Eventually.of_forall (fun q => ENNReal.toReal_nonneg))]
+      exact (lintegral_congr_ae (ae_restrict_of_ae hofReal)).symm
+    rw [h1, setAverage_eq, measureReal_def, volume_closedCube₂ hh.le, ENNReal.toReal_ofReal (by positivity),
+      smul_eq_mul, ENNReal.ofReal_mul (by positivity),
+      ENNReal.ofReal_inv_of_pos (by positivity)]
+  filter_upwards [lemma_lebesgue_diff₂ hint.locallyIntegrable, hfin] with p hp hpfin
+  intro ι l hn hpos hlim
+  have hmem : ∀ i, p ∈ closedCube₂ (hn i)
+      (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2) := fun i =>
+    ⟨mem_closedCube_stepIndex (hpos i) p.1, mem_closedCube_stepIndex (hpos i) p.2⟩
+  have havg := hp hn (fun i => (stepIndex d (hn i) p.1, stepIndex d (hn i) p.2)) hpos hlim hmem
+  have h2 := (ENNReal.continuous_ofReal.tendsto _).comp havg
+  rw [show ENNReal.ofReal (Φ' p) = Φ p from by
+    simp only [hΦ'def, ENNReal.ofReal_toReal hpfin]] at h2
+  exact h2.congr fun i => (hcube (hpos i) _).symm
 
 end QFS
