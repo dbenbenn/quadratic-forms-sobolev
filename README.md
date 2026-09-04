@@ -235,8 +235,17 @@ The finite sum is done, and with it the plane:
 > satisfying Debreu's condition, every kernel satisfying (1.4) and every
 > measurable `f`, `|f|²_{H^{α/2}(ℝ²)} ≤ C·|f|²_{H_k(ℝ²)}` for a finite `C`.
 
-**That is exactly the statement §3.2 needs and never establishes, proved for all
-admissible configurations in dimension two.** Corollary 2.4 covers `ℝ²` by
+**That is the whole-space form of the statement §3.2 needs, proved for all
+admissible configurations in dimension two.** One caveat, stated plainly: §3.2
+consumes the *ball-localised* form, `H_k(B*) ⊆ H^{α/2}(B*)`, and the theorem
+above is on `ℝ²`. The localisation of the left-hand side is already available
+(`QFS.formHs_le_form_of_commonDirection_on` and `QFS.formHs_le_form_planar_cross`
+confine the endpoints to a set), but their right-hand sides run over all of `ℝ²`;
+confining those too needs the exchange with the `z`-integral restricted, which is
+the same argument with one more side condition carried through. Until that is
+done, what is proved is the whole-space inclusion, not the ball version.
+
+Corollary 2.4 covers `ℝ²` by
 finitely many pieces `U_V`, the squares of that cover exhaust `ℝ² × ℝ²`,
 `QFS.planar_block_le` controls every block, and a finite sum of finite constants
 is finite.
