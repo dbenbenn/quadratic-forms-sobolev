@@ -34,8 +34,9 @@ unless `f` is already known to lie in `H^{α/2}` of the larger ball. So the
 enlarged-ball form of Theorem 1.1 is proved here for every
 `f ∈ H_k(B_{κR}) ∩ H^{α/2}(B_{(κ+√d)R})`, with the paper's scale-invariant
 enlargement and with `κ` and `c` independent of the ball, of `f` and of the
-scale. In **dimension two**, and in **every dimension when the cones are wide**
-(apex angles above `π/4`), that hypothesis is itself a theorem — by new
+scale. In **dimension two**, and in **every dimension when the cone axes have angular
+spread below twice the apex bound** — in particular whenever the apex angles
+exceed `π/4` — that hypothesis is itself a theorem — by new
 mathematics, kept in a separate file and excluded from the tables below — so
 there the ball form holds with no hypothesis beyond `f ∈ L²(B_{κR})`
 (`QFS.theoremOneOneBallCondMeas_two`, which is the paper's
@@ -205,6 +206,12 @@ The pieces, all proved:
 | **Two double cones overlap when their axes are close** — the bisector argument with the `π/4` threshold removed | `QFS.exists_common_subcone_of_inner`, `QFS.angle_le_of_cos_le_inner` | ✅ **proved** |
 | **A block of two *overlapping* types is controlled**, at any apex angle and in any dimension | `QFS.overlap_block_le` | ✅ **proved** |
 | **`H_k ⊆ H^{α/2}` for a pairwise overlapping family of cone types** — no direction common to the whole family is needed | `QFS.sobolevInclusion_of_overlapping` | ✅ **proved** |
+| **Two double cones of apex `θ` whose axes are at most `D` apart overlap** in aperture `θ − D/2` | `QFS.exists_common_subcone_of_dangle`, `QFS.abs_inner_eq_cos_dangle`, `QFS.dangle_le_pi_div_two` | ✅ **proved** |
+| A reference family of aperture `θ`, each of whose axes is within `ϑ − θ` of an axis of `Γ` | `QFS.ref_cones_near` | ✅ **proved** |
+| **`H_k ⊆ H^{α/2}` whenever the axis spread of `Γ` is below `2ϑ`** — every dimension, any apex angle | `QFS.sobolevInclusion_of_axisSpread` | ✅ **proved** |
+| **Theorem 1.1 for small axis spread**: the `H^{α/2}` form is finite, the enlarged ball, the `L²` form, the same ball | `QFS.formHs_ball_ne_top_of_spread`, `QFS.formHs_ball_le_form_spread`, `QFS.ballComparability_spread`, `QFS.formHs_le_form_spread` | ✅ **proved** |
+| **Theorem 1.4 for `ℝ^d`, small axis spread**: `H_k(ℝ^d) = H^{α/2}(ℝ^d)` | `QFS.formHs_univ_le_form_univ_spread`, `QFS.Hk_univ_eq_Hs_univ_spread` | ✅ **proved** |
+| **The wide-cone regime is the case `γ = π/2`**: every wide-cone statement above is now *derived* from the spread ones, not proved separately | `QFS.sobolevInclusion_wide`, `QFS.formHs_ball_ne_top_of_wide`, `QFS.formHs_ball_le_form_wide`, `QFS.ballComparability_wide`, `QFS.formHs_le_form_wide`, `QFS.formHs_univ_le_form_univ_wide`, `QFS.Hk_univ_eq_Hs_univ_wide` | ✅ **proved** |
 | **Pairwise overlap is strictly weaker than a common direction**: three cones in `ℝ³` of apex `arccos √(14/15) ≈ 15° < π/4`, overlapping pairwise, with no unit vector in all three | `QFS.exAxis`, `QFS.exApex`, `QFS.exAperture`, `QFS.ex_overlap`, `QFS.ex_no_common_direction`, `QFS.exists_narrow_overlapping_cones_without_common_direction` | ✅ **proved** |
 | **Theorem 1.1 for a narrow, direction-less configuration in `ℝ³`** — a case outside both §3.2 and the wide-cone theorem | `QFS.sobolevInclusion_narrow_example` | ✅ **proved** |
 | The Lipschitz cutoff and its cost | `QFS.cutoff`, `QFS.sq_cutoff_sub_le`, `QFS.sq_cutoff_mul_sub_le`, `QFS.form_cutoff_le`, `QFS.lintegral_cutoff_error_le`, `QFS.lintegral_cutoff_error_le'` | ✅ **proved** |
@@ -1149,7 +1156,9 @@ closes the statement in every dimension (`QFS.sobolevInclusion_wide`,
 so narrow cones are also covered whenever the finitely many cone types overlap
 pairwise (`QFS.sobolevInclusion_of_overlapping`) — a condition strictly weaker
 than a common direction
-(`QFS.exists_narrow_overlapping_cones_without_common_direction`). Through Lemma 7.1's chain the planar
+(`QFS.exists_narrow_overlapping_cones_without_common_direction`) — and, as a
+hypothesis on `Γ` alone, whenever its cone axes have angular spread below `2ϑ`
+(`QFS.sobolevInclusion_of_axisSpread`, of which the wide-cone case is `γ = π/2`). Through Lemma 7.1's chain the planar
 result also gives the same-ball statement there (`QFS.formHs_le_form_planar`),
 so in the plane the whole road from Theorem 1.3 to Theorem 1.1, and on to
 Theorem 1.4 for `ℝ²` (`QFS.Hk_univ_eq_Hs_univ_planar`), is machine-checked, with
@@ -1851,6 +1860,22 @@ proved in Lean:
     configuration satisfies Theorem 1.1 (`QFS.sobolevInclusion_narrow_example`)
     while lying outside everything above.
 
+11. **Small axis spread: the same, from a hypothesis on `Γ` alone.** Pairwise
+    overlap of a hand-picked family is awkward to check; the angular spread of
+    the configuration's own axes is not. If every two axes of `Γ` are at most
+    `γ` apart as lines and `γ < 2ϑ`, then the reference cones of aperture
+    `(γ + 6ϑ)/8` — each within `ϑ − θ` of an actual axis, which is what
+    `QFS.ref_cones_near` records — are pairwise at most `γ + 2(ϑ − θ)` apart,
+    hence overlap (`QFS.exists_common_subcone_of_dangle`), and step 10 applies:
+    `QFS.sobolevInclusion_of_axisSpread`. The whole §3.2-to-Theorem-1.4 assembly
+    then runs unchanged — `QFS.formHs_ball_ne_top_of_spread`,
+    `QFS.formHs_ball_le_form_spread`, `QFS.ballComparability_spread`,
+    `QFS.formHs_le_form_spread`, `QFS.formHs_univ_le_form_univ_spread`,
+    `QFS.Hk_univ_eq_Hs_univ_spread`. Two lines are never more than `π/2` apart,
+    so `ϑ > π/4` forces `γ ≤ π/2 < 2ϑ`: **step 9 is the case `γ = π/2`**, and
+    every wide-cone theorem in this repository is now derived from the
+    small-spread one rather than proved separately.
+
 **The narrow-cone case, attacked.** The obstruction in dimension three and above
 is that the cones at `s` and at `t` can be disjoint. But the chaining never
 needed the intermediate point to be seen by the *endpoints'* cones: a pair
@@ -1906,6 +1931,18 @@ lying outside §3.2, outside `QFS.sobolevInclusion_wide`, and outside the
 common-direction theorem. What is still missing is the general narrow case,
 where the reference cones of Corollary 2.4 need not overlap pairwise at all.
 
+**From a family to the configuration.** The pairwise-overlap hypothesis is about
+a family one has to produce; the *axis spread* of `Γ` is a hypothesis about `Γ`
+itself. If every two cone axes of `Γ` are at most `γ` apart as lines, with
+`γ < 2ϑ`, take reference cones of aperture `θ = (γ + 6ϑ)/8`: each is within
+`ϑ − θ` of an axis of `Γ` (`QFS.ref_cones_near`), so any two of them are at most
+`γ + 2(ϑ − θ) = (3γ + 2ϑ)/4 < 2θ` apart and therefore overlap in aperture
+`(2ϑ − γ)/4 > 0`. That gives `QFS.sobolevInclusion_of_axisSpread` and, through
+the same assembly as before, Theorems 1.1 and 1.4 for such configurations. Since
+two lines are never more than `π/2` apart, `ϑ > π/4` gives `γ ≤ π/2 < 2ϑ` for
+free: the wide-cone theorems are exactly the case `γ = π/2`, and are now derived
+from the small-spread ones instead of being proved separately.
+
 **Why longer chains do not close the gap.** A chain with two or more interior
 points has an interior leg whose two endpoints are both intermediate, so both
 their types are chosen by the configuration; making such a leg a cone pair
@@ -1937,8 +1974,8 @@ Cauchy–Schwarz and scale bookkeeping on the order of §§5–6 themselves. It 
 recorded here, not attempted.
 
 **What is still not done.** Narrow cones (apex `≤ π/4`) in dimension three and
-above, apart from the pairwise-overlapping families just described — and only
-those: dimension one is trivial (`QFS.formHs_le_form_dim_one`:
+above, apart from the pairwise-overlapping families and the small-spread
+configurations just described — and only those: dimension one is trivial (`QFS.formHs_le_form_dim_one`:
 on the line every double cone is `ℝ ∖ {0}`, so every pair is a cone pair and
 (1.4)'s lower bound gives the inclusion outright), dimension two is step 6, and
 wide cones are step 9. The remaining case fails for the reason in step 5 —

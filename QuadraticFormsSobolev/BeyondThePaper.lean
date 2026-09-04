@@ -3435,6 +3435,323 @@ theorem wide_block_le {d : ℕ} (hd : 0 < d) {α Λ θ : ℝ} (hθ1 : π / 4 < �
     _ = (unitBallVol d)⁻¹ * K * form Set.univ k f := by rw [hK]; ring
 
 
+/-! ## Pairwise overlapping cones: narrow cones without a common direction
+
+Chains of length three or more cannot help (see the note below), but chains of
+length two reach further than the wide-cone case suggests. All they need is that
+the two cones **overlap** — the intermediate point is then seen by both
+endpoints' own cones, and no constraint is placed on its type. Overlapping is
+strictly weaker than sharing a direction: three cones can pairwise overlap with
+no direction common to all three, and that happens for narrow cones in dimension
+three and above. -/
+
+/-- **A block of two overlapping types is controlled.** The hypothesis is a cone
+`Ṽ(u,η)` inside the cones of every point of `A` and of every point of `B`; no
+apex angle and no dimension enters. -/
+theorem overlap_block_le {d : ℕ} (hd : 0 < d) {α Λ η : ℝ} (hη0 : 0 < η) (hη2 : η ≤ π / 2)
+    (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2)
+    {A B : Set (EuclideanSpace ℝ (Fin d))} (hAm : MeasurableSet A) (hBm : MeasurableSet B)
+    {u : EuclideanSpace ℝ (Fin d)} (hu : ‖u‖ = 1)
+    (hA : ∀ x ∈ A, cone u η ⊆ (Γ x).carrier)
+    (hB : ∀ x ∈ B, cone u η ⊆ (Γ x).carrier) :
+    ∃ C : ℝ≥0∞, C ≠ ∞ ∧
+      ∫⁻ p in A ×ˢ B, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+        ≤ C * form Set.univ k f := by
+  set U : Set (EuclideanSpace ℝ (Fin d)) := A ∪ B with hU
+  have hUm : MeasurableSet U := hAm.union hBm
+  have hcommon : ∀ x ∈ U, cone u η ⊆ (Γ x).carrier := by
+    intro x hx
+    rcases hx with hx | hx
+    · exact hA x hx
+    · exact hB x hx
+  have hmain := formHs_le_form_of_commonDirection_on hu hη0 hη2 hα hd hk hUm hcommon hf hkm
+  set K : ℝ≥0∞ := ENNReal.ofReal (2 * Λ) *
+    (ENNReal.ofReal (chainConst d η α) + ENNReal.ofReal (chainConst' d η α)) *
+    unitBallVol d with hK
+  have hKtop : K ≠ ∞ := by
+    rw [hK]
+    exact ENNReal.mul_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top
+      (ENNReal.add_ne_top.mpr ⟨ENNReal.ofReal_ne_top, ENNReal.ofReal_ne_top⟩))
+      unitBallVol_ne_top
+  refine ⟨(unitBallVol d)⁻¹ * K, ENNReal.mul_ne_top
+    (ENNReal.inv_ne_top.mpr (unitBallVol_ne_zero d)) hKtop, ?_⟩
+  have hsub : A ×ˢ B ⊆ U ×ˢ U :=
+    Set.prod_mono Set.subset_union_left Set.subset_union_right
+  calc ∫⁻ p in A ×ˢ B, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+      ≤ ∫⁻ p in U ×ˢ U, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 :=
+        lintegral_mono_set hsub
+    _ = (unitBallVol d)⁻¹ * (unitBallVol d *
+          ∫⁻ p in U ×ˢ U, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2) := by
+        rw [← mul_assoc, ENNReal.inv_mul_cancel (unitBallVol_ne_zero d) unitBallVol_ne_top,
+          one_mul]
+    _ ≤ (unitBallVol d)⁻¹ * (K * form Set.univ k f) := mul_le_mul' le_rfl hmain
+    _ = (unitBallVol d)⁻¹ * K * form Set.univ k f := by rw [hK]; ring
+
+/-- **`H_k ⊆ H^{α/2}` for a pairwise overlapping family of cone types**, in every
+dimension and at any apex angle.
+
+The family `W` need not have a direction common to all of it: pairwise overlap
+suffices, and pairwise overlap does not imply a common direction — three cones
+of apex `θ` whose axes form a spherical triangle of side just under `2θ` overlap
+pairwise, while their circumradius exceeds `θ`. -/
+theorem sobolevInclusion_of_overlapping {d : ℕ} (hd : 0 < d) {α Λ η : ℝ}
+    (hη0 : 0 < η) (hη2 : η ≤ π / 2) (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    {ι : Type} [Finite ι] (W : ι → Set (EuclideanSpace ℝ (Fin d)))
+    (hcover : ∀ x : EuclideanSpace ℝ (Fin d), ∃ i, W i ⊆ (Γ x).carrier)
+    (hcompat : ∀ i j : ι, ∃ u : EuclideanSpace ℝ (Fin d), ‖u‖ = 1 ∧
+      cone u η ⊆ W i ∧ cone u η ⊆ W j)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
+    ∃ C : ℝ≥0∞, C ≠ ∞ ∧ formHs Set.univ α f ≤ C * form Set.univ k f := by
+  classical
+  have : Fintype ι := Fintype.ofFinite ι
+  set blk : ι × ι → Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) := fun i =>
+    {x | W i.1 ⊆ (Γ x).carrier} ×ˢ {x | W i.2 ⊆ (Γ x).carrier} with hblk
+  have hcover' : (⋃ i, blk i) = Set.univ := by
+    refine Set.eq_univ_of_forall fun p => ?_
+    obtain ⟨i, hi⟩ := hcover p.1
+    obtain ⟨j, hj⟩ := hcover p.2
+    exact Set.mem_iUnion.mpr ⟨(i, j), hi, hj⟩
+  choose u hu h1 h2 using hcompat
+  choose C hCtop hCle using fun i : ι × ι =>
+    overlap_block_le hd hη0 hη2 hα hk hf hkm (hmeas (W i.1)) (hmeas (W i.2)) (hu i.1 i.2)
+      (fun x hx => le_trans (h1 i.1 i.2) hx) (fun x hx => le_trans (h2 i.1 i.2) hx)
+  refine ⟨∑' i, C i, ?_, ?_⟩
+  · rw [tsum_fintype]
+    exact (ENNReal.sum_lt_top.mpr fun i _ => (hCtop i).lt_top).ne
+  · have hlhs : formHs Set.univ α f
+        = ∫⁻ p in ⋃ i, blk i,
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 := by
+      rw [hcover', formHs, form, Set.univ_prod_univ]
+    rw [hlhs]
+    calc ∫⁻ p in ⋃ i, blk i,
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+        ≤ ∑' i, ∫⁻ p in blk i,
+            ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 :=
+          lintegral_iUnion_le _ _
+      _ ≤ ∑' i, C i * form Set.univ k f := ENNReal.tsum_le_tsum hCle
+      _ = (∑' i, C i) * form Set.univ k f := ENNReal.tsum_mul_right
+
+
+/-! ### When do two cones overlap?
+
+The bisector argument of `exists_common_subcone` is not about `π/4`: two double
+cones of apex `θ` overlap in a cone of aperture `θ − β`, where `β` is half the
+angle between their axes. The `π/4` threshold is what makes *every* pair overlap;
+a particular pair needs only its own axes to be close. -/
+
+/-- An inner product at least `cos c` between unit vectors means an angle at most
+`c`. -/
+lemma angle_le_of_cos_le_inner {v u : E} (hv : ‖v‖ = 1) (hu : ‖u‖ = 1) {c : ℝ}
+    (hc0 : 0 ≤ c) (hcπ : c ≤ π) (h : Real.cos c ≤ ⟪v, u⟫_ℝ) :
+    InnerProductGeometry.angle v u ≤ c := by
+  rw [InnerProductGeometry.angle, hv, hu, one_mul, div_one]
+  exact le_trans (Real.arccos_le_arccos h) (le_of_eq (Real.arccos_cos hc0 hcπ))
+
+private theorem exists_common_subcone_aux' {v w : E} (hv : ‖v‖ = 1) (hw : ‖w‖ = 1)
+    (hc : (0 : ℝ) ≤ ⟪v, w⟫_ℝ) {θ η : ℝ} (hη : 0 < η) (hθ : θ ≤ π / 2) (hηθ : η ≤ θ)
+    (hbis : Real.cos (θ - η) ≤ Real.sqrt ((1 + ⟪v, w⟫_ℝ) / 2)) :
+    ∃ u : E, ‖u‖ = 1 ∧ doubleCone u η ⊆ doubleCone v θ ∧
+      doubleCone u η ⊆ doubleCone w θ := by
+  have hpi : (0:ℝ) < π := Real.pi_pos
+  have hvv : ⟪v, v⟫_ℝ = 1 := by rw [real_inner_self_eq_norm_sq, hv]; norm_num
+  have hww : ⟪w, w⟫_ℝ = 1 := by rw [real_inner_self_eq_norm_sq, hw]; norm_num
+  have hne : v + w ≠ 0 := by
+    intro h
+    have hwv : w = -v := by
+      have := congrArg (fun z => z - v) h
+      simpa using this
+    rw [hwv, inner_neg_right, hvv] at hc
+    linarith
+  set N : ℝ := ‖v + w‖ with hN
+  have hNpos : 0 < N := norm_pos_iff.mpr hne
+  have hNsq : N ^ 2 = 2 + 2 * ⟪v, w⟫_ℝ := by
+    rw [hN, @norm_add_sq_real, hv, hw]; ring
+  have hNval : N = Real.sqrt (2 + 2 * ⟪v, w⟫_ℝ) := by
+    rw [← hNsq, Real.sqrt_sq hNpos.le]
+  set u : E := N⁻¹ • (v + w) with hu
+  have hunorm : ‖u‖ = 1 := by rw [hu, hN]; exact norm_smul_inv_norm hne
+  have hmul : Real.sqrt ((1 + ⟪v, w⟫_ℝ) / 2) * N = 1 + ⟪v, w⟫_ℝ := by
+    rw [hNval, ← Real.sqrt_mul (by positivity)]
+    rw [show (1 + ⟪v, w⟫_ℝ) / 2 * (2 + 2 * ⟪v, w⟫_ℝ) = (1 + ⟪v, w⟫_ℝ) ^ 2 from by ring]
+    exact Real.sqrt_sq (by linarith)
+  have hkey : ∀ x : E, ⟪x, v⟫_ℝ + ⟪x, w⟫_ℝ = 1 + ⟪v, w⟫_ℝ →
+      ⟪x, u⟫_ℝ = Real.sqrt ((1 + ⟪v, w⟫_ℝ) / 2) := by
+    intro x hx
+    rw [hu, real_inner_smul_right, inner_add_right, hx, inv_mul_eq_div,
+      div_eq_iff (ne_of_gt hNpos)]
+    exact hmul.symm
+  have hvu : Real.cos (θ - η) ≤ ⟪v, u⟫_ℝ := by
+    rw [hkey v (by rw [hvv])]; exact hbis
+  have hwu : Real.cos (θ - η) ≤ ⟪w, u⟫_ℝ := by
+    rw [hkey w (by rw [hww, real_inner_comm]; ring)]; exact hbis
+  have hrange : (0:ℝ) ≤ θ - η := by linarith
+  have hrange' : θ - η ≤ π := by linarith
+  have hdv : dangle v u ≤ θ - η :=
+    le_trans (min_le_left _ _) (angle_le_of_cos_le_inner hv hunorm hrange hrange' hvu)
+  have hdw : dangle w u ≤ θ - η :=
+    le_trans (min_le_left _ _) (angle_le_of_cos_le_inner hw hunorm hrange hrange' hwu)
+  refine ⟨u, hunorm, ?_, ?_⟩
+  · have := doubleCone_subset_of_dangle_le hv hunorm (a := θ - η) (η := η) hrange hη.le
+      (by linarith) hdv
+    rwa [show θ - η + η = θ from by ring] at this
+  · have := doubleCone_subset_of_dangle_le hw hunorm (a := θ - η) (η := η) hrange hη.le
+      (by linarith) hdw
+    rwa [show θ - η + η = θ from by ring] at this
+
+/-- **Two double cones overlap when their axes are close.** If the bisector's
+inner product with each axis is at least `cos (θ − η)`, the cone of aperture `η`
+about the bisector lies in both. -/
+theorem exists_common_subcone_of_inner {v w : E} (hv : ‖v‖ = 1) (hw : ‖w‖ = 1)
+    {θ η : ℝ} (hη : 0 < η) (hθ : θ ≤ π / 2) (hηθ : η ≤ θ)
+    (hbis : Real.cos (θ - η) ≤ Real.sqrt ((1 + |⟪v, w⟫_ℝ|) / 2)) :
+    ∃ u : E, ‖u‖ = 1 ∧ doubleCone u η ⊆ doubleCone v θ ∧ doubleCone u η ⊆ doubleCone w θ := by
+  have hpi : (0:ℝ) < π := Real.pi_pos
+  -- replace `w` by `-w` if necessary, so that the inner product is nonnegative
+  by_cases hsign : (0 : ℝ) ≤ ⟪v, w⟫_ℝ
+  · have habs : |⟪v, w⟫_ℝ| = ⟪v, w⟫_ℝ := abs_of_nonneg hsign
+    rw [habs] at hbis
+    exact exists_common_subcone_aux' hv hw hsign hη hθ hηθ hbis
+  · have hneg : ⟪v, w⟫_ℝ < 0 := not_le.mp hsign
+    have hnw : ‖(-w : E)‖ = 1 := by simpa using hw
+    have hsign' : (0:ℝ) ≤ ⟪v, -w⟫_ℝ := by rw [inner_neg_right]; linarith
+    have habs : |⟪v, w⟫_ℝ| = ⟪v, -w⟫_ℝ := by
+      rw [inner_neg_right, abs_of_neg hneg]
+    rw [habs] at hbis
+    obtain ⟨u, hu, h1, h2⟩ := exists_common_subcone_aux' hv hnw hsign' hη hθ hηθ hbis
+    exact ⟨u, hu, h1, by rwa [doubleCone_neg] at h2⟩
+
+lemma dangle_le_pi_div_two (v w : E) : dangle v w ≤ π / 2 := by
+  rcases le_total (InnerProductGeometry.angle v w) (π / 2) with h | h
+  · exact le_trans (min_le_left _ _) h
+  · exact le_trans (min_le_right _ _) (by linarith)
+
+/-- For unit vectors, `|⟪v,w⟫|` is the cosine of the angle between the two lines. -/
+lemma abs_inner_eq_cos_dangle {v w : E} (hv : ‖v‖ = 1) (hw : ‖w‖ = 1) :
+    |⟪v, w⟫_ℝ| = Real.cos (dangle v w) := by
+  have hcos : Real.cos (InnerProductGeometry.angle v w) = ⟪v, w⟫_ℝ := by
+    rw [InnerProductGeometry.cos_angle, hv, hw]; norm_num
+  rcases le_total (InnerProductGeometry.angle v w) (π / 2) with h | h
+  · have hd : dangle v w = InnerProductGeometry.angle v w := min_eq_left (by linarith)
+    have hnn : 0 ≤ ⟪v, w⟫_ℝ := by
+      rw [← hcos]
+      exact Real.cos_nonneg_of_mem_Icc
+        ⟨by linarith [InnerProductGeometry.angle_nonneg v w], h⟩
+    rw [hd, hcos, abs_of_nonneg hnn]
+  · have hd : dangle v w = π - InnerProductGeometry.angle v w := min_eq_right (by linarith)
+    have hnp : ⟪v, w⟫_ℝ ≤ 0 := by
+      rw [← hcos]
+      exact Real.cos_nonpos_of_pi_div_two_le_of_le h
+        (by linarith [InnerProductGeometry.angle_le_pi v w, Real.pi_pos])
+    rw [hd, Real.cos_pi_sub, hcos, abs_of_nonpos hnp]
+
+/-- **Two double cones of apex `θ` whose axes are at most `D` apart overlap** in a
+cone of aperture `θ − D/2` about their bisector. -/
+theorem exists_common_subcone_of_dangle {v w : E} (hv : ‖v‖ = 1) (hw : ‖w‖ = 1)
+    {θ D : ℝ} (hD0 : 0 ≤ D) (hθ : θ ≤ π / 2) (hDθ : D < 2 * θ) (hdang : dangle v w ≤ D) :
+    ∃ u : E, ‖u‖ = 1 ∧ doubleCone u (θ - D / 2) ⊆ doubleCone v θ ∧
+      doubleCone u (θ - D / 2) ⊆ doubleCone w θ := by
+  have hpi : (0:ℝ) < π := Real.pi_pos
+  have hDpi : D ≤ π := by linarith
+  refine exists_common_subcone_of_inner hv hw (by linarith) hθ (by linarith) ?_
+  rw [show θ - (θ - D / 2) = D / 2 from by ring, Real.cos_half (by linarith) hDpi]
+  refine Real.sqrt_le_sqrt ?_
+  have hmono : Real.cos D ≤ Real.cos (dangle v w) :=
+    Real.cos_le_cos_of_nonneg_of_le_pi (dangle_nonneg v w) hDpi hdang
+  rw [abs_inner_eq_cos_dangle hv hw]
+  linarith
+
+
+/-- A reference family of aperture `θ` for `Γ`, every axis of which is within
+`ϑ − θ` of the axis of some cone of `Γ`. -/
+theorem ref_cones_near [FiniteDimensional ℝ E] {ϑ θ : ℝ} (hϑ' : ϑ ≤ π / 2) (hθ : 0 < θ)
+    (hθϑ : θ < ϑ) (Γ : Configuration E) (hΓ : IsBounded Γ ϑ) :
+    ∃ S : Finset E, (∀ v ∈ S, ‖v‖ = 1) ∧
+      (∀ v ∈ S, ∃ x : E, dangle v (Γ x).axis ≤ ϑ - θ) ∧
+      (∀ x : E, ∃ v ∈ S, doubleCone v θ ⊆ (Γ x).carrier) := by
+  classical
+  have hpi : (0:ℝ) < π := Real.pi_pos
+  obtain ⟨S₀, hS₀, hcov⟩ := exists_finite_axes' (E := E) (ε := ϑ - θ) (by linarith)
+    (by linarith)
+  refine ⟨S₀.filter (fun v => ∃ x : E, dangle v (Γ x).axis ≤ ϑ - θ), ?_, ?_, ?_⟩
+  · exact fun v hv => hS₀ v (Finset.mem_filter.mp hv).1
+  · exact fun v hv => (Finset.mem_filter.mp hv).2
+  · intro x
+    obtain ⟨v, hvS, hv⟩ := hcov (Γ x).axis (Γ x).norm_axis
+    have hdang : dangle v (Γ x).axis ≤ ϑ - θ := by
+      rw [mem_doubleCone_iff_dangle (hS₀ v hvS) (by linarith) (by linarith)] at hv
+      exact le_of_lt hv.2
+    refine ⟨v, Finset.mem_filter.mpr ⟨hvS, ⟨x, hdang⟩⟩, ?_⟩
+    have hdang' : dangle (Γ x).axis v ≤ ϑ - θ := by rw [dangle_comm]; exact hdang
+    have hsub := doubleCone_subset_of_dangle_le (Γ x).norm_axis (hS₀ v hvS)
+      (a := ϑ - θ) (η := θ) (by linarith) (by linarith) (by linarith) hdang'
+    rw [show ϑ - θ + θ = ϑ from by ring] at hsub
+    refine hsub.trans ?_
+    intro p hp
+    rw [mem_doubleCone_iff_dangle (Γ x).norm_axis (by linarith) (by linarith)] at hp
+    rw [DCone.carrier,
+      mem_doubleCone_iff_dangle (Γ x).norm_axis (le_of_lt (Γ x).apex_pos)
+        (by linarith [(Γ x).apex_le])]
+    exact ⟨hp.1, lt_of_lt_of_le hp.2 (hΓ.2 x)⟩
+
+/-- **`H_k ⊆ H^{α/2}` whenever the cone axes of `Γ` have angular spread below twice
+the apex bound.** No `π/4` threshold, no dimension restriction: the reference cones
+of aperture `(γ + 6ϑ)/8` then overlap pairwise. -/
+theorem sobolevInclusion_of_axisSpread {d : ℕ} (hd : 0 < d) {ϑ γ α Λ : ℝ}
+    (hϑ' : ϑ ≤ π / 2) (hγ0 : 0 ≤ γ) (hγ : γ < 2 * ϑ) (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    (hspread : ∀ x y : EuclideanSpace ℝ (Fin d),
+      dangle (Γ x).axis (Γ y).axis ≤ γ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
+    ∃ C : ℝ≥0∞, C ≠ ∞ ∧ formHs Set.univ α f ≤ C * form Set.univ k f := by
+  classical
+  have hpi : (0:ℝ) < π := Real.pi_pos
+  have hϑ0 : 0 < ϑ := hΓ.1
+  set θ : ℝ := (γ + 6 * ϑ) / 8 with hθdef
+  have hθ0 : 0 < θ := by rw [hθdef]; linarith
+  have hθϑ : θ < ϑ := by rw [hθdef]; linarith
+  have hθ2 : θ ≤ π / 2 := by linarith
+  set D : ℝ := γ + 2 * (ϑ - θ) with hDdef
+  have hD0 : 0 ≤ D := by rw [hDdef]; linarith
+  have hDθ : D < 2 * θ := by rw [hDdef, hθdef]; linarith
+  set η : ℝ := θ - D / 2 with hηdef
+  have hη0 : 0 < η := by rw [hηdef]; linarith
+  have hη2 : η ≤ π / 2 := by rw [hηdef]; linarith
+  obtain ⟨S, hS, hnear, hcov⟩ := ref_cones_near hϑ' hθ0 hθϑ Γ hΓ
+  refine sobolevInclusion_of_overlapping hd hη0 hη2 hα hmeas hk
+    (fun v : ↥S => doubleCone (v : EuclideanSpace ℝ (Fin d)) θ) ?_ ?_ hf hkm
+  · intro x
+    obtain ⟨v, hvS, hv⟩ := hcov x
+    exact ⟨⟨v, hvS⟩, hv⟩
+  · intro i j
+    obtain ⟨x, hx⟩ := hnear (i : EuclideanSpace ℝ (Fin d)) i.2
+    obtain ⟨y, hy⟩ := hnear (j : EuclideanSpace ℝ (Fin d)) j.2
+    have hxy : dangle (Γ x).axis (Γ y).axis ≤ γ := hspread x y
+    have hyj : dangle (Γ y).axis (j : EuclideanSpace ℝ (Fin d)) ≤ ϑ - θ := by
+      rw [dangle_comm]; exact hy
+    have hdang : dangle (i : EuclideanSpace ℝ (Fin d)) (j : EuclideanSpace ℝ (Fin d)) ≤ D := by
+      have h1 := dangle_triangle (i : EuclideanSpace ℝ (Fin d)) (Γ x).axis
+        (j : EuclideanSpace ℝ (Fin d))
+      have h2 := dangle_triangle (Γ x).axis (Γ y).axis (j : EuclideanSpace ℝ (Fin d))
+      rw [hDdef]; linarith
+    obtain ⟨u, hu, h1, h2⟩ := exists_common_subcone_of_dangle (hS _ i.2) (hS _ j.2)
+      hD0 hθ2 hDθ hdang
+    exact ⟨u, hu, le_trans Set.subset_union_left h1, le_trans Set.subset_union_left h2⟩
+
 /-- **`H_k ⊆ H^{α/2}` in every dimension, for wide cones.** If the apex angles
 of `Γ` are bounded below by some `ϑ > π/4`, then
 
@@ -3451,47 +3768,18 @@ theorem sobolevInclusion_wide {d : ℕ} (hd : 0 < d) {ϑ α Λ : ℝ} (hϑ : π 
     {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
     (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
       ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
-    ∃ C : ℝ≥0∞, C ≠ ∞ ∧ formHs Set.univ α f ≤ C * form Set.univ k f := by
-  classical
-  set θ : ℝ := (π / 4 + ϑ) / 2 with hθdef
-  have hθ1 : π / 4 < θ := by rw [hθdef]; linarith
-  have hθ2 : θ ≤ π / 2 := by rw [hθdef]; linarith
-  have hθ3 : θ < ϑ := by rw [hθdef]; linarith
-  have hθ0 : 0 < θ := by linarith [Real.pi_pos]
-  obtain ⟨S, hS, hcov⟩ :=
-    ref_cones' (E := EuclideanSpace ℝ (Fin d)) (ϑ := ϑ) (θ := θ) hϑ' hθ0 hθ3
-  set blk : ↥S × ↥S → Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) := fun i =>
-    {x | doubleCone (i.1 : EuclideanSpace ℝ (Fin d)) θ ⊆ (Γ x).carrier} ×ˢ
-      {x | doubleCone (i.2 : EuclideanSpace ℝ (Fin d)) θ ⊆ (Γ x).carrier} with hblk
-  have hcover : (⋃ i, blk i) = Set.univ := by
-    refine Set.eq_univ_of_forall fun p => ?_
-    obtain ⟨v, hvS, hv⟩ := hcov Γ hΓ p.1
-    obtain ⟨w, hwS, hw⟩ := hcov Γ hΓ p.2
-    exact Set.mem_iUnion.mpr ⟨(⟨v, hvS⟩, ⟨w, hwS⟩), hv, hw⟩
-  choose C hCtop hCle using fun i : ↥S × ↥S =>
-    wide_block_le hd hθ1 hθ2 hα hk hmeas hf hkm (hS _ i.1.2) (hS _ i.2.2)
-  refine ⟨∑' i, C i, ?_, ?_⟩
-  · rw [tsum_fintype]
-    exact (ENNReal.sum_lt_top.mpr fun i _ => (hCtop i).lt_top).ne
-  · have hlhs : formHs Set.univ α f
-        = ∫⁻ p in ⋃ i, blk i,
-          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 := by
-      rw [hcover, formHs, form, Set.univ_prod_univ]
-    rw [hlhs]
-    calc ∫⁻ p in ⋃ i, blk i,
-          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
-        ≤ ∑' i, ∫⁻ p in blk i,
-            ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 :=
-          lintegral_iUnion_le _ _
-      _ ≤ ∑' i, C i * form Set.univ k f := ENNReal.tsum_le_tsum hCle
-      _ = (∑' i, C i) * form Set.univ k f := ENNReal.tsum_mul_right
+    ∃ C : ℝ≥0∞, C ≠ ∞ ∧ formHs Set.univ α f ≤ C * form Set.univ k f :=
+  sobolevInclusion_of_axisSpread (γ := π / 2) hd hϑ' (by linarith [Real.pi_pos])
+    (by linarith) hα hΓ hmeas (fun x y => dangle_le_pi_div_two _ _) hk hf hkm
 
-/-- **The inclusion §3.2 needs, for wide cones, in every dimension.** If `f` has
+/-- **The inclusion §3.2 needs, for configurations of small axis spread.** If `f` has
 finite `L²` norm and finite `H_k` form on the outer ball, then its `H^{α/2}` form
 on the inner ball is finite. -/
-theorem formHs_ball_ne_top_of_wide {d : ℕ} (hd : 0 < d) {ϑ α Λ : ℝ} (hϑ : π / 4 < ϑ)
-    (hϑ' : ϑ ≤ π / 2) (hα : 0 < α) (hα2 : α < 2)
+theorem formHs_ball_ne_top_of_spread {d : ℕ} (hd : 0 < d) {ϑ γ α Λ : ℝ}
+    (hϑ' : ϑ ≤ π / 2) (hγ0 : 0 ≤ γ) (hγ : γ < 2 * ϑ) (hα : 0 < α) (hα2 : α < 2)
     {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    (hspread : ∀ x y : EuclideanSpace ℝ (Fin d),
+      dangle (Γ x).axis (Γ y).axis ≤ γ)
     {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
     (hk : KernelBounds Γ α Λ k)
     {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
@@ -3523,7 +3811,8 @@ theorem formHs_ball_ne_top_of_wide {d : ℕ} (hd : 0 < d) {ϑ α Λ : ℝ} (hϑ 
       linarith
     simp only [hgdef, hu1, hv1, one_mul]
   -- the whole-space theorem, applied to `g`
-  obtain ⟨C, hCtop, hC⟩ := sobolevInclusion_wide hd hϑ hϑ' hα.le hΓ hmeas hk hgm hkmg
+  obtain ⟨C, hCtop, hC⟩ :=
+    sobolevInclusion_of_axisSpread hd hϑ' hγ0 hγ hα.le hΓ hmeas hspread hk hgm hkmg
   have hmono : formHs (ball x₀ R) α g ≤ formHs Set.univ α g := by
     refine lintegral_mono_set ?_
     exact Set.prod_mono (Set.subset_univ _) (Set.subset_univ _)
@@ -3543,17 +3832,21 @@ theorem formHs_ball_ne_top_of_wide {d : ℕ} (hd : 0 < d) {ϑ α Λ : ℝ} (hϑ 
       (ENNReal.mul_lt_top (ENNReal.mul_lt_top ENNReal.ofReal_lt_top hCδ.lt_top) hL2.lt_top)
 
 
-/-! ## Theorem 1.1 for wide cones, in every dimension
+/-! ## Theorem 1.1 when the axis spread is below twice the apex bound
 
-The same assembly as in the plane, with `formHs_ball_ne_top_of_wide` in place of
-`formHs_ball_ne_top_of_planar`. -/
+The same assembly as in the plane, with `formHs_ball_ne_top_of_spread` in place
+of `formHs_ball_ne_top_of_planar`. The wide-cone statements below are the case
+`γ = π/2`. -/
 
-/-- **Theorem 1.1's enlarged-ball form for wide cones**, in every dimension
-`d ≥ 2`: `κ` and `c` depend only on `ϑ`, `Λ`, `α` and `d`. -/
-theorem formHs_ball_le_form_wide {d : ℕ} (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ : π / 4 < ϑ)
-    (hϑ' : ϑ ≤ π / 2) (hα : 0 < α) (hα2 : α < 2) (hΛ : 1 ≤ Λ) :
+/-- **Theorem 1.1's enlarged-ball form when the axis spread is below `2ϑ`**, in
+every dimension `d ≥ 2`: `κ` and `c` depend only on `ϑ`, `Λ`, `α` and `d`. -/
+theorem formHs_ball_le_form_spread {d : ℕ} (hd : 2 ≤ d) {ϑ γ α Λ : ℝ}
+    (hϑ' : ϑ ≤ π / 2) (hγ0 : 0 ≤ γ) (hγ : γ < 2 * ϑ) (hα : 0 < α) (hα2 : α < 2)
+    (hΛ : 1 ≤ Λ) :
     ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
       ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+        (∀ x y : EuclideanSpace ℝ (Fin d),
+          dangle (Γ x).axis (Γ y).axis ≤ γ) →
       ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
         KernelBounds Γ α Λ k →
         (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
@@ -3568,7 +3861,7 @@ theorem formHs_ball_le_form_wide {d : ℕ} (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ 
       hϑ' hd hα hα2 hΛ
   have hs : (0:ℝ) ≤ Real.sqrt (d : ℝ) := Real.sqrt_nonneg _
   refine ⟨2 * (κ + Real.sqrt (d : ℝ)), c, by nlinarith, hc,
-    fun Γ hΓ hmeas k hk hkm x₀ R hR f hfm hf hL2 => ?_⟩
+    fun Γ hΓ hmeas hspread k hk hkm x₀ R hR f hfm hf hL2 => ?_⟩
   set ρ : ℝ := (κ + Real.sqrt (d : ℝ)) * R with hρ
   have hρpos : 0 < ρ := by rw [hρ]; nlinarith
   have hsub : ball x₀ (κ * R) ⊆ ball x₀ (2 * (κ + Real.sqrt (d : ℝ)) * R) := by
@@ -3578,18 +3871,21 @@ theorem formHs_ball_le_form_wide {d : ℕ} (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ 
   · rw [htop, ENNReal.mul_top (by simpa using lt_of_lt_of_le zero_lt_one hc)]
     exact le_top
   have hfin : formHs (ball x₀ ρ) α f ≠ ⊤ := by
-    refine formHs_ball_ne_top_of_wide hd0 hϑ hϑ' hα hα2 hΓ hmeas hk hfm hkm
+    refine formHs_ball_ne_top_of_spread hd0 hϑ' hγ0 hγ hα hα2 hΓ hmeas hspread hk hfm hkm
       (show ρ < 2 * (κ + Real.sqrt (d : ℝ)) * R by rw [hρ]; nlinarith) hL2 htop
   refine le_trans (hmain Γ hΓ hmeas k hk hkm x₀ R hR f hfm hf hfin) (mul_le_mul' le_rfl ?_)
   exact form_mono_set hsub k f
 
 
-/-- **The ball comparability for wide cones, with the paper's `f ∈ L²(B)`.**
-The wide-cone analogue of `QFS.theoremOneOneBallCondMeas_two`. -/
-theorem ballComparability_wide {d : ℕ} (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ : π / 4 < ϑ)
-    (hϑ' : ϑ ≤ π / 2) (hα : 0 < α) (hα2 : α < 2) (hΛ : 1 ≤ Λ) :
+/-- **The ball comparability for small axis spread, with the paper's `f ∈ L²(B)`.**
+The small-spread analogue of `QFS.theoremOneOneBallCondMeas_two`. -/
+theorem ballComparability_spread {d : ℕ} (hd : 2 ≤ d) {ϑ γ α Λ : ℝ}
+    (hϑ' : ϑ ≤ π / 2) (hγ0 : 0 ≤ γ) (hγ : γ < 2 * ϑ) (hα : 0 < α) (hα2 : α < 2)
+    (hΛ : 1 ≤ Λ) :
     ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
       ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+        (∀ x y : EuclideanSpace ℝ (Fin d),
+          dangle (Γ x).axis (Γ y).axis ≤ γ) →
       ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
         KernelBounds Γ α Λ k →
         (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
@@ -3598,18 +3894,21 @@ theorem ballComparability_wide {d : ℕ} (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ : 
       ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
         MemLp f 2 (volume.restrict (ball x₀ (κ * R))) →
         formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
-  obtain ⟨κ, c, hκ, hc, hmain⟩ := formHs_ball_le_form_wide hd hϑ hϑ' hα hα2 hΛ
-  exact ⟨κ, c, hκ, hc, fun Γ hΓ hmeas k hk hkm x₀ R hR =>
+  obtain ⟨κ, c, hκ, hc, hmain⟩ := formHs_ball_le_form_spread hd hϑ' hγ0 hγ hα hα2 hΛ
+  exact ⟨κ, c, hκ, hc, fun Γ hΓ hmeas hspread k hk hkm x₀ R hR =>
     ballComparability_of_measurable hκ hR
-      (fun f hfm hfl hL2 => hmain Γ hΓ hmeas k hk hkm x₀ R hR f hfm hfl hL2)⟩
+      (fun f hfm hfl hL2 => hmain Γ hΓ hmeas hspread k hk hkm x₀ R hR f hfm hfl hL2)⟩
 
-/-- **Theorem 1.1 for wide cones**, on the same ball, in every dimension `d ≥ 2`,
+/-- **Theorem 1.1 for small axis spread**, on the same ball, in every dimension `d ≥ 2`,
 granted the Whitney/Dyda input Lemma 7.1 quotes. -/
-theorem formHs_le_form_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ} (hϑ : π / 4 < ϑ)
-    (hϑ' : ϑ ≤ π / 2) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+theorem formHs_le_form_spread {d : ℕ} (hd : 2 ≤ d) {ϑ γ Λ α : ℝ}
+    (hϑ' : ϑ ≤ π / 2) (hγ0 : 0 ≤ γ) (hγ : γ < 2 * ϑ) (hΛ : 1 ≤ Λ) (hα : 0 < α)
+    (hα2 : α < 2)
     (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ)) :
     ∃ c : ℝ, 0 < c ∧
       ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+        (∀ x y : EuclideanSpace ℝ (Fin d),
+          dangle (Γ x).axis (Γ y).axis ≤ γ) →
       ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
         KernelBounds Γ α Λ k →
         (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
@@ -3620,27 +3919,28 @@ theorem formHs_le_form_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ} (hϑ : π 
         (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
           ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
         ENNReal.ofReal c * formHs (ball x₀ R) α f ≤ form (ball x₀ R) k f := by
-  obtain ⟨κ, c₀, hκ, hc₀, H⟩ := ballComparability_wide hd hϑ hϑ' hα hα2 hΛ
+  obtain ⟨κ, c₀, hκ, hc₀, H⟩ := ballComparability_spread hd hϑ' hγ0 hγ hα hα2 hΛ
   obtain ⟨W⟩ := hW κ hκ
   have hc₀pos : (0 : ℝ) < c₀ := lt_of_lt_of_le zero_lt_one hc₀
   have hMR : (0 : ℝ) < (W.overlapBound : ℝ) := by exact_mod_cast W.overlapBound_pos
   refine ⟨c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ),
     div_pos (mul_pos (inv_pos.mpr hc₀pos) W.dydaConst_pos) hMR,
-    fun Γ hΓ hmeas k hk hkm x₀ R hR f hf hFmeas => ?_⟩
+    fun Γ hΓ hmeas hspread k hk hkm x₀ R hR f hf hFmeas => ?_⟩
   exact formHs_le_form_of_ballComparability hc₀ W
-    (fun y₀ S hS hmem => H Γ hΓ hmeas k hk hkm y₀ S hS f hmem) x₀ R hR hf hFmeas
+    (fun y₀ S hS hmem => H Γ hΓ hmeas hspread k hk hkm y₀ S hS f hmem) x₀ R hR hf hFmeas
 
 
-/-! ## Theorem 1.4 for wide cones -/
+/-! ## Theorem 1.4 for small axis spread -/
 
-/-- **`H_k(ℝ^d) ⊆ H^{α/2}(ℝ^d)` for wide cones, with a uniform constant**,
+/-- **`H_k(ℝ^d) ⊆ H^{α/2}(ℝ^d)` for small axis spread, with a uniform constant**,
 granted the quoted Whitney/Dyda input. -/
-theorem formHs_univ_le_form_univ_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ}
-    (hϑ : Real.pi / 4 < ϑ)
-    (hϑ' : ϑ ≤ Real.pi / 2) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+theorem formHs_univ_le_form_univ_spread {d : ℕ} (hd : 2 ≤ d) {ϑ γ Λ α : ℝ}
+    (hϑ' : ϑ ≤ Real.pi / 2) (hγ0 : 0 ≤ γ) (hγ : γ < 2 * ϑ) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
     (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ)) :
     ∃ c : ℝ, 1 ≤ c ∧
       ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+        (∀ x y : EuclideanSpace ℝ (Fin d),
+          dangle (Γ x).axis (Γ y).axis ≤ γ) →
       ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
         KernelBounds Γ α Λ k →
         (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
@@ -3651,14 +3951,14 @@ theorem formHs_univ_le_form_univ_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ}
         (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
           ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
         formHs Set.univ α f ≤ ENNReal.ofReal c * form Set.univ k f := by
-  obtain ⟨c₀, hc₀pos, H⟩ := formHs_le_form_wide hd hϑ hϑ' hΛ hα hα2 hW
+  obtain ⟨c₀, hc₀pos, H⟩ := formHs_le_form_spread hd hϑ' hγ0 hγ hΛ hα hα2 hW
   refine ⟨max c₀⁻¹ 1, le_max_right _ _,
-    fun Γ hΓ hmeas k hk hkm f hf hFmeas => ?_⟩
+    fun Γ hΓ hmeas hspread k hk hkm f hf hFmeas => ?_⟩
   simp only [formHs]
   rw [form_univ_eq_iSup, form_univ_eq_iSup, ENNReal.mul_iSup]
   refine iSup_mono fun n => ?_
   have hR : (0 : ℝ) < (n : ℝ) + 1 := by positivity
-  have h1 := H Γ hΓ hmeas k hk hkm 0 ((n : ℝ) + 1) hR f (hf 0 _ hR) hFmeas
+  have h1 := H Γ hΓ hmeas hspread k hk hkm 0 ((n : ℝ) + 1) hR f (hf 0 _ hR) hFmeas
   have hstep : formHs (ball (0 : EuclideanSpace ℝ (Fin d)) ((n : ℝ) + 1)) α f
       ≤ ENNReal.ofReal c₀⁻¹ * form (ball (0 : EuclideanSpace ℝ (Fin d)) ((n : ℝ) + 1)) k f := by
     calc formHs (ball (0 : EuclideanSpace ℝ (Fin d)) ((n : ℝ) + 1)) α f
@@ -3670,19 +3970,21 @@ theorem formHs_univ_le_form_univ_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ}
           mul_le_mul' le_rfl h1
   refine le_trans hstep (mul_le_mul' (ENNReal.ofReal_le_ofReal (le_max_left _ _)) le_rfl)
 
-/-- **Theorem 1.4 for `Ω = ℝ^d`, for wide cones**: the two spaces coincide,
+/-- **Theorem 1.4 for `Ω = ℝ^d`, for small axis spread**: the two spaces coincide,
 granted the quoted Whitney/Dyda input. -/
-theorem Hk_univ_eq_Hs_univ_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ}
-    (hϑ : Real.pi / 4 < ϑ) (hϑ' : ϑ ≤ Real.pi / 2)
+theorem Hk_univ_eq_Hs_univ_spread {d : ℕ} (hd : 2 ≤ d) {ϑ γ Λ α : ℝ}
+    (hϑ' : ϑ ≤ Real.pi / 2) (hγ0 : 0 ≤ γ) (hγ : γ < 2 * ϑ)
     (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
     (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ))
     {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    (hspread : ∀ x y : EuclideanSpace ℝ (Fin d),
+      dangle (Γ x).axis (Γ y).axis ≤ γ)
     {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
     (hk : KernelBounds Γ α Λ k)
     (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
       k p.1 p.2) :
     Hk Set.univ k = Hs Set.univ α := by
-  obtain ⟨c, hc, H⟩ := formHs_univ_le_form_univ_wide hd hϑ hϑ' hΛ hα hα2 hW
+  obtain ⟨c, hc, H⟩ := formHs_univ_le_form_univ_spread hd hϑ' hγ0 hγ hΛ hα hα2 hW
   refine Set.Subset.antisymm (fun f hf => ?_) (Hs_subset_Hk hk Set.univ)
   obtain ⟨hfL2, hfform⟩ := hf
   refine ⟨hfL2, ?_⟩
@@ -3702,9 +4004,134 @@ theorem Hk_univ_eq_Hs_univ_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ}
       (((hgm.comp measurable_snd).sub (hgm.comp measurable_fst)).pow_const 2)).mul hkm
   have hform : form Set.univ k g = form Set.univ k f := (form_congr_ae k hae).symm
   have hformHs : formHs Set.univ α g = formHs Set.univ α f := (formHs_congr_ae α hae).symm
-  have hbound := H Γ hΓ hmeas k hk hkm g hgL2 hFmeas
+  have hbound := H Γ hΓ hmeas hspread k hk hkm g hgL2 hFmeas
   rw [hformHs, hform] at hbound
   exact ne_top_of_le_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top hfform) hbound
+
+
+/-! ## The wide-cone regime, as the case `γ = π/2`
+
+Two lines are never more than `π/2` apart, so a configuration with apex bound
+`ϑ > π/4` has axis spread below `2ϑ` automatically. Every wide-cone statement
+below is therefore an instance of the corresponding small-spread statement. -/
+
+/-- **The inclusion §3.2 needs, for wide cones, in every dimension.** -/
+theorem formHs_ball_ne_top_of_wide {d : ℕ} (hd : 0 < d) {ϑ α Λ : ℝ} (hϑ : π / 4 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) (hα : 0 < α) (hα2 : α < 2)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      k p.1 p.2)
+    {x₀ : EuclideanSpace ℝ (Fin d)} {R R' : ℝ} (hRR : R < R')
+    (hL2 : ∫⁻ x in ball x₀ R', ENNReal.ofReal (f x ^ 2) ≠ ∞)
+    (hHk : form (ball x₀ R') k f ≠ ∞) :
+    formHs (ball x₀ R) α f ≠ ∞ :=
+  formHs_ball_ne_top_of_spread (γ := π / 2) hd hϑ' (by linarith [Real.pi_pos])
+    (by linarith) hα hα2 hΓ hmeas (fun x y => dangle_le_pi_div_two _ _) hk hf hkm hRR hL2 hHk
+
+
+/-- **Theorem 1.1's enlarged-ball form for wide cones**, in every dimension
+`d ≥ 2`. -/
+theorem formHs_ball_le_form_wide {d : ℕ} (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ : π / 4 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) (hα : 0 < α) (hα2 : α < 2) (hΛ : 1 ≤ Λ) :
+    ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ, Measurable f → LocallyIntegrable f volume →
+        (∫⁻ x in ball x₀ (κ * R), ENNReal.ofReal (f x ^ 2)) ≠ ⊤ →
+        formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
+  obtain ⟨κ, c, hκ, hc, H⟩ := formHs_ball_le_form_spread (γ := π / 2) hd hϑ'
+    (by linarith [Real.pi_pos]) (by linarith) hα hα2 hΛ
+  exact ⟨κ, c, hκ, hc, fun Γ hΓ hmeas k hk hkm x₀ R hR f hfm hfl hL2 =>
+    H Γ hΓ hmeas (fun x y => dangle_le_pi_div_two _ _) k hk hkm x₀ R hR f hfm hfl hL2⟩
+
+
+/-- **The ball comparability for wide cones, with the paper's `f ∈ L²(B)`.** -/
+theorem ballComparability_wide {d : ℕ} (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ : π / 4 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) (hα : 0 < α) (hα2 : α < 2) (hΛ : 1 ≤ Λ) :
+    ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
+        MemLp f 2 (volume.restrict (ball x₀ (κ * R))) →
+        formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
+  obtain ⟨κ, c, hκ, hc, H⟩ := ballComparability_spread (γ := π / 2) hd hϑ'
+    (by linarith [Real.pi_pos]) (by linarith) hα hα2 hΛ
+  exact ⟨κ, c, hκ, hc, fun Γ hΓ hmeas k hk hkm x₀ R hR f hmem =>
+    H Γ hΓ hmeas (fun x y => dangle_le_pi_div_two _ _) k hk hkm x₀ R hR f hmem⟩
+
+
+/-- **Theorem 1.1 for wide cones**, on the same ball, in every dimension `d ≥ 2`,
+granted the Whitney/Dyda input Lemma 7.1 quotes. -/
+theorem formHs_le_form_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ} (hϑ : π / 4 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+    (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ)) :
+    ∃ c : ℝ, 0 < c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
+        MemLp f 2 (volume.restrict (ball x₀ R)) →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
+        ENNReal.ofReal c * formHs (ball x₀ R) α f ≤ form (ball x₀ R) k f := by
+  obtain ⟨c, hc, H⟩ := formHs_le_form_spread (γ := π / 2) hd hϑ'
+    (by linarith [Real.pi_pos]) (by linarith) hΛ hα hα2 hW
+  exact ⟨c, hc, fun Γ hΓ hmeas k hk hkm x₀ R hR f hf hFmeas =>
+    H Γ hΓ hmeas (fun x y => dangle_le_pi_div_two _ _) k hk hkm x₀ R hR f hf hFmeas⟩
+
+
+/-- **`H_k(ℝ^d) ⊆ H^{α/2}(ℝ^d)` for wide cones, with a uniform constant**,
+granted the quoted Whitney/Dyda input. -/
+theorem formHs_univ_le_form_univ_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ}
+    (hϑ : Real.pi / 4 < ϑ)
+    (hϑ' : ϑ ≤ Real.pi / 2) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+    (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ)) :
+    ∃ c : ℝ, 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
+        (∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+          MemLp f 2 (volume.restrict (ball x₀ R))) →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
+        formHs Set.univ α f ≤ ENNReal.ofReal c * form Set.univ k f := by
+  obtain ⟨c, hc, H⟩ := formHs_univ_le_form_univ_spread (γ := Real.pi / 2) hd hϑ'
+    (by linarith [Real.pi_pos]) (by linarith) hΛ hα hα2 hW
+  exact ⟨c, hc, fun Γ hΓ hmeas k hk hkm f hf hFmeas =>
+    H Γ hΓ hmeas (fun x y => dangle_le_pi_div_two _ _) k hk hkm f hf hFmeas⟩
+
+
+/-- **Theorem 1.4 for `Ω = ℝ^d`, for wide cones**: the two spaces coincide,
+granted the quoted Whitney/Dyda input. -/
+theorem Hk_univ_eq_Hs_univ_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ}
+    (hϑ : Real.pi / 4 < ϑ) (hϑ' : ϑ ≤ Real.pi / 2)
+    (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+    (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ))
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      k p.1 p.2) :
+    Hk Set.univ k = Hs Set.univ α :=
+  Hk_univ_eq_Hs_univ_spread (γ := Real.pi / 2) hd hϑ' (by linarith [Real.pi_pos])
+    (by linarith) hΛ hα hα2 hW hΓ hmeas (fun x y => dangle_le_pi_div_two _ _) hk hkm
 
 
 /-! ## Dimension one is trivial
@@ -4306,202 +4733,6 @@ theorem formHs_le_form_of_ae_commonDirection {d : ℕ} {v : EuclideanSpace ℝ (
       hmeas (visibleDense_of_ae hae) hf hkm
   rwa [ENNReal.ofReal_toReal (unitBallVol_ne_top (d := d))] at hmain
 
-
-/-! ## Pairwise overlapping cones: narrow cones without a common direction
-
-Chains of length three or more cannot help (see the note below), but chains of
-length two reach further than the wide-cone case suggests. All they need is that
-the two cones **overlap** — the intermediate point is then seen by both
-endpoints' own cones, and no constraint is placed on its type. Overlapping is
-strictly weaker than sharing a direction: three cones can pairwise overlap with
-no direction common to all three, and that happens for narrow cones in dimension
-three and above. -/
-
-/-- **A block of two overlapping types is controlled.** The hypothesis is a cone
-`Ṽ(u,η)` inside the cones of every point of `A` and of every point of `B`; no
-apex angle and no dimension enters. -/
-theorem overlap_block_le {d : ℕ} (hd : 0 < d) {α Λ η : ℝ} (hη0 : 0 < η) (hη2 : η ≤ π / 2)
-    (hα : 0 ≤ α)
-    {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
-    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
-    (hk : KernelBounds Γ α Λ k)
-    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
-    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
-      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2)
-    {A B : Set (EuclideanSpace ℝ (Fin d))} (hAm : MeasurableSet A) (hBm : MeasurableSet B)
-    {u : EuclideanSpace ℝ (Fin d)} (hu : ‖u‖ = 1)
-    (hA : ∀ x ∈ A, cone u η ⊆ (Γ x).carrier)
-    (hB : ∀ x ∈ B, cone u η ⊆ (Γ x).carrier) :
-    ∃ C : ℝ≥0∞, C ≠ ∞ ∧
-      ∫⁻ p in A ×ˢ B, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
-        ≤ C * form Set.univ k f := by
-  set U : Set (EuclideanSpace ℝ (Fin d)) := A ∪ B with hU
-  have hUm : MeasurableSet U := hAm.union hBm
-  have hcommon : ∀ x ∈ U, cone u η ⊆ (Γ x).carrier := by
-    intro x hx
-    rcases hx with hx | hx
-    · exact hA x hx
-    · exact hB x hx
-  have hmain := formHs_le_form_of_commonDirection_on hu hη0 hη2 hα hd hk hUm hcommon hf hkm
-  set K : ℝ≥0∞ := ENNReal.ofReal (2 * Λ) *
-    (ENNReal.ofReal (chainConst d η α) + ENNReal.ofReal (chainConst' d η α)) *
-    unitBallVol d with hK
-  have hKtop : K ≠ ∞ := by
-    rw [hK]
-    exact ENNReal.mul_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top
-      (ENNReal.add_ne_top.mpr ⟨ENNReal.ofReal_ne_top, ENNReal.ofReal_ne_top⟩))
-      unitBallVol_ne_top
-  refine ⟨(unitBallVol d)⁻¹ * K, ENNReal.mul_ne_top
-    (ENNReal.inv_ne_top.mpr (unitBallVol_ne_zero d)) hKtop, ?_⟩
-  have hsub : A ×ˢ B ⊆ U ×ˢ U :=
-    Set.prod_mono Set.subset_union_left Set.subset_union_right
-  calc ∫⁻ p in A ×ˢ B, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
-      ≤ ∫⁻ p in U ×ˢ U, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 :=
-        lintegral_mono_set hsub
-    _ = (unitBallVol d)⁻¹ * (unitBallVol d *
-          ∫⁻ p in U ×ˢ U, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2) := by
-        rw [← mul_assoc, ENNReal.inv_mul_cancel (unitBallVol_ne_zero d) unitBallVol_ne_top,
-          one_mul]
-    _ ≤ (unitBallVol d)⁻¹ * (K * form Set.univ k f) := mul_le_mul' le_rfl hmain
-    _ = (unitBallVol d)⁻¹ * K * form Set.univ k f := by rw [hK]; ring
-
-/-- **`H_k ⊆ H^{α/2}` for a pairwise overlapping family of cone types**, in every
-dimension and at any apex angle.
-
-The family `W` need not have a direction common to all of it: pairwise overlap
-suffices, and pairwise overlap does not imply a common direction — three cones
-of apex `θ` whose axes form a spherical triangle of side just under `2θ` overlap
-pairwise, while their circumradius exceeds `θ`. -/
-theorem sobolevInclusion_of_overlapping {d : ℕ} (hd : 0 < d) {α Λ η : ℝ}
-    (hη0 : 0 < η) (hη2 : η ≤ π / 2) (hα : 0 ≤ α)
-    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hmeas : CondMeas Γ)
-    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
-    (hk : KernelBounds Γ α Λ k)
-    {ι : Type} [Finite ι] (W : ι → Set (EuclideanSpace ℝ (Fin d)))
-    (hcover : ∀ x : EuclideanSpace ℝ (Fin d), ∃ i, W i ⊆ (Γ x).carrier)
-    (hcompat : ∀ i j : ι, ∃ u : EuclideanSpace ℝ (Fin d), ‖u‖ = 1 ∧
-      cone u η ⊆ W i ∧ cone u η ⊆ W j)
-    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
-    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
-      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
-    ∃ C : ℝ≥0∞, C ≠ ∞ ∧ formHs Set.univ α f ≤ C * form Set.univ k f := by
-  classical
-  have : Fintype ι := Fintype.ofFinite ι
-  set blk : ι × ι → Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) := fun i =>
-    {x | W i.1 ⊆ (Γ x).carrier} ×ˢ {x | W i.2 ⊆ (Γ x).carrier} with hblk
-  have hcover' : (⋃ i, blk i) = Set.univ := by
-    refine Set.eq_univ_of_forall fun p => ?_
-    obtain ⟨i, hi⟩ := hcover p.1
-    obtain ⟨j, hj⟩ := hcover p.2
-    exact Set.mem_iUnion.mpr ⟨(i, j), hi, hj⟩
-  choose u hu h1 h2 using hcompat
-  choose C hCtop hCle using fun i : ι × ι =>
-    overlap_block_le hd hη0 hη2 hα hk hf hkm (hmeas (W i.1)) (hmeas (W i.2)) (hu i.1 i.2)
-      (fun x hx => le_trans (h1 i.1 i.2) hx) (fun x hx => le_trans (h2 i.1 i.2) hx)
-  refine ⟨∑' i, C i, ?_, ?_⟩
-  · rw [tsum_fintype]
-    exact (ENNReal.sum_lt_top.mpr fun i _ => (hCtop i).lt_top).ne
-  · have hlhs : formHs Set.univ α f
-        = ∫⁻ p in ⋃ i, blk i,
-          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 := by
-      rw [hcover', formHs, form, Set.univ_prod_univ]
-    rw [hlhs]
-    calc ∫⁻ p in ⋃ i, blk i,
-          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
-        ≤ ∑' i, ∫⁻ p in blk i,
-            ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 :=
-          lintegral_iUnion_le _ _
-      _ ≤ ∑' i, C i * form Set.univ k f := ENNReal.tsum_le_tsum hCle
-      _ = (∑' i, C i) * form Set.univ k f := ENNReal.tsum_mul_right
-
-
-/-! ### When do two cones overlap?
-
-The bisector argument of `exists_common_subcone` is not about `π/4`: two double
-cones of apex `θ` overlap in a cone of aperture `θ − β`, where `β` is half the
-angle between their axes. The `π/4` threshold is what makes *every* pair overlap;
-a particular pair needs only its own axes to be close. -/
-
-/-- An inner product at least `cos c` between unit vectors means an angle at most
-`c`. -/
-lemma angle_le_of_cos_le_inner {v u : E} (hv : ‖v‖ = 1) (hu : ‖u‖ = 1) {c : ℝ}
-    (hc0 : 0 ≤ c) (hcπ : c ≤ π) (h : Real.cos c ≤ ⟪v, u⟫_ℝ) :
-    InnerProductGeometry.angle v u ≤ c := by
-  rw [InnerProductGeometry.angle, hv, hu, one_mul, div_one]
-  exact le_trans (Real.arccos_le_arccos h) (le_of_eq (Real.arccos_cos hc0 hcπ))
-
-private theorem exists_common_subcone_aux' {v w : E} (hv : ‖v‖ = 1) (hw : ‖w‖ = 1)
-    (hc : (0 : ℝ) ≤ ⟪v, w⟫_ℝ) {θ η : ℝ} (hη : 0 < η) (hθ : θ ≤ π / 2) (hηθ : η ≤ θ)
-    (hbis : Real.cos (θ - η) ≤ Real.sqrt ((1 + ⟪v, w⟫_ℝ) / 2)) :
-    ∃ u : E, ‖u‖ = 1 ∧ doubleCone u η ⊆ doubleCone v θ ∧
-      doubleCone u η ⊆ doubleCone w θ := by
-  have hpi : (0:ℝ) < π := Real.pi_pos
-  have hvv : ⟪v, v⟫_ℝ = 1 := by rw [real_inner_self_eq_norm_sq, hv]; norm_num
-  have hww : ⟪w, w⟫_ℝ = 1 := by rw [real_inner_self_eq_norm_sq, hw]; norm_num
-  have hne : v + w ≠ 0 := by
-    intro h
-    have hwv : w = -v := by
-      have := congrArg (fun z => z - v) h
-      simpa using this
-    rw [hwv, inner_neg_right, hvv] at hc
-    linarith
-  set N : ℝ := ‖v + w‖ with hN
-  have hNpos : 0 < N := norm_pos_iff.mpr hne
-  have hNsq : N ^ 2 = 2 + 2 * ⟪v, w⟫_ℝ := by
-    rw [hN, @norm_add_sq_real, hv, hw]; ring
-  have hNval : N = Real.sqrt (2 + 2 * ⟪v, w⟫_ℝ) := by
-    rw [← hNsq, Real.sqrt_sq hNpos.le]
-  set u : E := N⁻¹ • (v + w) with hu
-  have hunorm : ‖u‖ = 1 := by rw [hu, hN]; exact norm_smul_inv_norm hne
-  have hmul : Real.sqrt ((1 + ⟪v, w⟫_ℝ) / 2) * N = 1 + ⟪v, w⟫_ℝ := by
-    rw [hNval, ← Real.sqrt_mul (by positivity)]
-    rw [show (1 + ⟪v, w⟫_ℝ) / 2 * (2 + 2 * ⟪v, w⟫_ℝ) = (1 + ⟪v, w⟫_ℝ) ^ 2 from by ring]
-    exact Real.sqrt_sq (by linarith)
-  have hkey : ∀ x : E, ⟪x, v⟫_ℝ + ⟪x, w⟫_ℝ = 1 + ⟪v, w⟫_ℝ →
-      ⟪x, u⟫_ℝ = Real.sqrt ((1 + ⟪v, w⟫_ℝ) / 2) := by
-    intro x hx
-    rw [hu, real_inner_smul_right, inner_add_right, hx, inv_mul_eq_div,
-      div_eq_iff (ne_of_gt hNpos)]
-    exact hmul.symm
-  have hvu : Real.cos (θ - η) ≤ ⟪v, u⟫_ℝ := by
-    rw [hkey v (by rw [hvv])]; exact hbis
-  have hwu : Real.cos (θ - η) ≤ ⟪w, u⟫_ℝ := by
-    rw [hkey w (by rw [hww, real_inner_comm]; ring)]; exact hbis
-  have hrange : (0:ℝ) ≤ θ - η := by linarith
-  have hrange' : θ - η ≤ π := by linarith
-  have hdv : dangle v u ≤ θ - η :=
-    le_trans (min_le_left _ _) (angle_le_of_cos_le_inner hv hunorm hrange hrange' hvu)
-  have hdw : dangle w u ≤ θ - η :=
-    le_trans (min_le_left _ _) (angle_le_of_cos_le_inner hw hunorm hrange hrange' hwu)
-  refine ⟨u, hunorm, ?_, ?_⟩
-  · have := doubleCone_subset_of_dangle_le hv hunorm (a := θ - η) (η := η) hrange hη.le
-      (by linarith) hdv
-    rwa [show θ - η + η = θ from by ring] at this
-  · have := doubleCone_subset_of_dangle_le hw hunorm (a := θ - η) (η := η) hrange hη.le
-      (by linarith) hdw
-    rwa [show θ - η + η = θ from by ring] at this
-
-/-- **Two double cones overlap when their axes are close.** If the bisector's
-inner product with each axis is at least `cos (θ − η)`, the cone of aperture `η`
-about the bisector lies in both. -/
-theorem exists_common_subcone_of_inner {v w : E} (hv : ‖v‖ = 1) (hw : ‖w‖ = 1)
-    {θ η : ℝ} (hη : 0 < η) (hθ : θ ≤ π / 2) (hηθ : η ≤ θ)
-    (hbis : Real.cos (θ - η) ≤ Real.sqrt ((1 + |⟪v, w⟫_ℝ|) / 2)) :
-    ∃ u : E, ‖u‖ = 1 ∧ doubleCone u η ⊆ doubleCone v θ ∧ doubleCone u η ⊆ doubleCone w θ := by
-  have hpi : (0:ℝ) < π := Real.pi_pos
-  -- replace `w` by `-w` if necessary, so that the inner product is nonnegative
-  by_cases hsign : (0 : ℝ) ≤ ⟪v, w⟫_ℝ
-  · have habs : |⟪v, w⟫_ℝ| = ⟪v, w⟫_ℝ := abs_of_nonneg hsign
-    rw [habs] at hbis
-    exact exists_common_subcone_aux' hv hw hsign hη hθ hηθ hbis
-  · have hneg : ⟪v, w⟫_ℝ < 0 := not_le.mp hsign
-    have hnw : ‖(-w : E)‖ = 1 := by simpa using hw
-    have hsign' : (0:ℝ) ≤ ⟪v, -w⟫_ℝ := by rw [inner_neg_right]; linarith
-    have habs : |⟪v, w⟫_ℝ| = ⟪v, -w⟫_ℝ := by
-      rw [inner_neg_right, abs_of_neg hneg]
-    rw [habs] at hbis
-    obtain ⟨u, hu, h1, h2⟩ := exists_common_subcone_aux' hv hnw hsign' hη hθ hηθ hbis
-    exact ⟨u, hu, h1, by rwa [doubleCone_neg] at h2⟩
 
 /-! ### The overlap hypothesis is not vacuous, and is strictly weaker
 
