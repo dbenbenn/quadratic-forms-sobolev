@@ -170,6 +170,7 @@ The pieces, all proved:
 | **Theorem 1.1 for wide cones**: enlarged ball, `L²` form, same ball | `QFS.formHs_ball_le_form_wide`, `QFS.ballComparability_wide`, `QFS.formHs_le_form_wide` | ✅ **proved** |
 | **Theorem 1.4 for `ℝ^d`, wide cones** | `QFS.formHs_univ_le_form_univ_wide`, `QFS.Hk_univ_eq_Hs_univ_wide` | ✅ **proved** |
 | **Dimension one is trivial**: every cone is `ℝ ∖ {0}`, so `|·|²_{H^{α/2}} ≤ (Λ/2)|·|²_{H_k}` | `QFS.doubleCone_dim_one`, `QFS.jumpKernel_le_of_dim_one`, `QFS.formHs_le_form_dim_one` | ✅ **proved** |
+| The wide-cone hypotheses are satisfiable | `QFS.wide_hypotheses_nonvacuous` | ✅ **proved** |
 | The Lipschitz cutoff and its cost | `QFS.cutoff`, `QFS.sq_cutoff_sub_le`, `QFS.sq_cutoff_mul_sub_le`, `QFS.form_cutoff_le`, `QFS.lintegral_cutoff_error_le`, `QFS.lintegral_cutoff_error_le'` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the

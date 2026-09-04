@@ -3831,4 +3831,20 @@ theorem formHs_le_form_dim_one {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hα : 0 ≤ α)
         ∫⁻ p in Ω ×ˢ Ω, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2 :=
       lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
 
+
+/-- **The wide-cone hypotheses are satisfiable.** The constant configuration with
+apex angle `π/2` is `ϑ`-bounded for every `ϑ ≤ π/2`, in particular for a
+`ϑ > π/4`, and the plain jump kernel satisfies (1.4) with `Λ = 2`. -/
+theorem wide_hypotheses_nonvacuous {d : ℕ} {α : ℝ}
+    {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1) :
+    ∃ (ϑ : ℝ) (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+      (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞),
+      π / 4 < ϑ ∧ ϑ ≤ π / 2 ∧ IsBounded Γ ϑ ∧ CondMeas Γ ∧ KernelBounds Γ α 2 k ∧
+      (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+        k p.1 p.2) := by
+  have hpi : (0:ℝ) < π := Real.pi_pos
+  refine ⟨π / 2, constConfig ⟨v, hv, π / 2, by linarith, le_rfl⟩, jumpKernel d α,
+    by linarith, le_rfl, isBounded_constConfig (by linarith) le_rfl hv,
+    condMeas_constConfig _, kernelBounds_jumpKernel _ α, measurable_jumpKernel d α⟩
+
 end QFS
