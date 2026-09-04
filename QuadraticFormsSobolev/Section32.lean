@@ -1357,4 +1357,38 @@ theorem tendsto_cubeAvg_stepIndex {f : EuclideanSpace ℝ (Fin d) → ℝ}
         Filter.Tendsto (fun i => cubeAvg d (hn i) f (stepIndex d (hn i) s)) l (nhds (f s)) :=
   tendsto_avg_stepIndex hf
 
+
+/-- An almost-everywhere property of points lifts to both coordinates of almost
+every pair. -/
+theorem ae_prod_both {P : EuclideanSpace ℝ (Fin d) → Prop}
+    (hP : ∀ᵐ x : EuclideanSpace ℝ (Fin d), P x) :
+    ∀ᵐ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d), P p.1 ∧ P p.2 := by
+  rw [Measure.volume_eq_prod]
+  exact (Measure.quasiMeasurePreserving_fst.ae hP).and
+    (Measure.quasiMeasurePreserving_snd.ae hP)
+
+/-- Almost every pair has distinct coordinates. -/
+theorem ae_prod_ne (hd : 0 < d) :
+    ∀ᵐ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d), p.1 ≠ p.2 := by
+  have hsing : ∀ x : EuclideanSpace ℝ (Fin d), volume ({x} : Set (EuclideanSpace ℝ (Fin d))) = 0 := by
+    intro x
+    have he : ({x} : Set (EuclideanSpace ℝ (Fin d))) = closedBall x 0 := by simp
+    rw [he, volume_closedBall_eq _ le_rfl, zero_pow (Nat.ne_of_gt hd), ENNReal.ofReal_zero,
+      zero_mul]
+  rw [ae_iff]
+  have hdiag : {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) | ¬ p.1 ≠ p.2}
+      = {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) | p.1 = p.2} := by
+    ext p; simp
+  rw [hdiag, Measure.volume_eq_prod,
+    Measure.prod_apply (measurableSet_eq_fun measurable_fst measurable_snd)]
+  have hfib : ∀ x : EuclideanSpace ℝ (Fin d),
+      volume (Prod.mk x ⁻¹' {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+        p.1 = p.2}) = 0 := by
+    intro x
+    have he : Prod.mk x ⁻¹' {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+        p.1 = p.2} = ({x} : Set (EuclideanSpace ℝ (Fin d))) := by
+      ext y; simp [eq_comm]
+    rw [he, hsing x]
+  rw [lintegral_congr hfib, lintegral_zero]
+
 end QFS
