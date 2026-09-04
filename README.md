@@ -101,8 +101,16 @@ of chains. Chaining needs three quantitative inputs, and all three are proved:
 | A **ball** of common cone-neighbours of `s` and `t`, radius `‖s−t‖`, inside both cones and within `O(‖s−t‖/sin ϑ)` of each | `QFS.exists_ball_in_two_cones`, `QFS.mem_two_cones_of_mem_midBall` | ✅ proved |
 | The compression bound: for fixed `s`, `z`, the admissible `t` lie in a ball of radius comparable to `‖z−s‖` | `QFS.midBall_fibre_subset_closedBall`, `QFS.inner_mem_Icc_of_mem_midBall` | ✅ proved |
 | The averaging ball has volume exactly `c_d‖s−t‖^d` | `QFS.volume_midBall` | ✅ proved |
+| **The fibre estimate**: `∫_{t : z ∈ W(s,t)} ‖s−t‖^{-2d-α} dt ≤ C(d,ϑ,α)·‖z−s‖^{-d-α}` | `QFS.lintegral_midBall_fibre_le`, `QFS.chainConst` | ✅ proved |
 
-The first is the substantive one. The paper's Lemma 4.3 produces a *single*
+The last is what has to survive the exchange of the chaining average with the
+integration in `t`, and it is why the argument is scale-invariant: the singular
+weight comes back as exactly the weight of the `H_k` form on the pair `(s,z)`,
+which the lower bound of (1.4) then converts into `k(s,z)`. With it, the
+same-cone-direction case of `(★)` needs only the Tonelli assembly — which is not
+yet written.
+
+The first input is the substantive one. The paper's Lemma 4.3 produces a *single*
 intermediate point; a point is a null set and cannot absorb an average, so a
 chaining argument needs a set of positive measure. The construction exploits
 that `coneGap` increases by exactly `sin ϑ` per unit step along the axis
