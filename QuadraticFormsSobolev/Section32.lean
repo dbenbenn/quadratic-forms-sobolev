@@ -3242,4 +3242,119 @@ theorem lintegral_stepG_le_split (hd : 0 < d) {h α Λ R : ℝ} (hh : 0 < h) (h�
     _ = 3 * form (ball x₀ R') k f + (3 * W * tileOsc d h (ball x₀ R') f
         + 3 * W * tileOsc d h (ball x₀ R') f) := by ring
 
+
+/-- **`H^{α/2}` on a ball is finite as soon as the tile oscillation is bounded
+along a sequence of scales.** This is the alternative to the dominant: Fatou on
+the left of `(discret)` and the splitting bound on the right, with no a priori
+hypothesis on `f` beyond a *kernel-free* one. -/
+theorem formHs_ball_ne_top_of_osc_bounded (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ Real.pi / 2) (hα : 0 < α) (hα2 : α < 2) (hΛ : 1 ≤ Λ) :
+    ∃ κ : ℝ, 1 ≤ κ ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ, Measurable f → LocallyIntegrable f volume →
+        form (ball x₀ ((κ + Real.sqrt d) * R)) k f ≠ ⊤ →
+        (∃ (hn : ℕ → ℝ) (M : ℝ≥0∞), (∀ n, 0 < hn n) ∧ (∀ n, hn n ≤ R) ∧
+          Filter.Tendsto hn Filter.atTop (nhds 0) ∧ M ≠ ⊤ ∧
+          ∀ n, ENNReal.ofReal ((hn n) ^ (-α)) *
+            tileOsc d (hn n) (ball x₀ ((κ + Real.sqrt d) * R)) f ≤ M) →
+        formHs (ball x₀ R) α f ≠ ⊤ := by
+  have hd1 : 0 < d := by omega
+  have hsd : (0:ℝ) < Real.sqrt d := Real.sqrt_pos.mpr (by exact_mod_cast hd1)
+  obtain ⟨θ', hθ0, hθle, hcor⟩ :=
+    discreteKernelBounds_discreteKernel (d := d) hϑ hϑ' hd hα hα2.le
+  obtain ⟨C, hC1, hCmain⟩ := hcor Λ hΛ
+  obtain ⟨κ, c, hκ, hc, hdiscret⟩ := discret_lintegral (d := d) θ' C α (3 * Real.sqrt d)
+    hθ0 hC1 hα hα2 (by positivity)
+  refine ⟨κ, hκ, fun Γ hΓ hmeas k hk hkm x₀ R hR f hfm hf hform ⟨hn, M, hpos, hle, hlim,
+    hM, hosc⟩ => ?_⟩
+  set ρ : ℝ := (κ + Real.sqrt d) * R with hρ
+  -- Fatou on the left
+  have hfatou : formHs (ball x₀ R) α f
+      ≤ Filter.liminf (fun n => ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+          discreteC d (hn n) (ball x₀ R) (3 * Real.sqrt d * hn n) (jumpKernel d α)
+            (cubeAvg d (hn n) f) (stepIndex d (hn n) p.1, stepIndex d (hn n) p.2))
+        Filter.atTop :=
+    formHs_ball_le_liminf hn hpos hlim (R₀ := 3 * Real.sqrt d) (by positivity) hf hd1
+  -- the discrete inequality and the splitting bound, at each scale
+  set K : ℝ≥0∞ := ENNReal.ofReal c * (3 * form (ball x₀ ρ) k f
+    + (3 * (ENNReal.ofReal Λ * (ENNReal.ofReal ((2 * Real.sqrt d) ^ (-α)) *
+        kernelTail d α)) * M
+      + 3 * (ENNReal.ofReal Λ * (ENNReal.ofReal ((2 * Real.sqrt d) ^ (-α)) *
+        kernelTail d α)) * M)) with hK
+  have hbound : ∀ n, (∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      discreteC d (hn n) (ball x₀ R) (3 * Real.sqrt d * hn n) (jumpKernel d α)
+        (cubeAvg d (hn n) f) (stepIndex d (hn n) p.1, stepIndex d (hn n) p.2)) ≤ K := by
+    intro n
+    obtain ⟨Γ', hΓ'b, hω⟩ := hCmain Γ hΓ hmeas k hk (hn n) (hpos n)
+    have hdisc := hdiscret Γ' hΓ'b (hn n) (hpos n) (discreteKernel d k (hn n)) hω x₀ R
+      (cubeAvg d (hn n) f) hR
+    rw [← lintegral_stepG_eq (hpos n)] at hdisc
+    refine le_trans hdisc (mul_le_mul' le_rfl ?_)
+    refine le_trans (lintegral_stepG_le_split hd1 (hpos n) hα (by linarith) hk.upper hkm
+      hfm x₀) ?_
+    -- the ball and the oscillation, at this scale
+    have hsub : ball x₀ (κ * R + Real.sqrt d * hn n) ⊆ ball x₀ ρ := by
+      refine ball_subset_ball ?_
+      rw [hρ]
+      nlinarith [hle n, hsd, hκ, hR]
+    have hballs : form (ball x₀ (κ * R + Real.sqrt d * hn n)) k f ≤ form (ball x₀ ρ) k f :=
+      form_mono_set hsub k f
+    have hoscn : ENNReal.ofReal Λ *
+          (ENNReal.ofReal ((2 * Real.sqrt d * hn n) ^ (-α)) * kernelTail d α) *
+          tileOsc d (hn n) (ball x₀ (κ * R + Real.sqrt d * hn n)) f
+        ≤ ENNReal.ofReal Λ * (ENNReal.ofReal ((2 * Real.sqrt d) ^ (-α)) *
+            kernelTail d α) * M := by
+      have hsplit : ((2 * Real.sqrt d * hn n) : ℝ) ^ (-α)
+          = (2 * Real.sqrt d) ^ (-α) * (hn n) ^ (-α) := by
+        rw [← Real.mul_rpow (by positivity) (le_of_lt (hpos n))]
+      have hmono : tileOsc d (hn n) (ball x₀ (κ * R + Real.sqrt d * hn n)) f
+          ≤ tileOsc d (hn n) (ball x₀ ρ) f := lintegral_mono_set hsub
+      calc ENNReal.ofReal Λ *
+            (ENNReal.ofReal ((2 * Real.sqrt d * hn n) ^ (-α)) * kernelTail d α) *
+            tileOsc d (hn n) (ball x₀ (κ * R + Real.sqrt d * hn n)) f
+          ≤ ENNReal.ofReal Λ *
+              (ENNReal.ofReal ((2 * Real.sqrt d) ^ (-α) * (hn n) ^ (-α)) *
+                kernelTail d α) * tileOsc d (hn n) (ball x₀ ρ) f := by
+            rw [hsplit]
+            exact mul_le_mul' le_rfl hmono
+        _ = ENNReal.ofReal Λ * (ENNReal.ofReal ((2 * Real.sqrt d) ^ (-α)) *
+              kernelTail d α) *
+              (ENNReal.ofReal ((hn n) ^ (-α)) * tileOsc d (hn n) (ball x₀ ρ) f) := by
+            rw [ENNReal.ofReal_mul (by positivity)]
+            ring
+        _ ≤ ENNReal.ofReal Λ * (ENNReal.ofReal ((2 * Real.sqrt d) ^ (-α)) *
+              kernelTail d α) * M := mul_le_mul' le_rfl (hosc n)
+    have hoscn3 : 3 * (ENNReal.ofReal Λ *
+          (ENNReal.ofReal ((2 * Real.sqrt d * hn n) ^ (-α)) * kernelTail d α)) *
+          tileOsc d (hn n) (ball x₀ (κ * R + Real.sqrt d * hn n)) f
+        ≤ 3 * (ENNReal.ofReal Λ * (ENNReal.ofReal ((2 * Real.sqrt d) ^ (-α)) *
+            kernelTail d α)) * M := by
+      calc 3 * (ENNReal.ofReal Λ *
+            (ENNReal.ofReal ((2 * Real.sqrt d * hn n) ^ (-α)) * kernelTail d α)) *
+            tileOsc d (hn n) (ball x₀ (κ * R + Real.sqrt d * hn n)) f
+          = 3 * (ENNReal.ofReal Λ *
+              (ENNReal.ofReal ((2 * Real.sqrt d * hn n) ^ (-α)) * kernelTail d α) *
+              tileOsc d (hn n) (ball x₀ (κ * R + Real.sqrt d * hn n)) f) := by ring
+        _ ≤ 3 * (ENNReal.ofReal Λ * (ENNReal.ofReal ((2 * Real.sqrt d) ^ (-α)) *
+              kernelTail d α) * M) := mul_le_mul' (le_refl (3 : ℝ≥0∞)) hoscn
+        _ = 3 * (ENNReal.ofReal Λ * (ENNReal.ofReal ((2 * Real.sqrt d) ^ (-α)) *
+              kernelTail d α)) * M := by ring
+    exact add_le_add (mul_le_mul' le_rfl hballs) (add_le_add hoscn3 hoscn3)
+  -- conclude
+  have hKtop : K ≠ ⊤ := by
+    rw [hK]
+    refine ENNReal.mul_ne_top ENNReal.ofReal_ne_top ?_
+    refine ENNReal.add_ne_top.mpr ⟨ENNReal.mul_ne_top (by norm_num) hform,
+      ENNReal.add_ne_top.mpr ⟨?_, ?_⟩⟩ <;>
+    · refine ENNReal.mul_ne_top (ENNReal.mul_ne_top (by norm_num) ?_) hM
+      exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top
+        (ENNReal.mul_ne_top ENNReal.ofReal_ne_top (ne_of_lt (kernelTail_lt_top hd1 hα)))
+  refine ne_top_of_le_ne_top hKtop (le_trans hfatou ?_)
+  exact Filter.liminf_le_of_frequently_le (Filter.Frequently.of_forall hbound)
+
 end QFS
