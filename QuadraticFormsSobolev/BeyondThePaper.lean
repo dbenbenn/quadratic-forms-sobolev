@@ -1319,4 +1319,63 @@ theorem diagonal_blocks_of_bounded {d : ℕ} (hd : 0 < d) {ϑ α Λ : ℝ}
       (U := {x' | (Γ' x).carrier ⊆ (Γ x').carrier}) (hmeas _) hcommon hf hkm
     simpa [hapex x] using this
 
+
+/-! ## Dimension two: the toolkit
+
+In the plane the cross blocks *are* reachable: two double cones whose axes are
+not parallel have intersecting axis-lines, and the "not already a cone pair"
+condition supplies exactly the quantitative separation the chaining needs. The
+first step is a concrete orthogonal complement. -/
+
+/-- The rotation of `w` by a quarter turn, in coordinates. -/
+noncomputable def perp2 (w : EuclideanSpace ℝ (Fin 2)) : EuclideanSpace ℝ (Fin 2) :=
+  WithLp.toLp 2 ![-(w 1), w 0]
+
+@[simp] lemma perp2_apply_zero (w : EuclideanSpace ℝ (Fin 2)) : perp2 w 0 = -(w 1) := rfl
+
+@[simp] lemma perp2_apply_one (w : EuclideanSpace ℝ (Fin 2)) : perp2 w 1 = w 0 := rfl
+
+lemma real_inner_eq_two (x y : EuclideanSpace ℝ (Fin 2)) :
+    ⟪x, y⟫_ℝ = x 0 * y 0 + x 1 * y 1 := by
+  simp [PiLp.inner_apply, Fin.sum_univ_two]
+  ring
+
+lemma norm_sq_eq_two (x : EuclideanSpace ℝ (Fin 2)) : ‖x‖ ^ 2 = (x 0) ^ 2 + (x 1) ^ 2 := by
+  rw [← real_inner_self_eq_norm_sq, real_inner_eq_two]
+  ring
+
+@[simp] lemma inner_perp2_self (w : EuclideanSpace ℝ (Fin 2)) : ⟪w, perp2 w⟫_ℝ = 0 := by
+  rw [real_inner_eq_two]; simp; ring
+
+lemma norm_perp2 (w : EuclideanSpace ℝ (Fin 2)) : ‖perp2 w‖ = ‖w‖ := by
+  have h : ‖perp2 w‖ ^ 2 = ‖w‖ ^ 2 := by
+    rw [norm_sq_eq_two, norm_sq_eq_two]; simp; ring
+  have h1 : (0:ℝ) ≤ ‖perp2 w‖ := norm_nonneg _
+  have h2 : (0:ℝ) ≤ ‖w‖ := norm_nonneg _
+  nlinarith [h, h1, h2]
+
+/-- The plane decomposes along `w` and its quarter turn. -/
+lemma decomp_two {w : EuclideanSpace ℝ (Fin 2)} (hw : ‖w‖ = 1)
+    (x : EuclideanSpace ℝ (Fin 2)) :
+    x = ⟪w, x⟫_ℝ • w + ⟪perp2 w, x⟫_ℝ • perp2 w := by
+  have hw2 : (w 0) ^ 2 + (w 1) ^ 2 = 1 := by
+    rw [← norm_sq_eq_two, hw]; norm_num
+  refine euclidean_ext (Fin.forall_fin_two.mpr ⟨?_, ?_⟩)
+  · simp only [real_inner_eq_two, PiLp.add_apply, PiLp.smul_apply, smul_eq_mul,
+      perp2_apply_zero, perp2_apply_one]
+    linear_combination (-(x 0)) * hw2
+  · simp only [real_inner_eq_two, PiLp.add_apply, PiLp.smul_apply, smul_eq_mul,
+      perp2_apply_zero, perp2_apply_one]
+    linear_combination (-(x 1)) * hw2
+
+/-- The component of `x` across the axis `w` is measured by the quarter turn. -/
+lemma norm_across_two {w : EuclideanSpace ℝ (Fin 2)} (hw : ‖w‖ = 1)
+    (x : EuclideanSpace ℝ (Fin 2)) : ‖across w x‖ = |⟪perp2 w, x⟫_ℝ| := by
+  have hd := decomp_two hw x
+  have hacross : across w x = ⟪perp2 w, x⟫_ℝ • perp2 w := by
+    rw [across]
+    nth_rewrite 1 [hd]
+    abel
+  rw [hacross, norm_smul, Real.norm_eq_abs, norm_perp2, hw, mul_one]
+
 end QFS
