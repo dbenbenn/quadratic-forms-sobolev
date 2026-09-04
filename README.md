@@ -379,7 +379,7 @@ blocked on a recorded gap, ❌ out of scope.
 | 5.12 | Remark | the favored cone is not unique | ⚪ (reflected in the design, see below) |
 | 5.13 | Definition | the favored graph | ✅ |
 | 5.14 | Proposition | renormalisation | ✅ |
-| 5.15 | Theorem | path properties | ✅ **proved** (`QFS.path_props`) |
+| 5.15 | Theorem | path properties | ✅ **proved** (`QFS.path_props`, and `QFS.path_props_of_pos` without the cap `ϑ ≤ π/2`, which is how the paper states it) |
 | 5.16 | Lemma | the first jump | ✅ |
 | 7.1 | Lemma | from balls to a bounded Lipschitz domain | 🚧 its chain (6.14) **proved** (`QFS.lemma_ball_to_domain`), including the finite-overlap step (`QFS.tsum_setLIntegral_le_of_overlap`), and packaged for a ball (`QFS.formHs_le_form_of_ballComparability`) and for a domain (`QFS.formHs_le_form_domain`); the Whitney family and Dyda's inequality (13) are hypotheses, as in the paper (`QFS.WhitneyBallData`, `QFS.WhitneyDomainData`) |
 | 7.2 | Lemma | a Lebesgue differentiation argument | ✅ **proved** (`QFS.lemma_lebesgue_diff`) |
@@ -1063,6 +1063,16 @@ Each departure from the paper, and why.
     This avoids the comparison, hence one appeal to Lemma 3.4, and gives the
     same conclusion with the same constants.
 
+27. **Where the constant sits.** The paper puts the comparability constant
+    sometimes on the left (`c Σ ≤ Σ` in Corollary 3.1 and in Lemma 7.1's chain)
+    and sometimes on the right (`∫ ≤ c ∫` in Theorems 1.1 and 1.3). Each Lean
+    statement follows the orientation of the result it is used with, so
+    `QFS.corollaryThreeOne` is stated as `Σ ≤ c Σ` — the same assertion with `c`
+    replaced by `c⁻¹` — to match Theorem 1.3, while
+    `QFS.formHs_le_form_of_ballComparability` keeps the constant on the left, as
+    (6.14) has it. The headline statements (`QFS.TheoremOneOne`,
+    `QFS.TheoremOneOneCondMeas`, `QFS.TheoremOneOneBall`) all follow the paper.
+
 ## What remains
 
 The repository now proves every link in the chain from the discrete theory to
@@ -1172,7 +1182,7 @@ together with the results the paper itself quotes from elsewhere.
 | Dyda's inequality (13) | Lem. 7.1 | Quoted from [Dyda06, proof of Thm. 1]; carried as the hypothesis `hdyda` of `QFS.lemma_ball_to_domain`. |
 | Density of `C^∞(Ω̄)` and `C_c^∞(ℝ^d)` in `H^{α/2}` | Thm. 1.4 | Quoted from [DeDe12, Props. 4.52 and 4.27]. |
 | `H_k` on balls | Lem. 3.7 | ✅ **proved** in the enlarged-ball form (`QFS.formHs_ball_le_form_of_formHs_ne_top`), under the finiteness hypothesis above. |
-| `{x | V ⊆ Γ(x)}` is Lebesgue measurable | §2 (after Cor. 2.4) | The paper does not prove it — "This implication is due to [Debreu67, Thm. 4.4]". It is what makes the sets `A_h^m(u)` measurable, which Proposition 3.5 integrates over, so it is carried there as the explicit hypothesis `QFS.CondMeas`. |
+| `{x | V ⊆ Γ(x)}` is Lebesgue measurable | §2 (after Cor. 2.4) | The paper does not prove it — "This implication is due to [Debreu67, Thm. 4.4]". It is what makes the sets `A_h^m(u)` measurable, which Proposition 3.5 integrates over, so it is carried there as the explicit hypothesis `QFS.CondMeas`. Checked against Mathlib: the route through Debreu's theorem needs the measurable-projection theorem for analytic sets, which Mathlib does not have (`AnalyticSet` exists, but only `measurablySeparable` and `measurableSet_of_compl`, not universal measurability); and the elementary route — intersecting over a countable dense subset of `V` — fails exactly at apex `π/2`, where the closed double cone is the whole space. |
 | Auxiliary integral estimate | Lem. 7.1 | An integral computation feeding the appendix lemma, which is itself quoted rather than proved. |
 | The passage to the limit `h → 0` | §3.2 | ✅ **now formalised**, and assembled into Lemma 3.7 on a ball (`QFS.formHs_ball_le_form_of_formHs_ne_top`). It carries the hypothesis the paper's own dominated-convergence step needs and does not state — that `f` already lies in `H^{α/2}` of the larger ball — which is the open statement above; in `d = 2` that hypothesis is a theorem. |
 

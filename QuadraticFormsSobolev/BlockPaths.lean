@@ -830,4 +830,17 @@ theorem path_props (hd : 1 ≤ d) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 
     PathPropsHolds d ϑ R₀ :=
   (path_props_long hd hϑ hϑ' R₀).toPathPropsHolds
 
+
+/-- **Theorem 5.15 without the cap on `ϑ`**, which is how the paper states it:
+"a configuration with apex angles bounded from below by `ϑ > 0`". No apex angle
+exceeds `π/2`, so a `ϑ` above `π/2` bounds nothing and the statement is obtained
+by capping, exactly as `QFS.theoremOneThree` does. -/
+theorem path_props_of_pos (hd : 1 ≤ d) {ϑ : ℝ} (hϑ : 0 < ϑ) (R₀ : ℝ) :
+    PathPropsHolds d ϑ R₀ := by
+  have hpi : (0:ℝ) < π / 2 := by positivity
+  obtain ⟨N, M, lam, hN, hM, hlam, h⟩ :=
+    path_props hd (lt_min hϑ hpi) (min_le_right ϑ (π / 2)) R₀
+  exact ⟨N, M, lam, hN, hM, hlam, fun Γ hΓ =>
+    h Γ ⟨lt_min hϑ hpi, fun x => le_trans (min_le_left _ _) (hΓ.2 x)⟩⟩
+
 end QFS
