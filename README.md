@@ -245,6 +245,15 @@ confining those too needs the exchange with the `z`-integral restricted, which i
 the same argument with one more side condition carried through. Until that is
 done, what is proved is the whole-space inclusion, not the ball version.
 
+The alternative route — multiply `f` by a Lipschitz cutoff and apply the
+whole-space theorem — now has its analytic input:
+`QFS.lintegral_cutoff_kernel_lt_top` bounds the error the cutoff makes, using
+`QFS.lintegral_ball_rpow_lt_top` at small scales and
+`QFS.lintegral_compl_ball_rpow_lt_top` at large ones. That route gives the
+*qualitative* ball statement (`f ∈ H_k(B*) ⟹ f ∈ H^{α/2}(B)`) at the cost of an
+`L²` term — which is all §3.2 needs, since the quantitative constant comes from
+the discrete argument afterwards.
+
 Corollary 2.4 covers `ℝ²` by
 finitely many pieces `U_V`, the squares of that cover exhaust `ℝ² × ℝ²`,
 `QFS.planar_block_le` controls every block, and a finite sum of finite constants
@@ -389,6 +398,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **The tile-averaging operator, and that it preserves the integral** | §3.2 | `QFS.tileAvg`, `QFS.lintegral_tileAvg` | ✅ **proved** |
 | **Generalized (Vitali) dominated convergence, dominants allowed to move** | §3.2 | `QFS.limsup_lintegral_le_of_dominant` | ✅ **proved** |
 | **A Lipschitz function has finite `H^{α/2}` seminorm on a ball (`α < 2`)** | §3.2 | `QFS.formHs_lt_top_of_lipschitzOn`, `QFS.lintegral_ball_rpow_lt_top` | ✅ **proved** |
+| **The jump kernel off a ball, and against a Lipschitz cutoff** | §3.2 | `QFS.lintegral_compl_ball_rpow_lt_top`, `QFS.lintegral_cutoff_kernel_lt_top` | ✅ **proved** |
 | **Pairs in a common tile; the tiling of pairs** | §3.2 | `QFS.sameTile`, `QFS.sameTile_eq_iUnion`, `QFS.measurableSet_sameTile`, `QFS.norm_sub_le_of_sameTile`, `QFS.coneSet` | ✅ **proved** |
 | **On close cone pairs the kernel dominates the flat measure** | §3.2 (new) | `QFS.lintegral_sq_le_form_of_close` | ✅ **proved** |
 | **The cone part of the modulus `A_h` is bounded uniformly in `h`** | §3.2 (new) | `QFS.oscillation_sameTile_le_form` | ✅ **proved** |
