@@ -228,6 +228,7 @@ The pieces, all proved:
 | **The whole chain for multi-scale local domination** | `QFS.lintegral_near_le_form_of_locallyDominatedAt`, `QFS.formHs_univ_le_of_locallyDominatedAt`, `QFS.formHs_ball_ne_top_of_locallyDominatedAt`, `QFS.formHs_ball_le_form_locallyDominatedAt` | ✅ **proved** |
 | The cutoff step, abstracted: any `H^{α/2} ≤ C·H_k + C'·L²` bound gives §3.2's input | `QFS.formHs_ball_ne_top_of_L2inclusion` | ✅ **proved** |
 | **Every uniformly continuous configuration is locally dominated**, hence satisfies Theorem 1.1 — every dimension, any apex angle | `QFS.dangle_le_of_norm_sub_le`, `QFS.locallyDominated_of_uniformContinuous`, `QFS.formHs_ball_le_form_of_uniformContinuous` | ✅ **proved** |
+| **The dominated pairs are controlled unconditionally** — for every admissible configuration, with no hypothesis at all | `QFS.dominatedPairs`, `QFS.measurableSet_dominatedPairs`, `QFS.lintegral_dominatedPairs_le` | ✅ **proved** |
 | **Local domination out to a radius that varies from point to point** | `QFS.LocallyDominatedRad`, `QFS.lintegral_near_le_form_of_locallyDominatedRad` | ✅ **proved** |
 | The far pairs with a variable cut-off radius, and the swap symmetry of the pair integral | `QFS.lintegral_far_var_le`, `QFS.lintegral_far_var_le'`, `QFS.setLIntegral_swap_pairs` | ✅ **proved** |
 | **`H^{α/2} ≤ C·H_k + C'·∫f²ρ^{-α}` for a variable domination radius `ρ`** — the degeneration of `ρ` is paid for by an integrability condition on `f`, not by a uniform bound | `QFS.formHs_univ_le_of_locallyDominatedRad` | ✅ **proved** |
@@ -2012,6 +2013,20 @@ further out at the same radius, so each pair may be served by any of a finite se
 `QFS.formHs_ball_ne_top_of_locallyDominatedAt`,
 `QFS.formHs_ball_le_form_locallyDominatedAt`) and the constant summed over `Θ`.
 The single-scale hypothesis is the case `Θ = {θ}`.
+
+**What is true with no hypothesis at all.** Call a pair `(s,t)` *dominated* if
+some reference cone, at some aperture in a finite set `Θ`, fills a `c₀`-fraction
+of the ball the chaining averages over for that pair. Then, for **every**
+admissible configuration and every `f`,
+
+> `QFS.lintegral_dominatedPairs_le` — the `H^{α/2}` energy carried by the
+> dominated pairs is at most `C(d,Θ,α,Λ,c₀)·|f|²_{H_k}`.
+
+That is the whole content of the chaining, with the hypotheses stripped away: all
+the local-domination statements below do is exhibit sets of pairs that are
+dominated. And the open statement is exactly the energy carried by the
+**undominated** pairs — of which, by `QFS.ae_exists_dominating_type`, almost
+every point has none below some radius `ρ(s) > 0`.
 
 **Trading uniformity for integrability.** The radius need not be uniform at all.
 `QFS.LocallyDominatedRad` asks only for a measurable `ρ > 0` such that every pair

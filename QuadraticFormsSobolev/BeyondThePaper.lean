@@ -4954,10 +4954,84 @@ def LocallyDominatedRad {d : ℕ} (Γ : Configuration (EuclideanSpace ℝ (Fin d
       volume ({x : EuclideanSpace ℝ (Fin d) | doubleCone q.2 q.1 ⊆ (Γ x).carrier} ∩
         closedBall (midCentre q.2 q.1 s t) ‖s - t‖)
 
+/-- **The pairs the chaining can serve**: those for which some reference cone,
+at some aperture in `Θ`, fills a `c₀`-fraction of the ball the chaining averages
+over. -/
+def dominatedPairs {d : ℕ} (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
+    (S : Finset (EuclideanSpace ℝ (Fin d))) (Θ : Finset ℝ) (c₀ : ℝ) :
+    Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) :=
+  ⋃ q ∈ Θ ×ˢ S, {p | ENNReal.ofReal (c₀ * ‖p.1 - p.2‖ ^ d) ≤
+    volume ({x : EuclideanSpace ℝ (Fin d) | doubleCone q.2 q.1 ⊆ (Γ x).carrier} ∩
+      closedBall (midCentre q.2 q.1 p.1 p.2) ‖p.1 - p.2‖)}
+
+lemma measurableSet_dominatedPairs {d : ℕ} {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    (hmeas : CondMeas Γ) (S : Finset (EuclideanSpace ℝ (Fin d))) (Θ : Finset ℝ) (c₀ : ℝ) :
+    MeasurableSet (dominatedPairs Γ S Θ c₀) := by
+  classical
+  refine MeasurableSet.biUnion (Θ ×ˢ S).countable_toSet fun q _ => ?_
+  exact measurableSet_le (by fun_prop) (measurable_midBall_inter_volume q.2 q.1 (hmeas _))
+
+/-- **The dominated pairs are always controlled**, for every admissible
+configuration and with no hypothesis whatever: their `H^{α/2}` energy is bounded
+by the `H_k` form. Everything the local-domination hypotheses below do is to say
+that a given set of pairs is dominated. -/
+theorem lintegral_dominatedPairs_le {d : ℕ} (hd : 0 < d)
+    {α Λ c₀ : ℝ} {Θ : Finset ℝ} (hΘ : ∀ θ ∈ Θ, 0 < θ ∧ θ ≤ π / 2)
+    (hα : 0 ≤ α) (hc₀ : 0 < c₀)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
+    {S : Finset (EuclideanSpace ℝ (Fin d))} (hSu : ∀ v ∈ S, ‖v‖ = 1)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (hmeas : CondMeas Γ)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : Measurable f)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
+    ∫⁻ p in dominatedPairs Γ S Θ c₀,
+        ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2
+      ≤ ∑ q ∈ Θ ×ˢ S, (ENNReal.ofReal c₀)⁻¹ * (ENNReal.ofReal (2 * Λ) *
+          (ENNReal.ofReal (chainConst d q.1 α) + ENNReal.ofReal (chainConst' d q.1 α)) *
+          unitBallVol d * form Set.univ k f) := by
+  classical
+  set F : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞ := fun p =>
+    ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 with hF
+  set K : ℝ → ℝ≥0∞ := fun θ => ENNReal.ofReal (2 * Λ) *
+    (ENNReal.ofReal (chainConst d θ α) + ENNReal.ofReal (chainConst' d θ α)) *
+    unitBallVol d * form Set.univ k f with hK
+  set Q : ℝ × EuclideanSpace ℝ (Fin d) →
+      Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) := fun q =>
+    {p | ENNReal.ofReal (c₀ * ‖p.1 - p.2‖ ^ d) ≤
+      volume ({x : EuclideanSpace ℝ (Fin d) | doubleCone q.2 q.1 ⊆ (Γ x).carrier} ∩
+        closedBall (midCentre q.2 q.1 p.1 p.2) ‖p.1 - p.2‖)} with hQ
+  have hQm : ∀ q : ℝ × EuclideanSpace ℝ (Fin d), MeasurableSet (Q q) := fun q =>
+    measurableSet_le (by fun_prop) (measurable_midBall_inter_volume q.2 q.1 (hmeas _))
+  have hblock : ∀ q ∈ Θ ×ˢ S, ∫⁻ p in Q q, F p ≤ (ENNReal.ofReal c₀)⁻¹ * K q.1 := by
+    intro q hq
+    rw [Finset.mem_product] at hq
+    obtain ⟨hqΘ, hqS⟩ := hq
+    obtain ⟨hθ, hθ'⟩ := hΘ q.1 hqΘ
+    have hmain := formHs_le_form_of_visibleDense_on (hSu q.2 hqS) hθ hθ' hα hd hc₀.le hk hmeas
+      (hQm q) (fun p hp _ => hp) hf hkm
+    have hc : ENNReal.ofReal c₀ ≠ 0 := by
+      simpa using (ENNReal.ofReal_pos).mpr hc₀
+    calc ∫⁻ p in Q q, F p
+        = (ENNReal.ofReal c₀)⁻¹ * (ENNReal.ofReal c₀ * ∫⁻ p in Q q, F p) := by
+          rw [← mul_assoc, ENNReal.inv_mul_cancel hc ENNReal.ofReal_ne_top, one_mul]
+      _ ≤ (ENNReal.ofReal c₀)⁻¹ * K q.1 := mul_le_mul' le_rfl hmain
+  calc ∫⁻ p in dominatedPairs Γ S Θ c₀, F p
+      ≤ ∑ q ∈ Θ ×ˢ S, ∫⁻ p in Q q, F p := by
+        have hun : dominatedPairs Γ S Θ c₀
+            = ⋃ q : {x // x ∈ Θ ×ˢ S}, Q (q : ℝ × EuclideanSpace ℝ (Fin d)) := by
+          ext p
+          simp only [dominatedPairs, hQ, Set.mem_iUnion, Subtype.exists, exists_prop]
+        rw [hun]
+        refine le_trans (lintegral_iUnion_le _ _) ?_
+        rw [tsum_fintype]
+        exact le_of_eq (Finset.sum_coe_sort (Θ ×ˢ S) fun q => ∫⁻ p in Q q, F p)
+    _ ≤ ∑ q ∈ Θ ×ˢ S, (ENNReal.ofReal c₀)⁻¹ * K q.1 := Finset.sum_le_sum hblock
+
 /-- **The near-diagonal energy is controlled under local domination**, in every
 dimension and at any apex angle: the type may vary from pair to pair. -/
 theorem lintegral_near_le_form_of_locallyDominatedRad {d : ℕ} (hd : 0 < d)
-    {α Λ c₀ : ℝ} {ρ : EuclideanSpace ℝ (Fin d) → ℝ} (hρm : Measurable ρ)
+    {α Λ c₀ : ℝ} {ρ : EuclideanSpace ℝ (Fin d) → ℝ}
     {Θ : Finset ℝ} (hΘ : ∀ θ ∈ Θ, 0 < θ ∧ θ ≤ π / 2)
     (hα : 0 ≤ α) (hc₀ : 0 < c₀)
     {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
@@ -4974,28 +5048,9 @@ theorem lintegral_near_le_form_of_locallyDominatedRad {d : ℕ} (hd : 0 < d)
           (ENNReal.ofReal (chainConst d q.1 α) + ENNReal.ofReal (chainConst' d q.1 α)) *
           unitBallVol d * form Set.univ k f) := by
   classical
-  set F : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞ := fun p =>
-    ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel d α p.1 p.2 with hF
-  set K : ℝ → ℝ≥0∞ := fun θ => ENNReal.ofReal (2 * Λ) *
-    (ENNReal.ofReal (chainConst d θ α) + ENNReal.ofReal (chainConst' d θ α)) *
-    unitBallVol d * form Set.univ k f with hK
-  set Q : ℝ × EuclideanSpace ℝ (Fin d) →
-      Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) := fun q =>
-    {p | ‖p.1 - p.2‖ ≤ ρ p.1 ∧ ENNReal.ofReal (c₀ * ‖p.1 - p.2‖ ^ d) ≤
-      volume ({x : EuclideanSpace ℝ (Fin d) | doubleCone q.2 q.1 ⊆ (Γ x).carrier} ∩
-        closedBall (midCentre q.2 q.1 p.1 p.2) ‖p.1 - p.2‖)} with hQ
-  have hQm : ∀ q : ℝ × EuclideanSpace ℝ (Fin d), MeasurableSet (Q q) := by
-    intro q
-    have h1 : MeasurableSet {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
-        ‖p.1 - p.2‖ ≤ ρ p.1} :=
-      measurableSet_le (by fun_prop) (hρm.comp measurable_fst)
-    have h2 : MeasurableSet {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
-        ENNReal.ofReal (c₀ * ‖p.1 - p.2‖ ^ d) ≤
-          volume ({x : EuclideanSpace ℝ (Fin d) | doubleCone q.2 q.1 ⊆ (Γ x).carrier} ∩
-            closedBall (midCentre q.2 q.1 p.1 p.2) ‖p.1 - p.2‖)} :=
-      measurableSet_le (by fun_prop) (measurable_midBall_inter_volume q.2 q.1 (hmeas _))
-    exact h1.inter h2
-  -- the good pairs cover the near-diagonal region up to a null set
+  refine le_trans (lintegral_mono_set' ?_)
+    (lintegral_dominatedPairs_le hd hΘ hα hc₀ hSu hk hmeas hf hkm)
+  -- the pairs closer than `ρ` are dominated, up to a null set of first points
   obtain ⟨N, hNnull, hN⟩ : ∃ N : Set (EuclideanSpace ℝ (Fin d)), volume N = 0 ∧
       ∀ s ∉ N, ∀ t : EuclideanSpace ℝ (Fin d), ‖s - t‖ ≤ ρ s →
         ∃ q ∈ Θ ×ˢ S, ENNReal.ofReal (c₀ * ‖s - t‖ ^ d) ≤
@@ -5008,46 +5063,18 @@ theorem lintegral_near_le_form_of_locallyDominatedRad {d : ℕ} (hd : 0 < d)
     exact not_not.mp hs
   have hnullprod : volume (N ×ˢ (Set.univ : Set (EuclideanSpace ℝ (Fin d)))) = 0 := by
     rw [Measure.volume_eq_prod, Measure.prod_prod, hNnull, zero_mul]
-  have hcover : {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) | ‖p.1 - p.2‖ ≤ ρ p.1}
-      ≤ᵐ[volume] ⋃ q ∈ Θ ×ˢ S, Q q := by
-    have hsub : {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
-        ¬ (p ∈ {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) | ‖p.1 - p.2‖ ≤ ρ p.1} →
-          p ∈ ⋃ q ∈ Θ ×ˢ S, Q q)} ⊆ N ×ˢ (Set.univ : Set (EuclideanSpace ℝ (Fin d))) := by
-      intro p hp
-      simp only [Set.mem_ofPred_eq, Classical.not_imp] at hp
-      obtain ⟨hp1, hp2⟩ := hp
-      refine ⟨?_, Set.mem_univ _⟩
-      by_contra hpN
-      obtain ⟨q, hqS, hq⟩ := hN p.1 hpN p.2 hp1
-      exact hp2 (Set.mem_biUnion hqS ⟨hp1, hq⟩)
-    exact ae_iff.mpr (measure_mono_null hsub hnullprod)
-  have hblock : ∀ q ∈ Θ ×ˢ S, ∫⁻ p in Q q, F p ≤ (ENNReal.ofReal c₀)⁻¹ * K q.1 := by
-    intro q hq
-    rw [Finset.mem_product] at hq
-    obtain ⟨hqΘ, hqS⟩ := hq
-    obtain ⟨hθ, hθ'⟩ := hΘ q.1 hqΘ
-    have hmain := formHs_le_form_of_visibleDense_on (hSu q.2 hqS) hθ hθ' hα hd hc₀.le hk hmeas
-      (hQm q) (fun p hp _ => hp.2) hf hkm
-    have hc : ENNReal.ofReal c₀ ≠ 0 := by
-      simpa using (ENNReal.ofReal_pos).mpr hc₀
-    calc ∫⁻ p in Q q, F p
-        = (ENNReal.ofReal c₀)⁻¹ * (ENNReal.ofReal c₀ * ∫⁻ p in Q q, F p) := by
-          rw [← mul_assoc, ENNReal.inv_mul_cancel hc ENNReal.ofReal_ne_top, one_mul]
-      _ ≤ (ENNReal.ofReal c₀)⁻¹ * K q.1 := mul_le_mul' le_rfl hmain
-  calc ∫⁻ p in {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) | ‖p.1 - p.2‖ ≤ ρ p.1},
-        F p
-      ≤ ∫⁻ p in ⋃ q ∈ Θ ×ˢ S, Q q, F p := lintegral_mono_set' hcover
-    _ ≤ ∑ q ∈ Θ ×ˢ S, ∫⁻ p in Q q, F p := by
-        have hun : (⋃ q ∈ Θ ×ˢ S, Q q)
-            = ⋃ q : {x // x ∈ Θ ×ˢ S}, Q (q : ℝ × EuclideanSpace ℝ (Fin d)) := by
-          ext p
-          simp only [Set.mem_iUnion, Subtype.exists, exists_prop]
-        rw [hun]
-        refine le_trans (lintegral_iUnion_le _ _) ?_
-        rw [tsum_fintype]
-        exact le_of_eq (Finset.sum_coe_sort (Θ ×ˢ S) fun q => ∫⁻ p in Q q, F p)
-    _ ≤ ∑ q ∈ Θ ×ˢ S, (ENNReal.ofReal c₀)⁻¹ * K q.1 := Finset.sum_le_sum hblock
-
+  have hsub : {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+      ¬ (p ∈ {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) | ‖p.1 - p.2‖ ≤ ρ p.1} →
+        p ∈ dominatedPairs Γ S Θ c₀)}
+      ⊆ N ×ˢ (Set.univ : Set (EuclideanSpace ℝ (Fin d))) := by
+    intro p hp
+    simp only [Set.mem_ofPred_eq, Classical.not_imp] at hp
+    obtain ⟨hp1, hp2⟩ := hp
+    refine ⟨?_, Set.mem_univ _⟩
+    by_contra hpN
+    obtain ⟨q, hqS, hq⟩ := hN p.1 hpN p.2 hp1
+    exact hp2 (Set.mem_biUnion hqS hq)
+  exact ae_iff.mpr (measure_mono_null hsub hnullprod)
 
 /-- **Local domination at a scale of one's choosing**, out to a fixed radius `r₀`
 — the case `ρ ≡ r₀` of `QFS.LocallyDominatedRad`. -/
@@ -5071,7 +5098,7 @@ theorem lintegral_near_le_form_of_locallyDominatedAt {d : ℕ} (hd : 0 < d)
       ≤ ∑ q ∈ Θ ×ˢ S, (ENNReal.ofReal c₀)⁻¹ * (ENNReal.ofReal (2 * Λ) *
           (ENNReal.ofReal (chainConst d q.1 α) + ENNReal.ofReal (chainConst' d q.1 α)) *
           unitBallVol d * form Set.univ k f) :=
-  lintegral_near_le_form_of_locallyDominatedRad hd measurable_const hΘ hα hc₀ hSu hk hmeas
+  lintegral_near_le_form_of_locallyDominatedRad hd hΘ hα hc₀ hSu hk hmeas
     hdom hf hkm
 
 /-- **Local domination of a cone type**, at the pair's own scale — the case
@@ -5532,7 +5559,7 @@ theorem formHs_univ_le_of_locallyDominatedRad {d : ℕ} (hd : 0 < d) {α Λ c₀
       (((hf.comp measurable_snd).sub (hf.comp measurable_fst)).pow_const 2)).mul
       (measurable_jumpKernel d α)
   -- the near part, twice
-  have hnear₁ := lintegral_near_le_form_of_locallyDominatedRad hd hρm hΘ hα.le hc₀ hSu hk
+  have hnear₁ := lintegral_near_le_form_of_locallyDominatedRad hd hΘ hα.le hc₀ hSu hk
     hmeas hdom hf hkm
   have hswap : ∫⁻ p in N₂, F p = ∫⁻ p in N₁, F p := by
     have hpre : Prod.swap ⁻¹' N₂ = N₁ := by
