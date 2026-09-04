@@ -1167,4 +1167,26 @@ theorem lintegral_stepFun₂ {h : ℝ} (hh : 0 < h)
     setLIntegral_const, Measure.volume_eq_prod, Measure.prod_prod,
     volume_halfClosedCube hh.le, volume_halfClosedCube hh.le]
 
+
+/-- Every point of `hℤ^d` is `h·n` for an integer vector `n`. -/
+lemma exists_latticePt {h : ℝ} (hh : h ≠ 0) {x : EuclideanSpace ℝ (Fin d)}
+    (hx : x ∈ scaledLattice d h) : ∃ n : Fin d → ℤ, latticePt d h n = x := by
+  choose n hn using hx
+  refine ⟨n, ?_⟩
+  refine euclidean_ext fun i => ?_
+  exact (hn i).symm
+
+/-- **`hℤ^d` is a copy of `ℤ^d`.** The identification a sum over the lattice must
+be transported along before the tiling identity can be applied to it. -/
+noncomputable def latticeEquiv (d : ℕ) {h : ℝ} (hh : h ≠ 0) :
+    (Fin d → ℤ) ≃ ↥(scaledLattice d h) :=
+  Equiv.ofBijective (fun n => ⟨latticePt d h n, latticePt_mem_scaledLattice h n⟩)
+    ⟨fun n m hnm => latticePt_injective hh (congrArg Subtype.val hnm),
+     fun x => by
+       obtain ⟨n, hn⟩ := exists_latticePt hh x.2
+       exact ⟨n, Subtype.ext hn⟩⟩
+
+@[simp] lemma latticeEquiv_apply (d : ℕ) {h : ℝ} (hh : h ≠ 0) (n : Fin d → ℤ) :
+    (latticeEquiv d hh n : EuclideanSpace ℝ (Fin d)) = latticePt d h n := rfl
+
 end QFS
