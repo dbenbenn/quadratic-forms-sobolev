@@ -1279,4 +1279,34 @@ theorem discreteFormOn_mul_eq_lintegral {h : ℝ} (hh : 0 < h)
     discreteFormOn_eq_tsum, tsum_discreteC_eq_tsum_index (ne_of_gt hh),
     ENNReal.tsum_mul_right]
 
+
+/-- **`(discret)`, in integral form.** Corollary 3.1 transported along
+`discreteFormOn_mul_eq_lintegral`: the inequality between sums becomes one
+between integrals of step functions, which is the form the limit `h → 0` acts
+on. -/
+theorem discret_lintegral (ϑ Λ α R₀ : ℝ) (hϑ : 0 < ϑ) (hΛ : 1 ≤ Λ) (hα : 0 < α)
+    (hα2 : α < 2) (hR₀ : 0 < R₀) :
+    ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ →
+      ∀ h : ℝ, 0 < h →
+      ∀ ω, DiscreteKernelBounds Γ α Λ (R₀ * h) (scaledLattice d h) ω →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ) (f : EuclideanSpace ℝ (Fin d) → ℝ),
+        0 < R →
+        (∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+            discreteC d h (ball x₀ R) (R₀ * h) (jumpKernel d α) f
+              (stepIndex d h p.1, stepIndex d h p.2))
+          ≤ ENNReal.ofReal c *
+            ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+              discreteC d h (ball x₀ (κ * R)) (R₀ * h) ω f
+                (stepIndex d h p.1, stepIndex d h p.2) := by
+  obtain ⟨κ, c, hκ, hc, hmain⟩ := corollaryThreeOne (d := d) ϑ Λ α R₀ hϑ hΛ hα hα2 hR₀
+  refine ⟨κ, c, hκ, hc, ?_⟩
+  intro Γ hΓ h hh ω hω x₀ R f hR
+  have hsc := hmain Γ hΓ h hh ω hω x₀ R f hR
+  have hscaled := mul_le_mul' hsc
+    (le_refl (ENNReal.ofReal (h ^ d) * ENNReal.ofReal (h ^ d)))
+  rw [discreteFormOn_mul_eq_lintegral hh] at hscaled
+  refine le_trans hscaled (le_of_eq ?_)
+  rw [mul_assoc, discreteFormOn_mul_eq_lintegral hh]
+
 end QFS
