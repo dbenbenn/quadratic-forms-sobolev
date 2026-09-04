@@ -3706,4 +3706,129 @@ theorem Hk_univ_eq_Hs_univ_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ}
   rw [hformHs, hform] at hbound
   exact ne_top_of_le_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top hfform) hbound
 
+
+/-! ## Dimension one is trivial
+
+On the line a double cone of positive apex angle is everything but the origin,
+so *every* pair of distinct points is a cone pair and the lower bound of (1.4)
+gives the inclusion directly, with the constant `Λ/2`. This is what makes the
+open case precisely "narrow cones in dimension at least three". -/
+
+/-- On the line every double cone of positive apex angle is `ℝ \ {0}`. -/
+theorem doubleCone_dim_one {v : EuclideanSpace ℝ (Fin 1)} (hv : ‖v‖ = 1) {ϑ : ℝ}
+    (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) : doubleCone v ϑ = {(0 : EuclideanSpace ℝ (Fin 1))}ᶜ := by
+  ext h
+  constructor
+  · rintro (hh | hh)
+    · exact hh.1
+    · rw [Set.mem_neg] at hh
+      simp only [Set.mem_compl_iff, Set.mem_singleton_iff]
+      intro h0
+      exact hh.1 (by rw [h0]; simp)
+  · intro hh
+    have hne : h ≠ 0 := hh
+    have hnorm : 0 < ‖h‖ := norm_pos_iff.mpr hne
+    -- in dimension one `|⟪v, h⟫| = ‖v‖ ‖h‖`
+    have habs : |⟪v, h⟫_ℝ| = ‖h‖ := by
+      have := abs_real_inner_le_norm v h
+      rw [hv, one_mul] at this
+      refine le_antisymm this ?_
+      -- the space is one-dimensional, so `v` and `h` are parallel
+      obtain ⟨c, hc⟩ : ∃ c : ℝ, h = c • v := by
+        have hfin : Module.finrank ℝ (EuclideanSpace ℝ (Fin 1)) = 1 := by
+          simp [finrank_euclideanSpace]
+        have hvne : v ≠ 0 := by intro h0; rw [h0] at hv; simp at hv
+        have hspan : Submodule.span ℝ {v} = ⊤ := by
+          refine Submodule.eq_top_of_finrank_eq ?_
+          rw [finrank_span_singleton hvne, hfin]
+        have : h ∈ Submodule.span ℝ ({v} : Set (EuclideanSpace ℝ (Fin 1))) := by
+          rw [hspan]; trivial
+        rcases Submodule.mem_span_singleton.mp this with ⟨c, hc⟩
+        exact ⟨c, hc.symm⟩
+      rw [hc, real_inner_smul_right, abs_mul, norm_smul, real_inner_self_eq_norm_sq, hv]
+      simp [abs_of_nonneg]
+    have hcos : Real.cos ϑ < 1 := by
+      have h0 : Real.cos ϑ < Real.cos 0 :=
+        Real.cos_lt_cos_of_nonneg_of_le_pi le_rfl (by linarith [Real.pi_pos]) hϑ
+      simpa using h0
+    rcases abs_cases (⟪v, h⟫_ℝ) with ⟨he, -⟩ | ⟨he, -⟩
+    · left
+      refine ⟨hne, ?_⟩
+      rw [lt_div_iff₀ hnorm]
+      nlinarith [habs, he]
+    · right
+      rw [Set.mem_neg]
+      refine ⟨by simpa using hne, ?_⟩
+      rw [inner_neg_right, norm_neg, lt_div_iff₀ hnorm]
+      nlinarith [habs, he]
+
+
+/-- On the line every pair of distinct points is a cone pair, so the lower bound
+of (1.4) alone gives `jumpKernel ≤ (Λ/2) k`. -/
+theorem jumpKernel_le_of_dim_one {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin 1))} (hΓ : IsBounded Γ ϑ)
+    {k : EuclideanSpace ℝ (Fin 1) → EuclideanSpace ℝ (Fin 1) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (x y : EuclideanSpace ℝ (Fin 1)) :
+    jumpKernel 1 α x y ≤ ENNReal.ofReal (Λ / 2) * k x y := by
+  have hΛ0 : (0:ℝ) < Λ := lt_of_lt_of_le zero_lt_one hk.one_le
+  by_cases hxy : x = y
+  · have : jumpKernel 1 α x y = 0 := by
+      rw [jumpKernel, hxy, sub_self, norm_zero, Real.zero_rpow (by
+        have : (0:ℝ) ≤ (1:ℕ) := by norm_num
+        push_cast
+        linarith), ENNReal.ofReal_zero]
+    rw [this]
+    exact bot_le
+  -- both indicators are `1`
+  have hcarrier : ∀ z : EuclideanSpace ℝ (Fin 1),
+      (Γ z).carrier = {(0 : EuclideanSpace ℝ (Fin 1))}ᶜ := fun z => by
+    rw [DCone.carrier]
+    exact doubleCone_dim_one (Γ z).norm_axis (Γ z).apex_pos (Γ z).apex_le
+  have hind1 : indE (coneAt Γ x) y = 1 := by
+    rw [indE, Set.indicator_of_mem]
+    rw [mem_coneAt, hcarrier]
+    simpa using sub_ne_zero_of_ne (Ne.symm hxy)
+  have hind2 : indE (coneAt Γ y) x = 1 := by
+    rw [indE, Set.indicator_of_mem]
+    rw [mem_coneAt, hcarrier]
+    simpa using sub_ne_zero_of_ne hxy
+  have hlow := hk.lower x y
+  rw [hind1, hind2] at hlow
+  have hprod : ENNReal.ofReal (Λ / 2) * (ENNReal.ofReal Λ⁻¹ * (1 + 1)) = 1 := by
+    rw [show (1 : ℝ≥0∞) + 1 = 2 from by norm_num, ← mul_assoc,
+      ← ENNReal.ofReal_mul (by positivity),
+      show Λ / 2 * Λ⁻¹ = 2⁻¹ from by field_simp]
+    rw [show ENNReal.ofReal (2⁻¹ : ℝ) = (2 : ℝ≥0∞)⁻¹ from by
+      rw [ENNReal.ofReal_inv_of_pos (by norm_num : (0:ℝ) < 2)]
+      norm_num]
+    exact ENNReal.inv_mul_cancel (by norm_num) (by norm_num)
+  calc jumpKernel 1 α x y
+      = ENNReal.ofReal (Λ / 2) * (ENNReal.ofReal Λ⁻¹ * ((1 + 1) * jumpKernel 1 α x y)) := by
+        rw [show ENNReal.ofReal (Λ / 2) *
+            (ENNReal.ofReal Λ⁻¹ * ((1 + 1) * jumpKernel 1 α x y))
+          = (ENNReal.ofReal (Λ / 2) * (ENNReal.ofReal Λ⁻¹ * (1 + 1))) * jumpKernel 1 α x y from
+          by ring, hprod, one_mul]
+    _ ≤ ENNReal.ofReal (Λ / 2) * k x y := mul_le_mul' le_rfl hlow
+
+/-- **The inclusion is trivial on the line**: `|f|²_{H^{α/2}(Ω)} ≤ (Λ/2)·|f|²_{H_k(Ω)}`
+for every `Ω`, with no chaining at all. -/
+theorem formHs_le_form_dim_one {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hα : 0 ≤ α)
+    {Γ : Configuration (EuclideanSpace ℝ (Fin 1))} (hΓ : IsBounded Γ ϑ)
+    {k : EuclideanSpace ℝ (Fin 1) → EuclideanSpace ℝ (Fin 1) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (Ω : Set (EuclideanSpace ℝ (Fin 1)))
+    (f : EuclideanSpace ℝ (Fin 1) → ℝ) :
+    formHs Ω α f ≤ ENNReal.ofReal (Λ / 2) * form Ω k f := by
+  rw [formHs, form, form]
+  calc ∫⁻ p in Ω ×ˢ Ω, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * jumpKernel 1 α p.1 p.2
+      ≤ ∫⁻ p in Ω ×ˢ Ω, ENNReal.ofReal (Λ / 2) *
+          (ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) := by
+        refine lintegral_mono fun p => ?_
+        rw [show ENNReal.ofReal (Λ / 2) * (ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2)
+          = ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * (ENNReal.ofReal (Λ / 2) * k p.1 p.2) from
+          by ring]
+        exact mul_le_mul' le_rfl (jumpKernel_le_of_dim_one hϑ hα hΓ hk p.1 p.2)
+    _ = ENNReal.ofReal (Λ / 2) *
+        ∫⁻ p in Ω ×ˢ Ω, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2 :=
+      lintegral_const_mul' _ _ ENNReal.ofReal_ne_top
+
 end QFS
