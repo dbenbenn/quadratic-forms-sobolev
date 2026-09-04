@@ -178,7 +178,7 @@ analogue of §§5–6, which the paper establishes only in the discrete setting;
 going through `ℤ^d` is precisely how it avoids this.
 
 **Dimension two is different, and its geometry is now done.** Two non-parallel
-lines in the plane meet, so `QFS.exists_ball_in_two_cones_two` produces a ball of
+lines in the plane meet, so `QFS.mem_two_cones_of_mem_planarBall` produces a ball of
 common cone-neighbours of radius `‖t−s‖ sin²ϑ / 2` for cross-direction pairs —
 exactly the object the `d = 3` disproof rules out. Its two hypotheses are the
 right ones: parallel axes fall under the common-direction theorem, and a pair
