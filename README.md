@@ -211,6 +211,8 @@ The pieces, all proved:
 | **`H_k ⊆ H^{α/2}` whenever the axis spread of `Γ` is below `2ϑ`** — every dimension, any apex angle | `QFS.sobolevInclusion_of_axisSpread` | ✅ **proved** |
 | **Theorem 1.1 for small axis spread**: the `H^{α/2}` form is finite, the enlarged ball, the `L²` form, the same ball | `QFS.formHs_ball_ne_top_of_spread`, `QFS.formHs_ball_le_form_spread`, `QFS.ballComparability_spread`, `QFS.formHs_le_form_spread` | ✅ **proved** |
 | **Theorem 1.4 for `ℝ^d`, small axis spread**: `H_k(ℝ^d) = H^{α/2}(ℝ^d)` | `QFS.formHs_univ_le_form_univ_spread`, `QFS.Hk_univ_eq_Hs_univ_spread` | ✅ **proved** |
+| **Theorem 1.1 on a domain and Theorem 1.4 for a domain, under small axis spread**, in every dimension `d ≥ 2`, granted the quoted Whitney/Dyda input | `QFS.formHs_le_form_domain_spread`, `QFS.Hk_domain_eq_Hs_domain_spread` | ✅ **proved** |
+| **Theorem 1.4 for a domain, for wide cones** — the case `γ = π/2` of the row above | `QFS.Hk_domain_eq_Hs_domain_wide` | ✅ **proved** |
 | **The wide-cone regime is the case `γ = π/2`**: every wide-cone statement above is now *derived* from the spread ones, not proved separately | `QFS.sobolevInclusion_wide`, `QFS.formHs_ball_ne_top_of_wide`, `QFS.formHs_ball_le_form_wide`, `QFS.ballComparability_wide`, `QFS.formHs_le_form_wide`, `QFS.formHs_univ_le_form_univ_wide`, `QFS.Hk_univ_eq_Hs_univ_wide` | ✅ **proved** |
 | **Pairwise overlap is strictly weaker than a common direction**: three cones in `ℝ³` of apex `arccos √(14/15) ≈ 15° < π/4`, overlapping pairwise, with no unit vector in all three | `QFS.exAxis`, `QFS.exApex`, `QFS.exAperture`, `QFS.ex_overlap`, `QFS.ex_no_common_direction`, `QFS.exists_narrow_overlapping_cones_without_common_direction` | ✅ **proved** |
 | **Theorem 1.1 for a narrow, direction-less configuration in `ℝ³`** — a case outside both §3.2 and the wide-cone theorem | `QFS.sobolevInclusion_narrow_example` | ✅ **proved** |
@@ -1871,7 +1873,10 @@ proved in Lean:
     then runs unchanged — `QFS.formHs_ball_ne_top_of_spread`,
     `QFS.formHs_ball_le_form_spread`, `QFS.ballComparability_spread`,
     `QFS.formHs_le_form_spread`, `QFS.formHs_univ_le_form_univ_spread`,
-    `QFS.Hk_univ_eq_Hs_univ_spread`. Two lines are never more than `π/2` apart,
+    `QFS.Hk_univ_eq_Hs_univ_spread` — and, with a Whitney family, on a domain
+    (`QFS.formHs_le_form_domain_spread`, `QFS.Hk_domain_eq_Hs_domain_spread`),
+    which in dimension three and above had until now been available only in the
+    plane. Two lines are never more than `π/2` apart,
     so `ϑ > π/4` forces `γ ≤ π/2 < 2ϑ`: **step 9 is the case `γ = π/2`**, and
     every wide-cone theorem in this repository is now derived from the
     small-spread one rather than proved separately.

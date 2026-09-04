@@ -4892,4 +4892,107 @@ theorem sobolevInclusion_narrow_example {α Λ : ℝ} (hα : 0 ≤ α)
   obtain ⟨u, hu, h1, h2⟩ := ex_overlap i j
   exact ⟨u, hu, le_trans Set.subset_union_left h1, le_trans Set.subset_union_left h2⟩
 
+/-! ## Theorem 1.4 for a domain, under small axis spread
+
+The planar assembly of `QFS.Hk_domain_eq_Hs_domain_planar`, with
+`QFS.ballComparability_spread` in place of the planar ball comparability. Taking
+`γ = π/2` gives the wide-cone case in every dimension. -/
+
+theorem formHs_le_form_domain_spread {d : ℕ} (hd : 2 ≤ d) {ϑ γ Λ α : ℝ}
+    (hϑ' : ϑ ≤ Real.pi / 2) (hγ0 : 0 ≤ γ) (hγ : γ < 2 * ϑ) (hΛ : 1 ≤ Λ) (hα : 0 < α)
+    (hα2 : α < 2) :
+    ∃ κ c₀ : ℝ, 1 ≤ κ ∧ 1 ≤ c₀ ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+        (∀ x y : EuclideanSpace ℝ (Fin d),
+          dangle (Γ x).axis (Γ y).axis ≤ γ) →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ Ω : Set (EuclideanSpace ℝ (Fin d)), MeasurableSet Ω →
+      ∀ W : WhitneyDomainData d α κ Ω,
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
+        MemLp f 2 (volume.restrict Ω) →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
+        ENNReal.ofReal (c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ)) * formHs Ω α f
+          ≤ form Ω k f := by
+  obtain ⟨κ, c₀, hκ, hc₀, H⟩ := ballComparability_spread hd hϑ' hγ0 hγ hα hα2 hΛ
+  refine ⟨κ, c₀, hκ, hc₀,
+    fun Γ hΓ hmeas hspread k hk hkm Ω hΩ W f hf hFmeas => ?_⟩
+  exact formHs_le_form_domain hc₀ hΩ W
+    (fun y₀ S hS hmem => H Γ hΓ hmeas hspread k hk hkm y₀ S hS f hmem) hf hFmeas
+
+/-- **Theorem 1.4 for a domain, under small axis spread**: `H_k(Ω) = H^{α/2}(Ω)` for every
+measurable `Ω ⊆ ℝ^d` that has a Whitney family and satisfies Dyda's inequality —
+the two inputs the paper quotes rather than proves. -/
+theorem Hk_domain_eq_Hs_domain_spread {d : ℕ} (hd : 2 ≤ d) {ϑ γ Λ α : ℝ}
+    (hϑ' : ϑ ≤ Real.pi / 2) (hγ0 : 0 ≤ γ) (hγ : γ < 2 * ϑ) (hΛ : 1 ≤ Λ) (hα : 0 < α)
+    (hα2 : α < 2) :
+    ∃ κ : ℝ, 1 ≤ κ ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+        (∀ x y : EuclideanSpace ℝ (Fin d),
+          dangle (Γ x).axis (Γ y).axis ≤ γ) →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ Ω : Set (EuclideanSpace ℝ (Fin d)), MeasurableSet Ω →
+      ∀ _W : WhitneyDomainData d α κ Ω, Hk Ω k = Hs Ω α := by
+  obtain ⟨κ, c₀, hκ, hc₀, H⟩ := ballComparability_spread hd hϑ' hγ0 hγ hα hα2 hΛ
+  refine ⟨κ, hκ, fun Γ hΓ hmeas hspread k hk hkm Ω hΩ W => ?_⟩
+  have hc₀pos : (0:ℝ) < c₀ := lt_of_lt_of_le zero_lt_one hc₀
+  have hMR : (0 : ℝ) < (W.overlapBound : ℝ) := by exact_mod_cast W.overlapBound_pos
+  refine Set.Subset.antisymm (fun f hf => ?_) (Hs_subset_Hk hk Ω)
+  obtain ⟨hfL2, hfform⟩ := hf
+  refine ⟨hfL2, ?_⟩
+  -- a measurable representative, supported in `Ω`
+  set g : EuclideanSpace ℝ (Fin d) → ℝ := Ω.indicator (hfL2.1.mk f) with hgdef
+  have hgm : Measurable g := hfL2.1.stronglyMeasurable_mk.measurable.indicator hΩ
+  have hae : ∀ᵐ x ∂(volume.restrict Ω), f x = g x := by
+    have h1 : ∀ᵐ x ∂(volume.restrict Ω), f x = hfL2.1.mk f x := hfL2.1.ae_eq_mk
+    have h2 : ∀ᵐ x ∂(volume.restrict Ω), hfL2.1.mk f x = g x :=
+      (ae_restrict_iff' hΩ).mpr (Filter.Eventually.of_forall fun x hx => by
+        rw [hgdef, Set.indicator_of_mem hx])
+    filter_upwards [h1, h2] with x hx1 hx2
+    rw [hx1, hx2]
+  have hgglob : MemLp g 2 volume :=
+    (memLp_indicator_iff_restrict hΩ).mpr (hfL2.ae_eq hfL2.1.ae_eq_mk)
+  have hgL2 : MemLp g 2 (volume.restrict Ω) := hgglob.mono_measure Measure.restrict_le_self
+  have hFmeas : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((g p.2 - g p.1) ^ 2) * k p.1 p.2 :=
+    (ENNReal.measurable_ofReal.comp
+      (((hgm.comp measurable_snd).sub (hgm.comp measurable_fst)).pow_const 2)).mul hkm
+  have hbound := formHs_le_form_domain hc₀ hΩ W
+    (fun y₀ S hS hmem => H Γ hΓ hmeas hspread k hk hkm y₀ S hS g hmem) hgL2 hFmeas
+  have hform : form Ω k g = form Ω k f := (form_congr_ae k hae).symm
+  have hformHs : formHs Ω α g = formHs Ω α f := (formHs_congr_ae α hae).symm
+  rw [hformHs, hform] at hbound
+  intro htop
+  rw [htop] at hbound
+  have hc : ENNReal.ofReal (c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ)) ≠ 0 := by
+    simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]
+    have := W.dydaConst_pos
+    positivity
+  rw [ENNReal.mul_top hc] at hbound
+  exact hfform (top_le_iff.mp hbound)
+
+/-- **Theorem 1.4 for a domain, for wide cones**, in every dimension `d ≥ 2`. -/
+theorem Hk_domain_eq_Hs_domain_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ}
+    (hϑ : Real.pi / 4 < ϑ) (hϑ' : ϑ ≤ Real.pi / 2) (hΛ : 1 ≤ Λ) (hα : 0 < α)
+    (hα2 : α < 2) :
+    ∃ κ : ℝ, 1 ≤ κ ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ Ω : Set (EuclideanSpace ℝ (Fin d)), MeasurableSet Ω →
+      ∀ _W : WhitneyDomainData d α κ Ω, Hk Ω k = Hs Ω α := by
+  obtain ⟨κ, hκ, H⟩ := Hk_domain_eq_Hs_domain_spread (γ := Real.pi / 2) hd hϑ'
+    (by linarith [Real.pi_pos]) (by linarith) hΛ hα hα2
+  exact ⟨κ, hκ, fun Γ hΓ hmeas k hk hkm Ω hΩ W =>
+    H Γ hΓ hmeas (fun x y => dangle_le_pi_div_two _ _) k hk hkm Ω hΩ W⟩
+
+
 end QFS
