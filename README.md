@@ -159,6 +159,8 @@ The pieces, all proved:
 | **Theorem 1.4 for `Ω = ℝ²`**: `H_k(ℝ²) = H^{α/2}(ℝ²)` | `QFS.Hk_univ_eq_Hs_univ_planar` | ✅ **proved** |
 | **The comparability on a planar domain**, granted its Whitney family | `QFS.formHs_le_form_domain_planar` | ✅ **proved** |
 | **Theorem 1.4 for a planar domain**: `H_k(Ω) = H^{α/2}(Ω)` | `QFS.Hk_domain_eq_Hs_domain_planar` | ✅ **proved** |
+| **Lemma 3.7's own statement in the plane**: `H_k(B) = H^{α/2}(B)` | `QFS.Hk_ball_eq_Hs_ball_planar` | ✅ **proved** |
+| **The hypotheses of all of the above are satisfiable** | `QFS.planar_hypotheses_nonvacuous` | ✅ **proved** |
 | The Lipschitz cutoff and its cost | `QFS.cutoff`, `QFS.sq_cutoff_sub_le`, `QFS.sq_cutoff_mul_sub_le`, `QFS.form_cutoff_le`, `QFS.lintegral_cutoff_error_le`, `QFS.lintegral_cutoff_error_le'` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
@@ -355,7 +357,7 @@ blocked on a recorded gap, ❌ out of scope.
 | 3.4 | Lemma | `\|s−t\|` vs `\|x−y\|` | ✅ for `hℤ^d`; ❗ **false as printed** |
 | 3.5 | Proposition | test-function bound | ✅ **proved** for `d ≥ 2` (`QFS.prop_test_fct`), with `QFS.CondMeas` as hypothesis |
 | 3.6 | Corollary | the rescaled kernel | ✅ **proved** for `d ≥ 2` (`QFS.cor_rescaled_kernel`), with `QFS.CondMeas` as hypothesis |
-| 3.7 | Lemma | comparability on a ball, `\|·\|_{H^{α/2}(B)} ≤ c\|·\|_{H_k(B)}` | 🚧 §3.2's argument is **proved** in the enlarged-ball form (`QFS.formHs_ball_le_form_of_formHs_ne_top`), under the finiteness hypothesis the paper's dominated-convergence step needs; the passage from the enlarged ball to the same ball is `QFS.formHs_le_form_of_theoremOneOneBall`, modulo Lemma 7.1's quoted input |
+| 3.7 | Lemma | comparability on a ball, `\|·\|_{H^{α/2}(B)} ≤ c\|·\|_{H_k(B)}` | 🚧 §3.2's argument is **proved** in the enlarged-ball form (`QFS.formHs_ball_le_form_of_formHs_ne_top`), under the finiteness hypothesis the paper's dominated-convergence step needs; the passage from the enlarged ball to the same ball is `QFS.formHs_le_form_of_theoremOneOneBall`, modulo Lemma 7.1's quoted input  Lemma 3.7's own statement (`H_k(B) = H^{α/2}(B)`) is proved in the plane, granted the quoted Whitney/Dyda input, by new mathematics recorded outside these tables (`QFS.Hk_ball_eq_Hs_ball_planar`) |
 | 4.1 | Theorem | **connectivity of `G[U]`** | ✅ **proved** |
 | 4.2 | Definition | type of a point | ✅ |
 | 4.3 | Lemma | same type ⟹ path of length ≤ 2 | ✅ |

@@ -1,3 +1,4 @@
+import QuadraticFormsSobolev.Nonvacuous
 import QuadraticFormsSobolev.Section7
 import QuadraticFormsSobolev.Section3Kernel
 import QuadraticFormsSobolev.Section32
@@ -3151,5 +3152,68 @@ theorem Hk_domain_eq_Hs_domain_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ)
     positivity
   rw [ENNReal.mul_top hc] at hbound
   exact hfform (top_le_iff.mp hbound)
+
+
+/-! ## Lemma 3.7's own statement, in the plane
+
+Lemma 3.7 says the two spaces coincide on a ball.  That follows from the
+same-ball comparability, which in the plane is `formHs_le_form_planar`. -/
+
+/-- **Lemma 3.7 in the plane**: `H_k(B) = H^{α/2}(B)` for every ball, granted
+the Whitney/Dyda input the paper quotes. -/
+theorem Hk_ball_eq_Hs_ball_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ Real.pi / 2)
+    (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+    (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData 2 α κ))
+    {Γ : Configuration (EuclideanSpace ℝ (Fin 2))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin 2) → EuclideanSpace ℝ (Fin 2) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+      k p.1 p.2)
+    (x₀ : EuclideanSpace ℝ (Fin 2)) {R : ℝ} (hR : 0 < R) :
+    Hk (ball x₀ R) k = Hs (ball x₀ R) α := by
+  obtain ⟨c, hcpos, H⟩ := formHs_le_form_planar hϑ hϑ' hΛ hα hα2 hW
+  refine Set.Subset.antisymm (fun f hf => ?_) (Hs_subset_Hk hk _)
+  obtain ⟨hfL2, hfform⟩ := hf
+  refine ⟨hfL2, ?_⟩
+  set g : EuclideanSpace ℝ (Fin 2) → ℝ := (ball x₀ R).indicator (hfL2.1.mk f) with hgdef
+  have hgm : Measurable g :=
+    hfL2.1.stronglyMeasurable_mk.measurable.indicator measurableSet_ball
+  have hae : ∀ᵐ x ∂(volume.restrict (ball x₀ R)), f x = g x := by
+    have h1 : ∀ᵐ x ∂(volume.restrict (ball x₀ R)), f x = hfL2.1.mk f x := hfL2.1.ae_eq_mk
+    have h2 : ∀ᵐ x ∂(volume.restrict (ball x₀ R)), hfL2.1.mk f x = g x :=
+      (ae_restrict_iff' measurableSet_ball).mpr (Filter.Eventually.of_forall fun x hx => by
+        rw [hgdef, Set.indicator_of_mem hx])
+    filter_upwards [h1, h2] with x hx1 hx2
+    rw [hx1, hx2]
+  have hgglob : MemLp g 2 volume :=
+    (memLp_indicator_iff_restrict measurableSet_ball).mpr (hfL2.ae_eq hfL2.1.ae_eq_mk)
+  have hgL2 : ∀ (y₀ : EuclideanSpace ℝ (Fin 2)) (S : ℝ), 0 < S →
+      MemLp g 2 (volume.restrict (ball y₀ S)) := fun y₀ S _ =>
+    hgglob.mono_measure Measure.restrict_le_self
+  have hFmeas : Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+      ENNReal.ofReal ((g p.2 - g p.1) ^ 2) * k p.1 p.2 :=
+    (ENNReal.measurable_ofReal.comp
+      (((hgm.comp measurable_snd).sub (hgm.comp measurable_fst)).pow_const 2)).mul hkm
+  have hbound := H Γ hΓ hmeas k hk hkm g hgL2 hFmeas x₀ R hR
+  have hform : form (ball x₀ R) k g = form (ball x₀ R) k f := (form_congr_ae k hae).symm
+  have hformHs : formHs (ball x₀ R) α g = formHs (ball x₀ R) α f :=
+    (formHs_congr_ae α hae).symm
+  rw [hformHs, hform] at hbound
+  intro htop
+  rw [htop, ENNReal.mul_top (by simpa using hcpos)] at hbound
+  exact hfform (top_le_iff.mp hbound)
+
+/-- **The hypotheses of the planar theorems are satisfiable.** The constant
+configuration and the plain jump kernel satisfy every one of them, so none of
+the statements above is vacuous. -/
+theorem planar_hypotheses_nonvacuous {ϑ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ Real.pi / 2)
+    {v : EuclideanSpace ℝ (Fin 2)} (hv : ‖v‖ = 1) :
+    ∃ (Γ : Configuration (EuclideanSpace ℝ (Fin 2)))
+      (k : EuclideanSpace ℝ (Fin 2) → EuclideanSpace ℝ (Fin 2) → ℝ≥0∞),
+      IsBounded Γ ϑ ∧ CondMeas Γ ∧ KernelBounds Γ α 2 k ∧
+      (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+        k p.1 p.2) :=
+  ⟨constConfig ⟨v, hv, ϑ, hϑ, hϑ'⟩, jumpKernel 2 α, isBounded_constConfig hϑ hϑ' hv,
+    condMeas_constConfig _, kernelBounds_jumpKernel _ α, measurable_jumpKernel 2 α⟩
 
 end QFS
