@@ -199,6 +199,9 @@ The pieces, all proved:
 | **Theorem 1.4 for `ℝ^d`, wide cones** | `QFS.formHs_univ_le_form_univ_wide`, `QFS.Hk_univ_eq_Hs_univ_wide` | ✅ **proved** |
 | **Dimension one is trivial**: every cone is `ℝ ∖ {0}`, so `|·|²_{H^{α/2}} ≤ (Λ/2)|·|²_{H_k}` | `QFS.doubleCone_dim_one`, `QFS.jumpKernel_le_of_dim_one`, `QFS.formHs_le_form_dim_one` | ✅ **proved** |
 | The wide-cone hypotheses are satisfiable | `QFS.wide_hypotheses_nonvacuous` | ✅ **proved** |
+| **Chaining through the intermediate point's own cone**: the averaging step and the local Poincaré inequality when the intermediate points are confined to a set of positive density | `QFS.VisibleDense`, `QFS.osc_weighted_le_visible`, `QFS.localPoincare_visible` | ✅ **proved** |
+| **`H_k ⊆ H^{α/2}` when one type is densely visible** — every dimension, any apex angle | `QFS.formHs_le_form_of_visibleDense` | ✅ **proved** |
+| **The exact reach of that method**: a set of uniform positive density at every scale is co-null (Lebesgue density), so the hypothesis is a.e. visibility | `QFS.null_compl_of_uniform_density`, `QFS.visibleDense_of_ae`, `QFS.formHs_le_form_of_ae_commonDirection` | ✅ **proved** |
 | The Lipschitz cutoff and its cost | `QFS.cutoff`, `QFS.sq_cutoff_sub_le`, `QFS.sq_cutoff_mul_sub_le`, `QFS.form_cutoff_le`, `QFS.lintegral_cutoff_error_le`, `QFS.lintegral_cutoff_error_le'` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
@@ -1823,6 +1826,32 @@ proved in Lean:
    `QFS.Hk_univ_eq_Hs_univ_wide`. The reference cones have to be taken at an
    aperture between `π/4` and `ϑ`, not at the `ϑ/3` of Lemma 2.2, which is what
    `QFS.ref_cones'` supplies.
+
+**The narrow-cone case, attacked.** The obstruction in dimension three and above
+is that the cones at `s` and at `t` can be disjoint. But the chaining never
+needed the intermediate point to be seen by the *endpoints'* cones: a pair
+`(s,z)` is a cone pair as soon as `s − z` lies in the cone at `z`, and the ball
+of common neighbours of `QFS.exists_ball_in_two_cones` exists for **every** pair
+— that lemma constrains only the direction, never the configuration. So the
+argument goes through whenever the intermediate points can be taken of one fixed
+type: `QFS.formHs_le_form_of_visibleDense` proves `H_k ⊆ H^{α/2}` in every
+dimension and for any apex angle, provided the set where `Γ` contains a fixed
+`Ṽ(v,ϑ)` has density at least `c₀` in every ball.
+
+**And its exact reach.** Pairs at every distance need intermediate points, so
+that density is required at every scale — and a set of uniform positive density
+at every scale has null complement, by the Lebesgue density theorem
+(`QFS.null_compl_of_uniform_density`). So the hypothesis is equivalent to
+almost-everywhere visibility, and the theorem is the a.e. form of the
+common-direction theorem (`QFS.formHs_le_form_of_ae_commonDirection`). That is a
+real but modest gain — and, read the other way, a negative result: **no chaining
+argument with a single intermediate point can reach genuinely narrow cones**,
+whatever set of good types it uses. Chains of length at least three are
+necessary, and their middle edge runs between two points whose types the
+configuration assigns adversarially: for `z₁` in the cone at `s` and `z₂` in the
+cone at `t`, the middle pair is a cone pair only if the cones at `z₁` and `z₂`
+cooperate, which nothing forces. That is precisely what §§5–6 arrange on the
+lattice, by majority and renormalisation.
 
 **A route not attempted, and why.** The natural attack on the remaining case is
 multi-scale: split the `H^{α/2}` energy by dyadic distance, chain each pair
