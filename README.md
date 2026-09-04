@@ -136,6 +136,8 @@ The pieces, all proved:
 | **The planar averaging step** | `QFS.volume_planarBall`, `QFS.osc_weighted_le_planar` | ✅ **proved** |
 | **The local Poincaré inequality for planar cross pairs** | `QFS.localPoincare_planar`, `QFS.measurable_param_planarBall`, `QFS.measurableSet_planarBall_graph` | ✅ **proved** |
 | **The planar cross blocks are controlled** | `QFS.formHs_le_form_planar_cross` | ✅ **proved** |
+| **The dichotomy that closes the plane** | `QFS.cross2_ne_zero_or_carrier_eq`, `QFS.eq_or_eq_neg_of_cross2_eq_zero` | ✅ **proved** |
+| **Every block of the planar decomposition is controlled** | `QFS.planar_block_le`, `QFS.unitBallVol_ne_zero` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
 integration in `t`, and it is why the argument is scale-invariant: the singular
@@ -218,10 +220,16 @@ lower bound (using the symmetry of `k` and of the double cone for the second
 case), and the rest are exactly the pairs `QFS.localPoincare_planar` handles.
 
 So in the plane **both kinds of block are now done** — the diagonal ones by
-`QFS.formHs_le_form_of_commonDirection_on`, the cross ones by this. What is left
-is bookkeeping: summing the finitely many blocks of the decomposition Corollary
-2.4 supplies, together with the fact that distinct reference cones in the plane
-have non-parallel axes.
+`QFS.formHs_le_form_of_commonDirection_on`, the cross ones by this. Both are now unified by `QFS.planar_block_le`: for any two reference cones of the
+same aperture, the block `U_V × U_W` is bounded by a finite constant times the
+`H_k` form. The dichotomy `QFS.cross2_ne_zero_or_carrier_eq` decides which
+theorem does the work — in the plane a vanishing cross product forces the axes
+parallel, hence the two double cones equal, hence the block diagonal, and there
+is no third possibility. That is exactly why the argument closes here and not in
+higher dimensions.
+
+What is left is a finite sum: Corollary 2.4 covers `ℝ²` by finitely many pieces
+`U_V`, the squares of that cover exhaust `ℝ² × ℝ²`, and the blocks add up.
 
 The analytic machinery is stated abstractly enough to be reused: the exchange
 asks only that a family of averaging sets have measurable graph and a fibre
