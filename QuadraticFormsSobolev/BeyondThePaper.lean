@@ -1378,4 +1378,177 @@ lemma norm_across_two {w : EuclideanSpace ℝ (Fin 2)} (hw : ‖w‖ = 1)
     abel
   rw [hacross, norm_smul, Real.norm_eq_abs, norm_perp2, hw, mul_one]
 
+
+/-- The two-dimensional cross product. -/
+def cross2 (x y : EuclideanSpace ℝ (Fin 2)) : ℝ := x 0 * y 1 - x 1 * y 0
+
+lemma inner_perp2_eq_neg_cross (u x : EuclideanSpace ℝ (Fin 2)) :
+    ⟪perp2 u, x⟫_ℝ = -cross2 x u := by
+  rw [real_inner_eq_two, cross2]
+  simp
+  ring
+
+lemma norm_across_eq_abs_cross {u : EuclideanSpace ℝ (Fin 2)} (hu : ‖u‖ = 1)
+    (x : EuclideanSpace ℝ (Fin 2)) : ‖across u x‖ = |cross2 x u| := by
+  rw [norm_across_two hu, inner_perp2_eq_neg_cross, abs_neg]
+
+/-- Cramer's rule in the plane. -/
+lemma cramer2 (x a b : EuclideanSpace ℝ (Fin 2)) :
+    cross2 x b • a - cross2 x a • b = cross2 a b • x := by
+  refine euclidean_ext (Fin.forall_fin_two.mpr ⟨?_, ?_⟩) <;>
+    · simp only [PiLp.sub_apply, PiLp.smul_apply, smul_eq_mul, cross2]
+      ring
+
+/-- **The separation supplied by "not already a cone pair".** If `x` does not lie
+in the double cone about `u`, then its component across `u` is at least
+`‖x‖ sin ϑ`. This is what makes the planar construction quantitative: exactly the
+pairs that need chaining are the ones whose geometry is non-degenerate. -/
+lemma abs_cross_ge_of_notMem_doubleCone {u : EuclideanSpace ℝ (Fin 2)} (hu : ‖u‖ = 1)
+    {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {x : EuclideanSpace ℝ (Fin 2)}
+    (hx : x ∉ doubleCone u ϑ) : ‖x‖ * Real.sin ϑ ≤ |cross2 x u| := by
+  have hs : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [Real.pi_pos])
+  have hc : 0 ≤ Real.cos ϑ := Real.cos_nonneg_of_mem_Icc ⟨by linarith [Real.pi_pos], hϑ'⟩
+  have hsc : Real.sin ϑ ^ 2 + Real.cos ϑ ^ 2 = 1 := Real.sin_sq_add_cos_sq ϑ
+  rw [mem_doubleCone_iff] at hx
+  simp only [not_or] at hx
+  obtain ⟨h1, h2⟩ := hx
+  rcases eq_or_ne x 0 with rfl | hx0
+  · simp [cross2]
+  have hg1 : coneGap u ϑ x ≤ 0 := by
+    by_contra hcon
+    exact h1 ((mem_cone_iff_coneGap_pos hu hϑ hϑ' x).mpr (not_le.mp hcon))
+  have hg2 : coneGap u ϑ (-x) ≤ 0 := by
+    by_contra hcon
+    exact h2 ((mem_cone_iff_coneGap_pos hu hϑ hϑ' (-x)).mpr (not_le.mp hcon))
+  have hacross : across u (-x) = -across u x := by
+    simp [across, inner_neg_right, neg_smul]
+    abel
+  rw [coneGap, hacross, norm_neg, inner_neg_right] at hg2
+  rw [coneGap] at hg1
+  -- `A := ⟪u,x⟫`, `B := ‖across u x‖`
+  have hpy := norm_sq_eq_inner_sq_add hu x
+  have hB : ‖across u x‖ = |cross2 x u| := norm_across_eq_abs_cross hu x
+  have hBnn : 0 ≤ ‖across u x‖ := norm_nonneg _
+  have hxn : 0 < ‖x‖ := norm_pos_iff.mpr hx0
+  rw [← hB]
+  nlinarith [hg1, hg2, hpy, hBnn, hxn, hs, hc, hsc, sq_nonneg (⟪u, x⟫_ℝ)]
+
+
+lemma cone_neg_subset_doubleCone (v : E) (ϑ : ℝ) : cone (-v) ϑ ⊆ doubleCone v ϑ := by
+  intro h hh
+  rw [mem_doubleCone_iff]
+  refine Or.inr ⟨neg_ne_zero.mpr hh.1, ?_⟩
+  have h2 := hh.2
+  rw [inner_neg_left] at h2
+  rwa [inner_neg_right, norm_neg]
+
+lemma abs_cross_le (u w : EuclideanSpace ℝ (Fin 2)) : |cross2 u w| ≤ ‖u‖ * ‖w‖ := by
+  have hinner : ⟪perp2 u, w⟫_ℝ = cross2 u w := by
+    rw [inner_perp2_eq_neg_cross, cross2, cross2]; ring
+  have := abs_real_inner_le_norm (perp2 u) w
+  rw [hinner, norm_perp2] at this
+  exact this
+
+/-- **The planar construction.** In the plane, two points whose cone axes are not
+parallel and which are *not already a cone pair* admit a ball of common
+cone-neighbours, of radius proportional to their distance.
+
+The two hypotheses are exactly right: if the axes were parallel a common
+direction would exist and `exists_ball_in_two_cones` would apply, while if the
+pair were already a cone pair no chaining would be needed. What makes the
+construction quantitative is that "not already a cone pair" forces the component
+of `t − s` across each axis to be at least `‖t − s‖ sin ϑ`
+(`abs_cross_ge_of_notMem_doubleCone`) — precisely the separation that keeps the
+intersection point of the two axis-lines away from both `s` and `t`. -/
+theorem exists_ball_in_two_cones_two {vs vt : EuclideanSpace ℝ (Fin 2)}
+    (hvs : ‖vs‖ = 1) (hvt : ‖vt‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
+    {s t : EuclideanSpace ℝ (Fin 2)} (hst : s ≠ t) (hD : cross2 vs vt ≠ 0)
+    (hns : t - s ∉ doubleCone vs ϑ) (hnt : t - s ∉ doubleCone vt ϑ) :
+    ∃ z : EuclideanSpace ℝ (Fin 2),
+      (∀ y ∈ closedBall z (‖t - s‖ * Real.sin ϑ ^ 2 / 2),
+        y - s ∈ doubleCone vs ϑ ∧ y - t ∈ doubleCone vt ϑ) ∧
+      ‖z - s‖ ≤ ‖t - s‖ / |cross2 vs vt| ∧ ‖z - t‖ ≤ ‖t - s‖ / |cross2 vs vt| := by
+  have hs : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [Real.pi_pos])
+  have hδ : 0 < ‖t - s‖ := by
+    rw [norm_pos_iff]; exact sub_ne_zero_of_ne (Ne.symm hst)
+  have hDpos : 0 < |cross2 vs vt| := abs_pos.mpr hD
+  have hD1 : |cross2 vs vt| ≤ 1 := by
+    have := abs_cross_le vs vt
+    rwa [hvs, hvt, mul_one] at this
+  set ρ : ℝ := ‖t - s‖ * Real.sin ϑ ^ 2 / 2 with hρdef
+  have hρpos : 0 < ρ := by rw [hρdef]; positivity
+  -- a point on an axis, far enough out, carries a ball inside the double cone
+  have key : ∀ (u : EuclideanSpace ℝ (Fin 2)), ‖u‖ = 1 → ∀ c : ℝ,
+      ‖t - s‖ * Real.sin ϑ ≤ |c| → ∀ y : EuclideanSpace ℝ (Fin 2),
+      ‖y - c • u‖ ≤ ρ → y ∈ doubleCone u ϑ := by
+    intro u hu c hc y hy
+    have hgap : ρ < |c| * Real.sin ϑ := by
+      have h1 : ‖t - s‖ * Real.sin ϑ * Real.sin ϑ ≤ |c| * Real.sin ϑ :=
+        mul_le_mul_of_nonneg_right hc hs.le
+      rw [hρdef]
+      nlinarith [h1, hδ, hs]
+    rcases lt_or_gt_of_ne (show c ≠ 0 by
+      intro hc0
+      rw [hc0, abs_zero] at hc
+      nlinarith [hδ, hs]) with hneg | hpos
+    · refine cone_neg_subset_doubleCone u ϑ ?_
+      have hun : ‖-u‖ = 1 := by rw [norm_neg, hu]
+      have hcc : c • u = (-c) • (-u) := by rw [smul_neg, neg_smul, neg_neg]
+      refine closedBall_subset_cone hun hϑ hϑ' (p := (-c) • (-u)) (ρ := ρ) ?_ ?_
+      · rw [coneGap_smul_axis hun ϑ (-c)]
+        rw [abs_of_neg hneg] at hgap
+        exact hgap
+      · rw [Metric.mem_closedBall, dist_eq_norm, ← hcc]
+        exact hy
+    · refine Set.mem_union_left _ ?_
+      refine closedBall_subset_cone hu hϑ hϑ' (p := c • u) (ρ := ρ) ?_ ?_
+      · rw [coneGap_smul_axis hu ϑ c]
+        rw [abs_of_pos hpos] at hgap
+        exact hgap
+      · rw [Metric.mem_closedBall, dist_eq_norm]
+        exact hy
+  -- the intersection point of the two axis-lines
+  set a : ℝ := cross2 (t - s) vt / cross2 vs vt with hadef
+  set b : ℝ := cross2 (t - s) vs / cross2 vs vt with hbdef
+  have hzs : (s + a • vs) - s = a • vs := by abel
+  have hzt : (s + a • vs) - t = b • vt := by
+    have hcr := cramer2 (t - s) vs vt
+    have hsm : a • vs - b • vt = t - s := by
+      have h1 : a • vs = (cross2 vs vt)⁻¹ • (cross2 (t - s) vt • vs) := by
+        rw [hadef, smul_smul, div_eq_inv_mul]
+      have h2 : b • vt = (cross2 vs vt)⁻¹ • (cross2 (t - s) vs • vt) := by
+        rw [hbdef, smul_smul, div_eq_inv_mul]
+      rw [h1, h2, ← smul_sub, hcr, smul_smul, inv_mul_cancel₀ hD, one_smul]
+    have : (s + a • vs) - t = (a • vs - b • vt) - (t - s) + b • vt := by abel
+    rw [this, hsm, sub_self, zero_add]
+  -- the two lower bounds, from "not already a cone pair"
+  have hlowa : ‖t - s‖ * Real.sin ϑ ≤ |a| := by
+    have h1 := abs_cross_ge_of_notMem_doubleCone hvt hϑ hϑ' hnt
+    rw [hadef, abs_div]
+    rw [le_div_iff₀ hDpos]
+    nlinarith [h1, hD1, hδ, hs, abs_nonneg (cross2 (t - s) vt)]
+  have hlowb : ‖t - s‖ * Real.sin ϑ ≤ |b| := by
+    have h1 := abs_cross_ge_of_notMem_doubleCone hvs hϑ hϑ' hns
+    rw [hbdef, abs_div]
+    rw [le_div_iff₀ hDpos]
+    nlinarith [h1, hD1, hδ, hs, abs_nonneg (cross2 (t - s) vs)]
+  refine ⟨s + a • vs, ?_, ?_, ?_⟩
+  · intro y hy
+    rw [Metric.mem_closedBall, dist_eq_norm] at hy
+    constructor
+    · refine key vs hvs a hlowa (y - s) ?_
+      have : (y - s) - a • vs = y - (s + a • vs) := by abel
+      rw [this]; exact hy
+    · refine key vt hvt b hlowb (y - t) ?_
+      have : (y - t) - b • vt = y - (s + a • vs) := by rw [← hzt]; abel
+      rw [this]; exact hy
+  · rw [hzs, norm_smul, Real.norm_eq_abs, hvs, mul_one, hadef, abs_div,
+      div_le_div_iff_of_pos_right hDpos]
+    have := abs_cross_le (t - s) vt
+    rwa [hvt, mul_one] at this
+  · rw [hzt, norm_smul, Real.norm_eq_abs, hvt, mul_one, hbdef, abs_div,
+      div_le_div_iff_of_pos_right hDpos]
+    have := abs_cross_le (t - s) vs
+    rwa [hvs, mul_one] at this
+
 end QFS
