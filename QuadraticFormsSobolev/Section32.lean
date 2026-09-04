@@ -1,5 +1,6 @@
 import QuadraticFormsSobolev.LebesgueDiff
 import QuadraticFormsSobolev.Section1
+import QuadraticFormsSobolev.Rescaling
 
 /-!
 # The limit procedure of Section 3.2
@@ -1188,5 +1189,49 @@ noncomputable def latticeEquiv (d : ℕ) {h : ℝ} (hh : h ≠ 0) :
 
 @[simp] lemma latticeEquiv_apply (d : ℕ) {h : ℝ} (hh : h ≠ 0) (n : Fin d → ℤ) :
     (latticeEquiv d hh n : EuclideanSpace ℝ (Fin d)) = latticePt d h n := rfl
+
+
+/-! ## The discrete form as an integral
+
+Corollary 3.1 states `(discret)` as an inequality between sums over pairs of
+lattice points; the limit `h → 0` acts on integrals. This section converts the
+one into the other. The intermediary is the summand extended by zero to all of
+`ℝ^d × ℝ^d`: both the subtype sum of `discreteFormOn` and the sum over the
+tiling's index set `(Fin d → ℤ)²` equal that total sum, because in each case the
+summand vanishes off the relevant set. -/
+
+/-- The constraint set of `discreteFormOn`. -/
+def discretePairs (d : ℕ) (h : ℝ) (S : Set (EuclideanSpace ℝ (Fin d))) (R₀ : ℝ) :
+    Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) :=
+  {p | p.1 ∈ S ∩ scaledLattice d h ∧ p.2 ∈ S ∩ scaledLattice d h ∧ R₀ < ‖p.1 - p.2‖}
+
+/-- The summand of `discreteFormOn`, extended by zero off the constraint set. -/
+noncomputable def discreteC (d : ℕ) (h : ℝ) (S : Set (EuclideanSpace ℝ (Fin d))) (R₀ : ℝ)
+    (ω : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) :
+    EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞ :=
+  (discretePairs d h S R₀).indicator
+    (fun p => ENNReal.ofReal ((f p.1 - f p.2) ^ 2) * ω p.1 p.2)
+
+/-- The subtype sum of `discreteFormOn` is the total sum of the extended
+summand. -/
+theorem discreteFormOn_eq_tsum {h : ℝ} (S : Set (EuclideanSpace ℝ (Fin d))) (R₀ : ℝ)
+    (ω : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) :
+    discreteFormOn (scaledLattice d h) S R₀ ω f
+      = ∑' p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+        discreteC d h S R₀ ω f p := by
+  have hsupp : Function.support (discreteC d h S R₀ ω f) ⊆ discretePairs d h S R₀ := by
+    intro p hp
+    by_contra hc
+    exact hp (by rw [discreteC, Set.indicator_of_notMem hc])
+  rw [← tsum_subtype_eq_of_support_subset hsupp]
+  refine tsum_congr fun p => ?_
+  rw [discreteC]
+  exact (Set.indicator_of_mem
+    (show (p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) ∈ discretePairs d h S R₀
+      from p.2)
+    (fun q : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f q.1 - f q.2) ^ 2) * ω q.1 q.2)).symm
 
 end QFS
