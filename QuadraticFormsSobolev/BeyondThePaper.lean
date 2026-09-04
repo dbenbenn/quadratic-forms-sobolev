@@ -1979,4 +1979,282 @@ theorem lintegral_swap_planar {vs vt : EuclideanSpace ℝ (Fin 2)} (hvs : ‖vs�
   rw [ENNReal.ofReal_mul hcc]
   ring
 
+
+/-! ### The `t` side of the planar family -/
+
+/-- Two-sided comparability at `t`. -/
+theorem planarBall_comparable'' {vs vt : EuclideanSpace ℝ (Fin 2)} (hvs : ‖vs‖ = 1)
+    (hvt : ‖vt‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hD : cross2 vs vt ≠ 0)
+    {s t z : EuclideanSpace ℝ (Fin 2)} (hz : z ∈ planarBall vs vt ϑ s t) :
+    ‖t - s‖ * Real.sin ϑ / 2 ≤ ‖z - t‖ ∧
+      ‖z - t‖ ≤ ‖t - s‖ * (1 / |cross2 vs vt| + 1) :=
+  let h := planarBall_comparable hvs hvt hϑ hϑ' hD hz.2.1 hz.2.2.1 hz.2.2.2
+  ⟨h.2.2.1, h.2.2.2⟩
+
+lemma measurableSet_planarBall_fibre' {vs vt : EuclideanSpace ℝ (Fin 2)} (ϑ : ℝ)
+    (t z : EuclideanSpace ℝ (Fin 2)) :
+    MeasurableSet {s : EuclideanSpace ℝ (Fin 2) | z ∈ planarBall vs vt ϑ s t} := by
+  have h1 : MeasurableSet {s : EuclideanSpace ℝ (Fin 2) | s ≠ t} := by
+    have he : {s : EuclideanSpace ℝ (Fin 2) | s ≠ t}
+        = ({t} : Set (EuclideanSpace ℝ (Fin 2)))ᶜ := by
+      ext s; simp only [Set.mem_ofPred_eq, Set.mem_compl_iff, Set.mem_singleton_iff, ne_eq]
+    rw [he]; exact (measurableSet_singleton t).compl
+  have h2 : MeasurableSet {s : EuclideanSpace ℝ (Fin 2) | t - s ∉ doubleCone vs ϑ} :=
+    ((isOpen_doubleCone vs ϑ).preimage (by fun_prop)).measurableSet.compl
+  have h3 : MeasurableSet {s : EuclideanSpace ℝ (Fin 2) | t - s ∉ doubleCone vt ϑ} :=
+    ((isOpen_doubleCone vt ϑ).preimage (by fun_prop)).measurableSet.compl
+  have h4 : MeasurableSet {s : EuclideanSpace ℝ (Fin 2) |
+      z ∈ closedBall (planarCtr vs vt s t) (‖t - s‖ * Real.sin ϑ ^ 2 / 2)} := by
+    have hc1 : Continuous fun s : EuclideanSpace ℝ (Fin 2) =>
+        dist z (planarCtr vs vt s t) := by unfold planarCtr planarA cross2; fun_prop
+    have hc2 : Continuous fun s : EuclideanSpace ℝ (Fin 2) =>
+        ‖t - s‖ * Real.sin ϑ ^ 2 / 2 := by fun_prop
+    simpa [Metric.mem_closedBall] using (isClosed_le hc1 hc2).measurableSet
+  have hEq : {s : EuclideanSpace ℝ (Fin 2) | z ∈ planarBall vs vt ϑ s t}
+      = ({s : EuclideanSpace ℝ (Fin 2) | s ≠ t} ∩
+          {s : EuclideanSpace ℝ (Fin 2) | t - s ∉ doubleCone vs ϑ} ∩
+          {s : EuclideanSpace ℝ (Fin 2) | t - s ∉ doubleCone vt ϑ}) ∩
+        {s : EuclideanSpace ℝ (Fin 2) |
+          z ∈ closedBall (planarCtr vs vt s t) (‖t - s‖ * Real.sin ϑ ^ 2 / 2)} := by
+    ext s
+    simp only [planarBall, Set.mem_ofPred_eq, Set.mem_inter_iff]
+    tauto
+  rw [hEq]
+  exact ((h1.inter h2).inter h3).inter h4
+
+/-- The `t`-side planar fibre estimate. -/
+theorem lintegral_planarBall_fibre_le' {vs vt : EuclideanSpace ℝ (Fin 2)} (hvs : ‖vs‖ = 1)
+    (hvt : ‖vt‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α)
+    (hD : cross2 vs vt ≠ 0) (t z : EuclideanSpace ℝ (Fin 2)) :
+    ∫⁻ s in {s | z ∈ planarBall vs vt ϑ s t},
+        ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α))
+      ≤ ENNReal.ofReal (planarConst vs vt ϑ α * ‖z - t‖ ^ (-(2 : ℝ) - α)) * unitBallVol 2 := by
+  have hs0 : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [Real.pi_pos])
+  have hDpos : 0 < |cross2 vs vt| := abs_pos.mpr hD
+  have hA : (0 : ℝ) < 1 / |cross2 vs vt| + 1 := by positivity
+  have hmeas := measurableSet_planarBall_fibre' (vs := vs) (vt := vt) ϑ t z
+  have hsub : {s | z ∈ planarBall vs vt ϑ s t} ⊆ closedBall t (2 * ‖z - t‖ / Real.sin ϑ) := by
+    intro s hs
+    obtain ⟨hlow, -⟩ := planarBall_comparable'' hvs hvt hϑ hϑ' hD hs
+    rw [Metric.mem_closedBall, dist_eq_norm, norm_sub_rev s t, le_div_iff₀ hs0]
+    linarith
+  rcases eq_or_ne z t with rfl | hzt
+  · have hball0 : volume (closedBall z (0 : ℝ)) = 0 := by
+      rw [volume_closedBall_eq _ le_rfl]; norm_num
+    have hnull : volume {s : EuclideanSpace ℝ (Fin 2) | z ∈ planarBall vs vt ϑ s z} = 0 := by
+      refine measure_mono_null (le_trans hsub (le_of_eq ?_)) hball0
+      simp
+    rw [setLIntegral_measure_zero _ _ hnull]
+    simp
+  · have hn : 0 < ‖z - t‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hzt
+    have hexp : -(4 : ℝ) - α ≤ 0 := by linarith
+    have hquot : 0 < ‖z - t‖ / (1 / |cross2 vs vt| + 1) := by positivity
+    have hpt : ∀ s ∈ {s | z ∈ planarBall vs vt ϑ s t},
+        ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α))
+          ≤ ENNReal.ofReal ((‖z - t‖ / (1 / |cross2 vs vt| + 1)) ^ (-(4 : ℝ) - α)) := by
+      intro s hs
+      obtain ⟨-, hup⟩ := planarBall_comparable'' hvs hvt hϑ hϑ' hD hs
+      refine ENNReal.ofReal_le_ofReal (Real.rpow_le_rpow_of_nonpos hquot ?_ hexp)
+      rw [div_le_iff₀ hA, norm_sub_rev s t]
+      linarith
+    calc ∫⁻ s in {s | z ∈ planarBall vs vt ϑ s t},
+            ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α))
+        ≤ ∫⁻ _ in {s | z ∈ planarBall vs vt ϑ s t},
+            ENNReal.ofReal ((‖z - t‖ / (1 / |cross2 vs vt| + 1)) ^ (-(4 : ℝ) - α)) := by
+          refine lintegral_mono_ae ?_
+          filter_upwards [ae_restrict_mem hmeas] with s hs using hpt s hs
+      _ = ENNReal.ofReal ((‖z - t‖ / (1 / |cross2 vs vt| + 1)) ^ (-(4 : ℝ) - α)) *
+            volume {s | z ∈ planarBall vs vt ϑ s t} := setLIntegral_const _ _
+      _ ≤ ENNReal.ofReal ((‖z - t‖ / (1 / |cross2 vs vt| + 1)) ^ (-(4 : ℝ) - α)) *
+            volume (closedBall t (2 * ‖z - t‖ / Real.sin ϑ)) :=
+          mul_le_mul' le_rfl (measure_mono hsub)
+      _ = ENNReal.ofReal (planarConst vs vt ϑ α * ‖z - t‖ ^ (-(2 : ℝ) - α)) *
+            unitBallVol 2 := by
+          rw [volume_closedBall_eq _ (by positivity), ← mul_assoc,
+            ← ENNReal.ofReal_mul (Real.rpow_nonneg hquot.le _)]
+          congr 2
+          have e1 : (‖z - t‖ / (1 / |cross2 vs vt| + 1)) ^ (-(4 : ℝ) - α)
+              = ‖z - t‖ ^ (-(4 : ℝ) - α) * (1 / |cross2 vs vt| + 1) ^ (4 + α) := by
+            rw [Real.div_rpow hn.le hA.le,
+              show -(4 : ℝ) - α = -(4 + α) from by ring, Real.rpow_neg hA.le,
+              div_eq_mul_inv, inv_inv]
+          have e2 : (2 * ‖z - t‖ / Real.sin ϑ) ^ 2
+              = ‖z - t‖ ^ ((2 : ℕ) : ℝ) * (4 / Real.sin ϑ ^ 2) := by
+            rw [Real.rpow_natCast]
+            field_simp
+            ring
+          have e3 : ‖z - t‖ ^ (-(4 : ℝ) - α) * ‖z - t‖ ^ ((2 : ℕ) : ℝ)
+              = ‖z - t‖ ^ (-(2 : ℝ) - α) := by
+            rw [← Real.rpow_add hn]; congr 1; push_cast; ring
+          rw [e1, e2, planarConst]
+          rw [show ‖z - t‖ ^ (-(4 : ℝ) - α) * (1 / |cross2 vs vt| + 1) ^ (4 + α) *
+                (‖z - t‖ ^ ((2 : ℕ) : ℝ) * (4 / Real.sin ϑ ^ 2))
+              = (‖z - t‖ ^ (-(4 : ℝ) - α) * ‖z - t‖ ^ ((2 : ℕ) : ℝ)) *
+                ((1 / |cross2 vs vt| + 1) ^ (4 + α) * 4 / Real.sin ϑ ^ 2) from by ring, e3]
+          ring
+
+
+/-- **The exchange for the planar family, at fixed `t`.** -/
+theorem lintegral_swap_planar' {vs vt : EuclideanSpace ℝ (Fin 2)} (hvs : ‖vs‖ = 1)
+    (hvt : ‖vt‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α)
+    (hD : cross2 vs vt ≠ 0) (t : EuclideanSpace ℝ (Fin 2))
+    {G : EuclideanSpace ℝ (Fin 2) → ℝ≥0∞} (hG : Measurable G) :
+    ∫⁻ s, ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α)) *
+        ∫⁻ z in planarBall vs vt ϑ s t, G z
+      ≤ ENNReal.ofReal (planarConst vs vt ϑ α) * unitBallVol 2 *
+        ∫⁻ z in {z | z - t ∈ doubleCone vt ϑ},
+          G z * ENNReal.ofReal (‖z - t‖ ^ (-(2 : ℝ) - α)) := by
+  have hs0 : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [Real.pi_pos])
+  have hDpos : 0 < |cross2 vs vt| := abs_pos.mpr hD
+  have hconeMeas : MeasurableSet {z : EuclideanSpace ℝ (Fin 2) | z - t ∈ doubleCone vt ϑ} :=
+    ((isOpen_doubleCone vt ϑ).preimage (by fun_prop)).measurableSet
+  have hcc : 0 ≤ planarConst vs vt ϑ α := by unfold planarConst; positivity
+  have hwm : Measurable fun s : EuclideanSpace ℝ (Fin 2) =>
+      ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α)) := by fun_prop
+  have hgraph : MeasurableSet {p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) |
+      p.2 ∈ planarBall vs vt ϑ p.1 t} := by
+    have hne : MeasurableSet {s : EuclideanSpace ℝ (Fin 2) | s ≠ t} := by
+      have he : {s : EuclideanSpace ℝ (Fin 2) | s ≠ t}
+          = ({t} : Set (EuclideanSpace ℝ (Fin 2)))ᶜ := by
+        ext s; simp only [Set.mem_ofPred_eq, Set.mem_compl_iff, Set.mem_singleton_iff, ne_eq]
+      rw [he]; exact (measurableSet_singleton t).compl
+    have h1 : MeasurableSet {p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) |
+        p.1 ≠ t} := measurable_fst hne
+    have h2 : MeasurableSet {p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) |
+        t - p.1 ∉ doubleCone vs ϑ} :=
+      ((isOpen_doubleCone vs ϑ).preimage (by fun_prop)).measurableSet.compl
+    have h3 : MeasurableSet {p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) |
+        t - p.1 ∉ doubleCone vt ϑ} :=
+      ((isOpen_doubleCone vt ϑ).preimage (by fun_prop)).measurableSet.compl
+    have h4 : MeasurableSet {p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) |
+        p.2 ∈ closedBall (planarCtr vs vt p.1 t) (‖t - p.1‖ * Real.sin ϑ ^ 2 / 2)} := by
+      have hc1 : Continuous fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+          dist p.2 (planarCtr vs vt p.1 t) := by unfold planarCtr planarA cross2; fun_prop
+      have hc2 : Continuous fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+          ‖t - p.1‖ * Real.sin ϑ ^ 2 / 2 := by fun_prop
+      simpa [Metric.mem_closedBall] using (isClosed_le hc1 hc2).measurableSet
+    have hEq : {p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) |
+        p.2 ∈ planarBall vs vt ϑ p.1 t}
+        = ({p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) | p.1 ≠ t} ∩
+            {p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) |
+              t - p.1 ∉ doubleCone vs ϑ} ∩
+            {p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) |
+              t - p.1 ∉ doubleCone vt ϑ}) ∩
+          {p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) |
+            p.2 ∈ closedBall (planarCtr vs vt p.1 t) (‖t - p.1‖ * Real.sin ϑ ^ 2 / 2)} := by
+      ext p
+      simp only [planarBall, Set.mem_ofPred_eq, Set.mem_inter_iff]
+      tauto
+    rw [hEq]
+    exact ((h1.inter h2).inter h3).inter h4
+  set Ψ : EuclideanSpace ℝ (Fin 2) → ℝ≥0∞ := fun z =>
+    {z : EuclideanSpace ℝ (Fin 2) | z - t ∈ doubleCone vt ϑ}.indicator
+      (fun z => ENNReal.ofReal (planarConst vs vt ϑ α * ‖z - t‖ ^ (-(2 : ℝ) - α)) *
+        unitBallVol 2) z with hΨ
+  have hfib : ∀ z, ∫⁻ s in {s | z ∈ planarBall vs vt ϑ s t},
+      ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α)) ≤ Ψ z := by
+    intro z
+    simp only [hΨ]
+    by_cases hzc : z - t ∈ doubleCone vt ϑ
+    · rw [Set.indicator_of_mem (show z ∈ {z : EuclideanSpace ℝ (Fin 2) |
+        z - t ∈ doubleCone vt ϑ} from hzc)]
+      exact lintegral_planarBall_fibre_le' hvs hvt hϑ hϑ' hα hD t z
+    · rw [Set.indicator_of_notMem (show z ∉ {z : EuclideanSpace ℝ (Fin 2) |
+        z - t ∈ doubleCone vt ϑ} from hzc)]
+      have hempty : {s : EuclideanSpace ℝ (Fin 2) | z ∈ planarBall vs vt ϑ s t} = ∅ := by
+        ext s
+        simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false]
+        intro hz
+        exact hzc (mem_two_cones_of_mem_planarBall' hvs hvt hϑ hϑ' hD hz).2
+      rw [hempty, MeasureTheory.setLIntegral_empty]
+  refine le_trans (lintegral_swap_of_fibre_bound
+    (W := fun s => planarBall vs vt ϑ s t)
+    (w := fun s => ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α)))
+    (fun s => measurableSet_planarBall ϑ s t) hgraph hwm hG
+    (fun z => measurableSet_planarBall_fibre' ϑ t z) hfib) ?_
+  have hprod : ∀ z, G z * Ψ z
+      = {z : EuclideanSpace ℝ (Fin 2) | z - t ∈ doubleCone vt ϑ}.indicator
+        (fun z => G z * (ENNReal.ofReal (planarConst vs vt ϑ α * ‖z - t‖ ^ (-(2 : ℝ) - α)) *
+          unitBallVol 2)) z := by
+    intro z
+    simp only [hΨ]
+    by_cases hzc : z - t ∈ doubleCone vt ϑ
+    · rw [Set.indicator_of_mem (show z ∈ {z : EuclideanSpace ℝ (Fin 2) |
+        z - t ∈ doubleCone vt ϑ} from hzc), Set.indicator_of_mem
+        (show z ∈ {z : EuclideanSpace ℝ (Fin 2) | z - t ∈ doubleCone vt ϑ} from hzc)]
+    · rw [Set.indicator_of_notMem (show z ∉ {z : EuclideanSpace ℝ (Fin 2) |
+        z - t ∈ doubleCone vt ϑ} from hzc), Set.indicator_of_notMem
+        (show z ∉ {z : EuclideanSpace ℝ (Fin 2) | z - t ∈ doubleCone vt ϑ} from hzc), mul_zero]
+  rw [lintegral_congr hprod, lintegral_indicator hconeMeas,
+    ← lintegral_const_mul' _ _
+      (ENNReal.mul_ne_top ENNReal.ofReal_ne_top unitBallVol_ne_top)]
+  refine le_of_eq (lintegral_congr fun z => ?_)
+  rw [ENNReal.ofReal_mul hcc]
+  ring
+
+
+/-- The volume of a planar ball, when its side conditions hold. -/
+lemma volume_planarBall {vs vt : EuclideanSpace ℝ (Fin 2)} {ϑ : ℝ}
+    {s t : EuclideanSpace ℝ (Fin 2)} (hne : s ≠ t)
+    (h1 : t - s ∉ doubleCone vs ϑ) (h2 : t - s ∉ doubleCone vt ϑ) :
+    volume (planarBall vs vt ϑ s t)
+      = ENNReal.ofReal ((‖t - s‖ * Real.sin ϑ ^ 2 / 2) ^ 2) * unitBallVol 2 := by
+  have he : planarBall vs vt ϑ s t
+      = closedBall (planarCtr vs vt s t) (‖t - s‖ * Real.sin ϑ ^ 2 / 2) := by
+    ext z
+    simp only [planarBall, Set.mem_ofPred_eq]
+    exact ⟨fun h => h.2.2.2, fun h => ⟨hne, h1, h2, h⟩⟩
+  rw [he, volume_closedBall_eq _ (by positivity)]
+
+/-- **The averaging step for the planar family.** -/
+theorem osc_weighted_le_planar {vs vt : EuclideanSpace ℝ (Fin 2)} {ϑ : ℝ}
+    {α : ℝ} (f : EuclideanSpace ℝ (Fin 2) → ℝ) {s t : EuclideanSpace ℝ (Fin 2)}
+    (hne : s ≠ t) (h1 : t - s ∉ doubleCone vs ϑ) (h2 : t - s ∉ doubleCone vt ϑ) :
+    ENNReal.ofReal ((f t - f s) ^ 2) * ENNReal.ofReal (‖s - t‖ ^ (-(2 : ℝ) - α)) *
+        (ENNReal.ofReal (Real.sin ϑ ^ 4 / 4) * unitBallVol 2)
+      ≤ ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α)) *
+        ∫⁻ z in planarBall vs vt ϑ s t,
+          ENNReal.ofReal (2 * (f z - f s) ^ 2 + 2 * (f t - f z) ^ 2) := by
+  have hδ : 0 < ‖s - t‖ := by rw [norm_pos_iff]; exact sub_ne_zero_of_ne hne
+  have hrev : ‖t - s‖ = ‖s - t‖ := norm_sub_rev t s
+  -- the flat averaging inequality
+  have hflat : ENNReal.ofReal ((f t - f s) ^ 2) * volume (planarBall vs vt ϑ s t)
+      ≤ ∫⁻ z in planarBall vs vt ϑ s t,
+        ENNReal.ofReal (2 * (f z - f s) ^ 2 + 2 * (f t - f z) ^ 2) := by
+    rw [← setLIntegral_const (planarBall vs vt ϑ s t) (ENNReal.ofReal ((f t - f s) ^ 2))]
+    refine lintegral_mono fun z => ENNReal.ofReal_le_ofReal ?_
+    nlinarith [sq_nonneg (f z - f s - (f t - f z)), sq_nonneg (f z - f s + (f t - f z))]
+  -- and the weights match
+  have hw : ENNReal.ofReal (‖s - t‖ ^ (-(2 : ℝ) - α)) * ENNReal.ofReal (Real.sin ϑ ^ 4 / 4)
+      = ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α)) *
+        ENNReal.ofReal ((‖t - s‖ * Real.sin ϑ ^ 2 / 2) ^ 2) := by
+    rw [← ENNReal.ofReal_mul (Real.rpow_nonneg hδ.le _),
+      ← ENNReal.ofReal_mul (Real.rpow_nonneg hδ.le _), hrev]
+    congr 1
+    have e : (‖s - t‖ * Real.sin ϑ ^ 2 / 2) ^ 2
+        = ‖s - t‖ ^ ((2 : ℕ) : ℝ) * (Real.sin ϑ ^ 4 / 4) := by
+      rw [Real.rpow_natCast]; ring
+    rw [e, ← mul_assoc, ← Real.rpow_add hδ]
+    congr 2
+    push_cast
+    ring
+  calc ENNReal.ofReal ((f t - f s) ^ 2) * ENNReal.ofReal (‖s - t‖ ^ (-(2 : ℝ) - α)) *
+        (ENNReal.ofReal (Real.sin ϑ ^ 4 / 4) * unitBallVol 2)
+      = ENNReal.ofReal ((f t - f s) ^ 2) *
+          (ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α)) *
+            (ENNReal.ofReal ((‖t - s‖ * Real.sin ϑ ^ 2 / 2) ^ 2) * unitBallVol 2)) := by
+        rw [show ENNReal.ofReal ((f t - f s) ^ 2) * ENNReal.ofReal (‖s - t‖ ^ (-(2 : ℝ) - α)) *
+              (ENNReal.ofReal (Real.sin ϑ ^ 4 / 4) * unitBallVol 2)
+            = ENNReal.ofReal ((f t - f s) ^ 2) *
+              ((ENNReal.ofReal (‖s - t‖ ^ (-(2 : ℝ) - α)) *
+                ENNReal.ofReal (Real.sin ϑ ^ 4 / 4)) * unitBallVol 2) from by ring, hw]
+        ring
+    _ = ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α)) *
+          (ENNReal.ofReal ((f t - f s) ^ 2) * volume (planarBall vs vt ϑ s t)) := by
+        rw [volume_planarBall hne h1 h2]; ring
+    _ ≤ ENNReal.ofReal (‖s - t‖ ^ (-(4 : ℝ) - α)) *
+          ∫⁻ z in planarBall vs vt ϑ s t,
+            ENNReal.ofReal (2 * (f z - f s) ^ 2 + 2 * (f t - f z) ^ 2) :=
+        mul_le_mul' le_rfl hflat
+
 end QFS
