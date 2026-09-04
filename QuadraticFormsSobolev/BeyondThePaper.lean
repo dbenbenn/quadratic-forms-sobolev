@@ -3542,4 +3542,168 @@ theorem formHs_ball_ne_top_of_wide {d : ℕ} (hd : 0 < d) {ϑ α Λ : ℝ} (hϑ 
   · exact ENNReal.mul_lt_top (by norm_num)
       (ENNReal.mul_lt_top (ENNReal.mul_lt_top ENNReal.ofReal_lt_top hCδ.lt_top) hL2.lt_top)
 
+
+/-! ## Theorem 1.1 for wide cones, in every dimension
+
+The same assembly as in the plane, with `formHs_ball_ne_top_of_wide` in place of
+`formHs_ball_ne_top_of_planar`. -/
+
+/-- **Theorem 1.1's enlarged-ball form for wide cones**, in every dimension
+`d ≥ 2`: `κ` and `c` depend only on `ϑ`, `Λ`, `α` and `d`. -/
+theorem formHs_ball_le_form_wide {d : ℕ} (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ : π / 4 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) (hα : 0 < α) (hα2 : α < 2) (hΛ : 1 ≤ Λ) :
+    ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ, Measurable f → LocallyIntegrable f volume →
+        (∫⁻ x in ball x₀ (κ * R), ENNReal.ofReal (f x ^ 2)) ≠ ⊤ →
+        formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
+  have hd0 : 0 < d := by omega
+  obtain ⟨κ, c, hκ, hc, hmain⟩ :=
+    formHs_ball_le_form_of_formHs_ne_top (d := d) (by linarith [Real.pi_pos] : 0 < ϑ)
+      hϑ' hd hα hα2 hΛ
+  have hs : (0:ℝ) ≤ Real.sqrt (d : ℝ) := Real.sqrt_nonneg _
+  refine ⟨2 * (κ + Real.sqrt (d : ℝ)), c, by nlinarith, hc,
+    fun Γ hΓ hmeas k hk hkm x₀ R hR f hfm hf hL2 => ?_⟩
+  set ρ : ℝ := (κ + Real.sqrt (d : ℝ)) * R with hρ
+  have hρpos : 0 < ρ := by rw [hρ]; nlinarith
+  have hsub : ball x₀ (κ * R) ⊆ ball x₀ (2 * (κ + Real.sqrt (d : ℝ)) * R) := by
+    refine ball_subset_ball ?_
+    nlinarith
+  by_cases htop : form (ball x₀ (2 * (κ + Real.sqrt (d : ℝ)) * R)) k f = ⊤
+  · rw [htop, ENNReal.mul_top (by simpa using lt_of_lt_of_le zero_lt_one hc)]
+    exact le_top
+  have hfin : formHs (ball x₀ ρ) α f ≠ ⊤ := by
+    refine formHs_ball_ne_top_of_wide hd0 hϑ hϑ' hα hα2 hΓ hmeas hk hfm hkm
+      (show ρ < 2 * (κ + Real.sqrt (d : ℝ)) * R by rw [hρ]; nlinarith) hL2 htop
+  refine le_trans (hmain Γ hΓ hmeas k hk hkm x₀ R hR f hfm hf hfin) (mul_le_mul' le_rfl ?_)
+  exact form_mono_set hsub k f
+
+
+/-- **The ball comparability for wide cones, with the paper's `f ∈ L²(B)`.**
+The wide-cone analogue of `QFS.theoremOneOneBallCondMeas_two`. -/
+theorem ballComparability_wide {d : ℕ} (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ : π / 4 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) (hα : 0 < α) (hα2 : α < 2) (hΛ : 1 ≤ Λ) :
+    ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
+        MemLp f 2 (volume.restrict (ball x₀ (κ * R))) →
+        formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
+  obtain ⟨κ, c, hκ, hc, hmain⟩ := formHs_ball_le_form_wide hd hϑ hϑ' hα hα2 hΛ
+  exact ⟨κ, c, hκ, hc, fun Γ hΓ hmeas k hk hkm x₀ R hR =>
+    ballComparability_of_measurable hκ hR
+      (fun f hfm hfl hL2 => hmain Γ hΓ hmeas k hk hkm x₀ R hR f hfm hfl hL2)⟩
+
+/-- **Theorem 1.1 for wide cones**, on the same ball, in every dimension `d ≥ 2`,
+granted the Whitney/Dyda input Lemma 7.1 quotes. -/
+theorem formHs_le_form_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ} (hϑ : π / 4 < ϑ)
+    (hϑ' : ϑ ≤ π / 2) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+    (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ)) :
+    ∃ c : ℝ, 0 < c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
+        MemLp f 2 (volume.restrict (ball x₀ R)) →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
+        ENNReal.ofReal c * formHs (ball x₀ R) α f ≤ form (ball x₀ R) k f := by
+  obtain ⟨κ, c₀, hκ, hc₀, H⟩ := ballComparability_wide hd hϑ hϑ' hα hα2 hΛ
+  obtain ⟨W⟩ := hW κ hκ
+  have hc₀pos : (0 : ℝ) < c₀ := lt_of_lt_of_le zero_lt_one hc₀
+  have hMR : (0 : ℝ) < (W.overlapBound : ℝ) := by exact_mod_cast W.overlapBound_pos
+  refine ⟨c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ),
+    div_pos (mul_pos (inv_pos.mpr hc₀pos) W.dydaConst_pos) hMR,
+    fun Γ hΓ hmeas k hk hkm x₀ R hR f hf hFmeas => ?_⟩
+  exact formHs_le_form_of_ballComparability hκ hc₀ W
+    (fun y₀ S hS hmem => H Γ hΓ hmeas k hk hkm y₀ S hS f hmem) x₀ R hR hf hFmeas
+
+
+/-! ## Theorem 1.4 for wide cones -/
+
+/-- **`H_k(ℝ^d) ⊆ H^{α/2}(ℝ^d)` for wide cones, with a uniform constant**,
+granted the quoted Whitney/Dyda input. -/
+theorem formHs_univ_le_form_univ_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ}
+    (hϑ : Real.pi / 4 < ϑ)
+    (hϑ' : ϑ ≤ Real.pi / 2) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+    (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ)) :
+    ∃ c : ℝ, 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
+        (∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+          MemLp f 2 (volume.restrict (ball x₀ R))) →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
+        formHs Set.univ α f ≤ ENNReal.ofReal c * form Set.univ k f := by
+  obtain ⟨c₀, hc₀pos, H⟩ := formHs_le_form_wide hd hϑ hϑ' hΛ hα hα2 hW
+  refine ⟨max c₀⁻¹ 1, le_max_right _ _,
+    fun Γ hΓ hmeas k hk hkm f hf hFmeas => ?_⟩
+  simp only [formHs]
+  rw [form_univ_eq_iSup, form_univ_eq_iSup, ENNReal.mul_iSup]
+  refine iSup_mono fun n => ?_
+  have hR : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have h1 := H Γ hΓ hmeas k hk hkm 0 ((n : ℝ) + 1) hR f (hf 0 _ hR) hFmeas
+  have hstep : formHs (ball (0 : EuclideanSpace ℝ (Fin d)) ((n : ℝ) + 1)) α f
+      ≤ ENNReal.ofReal c₀⁻¹ * form (ball (0 : EuclideanSpace ℝ (Fin d)) ((n : ℝ) + 1)) k f := by
+    calc formHs (ball (0 : EuclideanSpace ℝ (Fin d)) ((n : ℝ) + 1)) α f
+        = ENNReal.ofReal c₀⁻¹ * (ENNReal.ofReal c₀ *
+            formHs (ball (0 : EuclideanSpace ℝ (Fin d)) ((n : ℝ) + 1)) α f) := by
+          rw [← mul_assoc, ← ENNReal.ofReal_mul (le_of_lt (inv_pos.mpr hc₀pos)),
+            inv_mul_cancel₀ (ne_of_gt hc₀pos), ENNReal.ofReal_one, one_mul]
+      _ ≤ ENNReal.ofReal c₀⁻¹ * form (ball (0 : EuclideanSpace ℝ (Fin d)) ((n : ℝ) + 1)) k f :=
+          mul_le_mul' le_rfl h1
+  refine le_trans hstep (mul_le_mul' (ENNReal.ofReal_le_ofReal (le_max_left _ _)) le_rfl)
+
+/-- **Theorem 1.4 for `Ω = ℝ^d`, for wide cones**: the two spaces coincide,
+granted the quoted Whitney/Dyda input. -/
+theorem Hk_univ_eq_Hs_univ_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ}
+    (hϑ : Real.pi / 4 < ϑ) (hϑ' : ϑ ≤ Real.pi / 2)
+    (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
+    (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ))
+    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      k p.1 p.2) :
+    Hk Set.univ k = Hs Set.univ α := by
+  obtain ⟨c, hc, H⟩ := formHs_univ_le_form_univ_wide hd hϑ hϑ' hΛ hα hα2 hW
+  refine Set.Subset.antisymm (fun f hf => ?_) (Hs_subset_Hk hk Set.univ)
+  obtain ⟨hfL2, hfform⟩ := hf
+  refine ⟨hfL2, ?_⟩
+  -- pass to a measurable representative
+  set g : EuclideanSpace ℝ (Fin d) → ℝ := hfL2.1.mk f with hgdef
+  have hgm : Measurable g := hfL2.1.stronglyMeasurable_mk.measurable
+  have hae : ∀ᵐ x ∂(volume.restrict (Set.univ : Set (EuclideanSpace ℝ (Fin d)))), f x = g x :=
+    hfL2.1.ae_eq_mk
+  have hgL2 : ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      MemLp g 2 (volume.restrict (ball x₀ R)) := by
+    intro x₀ R _
+    refine ((hfL2.ae_eq hae).mono_measure ?_)
+    exact Measure.restrict_mono (Set.subset_univ _) le_rfl
+  have hFmeas : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((g p.2 - g p.1) ^ 2) * k p.1 p.2 :=
+    (ENNReal.measurable_ofReal.comp
+      (((hgm.comp measurable_snd).sub (hgm.comp measurable_fst)).pow_const 2)).mul hkm
+  have hform : form Set.univ k g = form Set.univ k f := (form_congr_ae k hae).symm
+  have hformHs : formHs Set.univ α g = formHs Set.univ α f := (formHs_congr_ae α hae).symm
+  have hbound := H Γ hΓ hmeas k hk hkm g hgL2 hFmeas
+  rw [hformHs, hform] at hbound
+  exact ne_top_of_le_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top hfform) hbound
+
 end QFS

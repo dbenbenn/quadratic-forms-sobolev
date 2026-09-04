@@ -2653,4 +2653,23 @@ lemma le_pi_div_two_of_isBounded {Γ : Configuration (EuclideanSpace ℝ (Fin d)
     (hΓ : IsBounded Γ ϑ) : ϑ ≤ Real.pi / 2 :=
   le_trans (hΓ.2 0) (Γ 0).apex_le
 
+
+/-- The passage from "measurable, locally integrable, square integrable on the
+ball" to the paper's `f ∈ L²(B)`: a measurable representative, which neither
+form sees. -/
+theorem ballComparability_of_measurable {α c κ : ℝ} (hκ : 1 ≤ κ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ} (hR : 0 < R)
+    (H : ∀ f : EuclideanSpace ℝ (Fin d) → ℝ, Measurable f → LocallyIntegrable f volume →
+      (∫⁻ x in ball x₀ (κ * R), ENNReal.ofReal (f x ^ 2)) ≠ ⊤ →
+      formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ)
+    (hf : MemLp f 2 (volume.restrict (ball x₀ (κ * R)))) :
+    formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
+  obtain ⟨g, hgm, hgloc, hae, hL2⟩ := exists_measurable_repr hf
+  have hsub : ball x₀ R ⊆ ball x₀ (κ * R) := ball_subset_ball (by nlinarith)
+  rw [formHs_congr_ae α (ae_restrict_of_ae_restrict_of_subset hsub hae),
+    form_congr_ae k hae]
+  exact H g hgm hgloc hL2
+
 end QFS
