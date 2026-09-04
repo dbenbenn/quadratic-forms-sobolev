@@ -518,6 +518,9 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **A Lipschitz function has finite `H^{α/2}` seminorm on a ball (`α < 2`)** | §3.2 | `QFS.formHs_lt_top_of_lipschitzOn`, `QFS.lintegral_ball_rpow_lt_top` | ✅ **proved** |
 | **The jump kernel off a ball, and against a Lipschitz cutoff** | §3.2 | `QFS.lintegral_compl_ball_rpow_lt_top`, `QFS.lintegral_cutoff_kernel_lt_top` | ✅ **proved** |
 | **The kernel's tail scales like `r^{-α}`**: `∫_{\|s−t\|>r} \|s−t\|^{-d-α}dt = C(d,α)r^{-α}` | §3.2 (new) | `QFS.kernelTail`, `QFS.kernelTail_lt_top`, `QFS.lintegral_compl_ball_rpow_scale`, `QFS.lintegral_compl_ball_kernel`, `QFS.lintegral_jumpKernel_far` | ✅ **proved** |
+| **The weight a splitting argument pays**, in either coordinate | §3.2 (new) | `QFS.lintegral_far_weight_le`, `QFS.lintegral_far_weight_le'` | ✅ **proved** |
+| **The splitting bound**: `∫∫ g_h ≤ 3\|f\|²_{H_k} + C h^{-α}·(tile oscillation)` | §3.2 (new) | `QFS.tileOsc`, `QFS.lintegral_stepG_le_split`, `QFS.ofReal_sq_add_three`, `QFS.constraintSet_subset`, `QFS.stepG_eq_indicator`, `QFS.measurable_stepFun`, `QFS.measurableSet_scaledLattice`, `QFS.measurableSet_discretePairs` | ✅ **proved** |
+| **Bounded oscillation suffices**: no dominated convergence, no a priori `H^{α/2}` hypothesis | §3.2 (new) | `QFS.formHs_ball_ne_top_of_osc_bounded` | ✅ **proved** |
 | **A Lipschitz cutoff, and `(χ(x)−χ(y))² ≤ min(‖x−y‖²/δ², 1)`** | §3.2 | `QFS.cutoff`, `QFS.cutoff_eq_one`, `QFS.cutoff_eq_zero`, `QFS.abs_cutoff_sub_le`, `QFS.sq_cutoff_sub_le`, `QFS.abs_clamp_sub_le` | ✅ **proved** |
 | **Pairs in a common tile; the tiling of pairs** | §3.2 | `QFS.sameTile`, `QFS.sameTile_eq_iUnion`, `QFS.measurableSet_sameTile`, `QFS.norm_sub_le_of_sameTile`, `QFS.coneSet` | ✅ **proved** |
 | **On close cone pairs the kernel dominates the flat measure** | §3.2 (new) | `QFS.lintegral_sq_le_form_of_close` | ✅ **proved** |
@@ -1147,12 +1150,19 @@ It is enough to prove something weaker. Decomposing
 `|f|²_{H_k(B*)}` and each outer term contributes `‖f − E_hf‖²_{L²(B*)}` times
 `sup_s ∫_{|s−t|>h/2} k(s,t)dt = O(Λ h^{-α})`:
 
-  `∫∫ g_h ≤ 9|f|²_{H_k(B*)} + C(d,α,Λ)·A_h`,   `A_h := h^{-α}‖f − E_hf‖²_{L²(B*)}`.
+  `∫∫ g_h ≤ 3|f|²_{H_k(B*)} + C(d,α,Λ)·A_h`,   `A_h := h^{-α}‖f − E_hf‖²_{L²(B*)}`.
 
 Fatou on the left of `(discret)` then closes the theorem — with **no** dominated
 convergence and no limit on the right — as soon as
 
 > **Enough.** `liminf_{h→0} h^{-α}‖f − E_hf‖²_{L²(B*)} < ∞` for `f ∈ H_k(B*)`.
+
+**This reduction is now formalised**: `QFS.lintegral_stepG_le_split` is the
+displayed bound (with the constant `3`, and `C(d,α,Λ) = 6Λ(2√d)^{-α}·C(d,α)`
+priced by `QFS.lintegral_far_weight_le` from the tail scaling
+`QFS.lintegral_jumpKernel_far`), and `QFS.formHs_ball_ne_top_of_osc_bounded`
+draws the conclusion: the `H^{α/2}` form of the ball is finite as soon as the
+oscillation is bounded along some sequence of scales.
 
 An attempt on this, which is **new mathematics rather than formalisation**, is in
 `BeyondThePaper.lean`; see *Beyond the paper* above for what it does and does not
