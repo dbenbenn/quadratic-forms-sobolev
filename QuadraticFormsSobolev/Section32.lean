@@ -3008,4 +3008,238 @@ theorem lintegral_far_weight_le' (hd : 0 < d) {α Λ r : ℝ} (hr : 0 < r) (hα 
           (ENNReal.mul_ne_top ENNReal.ofReal_ne_top (ne_of_lt (kernelTail_lt_top hd hα))))]
         ring
 
+
+/-- Any function of the lattice index is measurable, in one variable. -/
+theorem measurable_stepFun {h : ℝ} (hh : 0 < h) {β : Type*} [MeasurableSpace β]
+    (c : EuclideanSpace ℝ (Fin d) → β) :
+    Measurable fun s => c (stepIndex d h s) := by
+  intro S _
+  have hpre : (fun s => c (stepIndex d h s)) ⁻¹' S
+      = ⋃ n ∈ {n : Fin d → ℤ | c (latticePt d h n) ∈ S},
+        halfClosedCube h (latticePt d h n) := by
+    ext s
+    simp only [Set.mem_preimage, Set.mem_iUnion, Set.mem_setOf_eq, exists_prop]
+    constructor
+    · intro hs
+      exact ⟨fun i => round (s i / h), by rw [← stepIndex_eq_latticePt]; exact hs,
+        by rw [← stepIndex_eq_latticePt]; exact mem_halfClosedCube_stepIndex hh s⟩
+    · rintro ⟨n, hS, hmem⟩
+      rwa [stepIndex_eq_of_mem hh (latticePt_mem_scaledLattice h n) hmem]
+  rw [hpre]
+  exact MeasurableSet.biUnion (Set.to_countable _) fun n _ =>
+    measurableSet_halfClosedCube h _
+
+/-- The scaled lattice is countable, hence measurable. -/
+theorem measurableSet_scaledLattice {h : ℝ} (hh : 0 < h) :
+    MeasurableSet (scaledLattice d h) := by
+  have hcount : (scaledLattice d h).Countable := by
+    have himg : scaledLattice d h = Set.range (latticePt d h) := by
+      ext x
+      constructor
+      · intro hx
+        obtain ⟨n, hn⟩ := exists_latticePt hx
+        exact ⟨n, hn⟩
+      · rintro ⟨n, rfl⟩
+        exact latticePt_mem_scaledLattice h n
+    rw [himg]
+    exact Set.countable_range _
+  exact hcount.measurableSet
+
+/-- The constraint set of the discrete form is measurable. -/
+theorem measurableSet_discretePairs {h : ℝ} (hh : 0 < h)
+    {S : Set (EuclideanSpace ℝ (Fin d))} (hS : MeasurableSet S) (R₀ : ℝ) :
+    MeasurableSet (discretePairs d h S R₀) := by
+  have h1 : MeasurableSet (S ∩ scaledLattice d h) := hS.inter (measurableSet_scaledLattice hh)
+  have hset : discretePairs d h S R₀
+      = (Prod.fst ⁻¹' (S ∩ scaledLattice d h)) ∩ (Prod.snd ⁻¹' (S ∩ scaledLattice d h)) ∩
+        {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) | R₀ < ‖p.1 - p.2‖} := by
+    ext p
+    simp only [discretePairs, Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_preimage]
+    tauto
+  rw [hset]
+  exact ((h1.preimage measurable_fst).inter (h1.preimage measurable_snd)).inter
+    (measurableSet_lt measurable_const (measurable_fst.sub measurable_snd).norm)
+
+/-- `stepG` is the indicator of the constraint set. -/
+lemma stepG_eq_indicator {h : ℝ} (S : Set (EuclideanSpace ℝ (Fin d))) (R₀ : ℝ)
+    (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) :
+    stepG d h S R₀ k f = {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) |
+        (stepIndex d h p.1, stepIndex d h p.2) ∈ discretePairs d h S R₀}.indicator
+      (fun p => ENNReal.ofReal ((cubeAvg d h f (stepIndex d h p.1)
+        - cubeAvg d h f (stepIndex d h p.2)) ^ 2) * k p.1 p.2) := by
+  funext p
+  by_cases hp : (stepIndex d h p.1, stepIndex d h p.2) ∈ discretePairs d h S R₀
+  · rw [Set.indicator_of_mem (show p ∈ {p : EuclideanSpace ℝ (Fin d) ×
+      EuclideanSpace ℝ (Fin d) | (stepIndex d h p.1, stepIndex d h p.2) ∈
+        discretePairs d h S R₀} from hp), stepG, Set.indicator_of_mem hp]
+  · rw [Set.indicator_of_notMem (show p ∉ {p : EuclideanSpace ℝ (Fin d) ×
+      EuclideanSpace ℝ (Fin d) | (stepIndex d h p.1, stepIndex d h p.2) ∈
+        discretePairs d h S R₀} from hp), stepG, Set.indicator_of_notMem hp, zero_mul]
+
+
+/-- The constraint set sits inside a slightly larger ball, and off the diagonal
+by `2√d h`. -/
+lemma constraintSet_subset (hd : 0 < d) {h R : ℝ} (hh : 0 < h)
+    (x₀ : EuclideanSpace ℝ (Fin d))
+    {p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)}
+    (hp : (stepIndex d h p.1, stepIndex d h p.2) ∈
+      discretePairs d h (ball x₀ R) (3 * Real.sqrt d * h)) :
+    p.1 ∈ ball x₀ (R + Real.sqrt d * h) ∧ p.2 ∈ ball x₀ (R + Real.sqrt d * h) ∧
+      2 * Real.sqrt d * h < ‖p.1 - p.2‖ := by
+  have hsd : (0:ℝ) < Real.sqrt d := Real.sqrt_pos.mpr (by exact_mod_cast hd)
+  have hsdh : (0:ℝ) < Real.sqrt d * h := by positivity
+  have hs1' : ‖stepIndex d h p.1 - p.1‖ ≤ Real.sqrt d * h / 2 :=
+    norm_stepIndex_sub_le hh p.1
+  have hs2' : ‖stepIndex d h p.2 - p.2‖ ≤ Real.sqrt d * h / 2 :=
+    norm_stepIndex_sub_le hh p.2
+  have hs1 : ‖p.1 - stepIndex d h p.1‖ ≤ Real.sqrt d * h / 2 := by
+    rw [norm_sub_rev]; exact hs1'
+  have hs2 : ‖p.2 - stepIndex d h p.2‖ ≤ Real.sqrt d * h / 2 := by
+    rw [norm_sub_rev]; exact hs2'
+  have hb1 : ‖stepIndex d h p.1 - x₀‖ < R := mem_ball_iff_norm.mp hp.1.1
+  have hb2 : ‖stepIndex d h p.2 - x₀‖ < R := mem_ball_iff_norm.mp hp.2.1.1
+  have hsep : 3 * Real.sqrt d * h < ‖stepIndex d h p.1 - stepIndex d h p.2‖ := hp.2.2
+  refine ⟨?_, ?_, ?_⟩
+  · refine mem_ball_iff_norm.mpr ?_
+    calc ‖p.1 - x₀‖ ≤ ‖p.1 - stepIndex d h p.1‖ + ‖stepIndex d h p.1 - x₀‖ := by
+          simpa using norm_sub_le_norm_sub_add_norm_sub p.1 (stepIndex d h p.1) x₀
+      _ < R + Real.sqrt d * h := by linarith
+  · refine mem_ball_iff_norm.mpr ?_
+    calc ‖p.2 - x₀‖ ≤ ‖p.2 - stepIndex d h p.2‖ + ‖stepIndex d h p.2 - x₀‖ := by
+          simpa using norm_sub_le_norm_sub_add_norm_sub p.2 (stepIndex d h p.2) x₀
+      _ < R + Real.sqrt d * h := by linarith
+  · have htri : ‖stepIndex d h p.1 - stepIndex d h p.2‖
+        ≤ ‖stepIndex d h p.1 - p.1‖ + ‖p.1 - p.2‖ + ‖p.2 - stepIndex d h p.2‖ := by
+      calc ‖stepIndex d h p.1 - stepIndex d h p.2‖
+          ≤ ‖stepIndex d h p.1 - p.1‖ + ‖p.1 - stepIndex d h p.2‖ := by
+            simpa using norm_sub_le_norm_sub_add_norm_sub (stepIndex d h p.1) p.1
+              (stepIndex d h p.2)
+        _ ≤ ‖stepIndex d h p.1 - p.1‖ + (‖p.1 - p.2‖ + ‖p.2 - stepIndex d h p.2‖) := by
+            gcongr
+            simpa using norm_sub_le_norm_sub_add_norm_sub p.1 p.2 (stepIndex d h p.2)
+        _ = ‖stepIndex d h p.1 - p.1‖ + ‖p.1 - p.2‖ + ‖p.2 - stepIndex d h p.2‖ := by ring
+    rw [norm_sub_rev (stepIndex d h p.1) p.1] at htri
+    linarith
+
+
+/-- **The splitting bound.** The integral of `g_h` is at most three times the
+`H_k` form of a slightly larger ball, plus a multiple of `h^{-α}` times the tile
+oscillation of `f` there. No dominant and no a priori hypothesis: Fatou on the
+left of `(discret)` then needs only that `h^{-α}·tileOsc` stay bounded along a
+sequence. -/
+theorem lintegral_stepG_le_split (hd : 0 < d) {h α Λ R : ℝ} (hh : 0 < h) (hα : 0 < α)
+    (hΛ : 0 ≤ Λ)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : ∀ a b, k a b ≤ ENNReal.ofReal Λ * jumpKernel d α a b)
+    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      k p.1 p.2)
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hfm : Measurable f)
+    (x₀ : EuclideanSpace ℝ (Fin d)) :
+    ∫⁻ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+        stepG d h (ball x₀ R) (3 * Real.sqrt d * h) k f p
+      ≤ 3 * form (ball x₀ (R + Real.sqrt d * h)) k f
+        + (3 * (ENNReal.ofReal Λ * (ENNReal.ofReal ((2 * Real.sqrt d * h) ^ (-α)) *
+            kernelTail d α)) * tileOsc d h (ball x₀ (R + Real.sqrt d * h)) f
+          + 3 * (ENNReal.ofReal Λ * (ENNReal.ofReal ((2 * Real.sqrt d * h) ^ (-α)) *
+            kernelTail d α)) * tileOsc d h (ball x₀ (R + Real.sqrt d * h)) f) := by
+  have hsd : (0:ℝ) < Real.sqrt d := Real.sqrt_pos.mpr (by exact_mod_cast hd)
+  have hr : (0:ℝ) < 2 * Real.sqrt d * h := by positivity
+  set R' : ℝ := R + Real.sqrt d * h with hR'
+  set W : ℝ≥0∞ := ENNReal.ofReal Λ *
+    (ENNReal.ofReal ((2 * Real.sqrt d * h) ^ (-α)) * kernelTail d α) with hW
+  set C : Set (EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d)) :=
+    {p | (stepIndex d h p.1, stepIndex d h p.2) ∈
+      discretePairs d h (ball x₀ R) (3 * Real.sqrt d * h)} with hC
+  have hCm : MeasurableSet C :=
+    (measurable_stepFun₂ hh (fun x y => ((x, y) :
+      EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d))))
+      (measurableSet_discretePairs hh measurableSet_ball _)
+  -- the three pieces
+  set g : EuclideanSpace ℝ (Fin d) → ℝ≥0∞ := fun s =>
+    ENNReal.ofReal ((cubeAvg d h f (stepIndex d h s) - f s) ^ 2) with hg
+  have hgm : Measurable g := by
+    rw [hg]
+    exact ENNReal.measurable_ofReal.comp
+      (((measurable_stepFun hh (cubeAvg d h f)).sub hfm).pow_const 2)
+  have hmid : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.1 - f p.2) ^ 2) * k p.1 p.2 :=
+    (ENNReal.measurable_ofReal.comp
+      (((hfm.comp measurable_fst).sub (hfm.comp measurable_snd)).pow_const 2)).mul hkm
+  have hT1 : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      g p.1 * k p.1 p.2 := (hgm.comp measurable_fst).mul hkm
+  have hT3 : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      g p.2 * k p.1 p.2 := (hgm.comp measurable_snd).mul hkm
+  -- pointwise on the constraint set
+  have hpt : ∀ p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d),
+      ENNReal.ofReal ((cubeAvg d h f (stepIndex d h p.1)
+          - cubeAvg d h f (stepIndex d h p.2)) ^ 2) * k p.1 p.2
+        ≤ 3 * (g p.1 * k p.1 p.2)
+          + (3 * (ENNReal.ofReal ((f p.1 - f p.2) ^ 2) * k p.1 p.2)
+            + 3 * (g p.2 * k p.1 p.2)) := by
+    intro p
+    have hsplit : cubeAvg d h f (stepIndex d h p.1) - cubeAvg d h f (stepIndex d h p.2)
+        = (cubeAvg d h f (stepIndex d h p.1) - f p.1) + (f p.1 - f p.2)
+          + (f p.2 - cubeAvg d h f (stepIndex d h p.2)) := by ring
+    have hsq : ENNReal.ofReal ((cubeAvg d h f (stepIndex d h p.1)
+          - cubeAvg d h f (stepIndex d h p.2)) ^ 2)
+        ≤ 3 * g p.1 + 3 * ENNReal.ofReal ((f p.1 - f p.2) ^ 2) + 3 * g p.2 := by
+      have h3 := ofReal_sq_add_three (cubeAvg d h f (stepIndex d h p.1) - f p.1)
+        (f p.1 - f p.2) (f p.2 - cubeAvg d h f (stepIndex d h p.2))
+      rw [← hsplit] at h3
+      refine le_trans h3 (le_of_eq ?_)
+      simp only [hg]
+      rw [show (f p.2 - cubeAvg d h f (stepIndex d h p.2)) ^ 2
+        = (cubeAvg d h f (stepIndex d h p.2) - f p.2) ^ 2 from by ring]
+    calc ENNReal.ofReal ((cubeAvg d h f (stepIndex d h p.1)
+          - cubeAvg d h f (stepIndex d h p.2)) ^ 2) * k p.1 p.2
+        ≤ (3 * g p.1 + 3 * ENNReal.ofReal ((f p.1 - f p.2) ^ 2) + 3 * g p.2) *
+            k p.1 p.2 := mul_le_mul' hsq le_rfl
+      _ = 3 * (g p.1 * k p.1 p.2)
+          + (3 * (ENNReal.ofReal ((f p.1 - f p.2) ^ 2) * k p.1 p.2)
+            + 3 * (g p.2 * k p.1 p.2)) := by ring
+  -- integrate
+  have hb1 : ∫⁻ p in C, g p.1 * k p.1 p.2 ≤ W * tileOsc d h (ball x₀ R') f := by
+    refine le_trans (lintegral_mono_set ?_)
+      (lintegral_far_weight_le hd hr hα hΛ hk hkm hgm measurableSet_ball)
+    intro p hp
+    exact ⟨(constraintSet_subset hd hh x₀ hp).1, (constraintSet_subset hd hh x₀ hp).2.2⟩
+  have hb3 : ∫⁻ p in C, g p.2 * k p.1 p.2 ≤ W * tileOsc d h (ball x₀ R') f := by
+    refine le_trans (lintegral_mono_set ?_)
+      (lintegral_far_weight_le' hd hr hα hΛ hk hkm hgm measurableSet_ball)
+    intro p hp
+    exact ⟨(constraintSet_subset hd hh x₀ hp).2.1, (constraintSet_subset hd hh x₀ hp).2.2⟩
+  have hb2 : ∫⁻ p in C, ENNReal.ofReal ((f p.1 - f p.2) ^ 2) * k p.1 p.2
+      ≤ form (ball x₀ R') k f := by
+    rw [form]
+    refine le_trans (lintegral_mono_set ?_) (le_of_eq (lintegral_congr fun p => ?_))
+    · intro p hp
+      exact ⟨(constraintSet_subset hd hh x₀ hp).1, (constraintSet_subset hd hh x₀ hp).2.1⟩
+    · rw [show (f p.1 - f p.2) ^ 2 = (f p.2 - f p.1) ^ 2 from by ring]
+  rw [stepG_eq_indicator, lintegral_indicator hCm]
+  have hsum : ∫⁻ p in C, (3 * (g p.1 * k p.1 p.2)
+        + (3 * (ENNReal.ofReal ((f p.1 - f p.2) ^ 2) * k p.1 p.2)
+          + 3 * (g p.2 * k p.1 p.2)))
+      = 3 * (∫⁻ p in C, g p.1 * k p.1 p.2)
+        + (3 * (∫⁻ p in C, ENNReal.ofReal ((f p.1 - f p.2) ^ 2) * k p.1 p.2)
+          + 3 * (∫⁻ p in C, g p.2 * k p.1 p.2)) := by
+    rw [lintegral_add_left (hT1.const_mul 3), lintegral_const_mul 3 hT1,
+      lintegral_add_left (hmid.const_mul 3), lintegral_const_mul 3 hmid,
+      lintegral_const_mul 3 hT3]
+  calc ∫⁻ p in C, ENNReal.ofReal ((cubeAvg d h f (stepIndex d h p.1)
+        - cubeAvg d h f (stepIndex d h p.2)) ^ 2) * k p.1 p.2
+      ≤ ∫⁻ p in C, (3 * (g p.1 * k p.1 p.2)
+          + (3 * (ENNReal.ofReal ((f p.1 - f p.2) ^ 2) * k p.1 p.2)
+            + 3 * (g p.2 * k p.1 p.2))) := lintegral_mono hpt
+    _ = 3 * (∫⁻ p in C, g p.1 * k p.1 p.2)
+        + (3 * (∫⁻ p in C, ENNReal.ofReal ((f p.1 - f p.2) ^ 2) * k p.1 p.2)
+          + 3 * (∫⁻ p in C, g p.2 * k p.1 p.2)) := hsum
+    _ ≤ 3 * (W * tileOsc d h (ball x₀ R') f)
+        + (3 * form (ball x₀ R') k f + 3 * (W * tileOsc d h (ball x₀ R') f)) :=
+        add_le_add (mul_le_mul' (le_refl (3 : ℝ≥0∞)) hb1)
+          (add_le_add (mul_le_mul' (le_refl (3 : ℝ≥0∞)) hb2)
+            (mul_le_mul' (le_refl (3 : ℝ≥0∞)) hb3))
+    _ = 3 * form (ball x₀ R') k f + (3 * W * tileOsc d h (ball x₀ R') f
+        + 3 * W * tileOsc d h (ball x₀ R') f) := by ring
+
 end QFS
