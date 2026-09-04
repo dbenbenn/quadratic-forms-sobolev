@@ -1570,10 +1570,12 @@ proved in Lean:
 **What is still not done.** Dimension three and above, for the reason in step 5 —
 that needs the continuum analogue of §§5–6. And, in every dimension, §3.2's own
 assembly: the `g_h` apparatus turning Corollary 3.1's sums into the integrals the
-limit acts on. Its bridge is built (`QFS.lintegral_stepFun₂`, the tiling of
-pairs) but the assembly itself is not written, so **Theorem 1.1 is not proved in
-Lean even in the plane** — what is proved is that its only mathematical obstacle
-is gone there.
+limit acts on. Its first bricks are laid — the tiling of pairs
+(`QFS.lintegral_stepFun₂`) and the identification `hℤ^d ≃ ℤ^d`
+(`QFS.latticeEquiv`) along which Corollary 3.1's sums must be transported — but
+the assembly itself is not written, so **Theorem 1.1 is not proved in Lean even
+in the plane**. What is proved is that its only mathematical obstacle is gone
+there; what remains is bookkeeping of known shape.
 
 ## Verification
 
