@@ -2672,4 +2672,137 @@ theorem ballComparability_of_measurable {α c κ : ℝ} (hκ : 1 ≤ κ)
     form_congr_ae k hae]
   exact H g hgm hgloc hL2
 
+
+/-! ## The scaling of the kernel's tail
+
+`∫_{|z| > r} |z|^{-d-α} dz = r^{-α} ∫_{|z| > 1} |z|^{-d-α} dz`, by the dilation
+`z ↦ rz`. With `lintegral_compl_ball_rpow_lt_top` at `r = 1` this turns the
+qualitative finiteness into the quantitative `O(r^{-α})` that a splitting
+argument needs. -/
+
+theorem lintegral_compl_ball_rpow_scale {α r : ℝ} (hr : 0 < r) :
+    ∫⁻ u in {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖},
+        ENNReal.ofReal (‖u‖ ^ (-(d : ℝ) - α))
+      = ENNReal.ofReal (r ^ (-α)) *
+        ∫⁻ u in {u : EuclideanSpace ℝ (Fin d) | 1 < ‖u‖},
+          ENNReal.ofReal (‖u‖ ^ (-(d : ℝ) - α)) := by
+  set γ : ℝ := -(d : ℝ) - α with hγ
+  have hmr : MeasurableSet {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖} :=
+    measurableSet_lt measurable_const measurable_norm
+  have hm1 : MeasurableSet {u : EuclideanSpace ℝ (Fin d) | 1 < ‖u‖} :=
+    measurableSet_lt measurable_const measurable_norm
+  set G : EuclideanSpace ℝ (Fin d) → ℝ≥0∞ := fun u =>
+    {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖}.indicator
+      (fun u => ENNReal.ofReal (‖u‖ ^ γ)) u with hG
+  set F : EuclideanSpace ℝ (Fin d) → ℝ≥0∞ := fun u =>
+    {u : EuclideanSpace ℝ (Fin d) | 1 < ‖u‖}.indicator
+      (fun u => ENNReal.ofReal (‖u‖ ^ γ)) u with hF
+  have hGm : Measurable G :=
+    (ENNReal.measurable_ofReal.comp (measurable_norm.pow_const _)).indicator hmr
+  -- the dilation identity
+  have hdil : ∫⁻ z : EuclideanSpace ℝ (Fin d), G (r • z)
+      = ENNReal.ofReal ((r ^ d)⁻¹) * ∫⁻ z : EuclideanSpace ℝ (Fin d), G z := by
+    have hmap := Measure.map_addHaar_smul
+      (volume : Measure (EuclideanSpace ℝ (Fin d))) (ne_of_gt hr)
+    have hlm := lintegral_map (μ := (volume : Measure (EuclideanSpace ℝ (Fin d))))
+      (f := G) (g := fun z : EuclideanSpace ℝ (Fin d) => r • z) hGm (by fun_prop)
+    rw [hmap] at hlm
+    rw [← hlm, lintegral_smul_measure]
+    congr 1
+    simp [abs_of_pos, hr, finrank_euclideanSpace]
+  -- the integrand after the dilation
+  have hpt : ∀ z : EuclideanSpace ℝ (Fin d),
+      G (r • z) = ENNReal.ofReal (r ^ γ) * F z := by
+    intro z
+    have hnorm : ‖r • z‖ = r * ‖z‖ := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_pos hr]
+    simp only [hG, hF]
+    by_cases hz : (1:ℝ) < ‖z‖
+    · have hrz : r • z ∈ {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖} := by
+        rw [Set.mem_setOf_eq, hnorm]
+        nlinarith
+      rw [Set.indicator_of_mem hrz,
+        Set.indicator_of_mem (show z ∈ {u : EuclideanSpace ℝ (Fin d) | 1 < ‖u‖} from hz),
+        hnorm, Real.mul_rpow hr.le (norm_nonneg _), ENNReal.ofReal_mul (by positivity)]
+    · have hrz : r • z ∉ {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖} := by
+        rw [Set.mem_setOf_eq, hnorm]
+        push_neg at hz ⊢
+        nlinarith [norm_nonneg z]
+      rw [Set.indicator_of_notMem hrz,
+        Set.indicator_of_notMem (show z ∉ {u : EuclideanSpace ℝ (Fin d) | 1 < ‖u‖} from hz),
+        mul_zero]
+  have hcalc : ∫⁻ z : EuclideanSpace ℝ (Fin d), G (r • z)
+      = ENNReal.ofReal (r ^ γ) * ∫⁻ z : EuclideanSpace ℝ (Fin d), F z := by
+    rw [show (fun z : EuclideanSpace ℝ (Fin d) => G (r • z))
+        = fun z => ENNReal.ofReal (r ^ γ) * F z from funext hpt,
+      lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+  rw [← lintegral_indicator hmr, ← lintegral_indicator hm1, ← hG, ← hF]
+  have hrd : (0:ℝ) < r ^ d := by positivity
+  have := hdil.symm.trans hcalc
+  -- solve for `∫ G`
+  have hne0 : ENNReal.ofReal ((r ^ d)⁻¹) ≠ 0 := by
+    simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]
+    positivity
+  have hnetop : ENNReal.ofReal ((r ^ d)⁻¹) ≠ ∞ := ENNReal.ofReal_ne_top
+  have hsolve : ∫⁻ z : EuclideanSpace ℝ (Fin d), G z
+      = ENNReal.ofReal (r ^ d) * (ENNReal.ofReal (r ^ γ) *
+        ∫⁻ z : EuclideanSpace ℝ (Fin d), F z) := by
+    rw [← this, ← mul_assoc, ← ENNReal.ofReal_mul (by positivity),
+      mul_inv_cancel₀ (ne_of_gt hrd), ENNReal.ofReal_one, one_mul]
+  rw [hsolve, ← mul_assoc, ← ENNReal.ofReal_mul (by positivity)]
+  congr 2
+  rw [← Real.rpow_natCast r d, ← Real.rpow_add hr, hγ]
+  congr 1
+  ring
+
+
+/-- The tail of the jump kernel outside the unit ball. -/
+noncomputable def kernelTail (d : ℕ) (α : ℝ) : ℝ≥0∞ :=
+  ∫⁻ u in {u : EuclideanSpace ℝ (Fin d) | 1 < ‖u‖}, ENNReal.ofReal (‖u‖ ^ (-(d : ℝ) - α))
+
+theorem kernelTail_lt_top (hd : 0 < d) {α : ℝ} (hα : 0 < α) : kernelTail d α < ∞ :=
+  lintegral_compl_ball_rpow_lt_top hd one_pos (by linarith : -(d : ℝ) - α < -(d : ℝ))
+
+/-- **The kernel's tail scales like `r^{-α}`.** -/
+theorem lintegral_compl_ball_kernel {α r : ℝ} (hr : 0 < r) :
+    ∫⁻ u in {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖},
+        ENNReal.ofReal (‖u‖ ^ (-(d : ℝ) - α))
+      = ENNReal.ofReal (r ^ (-α)) * kernelTail d α :=
+  lintegral_compl_ball_rpow_scale hr
+
+/-- **The mass of the jump kernel at distance more than `r` from a point** is
+`r^{-α}` times a constant: `sup_s ∫_{|s−t|>r} |s−t|^{-d-α} dt = C(d,α) r^{-α}`.
+This is the factor a splitting argument pays for the terms it discards. -/
+theorem lintegral_jumpKernel_far {α r : ℝ} (hr : 0 < r)
+    (s : EuclideanSpace ℝ (Fin d)) :
+    ∫⁻ t in {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}, jumpKernel d α s t
+      = ENNReal.ofReal (r ^ (-α)) * kernelTail d α := by
+  have hmeas : MeasurableSet {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖} :=
+    measurableSet_lt measurable_const (measurable_const.sub measurable_id).norm
+  have hmr : MeasurableSet {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖} :=
+    measurableSet_lt measurable_const measurable_norm
+  have hfun : ∀ t : EuclideanSpace ℝ (Fin d),
+      {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}.indicator
+          (fun t => jumpKernel d α s t) t
+        = ({u : EuclideanSpace ℝ (Fin d) | r < ‖u‖}.indicator
+            (fun u => ENNReal.ofReal (‖u‖ ^ (-(d : ℝ) - α)))) (s - t) := by
+    intro t
+    by_cases ht : r < ‖s - t‖
+    · rw [Set.indicator_of_mem
+        (show t ∈ {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖} from ht),
+        Set.indicator_of_mem
+        (show s - t ∈ {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖} from ht), jumpKernel]
+    · rw [Set.indicator_of_notMem
+        (show t ∉ {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖} from ht),
+        Set.indicator_of_notMem
+        (show s - t ∉ {u : EuclideanSpace ℝ (Fin d) | r < ‖u‖} from ht)]
+  rw [← lintegral_indicator hmeas, ← lintegral_compl_ball_kernel (d := d) (α := α) hr,
+    ← lintegral_indicator hmr]
+  rw [show (fun t : EuclideanSpace ℝ (Fin d) =>
+      {t : EuclideanSpace ℝ (Fin d) | r < ‖s - t‖}.indicator
+        (fun t => jumpKernel d α s t) t)
+      = fun t => ({u : EuclideanSpace ℝ (Fin d) | r < ‖u‖}.indicator
+          (fun u => ENNReal.ofReal (‖u‖ ^ (-(d : ℝ) - α)))) (s - t) from funext hfun]
+  exact lintegral_sub_left_eq_self _ s
+
 end QFS

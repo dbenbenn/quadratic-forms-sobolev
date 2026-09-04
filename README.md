@@ -517,6 +517,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **Neither form sees a change of `f` on a null set** | §3.2 | `QFS.form_congr_ae`, `QFS.formHs_congr_ae` | ✅ **proved** |
 | **A Lipschitz function has finite `H^{α/2}` seminorm on a ball (`α < 2`)** | §3.2 | `QFS.formHs_lt_top_of_lipschitzOn`, `QFS.lintegral_ball_rpow_lt_top` | ✅ **proved** |
 | **The jump kernel off a ball, and against a Lipschitz cutoff** | §3.2 | `QFS.lintegral_compl_ball_rpow_lt_top`, `QFS.lintegral_cutoff_kernel_lt_top` | ✅ **proved** |
+| **The kernel's tail scales like `r^{-α}`**: `∫_{\|s−t\|>r} \|s−t\|^{-d-α}dt = C(d,α)r^{-α}` | §3.2 (new) | `QFS.kernelTail`, `QFS.kernelTail_lt_top`, `QFS.lintegral_compl_ball_rpow_scale`, `QFS.lintegral_compl_ball_kernel`, `QFS.lintegral_jumpKernel_far` | ✅ **proved** |
 | **A Lipschitz cutoff, and `(χ(x)−χ(y))² ≤ min(‖x−y‖²/δ², 1)`** | §3.2 | `QFS.cutoff`, `QFS.cutoff_eq_one`, `QFS.cutoff_eq_zero`, `QFS.abs_cutoff_sub_le`, `QFS.sq_cutoff_sub_le`, `QFS.abs_clamp_sub_le` | ✅ **proved** |
 | **Pairs in a common tile; the tiling of pairs** | §3.2 | `QFS.sameTile`, `QFS.sameTile_eq_iUnion`, `QFS.measurableSet_sameTile`, `QFS.norm_sub_le_of_sameTile`, `QFS.coneSet` | ✅ **proved** |
 | **On close cone pairs the kernel dominates the flat measure** | §3.2 (new) | `QFS.lintegral_sq_le_form_of_close` | ✅ **proved** |
