@@ -134,6 +134,8 @@ The pieces, all proved:
 | **The planar fibre estimate** | `QFS.planarBall`, `QFS.planarConst`, `QFS.lintegral_planarBall_fibre_le` | ✅ **proved** |
 | **The exchange for the planar family**, both sides | `QFS.lintegral_swap_planar`, `QFS.lintegral_swap_planar'`, `QFS.lintegral_planarBall_fibre_le'`, `QFS.planarBall_comparable''`, `QFS.measurableSet_planarBall`, `QFS.measurableSet_planarBall_fibre` | ✅ **proved** |
 | **The planar averaging step** | `QFS.volume_planarBall`, `QFS.osc_weighted_le_planar` | ✅ **proved** |
+| **The local Poincaré inequality for planar cross pairs** | `QFS.localPoincare_planar`, `QFS.measurable_param_planarBall`, `QFS.measurableSet_planarBall_graph` | ✅ **proved** |
+| **The planar cross blocks are controlled** | `QFS.formHs_le_form_planar_cross` | ✅ **proved** |
 
 The fibre estimate is what has to survive the exchange of the chaining average with the
 integration in `t`, and it is why the argument is scale-invariant: the singular
@@ -207,11 +209,19 @@ graph and fibre bound — were both to hand. The cone restriction survives it
 because off the cone at `s` the fibre is not merely null but **empty**: every
 point of a planar ball sees both cones by construction.
 
-**Every ingredient of the `d = 2` cross blocks is now proved** — geometry, both
-fibre estimates, both exchanges, and the averaging step. What remains is the
-assembly: split each cross block into the pairs that are already cone pairs —
-which go straight into the `H_k` form by (1.4)'s lower bound — and the rest,
-which these lemmas handle.
+**The `d = 2` cross blocks are done.** `QFS.formHs_le_form_planar_cross` bounds
+the `H^{α/2}` energy of `U × U'` by the `H_k` form whenever the points of `U`
+admit the cone about `v_s`, those of `U'` the one about `v_t`, and the axes are
+not parallel. The block splits in two, and the split is the whole point: the
+pairs that are *already* cone pairs go straight into the `H_k` form by (1.4)'s
+lower bound (using the symmetry of `k` and of the double cone for the second
+case), and the rest are exactly the pairs `QFS.localPoincare_planar` handles.
+
+So in the plane **both kinds of block are now done** — the diagonal ones by
+`QFS.formHs_le_form_of_commonDirection_on`, the cross ones by this. What is left
+is bookkeeping: summing the finitely many blocks of the decomposition Corollary
+2.4 supplies, together with the fact that distinct reference cones in the plane
+have non-parallel axes.
 
 The analytic machinery is stated abstractly enough to be reused: the exchange
 asks only that a family of averaging sets have measurable graph and a fibre
