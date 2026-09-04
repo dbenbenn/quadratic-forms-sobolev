@@ -15,38 +15,52 @@ elsewhere in this repository depends on this file.
 
 ## The problem
 
-Section 3.2 needs an a priori hypothesis its argument never establishes, and the
-formalisation reduces that need to (see the README):
+Section 3.2's dominated-convergence step needs an a priori hypothesis its own
+argument never establishes: that `f ∈ H_k(B*)` already lies in `H^{α/2}(B*)`.
+The formalisation of that step (`QFS.limsup_lintegral_stepG_le`) and of the
+whole of §3.2 (`QFS.formHs_ball_le_form_of_formHs_ne_top`) carries the
+hypothesis explicitly. This file discharges it in dimension two.
 
-> `liminf_{h → 0} h^{-α}‖f − E_h f‖²_{L²(B*)} < ∞` for every `f ∈ H_k(B*)`,
+## What this file proves
 
-`E_h` being the average over the tiles of the `h`-tiling. `QFS.oscillation_sameTile_le_form`
-settles the part of that modulus carried by pairs which see each other's cones.
-What is left is the *off-cone* oscillation inside a single tile.
+The route is a local Poincaré inequality: for two points `s`, `t`,
 
-## What this file proves, and what it does not
+  (★)  `(f(s) − f(t))²` is recovered by chaining through intermediate points
+       that *do* see the relevant cones, averaged over a positive-measure set of
+       such points,
 
-The route is a local Poincaré inequality: for a cube `Q` of side `h`,
+which converts the cone-restricted energy into the full fractional energy.
+`exists_ball_in_two_cones` is its geometric heart: for two distinct points
+sharing a cone direction it supplies a **ball** of intermediate points lying in
+both cones — a positive-measure strengthening of the paper's Lemma 4.3, which
+produces a single point. In the plane the same is true without a shared
+direction (`mem_two_cones_of_mem_planarBall`), because two non-parallel lines
+meet; that is what closes dimension two, and `no_common_neighbour_of_skew_axes`
+proves it cannot be done this way in dimension three.
 
-  (★)  `∫∫_{Q×Q}(f(s) − f(t))² ≤ C(d,ϑ,α,Λ) · h^{d+α} · ∫∫_{Q*×Q*}(f(s) − f(t))² k(s,t)`,
+Downstream of the inclusion, this file also carries the consequences that the
+paper's own machinery then yields in the plane:
 
-which summed over the tiles bounds `A_h` uniformly and closes the theorem with
-Fatou alone. `(★)` is proved by chaining: join `s` to `t` through intermediate
-points that *do* see the relevant cones, and average over a positive-measure set
-of such chains.
+* `sobolevInclusion_planar` — `H_k(ℝ²) ⊆ H^{α/2}(ℝ²)`, and
+  `formHs_ball_ne_top_of_planar` — its ball form, which is exactly §3.2's
+  missing hypothesis;
+* `formHs_ball_le_form_planar` and `theoremOneOneBallCondMeas_two` — Theorem
+  1.1's enlarged-ball form in the plane, in the paper's own shape;
+* `formHs_le_form_planar`, `Hk_ball_eq_Hs_ball_planar` — Theorem 1.1 and
+  Lemma 3.7 on the same ball, granted the Whitney/Dyda input Lemma 7.1 quotes;
+* `formHs_univ_le_form_univ_planar`, `Hk_univ_eq_Hs_univ_planar`,
+  `Hk_domain_eq_Hs_domain_planar` — Theorem 1.4 for `ℝ²` and for a domain with a
+  Whitney family.
 
-`exists_ball_in_two_cones` is the geometric heart of that argument, and it is
-proved here in full. It supplies, for any two distinct points sharing a cone
-direction, a **ball** of intermediate points each of which lies in both of their
-cones — a positive-measure strengthening of the qualitative "path of length at
-most two" of the paper's Lemma 4.3, which produces a single point.
+`planar_hypotheses_nonvacuous` records that none of this is vacuous.
 
-What is **not** proved here is the case of two points whose cones share no
-direction. In dimension three, two thin double cones with skew axes need not
-meet at all, so one intermediate point cannot suffice and genuinely longer
-chains are required; producing them, with a uniform bound on the length and with
-positive measure at every link, is the continuous analogue of the paper's §§5–6.
-The paper establishes that machinery only in the discrete setting — which is
+## What this file does not prove
+
+Dimension three and above. Two thin double cones with skew axes need not meet at
+all, so one intermediate point cannot suffice and genuinely longer chains are
+required; producing them, with a uniform bound on the length and with positive
+measure at every link, is the continuous analogue of the paper's §§5–6. The
+paper establishes that machinery only in the discrete setting — which is
 precisely why it goes through `ℤ^d` — and reproducing it in the continuum is an
 open research problem, not a gap in this formalisation.
 -/
