@@ -1207,4 +1207,93 @@ theorem formHs_le_form_of_commonDirection_on {d : ℕ} {v : EuclideanSpace ℝ (
           (ENNReal.ofReal (chainConst d ϑ α) + ENNReal.ofReal (chainConst' d ϑ α)) *
           unitBallVol d * form Set.univ k f := by ring
 
+
+/-! ## The obstruction to the cross blocks, as a theorem
+
+The cross blocks are not merely harder — one intermediate point provably cannot
+handle them. In dimension three, two double cones of aperture `ϑ < π/4` whose
+axes are orthogonal and skew are **disjoint**, so no `z` at all lies in both,
+let alone a set of positive measure. Chains of length two are therefore
+unavoidable, and their middle edge runs between two points whose cones the
+configuration assigns arbitrarily — which is exactly the difficulty §§5–6
+address, in the discrete setting. -/
+
+/-- Membership of a double cone gives a lower bound on the absolute inner
+product with the axis. -/
+lemma abs_inner_gt_of_mem_doubleCone {v z : E} {ϑ : ℝ} (hz : z ∈ doubleCone v ϑ) :
+    z ≠ 0 ∧ Real.cos ϑ * ‖z‖ < |⟪v, z⟫_ℝ| := by
+  rw [mem_doubleCone_iff] at hz
+  rcases hz with h | h
+  · obtain ⟨hne, hgt⟩ := mem_cone_iff_mul.mp h
+    exact ⟨hne, lt_of_lt_of_le hgt (le_abs_self _)⟩
+  · obtain ⟨hne, hgt⟩ := mem_cone_iff_mul.mp h
+    refine ⟨fun hc => hne (by rw [hc, neg_zero]), ?_⟩
+    rw [norm_neg, inner_neg_right] at hgt
+    exact lt_of_lt_of_le hgt (neg_le_abs _)
+
+/-- **Two intermediate points are genuinely necessary.** In `ℝ³`, for `ϑ < π/4`,
+the double cone of aperture `ϑ` about `e₁` at the origin and the one about `e₂`
+at `e₃` have no point in common.
+
+So for two points whose cones point along skew axes there is *no* common
+cone-neighbour — the positive-measure ball of `exists_ball_in_two_cones` is not
+merely unavailable, the set it would live in is empty. This is why the cross
+blocks need chains of length at least two, and why the argument cannot be closed
+by the methods of this file. -/
+theorem no_common_neighbour_of_skew_axes {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ < π / 4)
+    {z : EuclideanSpace ℝ (Fin 3)}
+    (h1 : z ∈ doubleCone (EuclideanSpace.single 0 (1 : ℝ)) ϑ)
+    (h2 : z - EuclideanSpace.single 2 (1 : ℝ) ∈
+      doubleCone (EuclideanSpace.single 1 (1 : ℝ)) ϑ) : False := by
+  have hpi := Real.pi_pos
+  have hc : 0 < Real.cos ϑ := Real.cos_pos_of_mem_Ioo ⟨by linarith, by linarith⟩
+  have hs : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith)
+  have hsc : Real.sin ϑ ^ 2 + Real.cos ϑ ^ 2 = 1 := Real.sin_sq_add_cos_sq ϑ
+  -- `ϑ < π/4` gives `sin ϑ < cos ϑ`
+  have hlt : Real.sin ϑ < Real.cos ϑ := by
+    have h := Real.cos_pos_of_mem_Ioo (x := ϑ + π / 4) ⟨by linarith, by linarith⟩
+    rw [Real.cos_add, Real.cos_pi_div_four, Real.sin_pi_div_four] at h
+    have h2' : (0 : ℝ) < Real.sqrt 2 := Real.sqrt_pos.mpr (by norm_num)
+    nlinarith [h, h2']
+  have hlt2 : Real.sin ϑ ^ 2 < Real.cos ϑ ^ 2 := by nlinarith [hs, hc, hlt]
+  -- coordinates
+  have hnormsq : ∀ w : EuclideanSpace ℝ (Fin 3),
+      ‖w‖ ^ 2 = (w 0) ^ 2 + (w 1) ^ 2 + (w 2) ^ 2 := by
+    intro w
+    have hsum : ‖w‖ ^ 2 = ∑ i : Fin 3, (w i) ^ 2 := by
+      rw [EuclideanSpace.norm_eq, Real.sq_sqrt (by positivity)]
+      exact Finset.sum_congr rfl fun i _ => by rw [Real.norm_eq_abs, sq_abs]
+    rw [hsum, Fin.sum_univ_three]
+  obtain ⟨-, hA0⟩ := abs_inner_gt_of_mem_doubleCone h1
+  obtain ⟨-, hB0⟩ := abs_inner_gt_of_mem_doubleCone h2
+  rw [EuclideanSpace.inner_single_left] at hA0 hB0
+  simp only [map_one, one_mul] at hA0 hB0
+  set w : EuclideanSpace ℝ (Fin 3) := z - EuclideanSpace.single 2 (1 : ℝ) with hwdef
+  have hw0 : w 0 = z 0 := by rw [hwdef]; simp
+  have hw1 : w 1 = z 1 := by rw [hwdef]; simp
+  have hw2 : w 2 = z 2 - 1 := by rw [hwdef]; simp
+  -- square both estimates
+  have hA : Real.cos ϑ ^ 2 * ((z 0) ^ 2 + (z 1) ^ 2 + (z 2) ^ 2) < (z 0) ^ 2 := by
+    have hsq := mul_self_lt_mul_self (by positivity : (0:ℝ) ≤ Real.cos ϑ * ‖z‖) hA0
+    have hz2 : Real.cos ϑ ^ 2 * ‖z‖ ^ 2
+        = Real.cos ϑ ^ 2 * ((z 0) ^ 2 + (z 1) ^ 2 + (z 2) ^ 2) := by rw [hnormsq z]
+    nlinarith [hsq, abs_mul_abs_self (z 0), hz2]
+  have hB : Real.cos ϑ ^ 2 * ((z 0) ^ 2 + (z 1) ^ 2 + (z 2 - 1) ^ 2) < (z 1) ^ 2 := by
+    have hsq := mul_self_lt_mul_self (by positivity : (0:ℝ) ≤ Real.cos ϑ * ‖w‖) hB0
+    rw [hw1] at hsq
+    have hn := hnormsq w
+    rw [hw0, hw1, hw2] at hn
+    have hz2 : Real.cos ϑ ^ 2 * ‖w‖ ^ 2
+        = Real.cos ϑ ^ 2 * ((z 0) ^ 2 + (z 1) ^ 2 + (z 2 - 1) ^ 2) := by rw [hn]
+    nlinarith [hsq, abs_mul_abs_self (z 1), hz2]
+  -- and conclude
+  rcases eq_or_ne (z 0) 0 with h0 | h0
+  · rw [h0] at hA; nlinarith [sq_nonneg (z 1), sq_nonneg (z 2), hc]
+  rcases eq_or_ne (z 1) 0 with h1' | h1'
+  · rw [h1'] at hB; nlinarith [sq_nonneg (z 0), sq_nonneg (z 2 - 1), hc]
+  have hz0 : 0 < (z 0) ^ 2 := by positivity
+  have hz1 : 0 < (z 1) ^ 2 := by positivity
+  nlinarith [hA, hB, hz0, hz1, hlt2, hsc, sq_nonneg (z 2), sq_nonneg (z 2 - 1),
+    mul_pos hz0 hz1]
+
 end QFS
