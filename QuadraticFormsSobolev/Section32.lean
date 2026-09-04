@@ -2405,22 +2405,23 @@ theorem discreteKernel_symm {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace �
 
 /-- **Corollary 3.6 as assumption (1.7)**, with the separation parameter `3√d`
 that the tile comparison of the kernel needs. -/
-theorem discreteKernelBounds_discreteKernel {ϑ α Λ : ℝ} (hϑ : 0 < ϑ)
+theorem discreteKernelBounds_discreteKernel {ϑ α : ℝ} (hϑ : 0 < ϑ)
     (hϑ' : ϑ ≤ Real.pi / 2) (hd : 2 ≤ d) (hα : 0 < α) (hα2 : α ≤ 2) :
     ∃ θ' : ℝ, 0 < θ' ∧ θ' ≤ Real.pi / 2 ∧
+      ∀ Λ : ℝ, 1 ≤ Λ →
+      ∃ C : ℝ, 1 ≤ C ∧
       ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
       ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
         KernelBounds Γ α Λ k →
-      ∃ C : ℝ, 1 ≤ C ∧
       ∀ h : ℝ, 0 < h →
       ∃ Γ' : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ' θ' ∧
         DiscreteKernelBounds Γ' α C (3 * Real.sqrt d * h) (scaledLattice d h)
           (discreteKernel d k h) := by
-  obtain ⟨θ', hθ0, hθle, hmain⟩ := cor_rescaled_kernel (d := d) hϑ hϑ' hd hα hα2
-  refine ⟨θ', hθ0, hθle, fun Γ hΓ hmeas k hk => ?_⟩
-  obtain ⟨C, hC0, hCmain⟩ := hmain Γ hΓ hmeas Λ k hk
-  refine ⟨max C 1, le_max_right _ _, fun h hh => ?_⟩
-  obtain ⟨Γ', -, hΓ'b, hbounds⟩ := hCmain h hh
+  obtain ⟨θ', hθ0, hθle, hmain⟩ := cor_rescaled_kernel_uniform (d := d) hϑ hϑ' hd hα hα2
+  refine ⟨θ', hθ0, hθle, fun Λ hΛ1 => ?_⟩
+  obtain ⟨C, hC0, hCmain⟩ := hmain Λ hΛ1
+  refine ⟨max C 1, le_max_right _ _, fun Γ hΓ hmeas k hk h hh => ?_⟩
+  obtain ⟨Γ', -, hΓ'b, hbounds⟩ := hCmain Γ hΓ hmeas k hk h hh
   have hsd : (0:ℝ) ≤ Real.sqrt d * h := by positivity
   refine ⟨Γ', hΓ'b, ?_⟩
   refine ⟨le_max_right _ _, fun x _ y _ => discreteKernel_symm hk.symm h x y, ?_, ?_⟩
@@ -2449,13 +2450,13 @@ see the README. -/
 `H^{α/2}` form on a slightly larger ball is finite. The constants `κ` and `c`
 do not depend on the ball, on `f`, or on the scale. -/
 theorem formHs_ball_le_form_of_formHs_ne_top {ϑ α Λ : ℝ} (hϑ : 0 < ϑ)
-    (hϑ' : ϑ ≤ Real.pi / 2) (hd : 2 ≤ d) (hα : 0 < α) (hα2 : α < 2)
-    {Γ : Configuration (EuclideanSpace ℝ (Fin d))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
-    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
-    (hk : KernelBounds Γ α Λ k)
-    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
-      k p.1 p.2) :
+    (hϑ' : ϑ ≤ Real.pi / 2) (hd : 2 ≤ d) (hα : 0 < α) (hα2 : α < 2) (hΛ : 1 ≤ Λ) :
     ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
       ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
       ∀ f : EuclideanSpace ℝ (Fin d) → ℝ, Measurable f → LocallyIntegrable f volume →
         formHs (ball x₀ ((κ + Real.sqrt d) * R)) α f ≠ ⊤ →
@@ -2463,11 +2464,11 @@ theorem formHs_ball_le_form_of_formHs_ne_top {ϑ α Λ : ℝ} (hϑ : 0 < ϑ)
   have hd1 : 0 < d := by omega
   have hsd : (0:ℝ) < Real.sqrt d := Real.sqrt_pos.mpr (by exact_mod_cast hd1)
   obtain ⟨θ', hθ0, hθle, hcor⟩ :=
-    discreteKernelBounds_discreteKernel (Λ := Λ) hϑ hϑ' hd hα hα2.le
-  obtain ⟨C, hC1, hCmain⟩ := hcor Γ hΓ hmeas k hk
+    discreteKernelBounds_discreteKernel (d := d) hϑ hϑ' hd hα hα2.le
+  obtain ⟨C, hC1, hCmain⟩ := hcor Λ hΛ
   obtain ⟨κ, c, hκ, hc, hdiscret⟩ := discret_lintegral (d := d) θ' C α (3 * Real.sqrt d)
     hθ0 hC1 hα hα2 (by positivity)
-  refine ⟨κ, c, hκ, hc, fun x₀ R hR f hfm hf hfin => ?_⟩
+  refine ⟨κ, c, hκ, hc, fun Γ hΓ hmeas k hk hkm x₀ R hR f hfm hf hfin => ?_⟩
   set hn : ℕ → ℝ := fun n => R * (1 / ((n : ℝ) + 1)) with hndef
   have hpos : ∀ n, 0 < hn n := fun n => by
     rw [hndef]; positivity
@@ -2493,7 +2494,7 @@ theorem formHs_ball_le_form_of_formHs_ne_top {ϑ α Λ : ℝ} (hϑ : 0 < ϑ)
       stepG d (hn n) (ball x₀ (κ * R)) (3 * Real.sqrt d * hn n) k f p with hSGdef
   have hstep : ∀ n, L n ≤ ENNReal.ofReal c * SG n := by
     intro n
-    obtain ⟨Γ', hΓ'b, hω⟩ := hCmain (hn n) (hpos n)
+    obtain ⟨Γ', hΓ'b, hω⟩ := hCmain Γ hΓ hmeas k hk (hn n) (hpos n)
     have hineq := hdiscret Γ' hΓ'b (hn n) (hpos n) (discreteKernel d k (hn n)) hω x₀ R
       (cubeAvg d (hn n) f) hR
     rw [hLdef, hSGdef]
@@ -2526,5 +2527,90 @@ theorem form_mono_set {Ω Ω' : Set (EuclideanSpace ℝ (Fin d))} (hsub : Ω ⊆
     (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
     (f : EuclideanSpace ℝ (Fin d) → ℝ) : form Ω k f ≤ form Ω' k f :=
   lintegral_mono_set (Set.prod_mono hsub hsub)
+
+
+/-- The form does not see a change of `f` on a null set of the domain. -/
+theorem form_congr_ae {Ω : Set (EuclideanSpace ℝ (Fin d))}
+    (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    {f g : EuclideanSpace ℝ (Fin d) → ℝ}
+    (hfg : ∀ᵐ x ∂(volume.restrict Ω), f x = g x) : form Ω k f = form Ω k g := by
+  have hmeas : volume.restrict (Ω ×ˢ Ω)
+      = (volume.restrict Ω).prod (volume.restrict Ω) := by
+    rw [Measure.prod_restrict, Measure.volume_eq_prod]
+  rw [form, form, hmeas]
+  refine lintegral_congr_ae ?_
+  have h1 : ∀ᵐ p ∂((volume.restrict Ω).prod (volume.restrict Ω)), f p.1 = g p.1 :=
+    Measure.quasiMeasurePreserving_fst.ae hfg
+  have h2 : ∀ᵐ p ∂((volume.restrict Ω).prod (volume.restrict Ω)), f p.2 = g p.2 :=
+    Measure.quasiMeasurePreserving_snd.ae hfg
+  filter_upwards [h1, h2] with p hp1 hp2
+  rw [hp1, hp2]
+
+theorem formHs_congr_ae {Ω : Set (EuclideanSpace ℝ (Fin d))} (α : ℝ)
+    {f g : EuclideanSpace ℝ (Fin d) → ℝ}
+    (hfg : ∀ᵐ x ∂(volume.restrict Ω), f x = g x) : formHs Ω α f = formHs Ω α g :=
+  form_congr_ae _ hfg
+
+
+/-! ## Theorem 1.1's ball form, with the hypotheses this formalisation carries
+
+`QFS.TheoremOneOneBall` is the paper's statement.  Two of its hypotheses are not
+the ones available here: the paper's condition (M) is used through Debreu's
+theorem, which is carried as `CondMeas`, and the kernel is assumed measurable,
+which the paper leaves implicit.  This variant records exactly what §3.2's
+argument proves. -/
+
+/-- The enlarged-ball form of Theorem 1.1, with Debreu's condition and the
+measurability of `k` as explicit hypotheses, and with the constants where the
+paper puts them: `κ` and `c` depend on `ϑ`, `Λ` and `α` alone. -/
+def TheoremOneOneBallCondMeas (d : ℕ) : Prop :=
+  ∀ ϑ Λ α : ℝ, 0 < ϑ → ϑ ≤ Real.pi / 2 → 1 ≤ Λ → 0 < α → α < 2 →
+    ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+          k p.1 p.2) →
+      ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
+        MemLp f 2 (volume.restrict (ball x₀ (κ * R))) →
+        formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f
+
+/-- A function in `L²` of a ball has a measurable, globally integrable
+representative that agrees with it on the ball: the indicator of the ball times
+a measurable version. -/
+theorem exists_measurable_repr {x₀ : EuclideanSpace ℝ (Fin d)} {R : ℝ}
+    {f : EuclideanSpace ℝ (Fin d) → ℝ} (hf : MemLp f 2 (volume.restrict (ball x₀ R))) :
+    ∃ g : EuclideanSpace ℝ (Fin d) → ℝ, Measurable g ∧ LocallyIntegrable g volume ∧
+      (∀ᵐ x ∂(volume.restrict (ball x₀ R)), f x = g x) ∧
+      (∫⁻ x in ball x₀ R, ENNReal.ofReal (g x ^ 2)) ≠ ⊤ := by
+  classical
+  have hball : volume (ball x₀ R) ≠ ∞ := measure_ball_lt_top.ne
+  haveI : IsFiniteMeasure (volume.restrict (ball x₀ R)) :=
+    ⟨by rw [Measure.restrict_apply_univ]; exact lt_of_le_of_ne le_top hball⟩
+  set f₀ : EuclideanSpace ℝ (Fin d) → ℝ := hf.1.mk f with hf₀
+  have hf₀m : Measurable f₀ := hf.1.stronglyMeasurable_mk.measurable
+  set g : EuclideanSpace ℝ (Fin d) → ℝ := (ball x₀ R).indicator f₀ with hgdef
+  have hgm : Measurable g := hf₀m.indicator measurableSet_ball
+  have hae : ∀ᵐ x ∂(volume.restrict (ball x₀ R)), f x = g x := by
+    have h1 : ∀ᵐ x ∂(volume.restrict (ball x₀ R)), f x = f₀ x := hf.1.ae_eq_mk
+    have h2 : ∀ᵐ x ∂(volume.restrict (ball x₀ R)), f₀ x = g x := by
+      refine (ae_restrict_iff' measurableSet_ball).mpr
+        (Filter.Eventually.of_forall fun x hx => ?_)
+      rw [hgdef, Set.indicator_of_mem hx]
+    filter_upwards [h1, h2] with x hx1 hx2
+    rw [hx1, hx2]
+  have hf₀L2 : MemLp f₀ 2 (volume.restrict (ball x₀ R)) := hf.ae_eq hf.1.ae_eq_mk
+  have hg2 : MemLp g 2 (volume.restrict (ball x₀ R)) := by
+    refine hf.ae_eq ?_
+    filter_upwards [hae] with x hx using hx
+  have hg1 : Integrable g volume :=
+    (integrable_indicator_iff measurableSet_ball).mpr (hf₀L2.integrable one_le_two)
+  refine ⟨g, hgm, hg1.locallyIntegrable, hae, ?_⟩
+  have hsq : Integrable (fun x => g x ^ 2) (volume.restrict (ball x₀ R)) := hg2.integrable_sq
+  have heq := ofReal_integral_eq_lintegral_ofReal hsq
+    (Filter.Eventually.of_forall fun x => sq_nonneg (g x))
+  rw [← heq]
+  exact ENNReal.ofReal_ne_top
 
 end QFS

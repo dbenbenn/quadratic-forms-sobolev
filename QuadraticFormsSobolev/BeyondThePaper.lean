@@ -2894,22 +2894,22 @@ for every measurable `f` that is locally integrable and square integrable on
 `B_{κR}`. This is the shape of `QFS.TheoremOneOneBall`, with the paper's
 scale-invariant enlargement of the ball. -/
 theorem formHs_ball_le_form_planar {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ Real.pi / 2)
-    (hα : 0 < α) (hα2 : α < 2)
-    {Γ : Configuration (EuclideanSpace ℝ (Fin 2))} (hΓ : IsBounded Γ ϑ) (hmeas : CondMeas Γ)
-    {k : EuclideanSpace ℝ (Fin 2) → EuclideanSpace ℝ (Fin 2) → ℝ≥0∞}
-    (hk : KernelBounds Γ α Λ k)
-    (hkm : Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
-      k p.1 p.2) :
+    (hα : 0 < α) (hα2 : α < 2) (hΛ : 1 ≤ Λ) :
     ∃ κ c : ℝ, 1 ≤ κ ∧ 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin 2)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin 2) → EuclideanSpace ℝ (Fin 2) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+          k p.1 p.2) →
       ∀ (x₀ : EuclideanSpace ℝ (Fin 2)) (R : ℝ), 0 < R →
       ∀ f : EuclideanSpace ℝ (Fin 2) → ℝ, Measurable f → LocallyIntegrable f volume →
         (∫⁻ x in ball x₀ (κ * R), ENNReal.ofReal (f x ^ 2)) ≠ ⊤ →
         formHs (ball x₀ R) α f ≤ ENNReal.ofReal c * form (ball x₀ (κ * R)) k f := by
   obtain ⟨κ, c, hκ, hc, hmain⟩ :=
-    formHs_ball_le_form_of_formHs_ne_top (d := 2) hϑ hϑ' le_rfl hα hα2 hΓ hmeas hk hkm
+    formHs_ball_le_form_of_formHs_ne_top (d := 2) hϑ hϑ' le_rfl hα hα2 hΛ
   have hs2 : (0:ℝ) ≤ Real.sqrt ((2:ℕ) : ℝ) := Real.sqrt_nonneg _
   refine ⟨2 * (κ + Real.sqrt ((2:ℕ) : ℝ)), c, by nlinarith, hc,
-    fun x₀ R hR f hfm hf hL2 => ?_⟩
+    fun Γ hΓ hmeas k hk hkm x₀ R hR f hfm hf hL2 => ?_⟩
   set ρ : ℝ := (κ + Real.sqrt ((2:ℕ) : ℝ)) * R with hρ
   have hρpos : 0 < ρ := by rw [hρ]; nlinarith
   have hsub : ball x₀ (κ * R) ⊆ ball x₀ (2 * (κ + Real.sqrt ((2:ℕ) : ℝ)) * R) := by
@@ -2919,14 +2919,33 @@ theorem formHs_ball_le_form_planar {ϑ α Λ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ �
   by_cases htop : form (ball x₀ (2 * (κ + Real.sqrt ((2:ℕ) : ℝ)) * R)) k f = ⊤
   · rw [htop, ENNReal.mul_top (by simpa using lt_of_lt_of_le zero_lt_one hc)]
     exact le_top
-  have hHk : form (ball x₀ ρ) k f ≠ ⊤ := by
-    refine ne_top_of_le_ne_top htop (form_mono_set (ball_subset_ball ?_) k f)
-    rw [hρ]; nlinarith
   have hfin : formHs (ball x₀ ρ) α f ≠ ⊤ := by
     refine formHs_ball_ne_top_of_planar hϑ hϑ' hα hα2 hΓ hmeas hk hfm hkm
-      (show ρ < 2 * (κ + Real.sqrt ((2:ℕ) : ℝ)) * R by rw [hρ]; nlinarith) hL2 ?_
-    exact htop
-  refine le_trans (hmain x₀ R hR f hfm hf hfin) (mul_le_mul' le_rfl ?_)
+      (show ρ < 2 * (κ + Real.sqrt ((2:ℕ) : ℝ)) * R by rw [hρ]; nlinarith) hL2 htop
+  refine le_trans (hmain Γ hΓ hmeas k hk hkm x₀ R hR f hfm hf hfin) (mul_le_mul' le_rfl ?_)
   exact form_mono_set hsub k f
+
+
+/-- **Theorem 1.1's ball form holds in the plane**, in the shape
+`QFS.TheoremOneOneBallCondMeas` records: `κ` and `c` depend on `ϑ`, `Λ` and `α`
+alone, the hypothesis on `f` is `f ∈ L²(B_{κR})`, and the only additions to the
+paper's own hypotheses are Debreu's measurability condition and the
+measurability of `k`, both of which this formalisation carries throughout.
+
+The proof is the planar theorem above applied to a measurable representative of
+`f`: `L²` of a ball gives a measurable, globally integrable `g` agreeing with
+`f` almost everywhere there (`QFS.exists_measurable_repr`), and neither form
+sees the change (`QFS.form_congr_ae`). -/
+theorem theoremOneOneBallCondMeas_two : TheoremOneOneBallCondMeas 2 := by
+  intro ϑ Λ α hϑ hϑ' hΛ hα hα2
+  obtain ⟨κ, c, hκ, hc, hmain⟩ := formHs_ball_le_form_planar hϑ hϑ' hα hα2 hΛ
+  refine ⟨κ, c, hκ, hc, fun Γ hΓ hmeas k hk hkm x₀ R hR f hf => ?_⟩
+  obtain ⟨g, hgm, hgloc, hae, hL2⟩ := exists_measurable_repr hf
+  have hsub : ball x₀ R ⊆ ball x₀ (κ * R) := ball_subset_ball (by nlinarith)
+  have h1 : formHs (ball x₀ R) α f = formHs (ball x₀ R) α g :=
+    formHs_congr_ae α (ae_restrict_of_ae_restrict_of_subset hsub hae)
+  have h2 : form (ball x₀ (κ * R)) k f = form (ball x₀ (κ * R)) k g := form_congr_ae k hae
+  rw [h1, h2]
+  exact hmain Γ hΓ hmeas k hk hkm x₀ R hR g hgm hgloc hL2
 
 end QFS

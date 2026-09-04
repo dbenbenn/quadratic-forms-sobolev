@@ -614,17 +614,20 @@ theorem discreteKernel_ge_volume_scaled
     _ ≤ ∫⁻ p in cube h x ×ˢ cube h y, k p.1 p.2 :=
         lintegral_mono' (Measure.restrict_mono hsub le_rfl) le_rfl
 
-/-- **Corollary 3.6** of Bux–Kassmann–Schulze, for `d ≥ 2`: for every `h > 0` the
-discrete kernel `ω^k_h` satisfies assumption (1.7) on `hℤ^d`, for a configuration
-`Γ^h` whose apex angles are bounded below by a `ϑ'` independent of `h`, with a
-constant `C` independent of `h`. -/
-theorem cor_rescaled_kernel {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd : 2 ≤ d)
+/-- **Corollary 3.6** of Bux–Kassmann–Schulze, for `d ≥ 2`, with the constant
+where the paper puts it: `C` depends on `d`, `ϑ`, `α` and `Λ` only, and in
+particular neither on the configuration nor on the kernel nor on the scale.
+For every `h > 0` the discrete kernel `ω^k_h` satisfies assumption (1.7) on
+`hℤ^d`, for a configuration `Γ^h` whose apex angles are bounded below by a `ϑ'`
+independent of `h`. -/
+theorem cor_rescaled_kernel_uniform {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd : 2 ≤ d)
     {α : ℝ} (hα : 0 < α) (hα2 : α ≤ 2) :
     ∃ θ' : ℝ, 0 < θ' ∧ θ' ≤ π / 2 ∧
-      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
-      ∀ (Λ : ℝ) (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞),
-        KernelBounds Γ α Λ k →
+      ∀ Λ : ℝ, 1 ≤ Λ →
       ∃ C : ℝ, 0 < C ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
       ∀ h : ℝ, 0 < h →
       ∃ Γ' : Configuration (EuclideanSpace ℝ (Fin d)),
         (∀ u, (Γ' u).apex = θ') ∧ IsBounded Γ' θ' ∧
@@ -652,8 +655,7 @@ theorem cor_rescaled_kernel {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd
     exact ⟨v, by rw [hSdef]; exact hv⟩
   obtain ⟨θ', hθ'0, hθ'le, hthin⟩ := lemma_new_config hd hsd hθ0 hθle S hSnorm
   refine ⟨θ', hθ'0, hθ'le, ?_⟩
-  intro Γ hΓ hmeas Λ k hk
-  have hΛ1 := hk.one_le
+  intro Λ hΛ1
   have hΛ0 : (0:ℝ) < Λ := lt_of_lt_of_le zero_lt_one hΛ1
   have hLpos : (0:ℝ) < (S.card : ℝ) := by exact_mod_cast Finset.card_pos.mpr hSne
   obtain ⟨C₀, hC₀def⟩ : ∃ C : ℝ,
@@ -661,7 +663,7 @@ theorem cor_rescaled_kernel {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd
   have hC₀0 : (0:ℝ) < C₀ := by rw [hC₀def]; positivity
   refine ⟨max (Λ * (2 * Real.sqrt d) ^ ((d:ℝ) + 2)) (C₀ * Λ⁻¹)⁻¹,
     lt_of_lt_of_le (by positivity) (le_max_left _ _), ?_⟩
-  intro h hh
+  intro Γ hΓ hmeas k hk h hh
   obtain ⟨F, hFdef⟩ : ∃ F : RefFamily Γ (ϑ / 3), F = refFamily hϑ hϑ' Γ hΓ := ⟨_, rfl⟩
   have hFaxes : F.axes = S := by rw [hFdef, hSdef]; rfl
   choose fav hfav using (fun u => exists_isFavoured F h u)
@@ -742,5 +744,29 @@ theorem cor_rescaled_kernel {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd
           (mul_le_mul' hvolx hvoly))
         rw [hB, hB']
         exact add_le_add (hind x y hx hy) (hind y x hy hx)
+
+
+/-- **Corollary 3.6** in the shape the paper states it: the constant is produced
+after the configuration and the kernel. It is `cor_rescaled_kernel_uniform` with
+the existential weakened; the proof there gives the stronger order. -/
+theorem cor_rescaled_kernel {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd : 2 ≤ d)
+    {α : ℝ} (hα : 0 < α) (hα2 : α ≤ 2) :
+    ∃ θ' : ℝ, 0 < θ' ∧ θ' ≤ π / 2 ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ (Λ : ℝ) (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞),
+        KernelBounds Γ α Λ k →
+      ∃ C : ℝ, 0 < C ∧
+      ∀ h : ℝ, 0 < h →
+      ∃ Γ' : Configuration (EuclideanSpace ℝ (Fin d)),
+        (∀ u, (Γ' u).apex = θ') ∧ IsBounded Γ' θ' ∧
+        ∀ x ∈ scaledLattice d h, ∀ y ∈ scaledLattice d h, Real.sqrt d * h < ‖x - y‖ →
+          ENNReal.ofReal C⁻¹ *
+              ((indE (coneAt Γ' x) y + indE (coneAt Γ' y) x) * jumpKernel d α x y)
+            ≤ discreteKernel d k h x y ∧
+          discreteKernel d k h x y ≤ ENNReal.ofReal C * jumpKernel d α x y := by
+  obtain ⟨θ', hθ0, hθle, hmain⟩ := cor_rescaled_kernel_uniform hϑ hϑ' hd hα hα2
+  refine ⟨θ', hθ0, hθle, fun Γ hΓ hmeas Λ k hk => ?_⟩
+  obtain ⟨C, hC0, hCmain⟩ := hmain Λ hk.one_le
+  exact ⟨C, hC0, fun h hh => hCmain Γ hΓ hmeas k hk h hh⟩
 
 end QFS
