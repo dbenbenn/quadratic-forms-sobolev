@@ -1811,6 +1811,25 @@ proved in Lean:
    aperture between `π/4` and `ϑ`, not at the `ϑ/3` of Lemma 2.2, which is what
    `QFS.ref_cones'` supplies.
 
+**A route not attempted, and why.** The natural attack on the remaining case is
+multi-scale: split the `H^{α/2}` energy by dyadic distance, chain each pair
+through *lattice* points at a finer scale `ρ = ε|s−t|` — where Theorem 5.15
+supplies paths of bounded length with edges of comparable length, in every
+dimension and for every configuration — and bound the two end terms by the
+local oscillation `A_ρ = ρ^{-α}‖f − E_ρ f‖²_{L²}`. Two things are needed and
+only one is available. The chaining part is fine: an edge is used by paths of
+`O(1)` scales, so the multiplicity bound survives the sum over scales, and
+Lemma 5.9 makes each edge's pair of cubes a cone pair. The end terms are not:
+`A_ρ` is essentially constant in `ρ` for `f ∈ H^{α/2}`, so summing the naive
+bound over scales diverges. A weighted telescoping of the nested dyadic
+averages replaces `A_ρ` by a square function `∑_i 2^{-iα}‖E_{2^i}f −
+E_{2^{i+1}}f‖²`, which is again comparable to the `H^{α/2}` energy — so the
+argument closes only if the constant in front can be made smaller than one, and
+the `ε^α` gained by chaining at the finer scale is what would do it. That is a
+plausible route and a large one: dyadic square functions, weighted
+Cauchy–Schwarz and scale bookkeeping on the order of §§5–6 themselves. It is
+recorded here, not attempted.
+
 **What is still not done.** Narrow cones (apex `≤ π/4`) in dimension three and
 above — and only those: dimension one is trivial (`QFS.formHs_le_form_dim_one`:
 on the line every double cone is `ℝ ∖ {0}`, so every pair is a cone pair and
