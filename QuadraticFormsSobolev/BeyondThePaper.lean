@@ -3065,4 +3065,91 @@ theorem Hk_univ_eq_Hs_univ_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤
   rw [hformHs, hform] at hbound
   exact ne_top_of_le_ne_top (ENNReal.mul_ne_top ENNReal.ofReal_ne_top hfform) hbound
 
+
+/-! ## Theorem 1.4 for a domain, in the plane
+
+Lemma 7.1 for a domain (`QFS.formHs_le_form_domain`) turns the ball
+comparability into the comparability on `Ω`, given the Whitney family of `Ω` and
+Dyda's inequality — the two inputs the paper quotes.  With the planar ball
+theorem it gives the inclusion `H_k(Ω) ⊆ H^{α/2}(Ω)` for every planar domain
+that has such a family. -/
+
+/-- **The comparability on a domain, in the plane**, granted the quoted Whitney
+family and Dyda's inequality for that domain. -/
+theorem formHs_le_form_domain_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ Real.pi / 2) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2) :
+    ∃ κ c₀ : ℝ, 1 ≤ κ ∧ 1 ≤ c₀ ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin 2)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin 2) → EuclideanSpace ℝ (Fin 2) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+          k p.1 p.2) →
+      ∀ f : EuclideanSpace ℝ (Fin 2) → ℝ,
+        (∀ (y₀ : EuclideanSpace ℝ (Fin 2)) (S : ℝ), 0 < S →
+          MemLp f 2 (volume.restrict (ball y₀ S))) →
+        (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+          ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) →
+      ∀ Ω : Set (EuclideanSpace ℝ (Fin 2)), MeasurableSet Ω →
+      ∀ W : WhitneyDomainData 2 α κ Ω,
+        ENNReal.ofReal (c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ)) * formHs Ω α f
+          ≤ form Ω k f := by
+  obtain ⟨κ, c₀, hκ, hc₀, H⟩ := theoremOneOneBallCondMeas_two ϑ Λ α hϑ hϑ' hΛ hα hα2
+  refine ⟨κ, c₀, hκ, hc₀,
+    fun Γ hΓ hmeas k hk hkm f hf hFmeas Ω hΩ W => ?_⟩
+  exact formHs_le_form_domain hκ hc₀ hΩ W
+    (fun y₀ S hS hmem => H Γ hΓ hmeas k hk hkm y₀ S hS f hmem) hf hFmeas
+
+/-- **Theorem 1.4 for a planar domain**: `H_k(Ω) = H^{α/2}(Ω)` for every
+measurable `Ω ⊆ ℝ²` that has a Whitney family and satisfies Dyda's inequality —
+the two inputs the paper quotes rather than proves. -/
+theorem Hk_domain_eq_Hs_domain_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ)
+    (hϑ' : ϑ ≤ Real.pi / 2) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2) :
+    ∃ κ : ℝ, 1 ≤ κ ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin 2)), IsBounded Γ ϑ → CondMeas Γ →
+      ∀ k : EuclideanSpace ℝ (Fin 2) → EuclideanSpace ℝ (Fin 2) → ℝ≥0∞,
+        KernelBounds Γ α Λ k →
+        (Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+          k p.1 p.2) →
+      ∀ Ω : Set (EuclideanSpace ℝ (Fin 2)), MeasurableSet Ω →
+      ∀ _W : WhitneyDomainData 2 α κ Ω, Hk Ω k = Hs Ω α := by
+  obtain ⟨κ, c₀, hκ, hc₀, H⟩ := theoremOneOneBallCondMeas_two ϑ Λ α hϑ hϑ' hΛ hα hα2
+  refine ⟨κ, hκ, fun Γ hΓ hmeas k hk hkm Ω hΩ W => ?_⟩
+  have hc₀pos : (0:ℝ) < c₀ := lt_of_lt_of_le zero_lt_one hc₀
+  have hMR : (0 : ℝ) < (W.overlapBound : ℝ) := by exact_mod_cast W.overlapBound_pos
+  refine Set.Subset.antisymm (fun f hf => ?_) (Hs_subset_Hk hk Ω)
+  obtain ⟨hfL2, hfform⟩ := hf
+  refine ⟨hfL2, ?_⟩
+  -- a measurable representative, supported in `Ω`
+  set g : EuclideanSpace ℝ (Fin 2) → ℝ := Ω.indicator (hfL2.1.mk f) with hgdef
+  have hgm : Measurable g := hfL2.1.stronglyMeasurable_mk.measurable.indicator hΩ
+  have hae : ∀ᵐ x ∂(volume.restrict Ω), f x = g x := by
+    have h1 : ∀ᵐ x ∂(volume.restrict Ω), f x = hfL2.1.mk f x := hfL2.1.ae_eq_mk
+    have h2 : ∀ᵐ x ∂(volume.restrict Ω), hfL2.1.mk f x = g x :=
+      (ae_restrict_iff' hΩ).mpr (Filter.Eventually.of_forall fun x hx => by
+        rw [hgdef, Set.indicator_of_mem hx])
+    filter_upwards [h1, h2] with x hx1 hx2
+    rw [hx1, hx2]
+  have hgglob : MemLp g 2 volume :=
+    (memLp_indicator_iff_restrict hΩ).mpr (hfL2.ae_eq hfL2.1.ae_eq_mk)
+  have hgL2 : ∀ (y₀ : EuclideanSpace ℝ (Fin 2)) (S : ℝ), 0 < S →
+      MemLp g 2 (volume.restrict (ball y₀ S)) := fun y₀ S _ =>
+    hgglob.mono_measure (Measure.restrict_le_self)
+  have hFmeas : Measurable fun p : EuclideanSpace ℝ (Fin 2) × EuclideanSpace ℝ (Fin 2) =>
+      ENNReal.ofReal ((g p.2 - g p.1) ^ 2) * k p.1 p.2 :=
+    (ENNReal.measurable_ofReal.comp
+      (((hgm.comp measurable_snd).sub (hgm.comp measurable_fst)).pow_const 2)).mul hkm
+  have hbound := formHs_le_form_domain hκ hc₀ hΩ W
+    (fun y₀ S hS hmem => H Γ hΓ hmeas k hk hkm y₀ S hS g hmem) hgL2 hFmeas
+  have hform : form Ω k g = form Ω k f := (form_congr_ae k hae).symm
+  have hformHs : formHs Ω α g = formHs Ω α f := (formHs_congr_ae α hae).symm
+  rw [hformHs, hform] at hbound
+  intro htop
+  rw [htop] at hbound
+  have hc : ENNReal.ofReal (c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ)) ≠ 0 := by
+    simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]
+    have := W.dydaConst_pos
+    positivity
+  rw [ENNReal.mul_top hc] at hbound
+  exact hfform (top_le_iff.mp hbound)
+
 end QFS

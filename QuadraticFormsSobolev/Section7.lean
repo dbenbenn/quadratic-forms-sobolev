@@ -344,4 +344,89 @@ noncomputable def whitneyBallData_one (d : ℕ) (α : ℝ) : WhitneyBallData d �
     simp [Set.encard_univ]
   dyda := by intro x₀ R _ f; simp
 
+
+/-! ## Lemma 7.1 for a domain
+
+`lemma_ball_to_domain` is the chain (6.14) for an arbitrary `Ω`; combining it
+with the comparability on balls gives the comparability on `Ω`, which is what
+Theorem 1.4 uses for a bounded Lipschitz domain. The Whitney family and Dyda's
+inequality are hypotheses, exactly as in the paper. -/
+
+/-- The Whitney family of a domain, and Dyda's inequality for it: the input
+Lemma 7.1 quotes rather than proves, for a general `Ω` rather than for a ball.
+Compare `QFS.WhitneyBallData`. -/
+structure WhitneyDomainData (d : ℕ) (α κ : ℝ) (Ω : Set (EuclideanSpace ℝ (Fin d))) where
+  /-- The index set of the family. -/
+  idx : Type
+  /-- The family is countable. -/
+  countable : Countable idx
+  /-- The overlap bound `M` of property (iii). -/
+  overlapBound : ℕ
+  /-- The overlap bound is positive. -/
+  overlapBound_pos : 0 < overlapBound
+  /-- The constant of Dyda's inequality (13). -/
+  dydaConst : ℝ
+  /-- Dyda's constant is positive. -/
+  dydaConst_pos : 0 < dydaConst
+  /-- The centres of the Whitney balls. -/
+  ctr : idx → EuclideanSpace ℝ (Fin d)
+  /-- The radii of the Whitney balls. -/
+  rad : idx → ℝ
+  /-- Property (ii): the enlarged balls stay inside `Ω`. -/
+  enlarged_subset : ∀ i, ball (ctr i) (κ * rad i) ⊆ Ω
+  /-- Property (iii): the enlarged balls overlap at most `overlapBound` times. -/
+  overlap : ∀ y, {i | y ∈ ball (ctr i) (κ * rad i)}.encard ≤ (overlapBound : ℕ∞)
+  /-- Inequality (13) of [Dyda06]. -/
+  dyda : ∀ f, ENNReal.ofReal dydaConst * formHs Ω α f
+    ≤ ∑' i, formHs (ball (ctr i) (rad i)) α f
+
+/-- **Lemma 7.1 for a domain**: the enlarged-ball comparability, a Whitney
+family for `Ω` and Dyda's inequality give the comparability on `Ω`. -/
+theorem formHs_le_form_domain {Ω : Set (EuclideanSpace ℝ (Fin d))} {α κ c₀ : ℝ}
+    (hκ : 1 ≤ κ) (hc₀ : 1 ≤ c₀) (hΩ : MeasurableSet Ω) (W : WhitneyDomainData d α κ Ω)
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    {f : EuclideanSpace ℝ (Fin d) → ℝ}
+    (H : ∀ (y₀ : EuclideanSpace ℝ (Fin d)) (S : ℝ), 0 < S →
+      MemLp f 2 (volume.restrict (ball y₀ (κ * S))) →
+      formHs (ball y₀ S) α f ≤ ENNReal.ofReal c₀ * form (ball y₀ (κ * S)) k f)
+    (hf : ∀ (y₀ : EuclideanSpace ℝ (Fin d)) (S : ℝ), 0 < S →
+      MemLp f 2 (volume.restrict (ball y₀ S)))
+    (hFmeas : Measurable fun p : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) =>
+      ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2) :
+    ENNReal.ofReal (c₀⁻¹ * W.dydaConst / (W.overlapBound : ℝ)) * formHs Ω α f
+      ≤ form Ω k f := by
+  have hcount := W.countable
+  have hc₀pos : (0 : ℝ) < c₀ := lt_of_lt_of_le zero_lt_one hc₀
+  have hMR : (0 : ℝ) < (W.overlapBound : ℝ) := by exact_mod_cast W.overlapBound_pos
+  have hMne : ((W.overlapBound : ℕ) : ℝ≥0∞) ≠ 0 := by
+    have : W.overlapBound ≠ 0 := by have := W.overlapBound_pos; omega
+    simpa using this
+  have hMtop : ((W.overlapBound : ℕ) : ℝ≥0∞) ≠ ∞ := ENNReal.natCast_ne_top _
+  have hball : ∀ i, ENNReal.ofReal c₀⁻¹ * formHs (ball (W.ctr i) (W.rad i)) α f
+      ≤ form (ball (W.ctr i) (κ * W.rad i)) k f := by
+    intro i
+    by_cases hri : 0 < W.rad i
+    · have h2 := H (W.ctr i) (W.rad i) hri (hf _ _ (by nlinarith))
+      calc ENNReal.ofReal c₀⁻¹ * formHs (ball (W.ctr i) (W.rad i)) α f
+          ≤ ENNReal.ofReal c₀⁻¹ * (ENNReal.ofReal c₀ *
+              form (ball (W.ctr i) (κ * W.rad i)) k f) := mul_le_mul' le_rfl h2
+        _ = form (ball (W.ctr i) (κ * W.rad i)) k f := by
+            rw [← mul_assoc, ← ENNReal.ofReal_mul (le_of_lt (inv_pos.mpr hc₀pos)),
+              inv_mul_cancel₀ (ne_of_gt hc₀pos), ENNReal.ofReal_one, one_mul]
+    · have hempty : ball (W.ctr i) (W.rad i) = ∅ := ball_eq_empty.mpr (not_lt.mp hri)
+      simp [formHs, form, hempty]
+  have hchain := lemma_ball_to_domain (S := fun i => ball (W.ctr i) (W.rad i))
+    (S' := fun i => ball (W.ctr i) (κ * W.rad i)) (Ω := Ω) (M := W.overlapBound) (α := α)
+    (c := c₀⁻¹) (c' := W.dydaConst) (k := k) (f := f)
+    (fun i => measurableSet_ball) hΩ W.enlarged_subset W.overlap hFmeas hball (W.dyda f)
+  have hdiv := mul_le_mul' (le_refl (((W.overlapBound : ℕ) : ℝ≥0∞)⁻¹)) hchain
+  have hRHS : ((W.overlapBound : ℕ) : ℝ≥0∞)⁻¹ *
+      (((W.overlapBound : ℕ) : ℝ≥0∞) * form Ω k f) = form Ω k f := by
+    rw [← mul_assoc, ENNReal.inv_mul_cancel hMne hMtop, one_mul]
+  rw [hRHS] at hdiv
+  refine le_trans (le_of_eq ?_) hdiv
+  rw [ENNReal.ofReal_div_of_pos hMR, ENNReal.ofReal_mul (le_of_lt (inv_pos.mpr hc₀pos)),
+    ENNReal.ofReal_natCast, div_eq_mul_inv]
+  ring
+
 end QFS
