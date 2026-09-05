@@ -2237,8 +2237,9 @@ The equations this formalisation refers to:
 
 **The auxiliary results are an appendix, not a section 7.** The paper ends with
 `\appendix`, so its last section prints as **Appendix A** and its two lemmas as
-**Lemma A.1** and **Lemma A.2**. (`QuadraticFormsSobolev/Section7.lean` still
-carries the older name.)
+**Lemma A.1** and **Lemma A.2**. The module is named `AppendixA` accordingly; it
+also carries Theorem 1.4 on `ℝ^d`, which is not appendix material but shares the
+appendix's property of sitting downstream of Theorem 1.1.
 
 Two source labels are traps for anyone reading the `.tex` rather than the PDF.
 The appendix chain is written `\begin{align}\label{6.14}` — a leftover from a
@@ -2304,7 +2305,7 @@ printed statement where one exists.
 | `RefCones` | Lemma 2.2 and Corollary 2.4: finitely many reference cones |
 | `Section3` | lattices, Lemmas 3.2 and 3.4, cube volumes, the tiling |
 | `Section32` | §3.2 in full: `(15)` as an inequality between integrals, Fatou on the left, the moving dominant and generalized dominated convergence on the right, Jensen for the step function, the tile comparison of the kernel, and the assembly into Lemma 3.7 on a ball; also Lipschitz functions in `H^{α/2}`, the circularity of the mollification route, and the Lipschitz cutoff with its cost |
-| `Section7` | Theorem 1.4 on `ℝ^d`, and the finite-overlap chain (18) of Lemma A.1 |
+| `AppendixA` | Theorem 1.4 on `ℝ^d`, and the finite-overlap chain (18) of Lemma A.1 |
 | `BeyondThePaper` | **not the paper** — new research on the open statement: the chaining programme, closed in dimension two, for wide cones, for small axis spread, for overlapping and for locally dominated configurations, and reduced in general to one integrability condition; see *Beyond the paper* |
 | `ThinCones` | Lemma 3.3 for `d ≥ 2` |
 | `Section4` | the continuous prelude; Theorem 4.1 |

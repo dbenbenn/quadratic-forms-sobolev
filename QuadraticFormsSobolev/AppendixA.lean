@@ -1,7 +1,7 @@
 import QuadraticFormsSobolev.Section32
 
 /-!
-# Section 7: the auxiliary lemmas, and Theorem 1.4 on `ℝ^d`
+# Appendix A, and Theorem 1.4 on `ℝ^d`
 
 Two results downstream of Theorem 1.1 that do not need Section 3.2's open step.
 
