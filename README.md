@@ -26,7 +26,7 @@ rests on: Section 2's definitional set-up and reference cones, Section 4's
 Of the road to Theorem 1.1, **Section 3 is now formalised in full**: Corollary
 3.1, Lemmas 3.2–3.4, **Proposition 3.5**, **Corollary 3.6**, and **§3.2's own
 argument**, assembled in `QFS.formHs_ball_le_form_of_formHs_ne_top` — Fatou on
-the left of `(discret)`, the discrete inequality in the middle, and dominated
+the left of `(15)`, the discrete inequality in the middle, and dominated
 convergence with a *moving* dominant on the right. That last step carries one
 hypothesis the paper does not state: the paper appeals to dominated convergence
 without exhibiting a dominant, and no dominant with constant integral exists
@@ -43,7 +43,7 @@ integrability condition on `f` (see *What remains*). Wherever it is a theorem,
 the ball form holds with no hypothesis beyond `f ∈ L²(B_{κR})`: in the plane that
 is `QFS.theoremOneOneBallCondMeas_two`, which is the paper's
 `QFS.TheoremOneOneBall` with Debreu's condition and the measurability of `k`
-added, and there, through Lemma 7.1's chain, the same-ball statement follows too
+added, and there, through Lemma A.1's chain, the same-ball statement follows too
 (`QFS.formHs_le_form_planar`) — granted the Whitney family and Dyda's
 inequality, which the paper quotes rather than proves; the corresponding
 statements for the other regimes are `QFS.formHs_le_form_wide`,
@@ -51,7 +51,7 @@ statements for the other regimes are `QFS.formHs_le_form_wide`,
 Theorem 1.1 itself is recorded as a
 type-checked `Prop`, together with the enlarged-ball form
 (`QFS.TheoremOneOneBall`); its last step, from a ball `B*` down to `B`, is
-Lemma 7.1, whose chain (6.14) is proved here with the Whitney family and Dyda's
+Lemma A.1, whose chain (18) is proved here with the Whitney family and Dyda's
 inequality (13) — the two things the paper quotes rather than proves — as
 explicit hypotheses. Theorem 1.4 for `Ω = ℝ^d` is proved granted Theorem 1.1.
 See *Not attempted*.
@@ -105,8 +105,8 @@ and the rest are gaps or slips repaired silently:
 | **Corollary 3.1**, rescaled to `hℤ^d` | `QFS.corollaryThreeOne` |
 | **§3.2's limit procedure**, assembled into Lemma 3.7's enlarged-ball form, under the finiteness hypothesis the paper's own dominated-convergence step needs | `QFS.formHs_ball_le_form_of_formHs_ne_top` |
 | The same under a weaker, kernel-free hypothesis: the tile oscillation bounded along a sequence of scales | `QFS.formHs_ball_le_form_of_osc_bounded` |
-| **Lemma 7.1**'s chain (6.14), for a ball and for a domain, with the quoted Whitney/Dyda input as a hypothesis | `QFS.formHs_le_form_of_ballComparability`, `QFS.formHs_le_form_domain` |
-| **Lemma 7.2**, differentiation along cubes, and its analogue on `ℝ^d × ℝ^d` | `QFS.lemma_lebesgue_diff`, `QFS.lemma_lebesgue_diff₂` |
+| **Lemma A.1**'s chain (18), for a ball and for a domain, with the quoted Whitney/Dyda input as a hypothesis | `QFS.formHs_le_form_of_ballComparability`, `QFS.formHs_le_form_domain` |
+| **Lemma A.2**, differentiation along cubes, and its analogue on `ℝ^d × ℝ^d` | `QFS.lemma_lebesgue_diff`, `QFS.lemma_lebesgue_diff₂` |
 | **Theorem 1.4** for `Ω = ℝ^d`, granted Theorem 1.1 | `QFS.theoremOneFourUniv_of_theoremOneOne` |
 
 And, in `BeyondThePaper.lean` — **new mathematics, not the paper**, excluded from
@@ -124,7 +124,7 @@ the coverage tables:
 | `H_k ⊆ H^{α/2}` when the cone axes have angular spread below `2ϑ`, every `d` — the wide-cone case is `γ = π/2` | `QFS.sobolevInclusion_of_axisSpread` |
 | The same for a pairwise overlapping family of cone types, and for two arbitrary narrow types split by a hyperplane | `QFS.sobolevInclusion_of_overlapping`, `QFS.formHs_ball_le_form_twoSide` |
 | **Theorem 1.1** for every uniformly continuous configuration, every `d ≥ 2` | `QFS.formHs_ball_le_form_of_uniformContinuous` |
-| **The visibility-weighted energy is controlled for every configuration**, nothing assumed of `Γ` beyond (1.4) and (M) | `QFS.lintegral_visibility_le` |
+| **The visibility-weighted energy is controlled for every configuration**, nothing assumed of `Γ` beyond (2) and (M) | `QFS.lintegral_visibility_le` |
 | **Theorem 1.1 for every admissible configuration**, for every `f` with `∫f²ρ^{-α} < ∞` against the explicit measurable domination radius `ρ` | `QFS.exists_measurable_dominationRadius`, `QFS.formHs_ball_le_form_of_dominationRadius` |
 
 ## Beyond the paper — new mathematics, clearly separated
@@ -242,8 +242,8 @@ The pieces, all proved:
 | **Every uniformly continuous configuration is locally dominated** (every dimension, any apex angle), hence satisfies Theorem 1.1 (`d ≥ 2`) | `QFS.dangle_le_of_norm_sub_le`, `QFS.locallyDominated_of_uniformContinuous`, `QFS.formHs_ball_le_form_of_uniformContinuous` | ✅ **proved** |
 | **Every admissible configuration has an explicit, measurable, everywhere-positive domination radius** — the density requirement restricted to dyadic scales | `QFS.denseFrom`, `QFS.measurableSet_denseFrom`, `QFS.ae_exists_denseFrom`, `QFS.domRadius`, `QFS.measurable_domRadius`, `QFS.domRadius_pos`, `QFS.exists_measurable_dominationRadius`, `QFS.measurable_volume_inter_closedBall`, `QFS.exists_dyadic_scale`, `QFS.midBall_inter_half'` | ✅ **proved** |
 | **Theorem 1.1 for *every* admissible configuration, for every `f` with `∫f²ρ^{-α} < ∞`** — the only remaining condition is on `f`, against that radius | `QFS.formHs_ball_le_form_of_dominationRadius` | ✅ **proved** |
-| **The visibility-weighted energy is controlled**, with nothing assumed of `Γ` beyond (1.4) and (M) — every pair is paid for in proportion to how much of its averaging balls can see both endpoints; the dominated-pair theorem is the case where that weight is bounded below | `QFS.osc_weighted_le_vol`, `QFS.localPoincare_vol`, `QFS.formHs_le_form_of_vol`, `QFS.lintegral_visibility_le` | ✅ **proved** |
-| **The dominated pairs are controlled** — for every configuration, with nothing assumed of `Γ` beyond (1.4) and (M) | `QFS.dominatedPairs`, `QFS.measurableSet_dominatedPairs`, `QFS.lintegral_dominatedPairs_le` | ✅ **proved** |
+| **The visibility-weighted energy is controlled**, with nothing assumed of `Γ` beyond (2) and (M) — every pair is paid for in proportion to how much of its averaging balls can see both endpoints; the dominated-pair theorem is the case where that weight is bounded below | `QFS.osc_weighted_le_vol`, `QFS.localPoincare_vol`, `QFS.formHs_le_form_of_vol`, `QFS.lintegral_visibility_le` | ✅ **proved** |
+| **The dominated pairs are controlled** — for every configuration, with nothing assumed of `Γ` beyond (2) and (M) | `QFS.dominatedPairs`, `QFS.measurableSet_dominatedPairs`, `QFS.lintegral_dominatedPairs_le` | ✅ **proved** |
 | **Local domination out to a radius that varies from point to point** | `QFS.LocallyDominatedRad`, `QFS.lintegral_near_le_form_of_locallyDominatedRad` | ✅ **proved** |
 | The far pairs with a variable cut-off radius, and the swap symmetry of the pair integral | `QFS.lintegral_far_var_le`, `QFS.lintegral_far_var_le'`, `QFS.setLIntegral_swap_pairs` | ✅ **proved** |
 | **`H^{α/2} ≤ C·H_k + C'·∫f²ρ^{-α}` for a variable domination radius `ρ`** — the degeneration of `ρ` is paid for by an integrability condition on `f`, not by a uniform bound | `QFS.formHs_univ_le_of_locallyDominatedRad` | ✅ **proved** |
@@ -253,7 +253,7 @@ The pieces, all proved:
 The fibre estimate is what has to survive the exchange of the chaining average with the
 integration in `t`, and it is why the argument is scale-invariant: the singular
 weight comes back as exactly the weight of the `H_k` form on the pair `(s,z)`,
-which the lower bound of (1.4) then converts into `k(s,z)`.
+which the lower bound of (2) then converts into `k(s,z)`.
 
 **How the same-direction case goes.** The chained integrand
 `2(f(z)−f(s))² + 2(f(t)−f(z))²` is split, and each half is sent through the
@@ -327,7 +327,7 @@ point of a planar ball sees both cones by construction.
 the `H^{α/2}` energy of `U × U'` by the `H_k` form whenever the points of `U`
 admit the cone about `v_s`, those of `U'` the one about `v_t`, and the axes are
 not parallel. The block splits in two, and the split is the whole point: the
-pairs that are *already* cone pairs go straight into the `H_k` form by (1.4)'s
+pairs that are *already* cone pairs go straight into the `H_k` form by (2)'s
 lower bound (using the symmetry of `k` and of the double cone for the second
 case), and the rest are exactly the pairs `QFS.localPoincare_planar` handles.
 
@@ -343,7 +343,7 @@ higher dimensions.
 The finite sum is done, and with it the plane:
 
 > **`QFS.sobolevInclusion_planar`** — for every `ϑ`-bounded configuration on `ℝ²`
-> satisfying Debreu's condition, every kernel satisfying (1.4) and every
+> satisfying Debreu's condition, every kernel satisfying (2) and every
 > measurable `f`, `|f|²_{H^{α/2}(ℝ²)} ≤ C·|f|²_{H_k(ℝ²)}` for a finite `C`.
 
 **That is the statement §3.2 needs, proved for all admissible configurations in
@@ -383,7 +383,7 @@ inequality `QFS.sobolevInclusion_planar` is weaker still in that respect, since
 its constant is produced after `f` is fixed, so it certifies the inclusion
 `H_k ⊆ H^{α/2}` but not a bound with a single constant. The ball form does have
 a constant independent of `f`, of the ball and of the scale, because that
-constant comes from Corollary 3.1 through `(discret)`.
+constant comes from Corollary 3.1 through `(15)`.
 
 The alternative route — multiply `f` by a Lipschitz cutoff and apply the
 whole-space theorem — now has its analytic input:
@@ -433,7 +433,7 @@ contain.
 
 | # | Kind | Label | State |
 | --- | --- | --- | --- |
-| 1.1 | Theorem | main comparability, continuous | 🚧 the **enlarged-ball form is proved** (`QFS.formHs_ball_le_form_of_formHs_ne_top`) under the finiteness hypothesis §3.2's own dominated-convergence step needs and the paper does not state. **In `d = 2` the theorem itself is proved** in the paper's own statement (`QFS.TheoremOneOneCondMeas`, proved as `QFS.theoremOneOneCondMeas_two`) — by new mathematics recorded outside these tables, and granted the Whitney/Dyda input Lemma 7.1 quotes. The paper's own `Prop` is `QFS.TheoremOneOne`, which differs only in using condition (M) where this formalisation uses Debreu's conclusion, and in leaving the measurability of `k` implicit. Beyond `d = 2`, the same holds in **every dimension for cones of apex angle above `π/4`** (`QFS.formHs_le_form_wide`), and in the further regimes recorded outside these tables — small axis spread, pairwise overlapping types, uniformly continuous and locally dominated configurations |
+| 1.1 | Theorem | main comparability, continuous | 🚧 the **enlarged-ball form is proved** (`QFS.formHs_ball_le_form_of_formHs_ne_top`) under the finiteness hypothesis §3.2's own dominated-convergence step needs and the paper does not state. **In `d = 2` the theorem itself is proved** in the paper's own statement (`QFS.TheoremOneOneCondMeas`, proved as `QFS.theoremOneOneCondMeas_two`) — by new mathematics recorded outside these tables, and granted the Whitney/Dyda input Lemma A.1 quotes. The paper's own `Prop` is `QFS.TheoremOneOne`, which differs only in using condition (M) where this formalisation uses Debreu's conclusion, and in leaving the measurability of `k` implicit. Beyond `d = 2`, the same holds in **every dimension for cones of apex angle above `π/4`** (`QFS.formHs_le_form_wide`), and in the further regimes recorded outside these tables — small axis spread, pairwise overlapping types, uniformly continuous and locally dominated configurations |
 | 1.2 | Remark | strength of the hypotheses | ⚪ (condition (M) is `QFS.CondM`) |
 | 1.3 | Theorem | main comparability, discrete | ✅ **proved** (`QFS.theoremOneThree`) |
 | 1.4 | Theorem | `H_k(Ω) = H^{α/2}(Ω)` | 🚧 the case `Ω = ℝ^d` **proved** granted Theorem 1.1 (`QFS.theoremOneFourUniv_of_theoremOneOne`); **in the plane, `Ω = ℝ²` unconditionally** and **any measurable `Ω` with a Whitney family** (`QFS.Hk_univ_eq_Hs_univ_planar`, `QFS.Hk_domain_eq_Hs_domain_planar`, by new mathematics recorded outside these tables), granted the Whitney/Dyda input the paper quotes; the density assertions are quoted from [DeDe12]; and for `Ω = ℝ^d` with wide cones in every dimension (`QFS.Hk_univ_eq_Hs_univ_wide`) |
@@ -452,7 +452,7 @@ contain.
 | 3.4 | Lemma | `\|s−t\|` vs `\|x−y\|` | ✅ for `hℤ^d`; ❗ **false as printed** |
 | 3.5 | Proposition | test-function bound | ✅ **proved** for `d ≥ 2` (`QFS.prop_test_fct`), with `QFS.CondMeas` as hypothesis |
 | 3.6 | Corollary | the rescaled kernel | ✅ **proved** for `d ≥ 2` (`QFS.cor_rescaled_kernel`), with `QFS.CondMeas` as hypothesis |
-| 3.7 | Lemma | comparability on a ball, `\|·\|_{H^{α/2}(B)} ≤ c\|·\|_{H_k(B)}` | 🚧 §3.2's argument is **proved** in the enlarged-ball form (`QFS.formHs_ball_le_form_of_formHs_ne_top`), under the finiteness hypothesis the paper's dominated-convergence step needs; the passage from the enlarged ball to the same ball is `QFS.formHs_le_form_of_theoremOneOneBall`, modulo Lemma 7.1's quoted input. Lemma 3.7's own statement (`H_k(B) = H^{α/2}(B)`) is proved in the plane, granted the quoted Whitney/Dyda input, by new mathematics recorded outside these tables (`QFS.Hk_ball_eq_Hs_ball_planar`) |
+| 3.7 | Lemma | comparability on a ball, `\|·\|_{H^{α/2}(B)} ≤ c\|·\|_{H_k(B)}` | 🚧 §3.2's argument is **proved** in the enlarged-ball form (`QFS.formHs_ball_le_form_of_formHs_ne_top`), under the finiteness hypothesis the paper's dominated-convergence step needs; the passage from the enlarged ball to the same ball is `QFS.formHs_le_form_of_theoremOneOneBall`, modulo Lemma A.1's quoted input. Lemma 3.7's own statement (`H_k(B) = H^{α/2}(B)`) is proved in the plane, granted the quoted Whitney/Dyda input, by new mathematics recorded outside these tables (`QFS.Hk_ball_eq_Hs_ball_planar`) |
 | 4.1 | Theorem | **connectivity of `G[U]`** | ✅ **proved** |
 | 4.2 | Definition | type of a point | ✅ |
 | 4.3 | Lemma | same type ⟹ path of length ≤ 2 | ✅ |
@@ -475,7 +475,7 @@ contain.
 | 5.14 | Proposition | renormalisation | ✅ |
 | 5.15 | Theorem | path properties | ✅ **proved** (`QFS.path_props`, and `QFS.path_props_of_pos` without the cap `ϑ ≤ π/2`, which is how the paper states it) |
 | 5.16 | Lemma | the first jump | ✅ |
-| 7.1 | Lemma | from balls to a bounded Lipschitz domain | 🚧 its chain (6.14) **proved** (`QFS.lemma_ball_to_domain`), including the finite-overlap step (`QFS.tsum_setLIntegral_le_of_overlap`), and packaged for a ball (`QFS.formHs_le_form_of_ballComparability`) and for a domain (`QFS.formHs_le_form_domain`); the Whitney family and Dyda's inequality (13) are hypotheses, as in the paper (`QFS.WhitneyBallData`, `QFS.WhitneyDomainData`) |
+| 7.1 | Lemma | from balls to a bounded Lipschitz domain | 🚧 its chain (18) **proved** (`QFS.lemma_ball_to_domain`), including the finite-overlap step (`QFS.tsum_setLIntegral_le_of_overlap`), and packaged for a ball (`QFS.formHs_le_form_of_ballComparability`) and for a domain (`QFS.formHs_le_form_domain`); the Whitney family and Dyda's inequality (13) are hypotheses, as in the paper (`QFS.WhitneyBallData`, `QFS.WhitneyDomainData`) |
 | 7.2 | Lemma | a Lebesgue differentiation argument | ✅ **proved** (`QFS.lemma_lebesgue_diff`) |
 
 Sections 2, 4, 5 and 6 are formalised completely, apart from one remark of
@@ -483,8 +483,8 @@ Section 2 that the paper itself quotes rather than proves (see *Not attempted*).
 Section 3 is formalised completely as well, including §3.2's limit procedure;
 what remains there is the one hypothesis that procedure needs and the paper does
 not supply, namely `H_k(B*) ⊆ H^{α/2}(B*)`. From Section 1,
-the function-space definitions, assumption (1.4), the reverse inequality and
-equation (1.6) are proved, Theorem 1.3 is proved, and Theorem 1.1 is recorded as
+the function-space definitions, assumption (2), the reverse inequality and
+equation (5) are proved, Theorem 1.3 is proved, and Theorem 1.1 is recorded as
 a type-checked `Prop` alongside its enlarged-ball form.
 
 ## What is proved, in detail
@@ -500,7 +500,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | The family `𝒱`; configurations | Def. 2.1 | `QFS.DCone`, `QFS.Configuration` | ✅ defined |
 | `ϑ`-bounded, condition (M), `ϑ`-admissible | Def. 2.1 | `QFS.IsBounded`, `QFS.CondM`, `QFS.IsAdmissible` | ✅ defined |
 | Open cube `A_h(u)`, half-closed `Ã_h(u)` | Def. 2.5 | `QFS.cube`, `QFS.halfClosedCube` | ✅ defined |
-| Max norm `‖·‖_∞`; `‖v‖_∞ ≤ ‖v‖ ≤ √d ‖v‖_∞` | eq. (3.1) | `QFS.infNorm_le_norm`, `QFS.norm_le_sqrt_dim_mul_infNorm` | ✅ proved |
+| Max norm `‖·‖_∞`; `‖v‖_∞ ≤ ‖v‖ ≤ √d ‖v‖_∞` | eq. (9) | `QFS.infNorm_le_norm`, `QFS.norm_le_sqrt_dim_mul_infNorm` | ✅ proved |
 | `A_h(x) ⊆ B̄_{(h/2)√d}(x)` | Lem. 2.7 (last step) | `QFS.cube_subset_closedBall` | ✅ proved |
 | Eq. (⋆): `V_ℓ = ⋂_{ξ∈B̄_ℓ} V[ξ]` | Lem. 2.7 proof | `QFS.shrink_eq_iInter_shift` | ✅ proved |
 | Eq. (✝): `⋃_{ξ∈B̄_ℓ} V_{2ℓ}[ξ] ⊆ V_ℓ` | Lem. 2.7 proof | `QFS.iUnion_shift_shrink_subset` | ✅ proved |
@@ -513,7 +513,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | Family of reference cones, `V^m_r`, `V^m_r[x]` | Def. 2.3 | `QFS.RefFamily`, `.shrunk`, `.shrunkAt` | ✅ defined |
 | **Corollary 2.4**: finite-image subconfiguration | Cor. 2.4 | `QFS.ref_config` | ✅ **proved** |
 | Lattices `ℤ^d`, `hℤ^d` | §3 | `QFS.lattice`, `QFS.scaledLattice` | ✅ defined |
-| `‖·‖_∞` triangle inequality, sup attained | eq. (3.1) | `QFS.infNorm_add_le`, `QFS.exists_infNorm_eq` | ✅ proved |
+| `‖·‖_∞` triangle inequality, sup attained | eq. (9) | `QFS.infNorm_add_le`, `QFS.exists_infNorm_eq` | ✅ proved |
 | `‖x−y‖_∞ > h` ⟹ `≥ 2h` on `hℤ^d` | Lem. 3.4 proof | `QFS.two_mul_le_infNorm_sub` | ✅ proved |
 | **Lemma 3.4**: `\|s−t\|` vs `\|x−y\|` | Lem. 3.4 | `QFS.lemma_cubes` | ✅ **proved** (corrected, see below) |
 | Lemma 3.4 as literally stated is false | Lem. 3.4 | `QFS.lemma_cubes_literal_false` | ✅ **disproved** |
@@ -541,7 +541,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **Corollary 3.6** | Cor. 3.6 | `QFS.cor_rescaled_kernel` | ✅ **proved** (`d ≥ 2`) |
 | Cubes are closed / open; a cube containing `x` lies in `B̄_{h√d}(x)` | Lem. 7.2 | `QFS.continuous_coord`, `QFS.isClosed_closedCube`, `QFS.isOpen_cube`, `QFS.closedCube_subset_closedBall_of_mem` | ✅ proved |
 | **The Vitali family of cubes** | Lem. 7.2 | `QFS.unitBallVol`, `QFS.volume_closedBall_eq`, `QFS.cubeVitaliConst`, `QFS.cubeVitali_doubling`, `QFS.cubeVitali`, `QFS.closedCube_mem_setsAt`, `QFS.tendsto_closedCube_filterAt` | ✅ **proved** |
-| **Lemma 7.2**: differentiation along cubes | Lem. 7.2 | `QFS.lemma_lebesgue_diff` | ✅ **proved** |
+| **Lemma A.2**: differentiation along cubes | Lem. 7.2 | `QFS.lemma_lebesgue_diff` | ✅ **proved** |
 | **The half-closed cubes tile `ℝ^d`** | §3.2 | `QFS.existsUnique_mem_halfClosedCube` | ✅ **proved** |
 | **The tiling as a countable measurable partition** | §3.2 | `QFS.latticePt`, `QFS.latticePt_injective`, `QFS.halfClosedCube_eq_preimage`, `QFS.measurableSet_halfClosedCube`, `QFS.volume_halfClosedCube`, `QFS.iUnion_halfClosedCube`, `QFS.pairwiseDisjoint_halfClosedCube` | ✅ **proved** |
 | **The step index `x_h(s)`** | §3.2 | `QFS.stepIndex`, `QFS.stepIndex_mem_scaledLattice`, `QFS.mem_halfClosedCube_stepIndex`, `QFS.mem_closedCube_stepIndex`, `QFS.stepIndex_eq_of_mem`, `QFS.halfClosedCube_subset_closedCube` | ✅ **proved** |
@@ -549,19 +549,19 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **A step function integrates to `∑ c(x)·h^d`** | §3.2 | `QFS.lintegral_eq_tsum_halfClosedCube`, `QFS.lintegral_stepFun` | ✅ **proved** |
 | **The tile-averaging operator, and that it preserves the integral** | §3.2 | `QFS.tileAvg`, `QFS.lintegral_tileAvg` | ✅ **proved** |
 | **Generalized (Vitali) dominated convergence, dominants allowed to move** | §3.2 | `QFS.limsup_lintegral_le_of_dominant` | ✅ **proved** |
-| **`(discret)` as an inequality between integrals** | §3.2 | `QFS.discret_lintegral`, `QFS.discretePairs`, `QFS.discreteC`, `QFS.discreteFormOn_eq_tsum`, `QFS.discreteFormOn_mul_eq_lintegral`, `QFS.lintegral_stepFun₂`, `QFS.lintegral_eq_tsum_halfClosedCube₂`, `QFS.latticeEquiv` | ✅ **proved** |
+| **`(15)` as an inequality between integrals** | §3.2 | `QFS.discret_lintegral`, `QFS.discretePairs`, `QFS.discreteC`, `QFS.discreteFormOn_eq_tsum`, `QFS.discreteFormOn_mul_eq_lintegral`, `QFS.lintegral_stepFun₂`, `QFS.lintegral_eq_tsum_halfClosedCube₂`, `QFS.latticeEquiv` | ✅ **proved** |
 | **The step function `f_h` as a function of the point** | §3.2 | `QFS.cubeAvg`, `QFS.tendsto_cubeAvg_stepIndex`, `QFS.tendsto_stepIndex`, `QFS.norm_stepIndex_sub_le` | ✅ **proved** |
 | **Almost every pair has both coordinates generic, and distinct** | §3.2 | `QFS.ae_prod_both`, `QFS.ae_prod_ne`, `QFS.volume_sphere_eq_zero`, `QFS.ae_notMem_sphere` | ✅ **proved** |
-| **Lemma 7.2 on the product space** — the Vitali family of product cubes | §3.2, Lem. 7.2 | `QFS.closedCube₂`, `QFS.volume_closedBall₂_eq`, `QFS.cubeVitaliConst₂`, `QFS.cubeVitali₂_doubling`, `QFS.cubeVitali₂`, `QFS.closedCube₂_mem_setsAt`, `QFS.tendsto_closedCube₂_filterAt`, `QFS.lemma_lebesgue_diff₂` | ✅ **proved** |
+| **Lemma A.2 on the product space** — the Vitali family of product cubes | §3.2, Lem. 7.2 | `QFS.closedCube₂`, `QFS.volume_closedBall₂_eq`, `QFS.cubeVitaliConst₂`, `QFS.cubeVitali₂_doubling`, `QFS.cubeVitali₂`, `QFS.closedCube₂_mem_setsAt`, `QFS.tendsto_closedCube₂_filterAt`, `QFS.lemma_lebesgue_diff₂` | ✅ **proved** |
 | **The tile average of a function of a pair**: constant integral, a.e. limit | §3.2 | `QFS.tileAvg₂`, `QFS.lintegral_tileAvg₂`, `QFS.tendsto_tileAvg₂`, `QFS.setLIntegral_congr_of_subset`, `QFS.lintegral_closedCube₂_eq_halfClosedCube₂` | ✅ **proved** |
 | **Jensen for the step function**: `(f_h(x) − f_h(y))² ≤ ⨍⨍_{A(x)×A(y)}(f(u) − f(v))²` | §3.2 | `QFS.ofReal_sq_cubeAvg_sub_le`, `QFS.sq_setIntegral_le_measure_mul`, `QFS.setIntegral_sub_prod`, `QFS.isCompact_closedCube` | ✅ **proved** |
 | **The jump kernel is comparable across a well-separated pair of tiles** | §3.2 | `QFS.jumpKernel_le_of_mem_cubes`, `QFS.norm_sub_mem_cubes`, `QFS.norm_sub_le_of_mem_closedCube` | ✅ **proved** |
 | **The dominant**: `g_h ≤ Λ2^{d+α}·E_hΦ` pointwise | §3.2 | `QFS.stepG`, `QFS.ballIntegrand`, `QFS.stepG_le_tileAvg₂` | ✅ **proved** |
-| **The right-hand side of `(discret)` is `∫∫ g_h`** | §3.2 | `QFS.lintegral_stepG_eq`, `QFS.lintegral_halfClosedCube₂_eq_cube₂`, `QFS.cube_subset_halfClosedCube` | ✅ **proved** |
+| **The right-hand side of `(15)` is `∫∫ g_h`** | §3.2 | `QFS.lintegral_stepG_eq`, `QFS.lintegral_halfClosedCube₂_eq_cube₂`, `QFS.cube_subset_halfClosedCube` | ✅ **proved** |
 | **`g_h → g` and `g̃_h → g̃` almost everywhere** | §3.2 | `QFS.tendsto_stepG_ae`, `QFS.tendsto_discreteC_jump`, `QFS.tendsto_discreteC_jump_ae`, `QFS.tendsto_jumpKernel` | ✅ **proved** |
-| **Fatou on the left of `(discret)`** | §3.2 | `QFS.formHs_ball_le_liminf`, `QFS.formHs_ball_eq_lintegral_indicator`, `QFS.measurable_stepFun₂`, `QFS.measurable_discreteC_stepIndex`, `QFS.stepIndex_eq_latticePt` | ✅ **proved** |
+| **Fatou on the left of `(15)`** | §3.2 | `QFS.formHs_ball_le_liminf`, `QFS.formHs_ball_eq_lintegral_indicator`, `QFS.measurable_stepFun₂`, `QFS.measurable_discreteC_stepIndex`, `QFS.stepIndex_eq_latticePt` | ✅ **proved** |
 | **Dominated convergence on the right, with the moving dominant** | §3.2 | `QFS.limsup_lintegral_stepG_le`, `QFS.measurable_stepG`, `QFS.measurable_tileAvg₂`, `QFS.measurable_ballIntegrand`, `QFS.measurable_jumpKernel`, `QFS.form_eq_lintegral_ballIntegrand`, `QFS.closedCube_subset_ball` | ✅ **proved** |
-| **Corollary 3.6 as assumption (1.7) at every scale**, with `R₀ = 3√d` | §3.2, Cor. 3.6 | `QFS.discreteKernelBounds_discreteKernel`, `QFS.discreteKernel_symm` | ✅ **proved** |
+| **Corollary 3.6 as assumption (4) at every scale**, with `R₀ = 3√d` | §3.2, Cor. 3.6 | `QFS.discreteKernelBounds_discreteKernel`, `QFS.discreteKernel_symm` | ✅ **proved** |
 | **§3.2's assembly: Lemma 3.7 on a ball**, under the finiteness hypothesis | Lem. 3.7, §3.2 | `QFS.formHs_ball_le_form_of_formHs_ne_top`, `QFS.form_mono_set`, `QFS.limsup_const_mul` | ✅ **proved** |
 | **Corollary 3.6 with the constant where the paper puts it** (before `Γ` and `k`) | Cor. 3.6 | `QFS.cor_rescaled_kernel_uniform` | ✅ **proved** |
 | **The ball form of Theorem 1.1 with the hypotheses this formalisation carries** | Thm. 1.1, §3.2 | `QFS.TheoremOneOneBallCondMeas` | ✅ stated |
@@ -582,10 +582,10 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **Granted Theorem 1.1, an approximation bounded on `H^{α/2}` is bounded on `H_k`** — the circularity in the mollification route | §3.2 | `QFS.form_le_of_theoremOneOneBall` | ✅ **proved** |
 | **The form on `ℝ^d` as a supremum over balls** | Thm. 1.4 | `QFS.lintegral_univ_prod_eq_iSup`, `QFS.form_univ_eq_iSup` | ✅ **proved** |
 | **Theorem 1.4 for `Ω = ℝ^d`**, granted Theorem 1.1 | Thm. 1.4 | `QFS.TheoremOneFourUniv`, `QFS.theoremOneFourUniv_of_theoremOneOne`, `QFS.form_univ_le_formHs_univ` | ✅ **proved** |
-| **The finite-overlap estimate** of (6.14) | Lem. 7.1 | `QFS.tsum_setLIntegral_le_of_overlap`, `QFS.tsum_setLIntegral_le_of_overlap_sq` | ✅ **proved** |
-| **The chain (6.14)**, with the Whitney family and Dyda's inequality as hypotheses | Lem. 7.1 | `QFS.lemma_ball_to_domain` | ✅ **proved** |
+| **The finite-overlap estimate** of (18) | Lem. 7.1 | `QFS.tsum_setLIntegral_le_of_overlap`, `QFS.tsum_setLIntegral_le_of_overlap_sq` | ✅ **proved** |
+| **The chain (18)**, with the Whitney family and Dyda's inequality as hypotheses | Lem. 7.1 | `QFS.lemma_ball_to_domain` | ✅ **proved** |
 | **The quoted Whitney/Dyda input for a ball**, and that it is satisfiable | Lem. 7.1 | `QFS.WhitneyBallData`, `QFS.whitneyBallData_one` | ✅ **stated, non-vacuous** |
-| **The quoted Whitney/Dyda input for a domain**, and Lemma 7.1 for a domain | Lem. 7.1 | `QFS.WhitneyDomainData`, `QFS.formHs_le_form_domain` | ✅ **proved** |
+| **The quoted Whitney/Dyda input for a domain**, and Lemma A.1 for a domain | Lem. 7.1 | `QFS.WhitneyDomainData`, `QFS.formHs_le_form_domain` | ✅ **proved** |
 | **Enlarged ball ⟹ same ball**: the last step of §3.2 | §3.2, Lem. 7.1 | `QFS.formHs_le_form_of_ballComparability`, `QFS.formHs_le_form_of_theoremOneOneBall` | ✅ **proved** |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
@@ -612,10 +612,10 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | The induction on the number of cone types | Thm. 4.1 proof | `QFS.conn_of_isPreconnected_of_finite` | ✅ proved |
 | **Theorem 4.1**: connectivity of `G[U]` | Thm. 4.1 | `QFS.cont_connectivity` | ✅ **proved** |
 | Kernel `\|x−y\|^{-d-α}`; the quadratic form | §1 | `QFS.jumpKernel`, `QFS.form`, `QFS.formHs` | ✅ defined |
-| Assumption (1.4) on `k`; discrete (1.7) on `ω` | eq. (1.4), (1.7) | `QFS.KernelBounds`, `QFS.DiscreteKernelBounds` | ✅ defined |
+| Assumption (2) on `k`; discrete (4) on `ω` | eq. (2), (4) | `QFS.KernelBounds`, `QFS.DiscreteKernelBounds` | ✅ defined |
 | `H_k(Ω)`, `H^{α/2}(Ω)` | §1 | `QFS.Hk`, `QFS.Hs` | ✅ defined |
-| The "trivially true" reverse inequality of (1.5) | §1, after Thm. 1.1 | `QFS.form_le_formHs` | ✅ proved |
-| **Equation (1.6)**: `H^{α/2}(Ω) ⊆ H_k(Ω)` | eq. (1.6) | `QFS.Hs_subset_Hk` | ✅ **proved** |
+| The "trivially true" reverse inequality of (3) | §1, after Thm. 1.1 | `QFS.form_le_formHs` | ✅ proved |
+| **Equation (5)**: `H^{α/2}(Ω) ⊆ H_k(Ω)` | eq. (5) | `QFS.Hs_subset_Hk` | ✅ **proved** |
 | Statement of Theorem 1.1 (with the `α`-uniform form) | Thm. 1.1 | `QFS.TheoremOneOne`, `QFS.TheoremOneOneUniform` | ⚪ stated, not proved |
 | The enlarged-ball form of Theorem 1.1 | §3.2 | `QFS.TheoremOneOneBall` | ⚪ stated, not proved |
 | **Non-vacuity of the hypotheses** | (new) | `QFS.constConfig`, `QFS.isBounded_constConfig`, `QFS.condMeas_constConfig`, `QFS.indE_add_indE_le_two`, `QFS.kernelBounds_jumpKernel`, `QFS.discreteKernelBounds_jumpKernel`, `QFS.theoremOneThree_nonvacuous` | ✅ **proved** |
@@ -623,7 +623,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **Theorem 1.3** | Thm. 1.3, §6 | `QFS.theoremOneThree` | ✅ **proved** |
 | Telescoping and Cauchy–Schwarz along a walk | §6 | `QFS.walk_telescope`, `QFS.list_sq_sum_le`, `QFS.walk_sq_le` | ✅ proved |
 | A walk stays within its total length of its start | §6 | `QFS.norm_sub_start_le` | ✅ proved |
-| **Assumption (1.7) at an edge of `G`** | §6 | `QFS.jumpKernel_le_of_dart` | ✅ **proved** |
+| **Assumption (4) at an edge of `G`** | §6 | `QFS.jumpKernel_le_of_dart` | ✅ **proved** |
 | **The chain estimate for one pair** | §6 | `QFS.chain_estimate` | ✅ **proved** |
 | Both sides are finite sums | §6 | `QFS.pairSet`, `QFS.pairSet_finite`, `QFS.discreteForm_eq_sum`, `QFS.tsum_subtype_eq_finset_sum` | ✅ proved |
 | A list sum against the values it takes | §6 | `QFS.list_sum_le_card_mul_sum`, `QFS.ofReal_list_sum` | ✅ proved |
@@ -1013,14 +1013,14 @@ Each departure from the paper, and why.
 
 17. **Section 6's chaining needs edges longer than `R₀`, and claim (4) does not
     give it.** The computation displayed in Section 6 applies the *lower* bound
-    of assumption (1.7) at each edge `{z_i, z_{i+1}}` of `p_xy`, to replace
+    of assumption (4) at each edge `{z_i, z_{i+1}}` of `p_xy`, to replace
     `|z_{i+1} − z_i|^{-d-α}` by `Λ ω(z_i, z_{i+1})`. That bound is only assumed
     for `|x − y| > R₀`. But claim (4) of Theorem 5.15 bounds an edge below only
     by `λ^{-1}|x − y|`, and `λ ≥ R₀`, so for a pair with `|x − y|` just above
     `R₀` the guaranteed edge length is about `R₀/λ ≤ 1` — well short of `R₀`.
     Restricting to pairs with `|x − y| > λR₀` does not help either: the pairs
     with `R₀ < |x − y| ≤ λR₀` still need chains, and `ω(x, y)` may vanish for
-    them, since the indicator in (1.7) is `0` unless one point lies in the
+    them, since the indicator in (4) is `0` unless one point lies in the
     other's cone.
 
     The repair is in the construction, not in the estimate. Theorem 5.15 routes
@@ -1084,7 +1084,7 @@ Each departure from the paper, and why.
     integrand as an explicit hypothesis, because summing the forms over a Whitney
     family goes through `lintegral_tsum`, which needs it.
 
-21. **Lemma 7.1's overlap constant can be `M`, not `M²`.** Display (6.14) bounds
+21. **Lemma A.1's overlap constant can be `M`, not `M²`.** Display (18) bounds
     `∑_{B∈ℬ} ∫_{B*×B*} … ≤ M² ∫_{Ω×Ω} …` from the finite-overlap property
     "each point of `Ω` belongs to at most `M` balls `B*`". One factor suffices: a
     pair `(x,y)` lies in `B* × B*` only for those `B` with `x ∈ B*`, of which
@@ -1093,17 +1093,17 @@ Each departure from the paper, and why.
     downstream depends on the difference.
 
 22. **Two rows of this README were mislabelled, and are corrected.** The coverage
-    table described Lemma 7.1 as an "auxiliary integral estimate" and marked
+    table described Lemma A.1 as an "auxiliary integral estimate" and marked
     Lemma 3.7 "out of scope". Re-reading the source with the numbering settled
     (`\newtheorem{theorem}{Theorem}[section]`, one counter per section) shows that
-    **Lemma 7.1 is `lem:new6.9`**, the passage from balls to a bounded Lipschitz
+    **Lemma A.1 is `lem:new6.9`**, the passage from balls to a bounded Lipschitz
     domain, and **Lemma 3.7 is `lem:H-are-equal-on-balls`**, the same-ball
     comparability that §3.2 exists to prove — not an out-of-scope aside but the
     section's target. Both rows now say so. The prose elsewhere in this file had
     the dependency right; only the table was wrong.
 
 23. **§3.2's separation parameter is `3√d`, not `√d`.** The paper restricts the
-    sums of `(discret)` to pairs with `|x − y| > √d h`, which is what Lemma 3.4
+    sums of `(15)` to pairs with `|x − y| > √d h`, which is what Lemma 3.4
     and Corollary 3.6 are stated for. The dominant of the limit procedure needs
     the jump kernel to be comparable across a pair of tiles, and `√d` is too
     small for that: `|u − v| ≤ |x − y| + √d h` need not be a bounded multiple of
@@ -1137,7 +1137,7 @@ Each departure from the paper, and why.
     `f_h(x) = h^{-d}∫_{A_h(x) ∩ B*} f` for `x ∈ hℤ^d ∩ B*`;
     `QFS.cubeAvg` is `h^{-d}∫_{A_h(x)} f`, the average over the whole cube.
     Nothing in the argument constrains this choice — Corollary 3.1 holds for an
-    arbitrary function on the lattice, and `(discret)` is applied to whichever
+    arbitrary function on the lattice, and `(15)` is applied to whichever
     one is chosen — and the whole-cube average is what the Lebesgue
     differentiation theorem differentiates, at every point rather than only in
     the interior of `B*`, and what Jensen's inequality
@@ -1149,7 +1149,7 @@ Each departure from the paper, and why.
     rather than open, which changes nothing (`QFS.volume_closedCube`); the
     tiling still uses the half-closed cubes, as the paper's `Ã_h` does.
 
-26. **Lemma 3.4 is not used on the left of `(discret)`.** The paper converts
+26. **Lemma 3.4 is not used on the left of `(15)`.** The paper converts
     both sides of Corollary 3.1 from the kernel evaluated at the lattice points
     to the kernel integrated over the pair of tiles, quoting Lemma 3.4 for the
     comparison, and then takes limits. Here the right-hand side is converted —
@@ -1163,13 +1163,13 @@ Each departure from the paper, and why.
     same conclusion with the same constants.
 
 27. **Where the constant sits.** The paper puts the comparability constant
-    sometimes on the left (`c Σ ≤ Σ` in Corollary 3.1 and in Lemma 7.1's chain)
+    sometimes on the left (`c Σ ≤ Σ` in Corollary 3.1 and in Lemma A.1's chain)
     and sometimes on the right (`∫ ≤ c ∫` in Theorems 1.1 and 1.3). Each Lean
     statement follows the orientation of the result it is used with, so
     `QFS.corollaryThreeOne` is stated as `Σ ≤ c Σ` — the same assertion with `c`
     replaced by `c⁻¹` — to match Theorem 1.3, while
     `QFS.formHs_le_form_of_ballComparability` keeps the constant on the left, as
-    (6.14) has it. The headline statements (`QFS.TheoremOneOne`,
+    (18) has it. The headline statements (`QFS.TheoremOneOne`,
     `QFS.TheoremOneOneCondMeas`, `QFS.TheoremOneOneBall`) all follow the paper.
 
 ## What remains
@@ -1214,7 +1214,7 @@ Theorem 1.1 holds for every `f` with `∫ f²ρ^{-α} < ∞`
 (`QFS.formHs_ball_le_form_of_dominationRadius`). What is not known is that this
 integral is finite for every `f ∈ H_k`.
 
-Through Lemma 7.1's chain the planar
+Through Lemma A.1's chain the planar
 result also gives the same-ball statement there (`QFS.formHs_le_form_planar`),
 so in the plane the whole road from Theorem 1.3 to Theorem 1.1, and on to
 Theorem 1.4 for `ℝ²` (`QFS.Hk_univ_eq_Hs_univ_planar`), is machine-checked, with
@@ -1233,7 +1233,7 @@ It is enough to prove something weaker. Decomposing
 
   `∫∫ g_h ≤ 3|f|²_{H_k(B*)} + C(d,α,Λ)·A_h`,   `A_h := h^{-α}‖f − E_hf‖²_{L²(B*)}`.
 
-Fatou on the left of `(discret)` then closes the theorem — with **no** dominated
+Fatou on the left of `(15)` then closes the theorem — with **no** dominated
 convergence and no limit on the right — as soon as
 
 > **Enough.** `liminf_{h→0} h^{-α}‖f − E_hf‖²_{L²(B*)} < ∞` for `f ∈ H_k(B*)`.
@@ -1255,7 +1255,7 @@ quantity with no singular kernel in it — strictly weaker than the
 
 **Half of it is proved.** `A_h` splits into a cone part and an off-cone part, and
 `QFS.oscillation_sameTile_le_form` bounds the cone part by `Λ d^{(d+α)/2}|f|²_{H_k}`,
-uniformly in `h`. The mechanism is that the lower bound of (1.4) is used in the
+uniformly in `h`. The mechanism is that the lower bound of (2) is used in the
 one direction that costs nothing: on pairs at distance `≤ r` the singular kernel
 is bounded *below* by `Λ^{-1}r^{-d-α}`, so it dominates the flat measure
 (`QFS.lintegral_sq_le_form_of_close`); with `r = √d·h` and the tiles of the
@@ -1286,15 +1286,15 @@ The chain, with each link's status:
 | Corollary 3.1 (rescaled to `hℤ^d`) | ✅ `QFS.corollaryThreeOne` |
 | Proposition 3.5, Corollary 3.6 (the discrete kernel `ω^k_h`) | ✅ `QFS.prop_test_fct`, `QFS.cor_rescaled_kernel` (`d ≥ 2`, with `QFS.CondMeas`) |
 | §3.2: the step functions and their convergence | ✅ `QFS.tendsto_avg_stepIndex`, `QFS.tendsto_cubeAvg_stepIndex`, `QFS.lintegral_stepFun` |
-| §3.2: `(discret)` as an inequality between integrals | ✅ `QFS.discret_lintegral` |
-| §3.2: Fatou on the left of `(discret)` | ✅ `QFS.formHs_ball_le_liminf` |
+| §3.2: `(15)` as an inequality between integrals | ✅ `QFS.discret_lintegral` |
+| §3.2: Fatou on the left of `(15)` | ✅ `QFS.formHs_ball_le_liminf` |
 | §3.2: dominated convergence on the right, **for `f ∈ H^{α/2}(B**)`** | ✅ `QFS.limsup_lintegral_stepG_le` (dominant `QFS.stepG_le_tileAvg₂`, `QFS.lintegral_tileAvg₂`, `QFS.tendsto_tileAvg₂`) |
 | §3.2: the assembly — Lemma 3.7 on a ball, under that hypothesis | ✅ `QFS.formHs_ball_le_form_of_formHs_ne_top` |
 | §3.2: removing that hypothesis | ❌ **the open statement above** in general; ✅ in `d = 2` (`QFS.formHs_ball_ne_top_of_planar`), for wide cones and small axis spread (`QFS.formHs_ball_ne_top_of_spread`), and for locally dominated configurations (`QFS.formHs_ball_ne_top_of_locallyDominated`) — all *Beyond the paper* |
-| Enlarged ball ⟹ same ball (Lemma 7.1 for a ball) | ✅ `QFS.formHs_le_form_of_theoremOneOneBall`, modulo the quoted `QFS.WhitneyBallData` |
+| Enlarged ball ⟹ same ball (Lemma A.1 for a ball) | ✅ `QFS.formHs_le_form_of_theoremOneOneBall`, modulo the quoted `QFS.WhitneyBallData` |
 | Lemma 3.7, Theorem 1.1 | ✅ on a ball, under the hypothesis (`QFS.formHs_ball_le_form_of_formHs_ne_top`); unconditional in `d = 2` (`QFS.formHs_ball_le_form_planar`), for small axis spread (`QFS.formHs_ball_le_form_spread`) and for locally dominated configurations (`QFS.formHs_ball_le_form_locallyDominated`) |
 | Theorem 1.4 on `ℝ^d` | ✅ `QFS.theoremOneFourUniv_of_theoremOneOne` |
-| Theorem 1.4 on a Lipschitz domain | follows from Lemma 7.1 for domains (`QFS.lemma_ball_to_domain`) |
+| Theorem 1.4 on a Lipschitz domain | follows from Lemma A.1 for domains (`QFS.lemma_ball_to_domain`) |
 
 Everything else outstanding is an input the paper itself quotes — Debreu's
 measurability, the Whitney decomposition, Dyda's inequality (13), the density
@@ -1315,7 +1315,7 @@ step.
 | `H_k(Ω) = H^{α/2}(Ω)`, density | Thm. 1.4 | Depends on Thm. 1.1 and on Lipschitz-domain extension theory not in scope. |
 | Regular Dirichlet form; Markov process | Cor. 1.5 | Depends on Thm. 1.1 and on Dirichlet-form theory (Fukushima–Oshima–Takeda) absent from Mathlib. This is the one result here whose obstacle is the library rather than the paper. |
 | Weak Harnack, Hölder regularity | Cor. 1.6 | Quoted from Dyda–Kassmann; not proved in the paper. |
-| The Whitney decomposition of a bounded Lipschitz domain | Lem. 7.1 | Asserted, not proved: "The Whitney decomposition technique provides a family `ℬ` of balls with the following properties." Carried as `QFS.WhitneyBallData` / `QFS.WhitneyDomainData`, which bundle exactly what the chain (6.14) uses: property (ii) (`enlarged_subset`), property (iii) (`overlap`) and the conclusion of Dyda's inequality (`dyda`). Property (i) — that nearby points of `Ω` share a ball — is what Dyda's inequality is proved from, and is not needed once its conclusion is assumed, so it is not part of the structure. |
+| The Whitney decomposition of a bounded Lipschitz domain | Lem. 7.1 | Asserted, not proved: "The Whitney decomposition technique provides a family `ℬ` of balls with the following properties." Carried as `QFS.WhitneyBallData` / `QFS.WhitneyDomainData`, which bundle exactly what the chain (18) uses: property (ii) (`enlarged_subset`), property (iii) (`overlap`) and the conclusion of Dyda's inequality (`dyda`). Property (i) — that nearby points of `Ω` share a ball — is what Dyda's inequality is proved from, and is not needed once its conclusion is assumed, so it is not part of the structure. |
 | Dyda's inequality (13) | Lem. 7.1 | Quoted from [Dyda06, proof of Thm. 1]; carried as the hypothesis `hdyda` of `QFS.lemma_ball_to_domain`. |
 | Density of `C^∞(Ω̄)` and `C_c^∞(ℝ^d)` in `H^{α/2}` | Thm. 1.4 | Quoted from [DeDe12, Props. 4.52 and 4.27]. |
 | `H_k` on balls | Lem. 3.7 | ✅ **proved** in the enlarged-ball form (`QFS.formHs_ball_le_form_of_formHs_ne_top`), under the finiteness hypothesis above. |
@@ -1324,11 +1324,11 @@ step.
 
 ### §3.2's dominated convergence, and what is left of it
 
-Section 3.2 passes from the discrete inequality `(discret)` to the continuous
+Section 3.2 passes from the discrete inequality `(15)` to the continuous
 one by letting `h → 0`. On the left it uses Fatou, which needs nothing extra. On
 the right it writes
 
-> For the right hand side in (discret) this implies with help of dominated
+> For the right hand side in (15) this implies with help of dominated
 > convergence … `∫ g_h → ∫ g`
 
 without exhibiting a dominating function. No fixed dominant exists, and the
@@ -1360,7 +1360,7 @@ the tiles of the product tiling being the sets `Ã_h(x) × Ã_h(y)`, on which
 `|u − v| ≤ 2|s − t|` because the sum is restricted to `|x − y| > 3√d h` — the
 separation parameter is taken to be `3√d` rather than the `√d` of Corollary 3.6,
 which only strengthens the constraint, so the corollary still applies. That
-`E_hΦ → Φ` almost everywhere is Lemma 7.2 on the product space
+`E_hΦ → Φ` almost everywhere is Lemma A.2 on the product space
 (`QFS.lemma_lebesgue_diff₂`, `QFS.tendsto_tileAvg₂`), and that all the dominants
 have the same integral is `QFS.lintegral_tileAvg₂`. So
 
@@ -1401,7 +1401,7 @@ right-hand side. Mollifying is averaging over translates, and
 so Jensen turns the requirement into `k(u+z, v+z) ≲ k(u,v)` for `|z| ≤ ε`.
 **`k` is not translation-stable in this sense**: it is built from a configuration
 of cones that may vary arbitrarily from point to point, and `k(u,v)` is allowed
-to vanish — the lower bound in (1.4) carries the indicator `1_E` — while
+to vanish — the lower bound in (2) carries the indicator `1_E` — while
 `k(u+z, v+z)` is comparable to `|u − v|^{-d-α}`. No such constant exists.
 
 This is *not* a refutation. Granted Theorem 1.1, `H_k(B)` and `H^{α/2}(B)`
@@ -1437,7 +1437,7 @@ Three further reductions were tried and also fail.
 
 What is missing, then, is a single qualitative statement: that every
 `f ∈ H_k(B*)` already lies in `H^{α/2}(B*)`. Given it, the chain
-Corollary 3.1 → Corollary 3.6 → `(discret)` → Fatou on the left →
+Corollary 3.1 → Corollary 3.6 → `(15)` → Fatou on the left →
 `QFS.limsup_lintegral_le_of_dominant` on the right closes, with all the
 constants the paper claims. This is recorded as an obstacle encountered in
 formalising the step, not as a claim that the step is wrong.
@@ -1756,8 +1756,8 @@ Given a pair `x, y ∈ B_R(x₀) ∩ ℤ^d` at distance more than `R₀`, take t
 * **rescale the kernel.** Claim (4) gives `|z_{i+1} − z_i| ≤ λ|x − y|`, so
   `|x − y|^{-d-α} ≤ λ^{d+α}|z_{i+1} − z_i|^{-d-α}` — the `rpow` is antitone in
   its base for a nonpositive exponent.
-* **apply (1.7).** `QFS.jumpKernel_le_of_dart`: an edge of `G` means one endpoint
-  lies in the other's cone, so the indicator in (1.7) is `1`; and the edge is
+* **apply (4).** `QFS.jumpKernel_le_of_dart`: an edge of `G` means one endpoint
+  lies in the other's cone, so the indicator in (4) is `1`; and the edge is
   longer than `R₀` by `QFS.PathPropsLong`, so the lower bound applies and
   `|z_{i+1} − z_i|^{-d-α} ≤ Λ ω(z_i, z_{i+1})`.
 
@@ -1809,12 +1809,12 @@ The `Q ≠ P` in `choiceAdj` needs blocks at distinct centres to be distinct:
 ## Non-vacuity
 
 A formalisation of this size is worth checking against vacuity: every headline
-result quantifies over configurations and kernels constrained by (1.4) or (1.7),
+result quantifies over configurations and kernels constrained by (2) or (4),
 and if those constraints were unsatisfiable the theorems would be empty.
 `Nonvacuous.lean` exhibits witnesses. For every `ϑ ∈ (0, π/2]` the constant
 configuration is `ϑ`-bounded (`QFS.isBounded_constConfig`) and satisfies the
 measurability Proposition 3.5 assumes (`QFS.condMeas_constConfig`), and the plain
-jump kernel `|x − y|^{-d-α}` satisfies both (1.4) and (1.7) with `Λ = 2`
+jump kernel `|x − y|^{-d-α}` satisfies both (2) and (4) with `Λ = 2`
 (`QFS.kernelBounds_jumpKernel`, `QFS.discreteKernelBounds_jumpKernel`), because
 the indicator bracket never exceeds `2` (`QFS.indE_add_indE_le_two`).
 `QFS.theoremOneThree_nonvacuous` collects these.
@@ -1862,7 +1862,7 @@ proved in Lean:
    (`QFS.sobolevInclusion_planar`), and via a Lipschitz cutoff the ball form §3.2
    actually consumes (`QFS.formHs_ball_ne_top_of_planar`).
 
-7. **§3.2's own assembly is now written.** `(discret)` became an inequality
+7. **§3.2's own assembly is now written.** `(15)` became an inequality
    between integrals (`QFS.discret_lintegral`, over the tiling of pairs
    `QFS.lintegral_stepFun₂` and the identification `hℤ^d ≃ ℤ^d`
    `QFS.latticeEquiv`); the left-hand integrand converges a.e.
@@ -1883,7 +1883,7 @@ proved in Lean:
    (`QFS.exists_measurable_repr`) and the a.e. invariance of the forms
    (`QFS.form_congr_ae`) the hypothesis on `f` becomes `f ∈ L²(B_{κR})`, so the
    planar result is exactly `QFS.TheoremOneOneBall` plus the two hypotheses this
-   formalisation carries: `QFS.theoremOneOneBallCondMeas_two`. Lemma 7.1's chain,
+   formalisation carries: `QFS.theoremOneOneBallCondMeas_two`. Lemma A.1's chain,
    refactored to take the ball comparability as an input
    (`QFS.formHs_le_form_of_ballComparability`), then gives the same-ball
    statement `QFS.formHs_le_form_planar` — and, once the `L²` hypothesis is
@@ -2080,7 +2080,7 @@ configuration and every `f`,
 
 > `QFS.lintegral_visibility_le` —
 > `∫∫ (f(t)−f(s))²‖s−t‖^{-2d-α}·(∑_q |U_q ∩ W_q(s,t)|) ≤ C·|f|²_{H_k}`,
-> with nothing assumed of `Γ` beyond the kernel bounds (1.4) and condition (M),
+> with nothing assumed of `Γ` beyond the kernel bounds (2) and condition (M),
 
 the sum running over the finitely many reference types and apertures. Every other
 statement in this section is a corollary of that one: bounding the weight below
@@ -2090,7 +2090,7 @@ local-domination hypotheses exhibit such sets.
 **What is true with nothing assumed of `Γ`.** Call a pair `(s,t)` *dominated* if
 some reference cone, at some aperture in a finite set `Θ`, fills a `c₀`-fraction
 of the ball the chaining averages over for that pair. Then, for **every**
-configuration satisfying the standing assumptions — the kernel bounds (1.4) and
+configuration satisfying the standing assumptions — the kernel bounds (2) and
 condition (M) — and every `f`,
 
 > `QFS.lintegral_dominatedPairs_le` — the `H^{α/2}` energy carried by the
@@ -2198,14 +2198,52 @@ residue is the integrability of `f²ρ^{-α}` against the domination radius `ρ`
 whose pointwise positivity is a theorem (`QFS.ae_exists_dominating_type`) but
 whose size is not controlled. Every other case is settled: dimension one is
 trivial (`QFS.formHs_le_form_dim_one` — on the line every double cone is
-`ℝ ∖ {0}`, so every pair is a cone pair and (1.4)'s lower bound gives the
+`ℝ ∖ {0}`, so every pair is a cone pair and (2)'s lower bound gives the
 inclusion outright), dimension two is step 6, wide cones are step 9, and the rest
 are steps 10–12. Closing the remaining case needs the continuum analogue of
 §§5–6, for the reason in step 5.
 
-The quoted input: the Whitney family and Dyda's inequality (13) behind Lemma 7.1,
+The quoted input: the Whitney family and Dyda's inequality (13) behind Lemma A.1,
 which the paper quotes rather than proves, and which are carried here as the
 explicit hypotheses `QFS.WhitneyBallData` and `QFS.WhitneyDomainData`.
+
+## Citations
+
+Every reference to a numbered result or equation cites **arXiv:1707.09277v1**,
+the only version on arXiv as of this writing. Two conventions in that paper are
+easy to get wrong, and both were got wrong here until they were checked against
+the typeset PDF:
+
+**Results are numbered within sections; equations are not.** `\newtheorem` is
+declared with `[section]`, so theorems, lemmas, corollaries, propositions,
+definitions and remarks share one counter per section and print as `1.1`, `3.2`,
+`5.15`. Equations take `amsart`'s default and run **flat through the whole
+paper**, `(1)` to `(18)` — there is no equation `(1.4)` or `(6.14)`. The two
+displays carrying `\tag{M}` print as `(M)` and consume no number.
+
+The equations this formalisation refers to:
+
+| Printed | Source label | What it is |
+| --- | --- | --- |
+| `(1)` | `eq:seminorm_Hs` | the `H^{α/2}` seminorm |
+| `(M)` | `eq:mbc` | the measurability condition on `Γ` |
+| `(2)` | `assum:main` | the bound on the kernel `k` |
+| `(3)` | `eq:main-result` | the comparability asserted by Theorem 1.1 |
+| `(4)` | `assum:main_discrete` | the bound on the discrete kernel `ω` |
+| `(5)` | `eq:one-direction` | `H^{α/2}(Ω) ⊆ H_k(Ω)` |
+| `(9)` | `eq:norms-on-R-n` | `‖v‖_∞ ≤ ‖v‖ ≤ √d ‖v‖_∞` |
+| `(15)` | `discret` | the discrete inequality of §3.2 |
+| `(18)` | `6.14` | the chain inside the appendix lemma |
+
+**The auxiliary results are an appendix, not a section 7.** The paper ends with
+`\appendix`, so its last section prints as **Appendix A** and its two lemmas as
+**Lemma A.1** and **Lemma A.2**. (`QuadraticFormsSobolev/Section7.lean` still
+carries the older name.)
+
+Two source labels are traps for anyone reading the `.tex` rather than the PDF.
+The appendix chain is written `\begin{align}\label{6.14}` — a leftover from a
+draft, since it prints as `(18)`. And three displays in §3 are labelled `1`, `2`
+and `7`, which print as `(11)`, `(12)` and `(13)`. A label is not a number.
 
 ## Verification
 
@@ -2236,8 +2274,8 @@ printed statement where one exists.
 | `Cubes` | the maximum norm, cubes, Lemma 2.7 |
 | `RefCones` | Lemma 2.2 and Corollary 2.4: finitely many reference cones |
 | `Section3` | lattices, Lemmas 3.2 and 3.4, cube volumes, the tiling |
-| `Section32` | §3.2 in full: `(discret)` as an inequality between integrals, Fatou on the left, the moving dominant and generalized dominated convergence on the right, Jensen for the step function, the tile comparison of the kernel, and the assembly into Lemma 3.7 on a ball; also Lipschitz functions in `H^{α/2}`, the circularity of the mollification route, and the Lipschitz cutoff with its cost |
-| `Section7` | Theorem 1.4 on `ℝ^d`, and the finite-overlap chain (6.14) of Lemma 7.1 |
+| `Section32` | §3.2 in full: `(15)` as an inequality between integrals, Fatou on the left, the moving dominant and generalized dominated convergence on the right, Jensen for the step function, the tile comparison of the kernel, and the assembly into Lemma 3.7 on a ball; also Lipschitz functions in `H^{α/2}`, the circularity of the mollification route, and the Lipschitz cutoff with its cost |
+| `Section7` | Theorem 1.4 on `ℝ^d`, and the finite-overlap chain (18) of Lemma A.1 |
 | `BeyondThePaper` | **not the paper** — new research on the open statement: the chaining programme, closed in dimension two, for wide cones, for small axis spread, for overlapping and for locally dominated configurations, and reduced in general to one integrability condition; see *Beyond the paper* |
 | `ThinCones` | Lemma 3.3 for `d ≥ 2` |
 | `Section4` | the continuous prelude; Theorem 4.1 |
@@ -2251,8 +2289,8 @@ printed statement where one exists.
 | `Section6` | Theorem 1.3 |
 | `Rescaling` | Corollary 3.1 |
 | `Section3Kernel` | the discrete kernel, Proposition 3.5, Corollary 3.6 |
-| `LebesgueDiff` | Lemma 7.2 |
-| `LebesgueDiff2` | Lemma 7.2 on `ℝ^d × ℝ^d`: the Vitali family of product cubes |
+| `LebesgueDiff` | Lemma A.2 |
+| `LebesgueDiff2` | Lemma A.2 on `ℝ^d × ℝ^d`: the Vitali family of product cubes |
 | `Nonvacuous` | witnesses that the hypotheses are satisfiable |
 
 ## Building

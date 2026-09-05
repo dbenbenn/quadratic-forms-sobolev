@@ -1,5 +1,5 @@
 /-
-Lemma 7.2 of Bux–Kassmann–Schulze on the *product* space `ℝ^d × ℝ^d`.
+Lemma A.2 of Bux–Kassmann–Schulze on the *product* space `ℝ^d × ℝ^d`.
 
 Section 3.2 differentiates a function of a pair, `(f(s) − f(t))² k(s,t)`, along
 the product cubes `Ã_h(x) × Ã_h(y)` of the tiling.  Those are the cubes of the
@@ -136,9 +136,9 @@ lemma tendsto_closedCube₂_filterAt {ι : Type} {l : Filter ι}
   exact (closedCube₂_subset_closedBall_of_mem (hmem i)).trans
     (closedBall_subset_closedBall (le_of_lt hi))
 
-/-! ## Lemma 7.2 on the product -/
+/-! ## Lemma A.2 on the product -/
 
-/-- **Lemma 7.2 for functions of a pair.** For a locally integrable `Φ` on
+/-- **Lemma A.2 for functions of a pair.** For a locally integrable `Φ` on
 `ℝ^d × ℝ^d` and almost every pair `p`, the averages of `Φ` over any shrinking
 sequence of product cubes containing `p` converge to `Φ p`. -/
 theorem lemma_lebesgue_diff₂

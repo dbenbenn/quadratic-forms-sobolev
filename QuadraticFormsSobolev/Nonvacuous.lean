@@ -3,11 +3,11 @@ Witnesses: the hypotheses of the main theorems are satisfiable.
 
 A formalisation of this size is worth checking against vacuity. Each of the
 headline results quantifies over configurations `Γ` and kernels `k`/`ω`
-constrained by (1.4) or (1.7); if those constraints were unsatisfiable the
+constrained by (2) or (4); if those constraints were unsatisfiable the
 theorems would be empty. They are not: for every `ϑ ∈ (0, π/2]` the constant
 configuration is `ϑ`-bounded and satisfies condition (M) and the measurability
 Proposition 3.5 assumes, and the plain jump kernel `|x − y|^{-d-α}` satisfies
-both (1.4) and (1.7) with `Λ = 2`, because the indicator bracket never exceeds
+both (2) and (4) with `Λ = 2`, because the indicator bracket never exceeds
 `2`.
 -/
 import QuadraticFormsSobolev.Section3Kernel
@@ -41,7 +41,7 @@ lemma condMeas_constConfig (V : DCone (EuclideanSpace ℝ (Fin d))) :
     rw [this]
     exact MeasurableSet.empty
 
-/-- The indicator bracket of (1.4) and (1.7) never exceeds `2`. -/
+/-- The indicator bracket of (2) and (4) never exceeds `2`. -/
 lemma indE_add_indE_le_two (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
     (x y : EuclideanSpace ℝ (Fin d)) :
     indE (coneAt Γ x) y + indE (coneAt Γ y) x ≤ 2 := by
@@ -56,8 +56,8 @@ lemma indE_add_indE_le_two (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
   calc indE (coneAt Γ x) y + indE (coneAt Γ y) x ≤ 1 + 1 := add_le_add h1 h2
     _ = 2 := by norm_num
 
-/-- **The hypotheses of (1.4) are satisfiable**: the plain jump kernel satisfies
-assumption (1.4) for *every* configuration, with `Λ = 2`. -/
+/-- **The hypotheses of (2) are satisfiable**: the plain jump kernel satisfies
+assumption (2) for *every* configuration, with `Λ = 2`. -/
 theorem kernelBounds_jumpKernel (Γ : Configuration (EuclideanSpace ℝ (Fin d))) (α : ℝ) :
     KernelBounds Γ α 2 (jumpKernel d α) where
   one_le := by norm_num
@@ -81,8 +81,8 @@ theorem kernelBounds_jumpKernel (Γ : Configuration (EuclideanSpace ℝ (Fin d))
           rw [show (1:ℝ≥0∞) = ENNReal.ofReal (1:ℝ) by simp]
           exact ENNReal.ofReal_le_ofReal (by norm_num)
 
-/-- **The hypotheses of (1.7) are satisfiable**: the same kernel satisfies
-assumption (1.7) for every configuration and every `R₀`, with `Λ = 2`. -/
+/-- **The hypotheses of (4) are satisfiable**: the same kernel satisfies
+assumption (4) for every configuration and every `R₀`, with `Λ = 2`. -/
 theorem discreteKernelBounds_jumpKernel (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
     (α R₀ : ℝ) (L : Set (EuclideanSpace ℝ (Fin d))) :
     DiscreteKernelBounds Γ α 2 R₀ L (jumpKernel d α) where

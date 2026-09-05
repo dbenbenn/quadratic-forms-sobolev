@@ -6,7 +6,7 @@ For a kernel `k` on `ℝ^d × ℝ^d` and `h > 0` the paper sets
   `ω^k_h(x, y) = h^{-2d} ∫∫_{A_h(x) × A_h(y)} k(s, t) d(s,t)`,
 
 a kernel on `hℤ^d`, and Proposition 3.5 checks that it satisfies assumption
-(1.7). The upper bound is "just a consequence of Lemma 3.4": on the product of
+(4). The upper bound is "just a consequence of Lemma 3.4": on the product of
 the two cubes `|s − t|` is bounded below by `|x − y|/(2√d)`, so the kernel is
 bounded above by `(2√d)^{d+α}` times its value at `(x, y)`.
 -/
@@ -617,7 +617,7 @@ theorem discreteKernel_ge_volume_scaled
 /-- **Corollary 3.6** of Bux–Kassmann–Schulze, for `d ≥ 2`, with the constant
 where the paper puts it: `C` depends on `d`, `ϑ`, `α` and `Λ` only, and in
 particular neither on the configuration nor on the kernel nor on the scale.
-For every `h > 0` the discrete kernel `ω^k_h` satisfies assumption (1.7) on
+For every `h > 0` the discrete kernel `ω^k_h` satisfies assumption (4) on
 `hℤ^d`, for a configuration `Γ^h` whose apex angles are bounded below by a `ϑ'`
 independent of `h`. -/
 theorem cor_rescaled_kernel_uniform {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd : 2 ≤ d)
