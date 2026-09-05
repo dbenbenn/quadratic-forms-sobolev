@@ -6,6 +6,12 @@ inequality of Theorem 1.1 (which "trivially holds"), and the inclusion (5).
 The two main theorems are also *stated* here, as `Prop`s, so that the targets
 are precise and type-checked. `QFS.TheoremOneThree` is proved in `Section6`;
 `QFS.TheoremOneOne` is not, and the README records what it still needs.
+
+Theorem 1.4 on `ℝ^d` closes the file. The paper obtains it from Lemma 3.7 "in
+the limit `R → ∞` using monotone convergence", the point being that the
+comparability constant does not depend on the ball. That deduction needs nothing
+from Section 3.2 beyond Theorem 1.1 itself, so it is proved here, conditionally
+(`QFS.theoremOneFourUniv_of_theoremOneOne`).
 -/
 import QuadraticFormsSobolev.Section5
 
@@ -202,5 +208,77 @@ def TheoremOneThree (d : ℕ) : Prop :=
       ∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ) (f : EuclideanSpace ℝ (Fin d) → ℝ), 0 < R →
         discreteForm (ball x₀ R) R₀ (jumpKernel d α) f
           ≤ ENNReal.ofReal c * discreteForm (ball x₀ (κ * R)) R₀ ω f
+
+/-! ## Theorem 1.4 on `ℝ^d` -/
+
+/-- Theorem 1.4 for `Ω = ℝ^d`: the seminorms `|·|_{H^{α/2}(ℝ^d)}` and
+`|·|_{H_k(ℝ^d)}` are comparable. The paper deduces this from Lemma 3.7 by
+letting `R → ∞`, which is legitimate exactly because the constant there does not
+depend on the ball. -/
+def TheoremOneFourUniv (d : ℕ) : Prop :=
+  ∀ ϑ Λ α : ℝ, 0 < ϑ → 1 ≤ Λ → 0 < α → α < 2 →
+    ∃ c : ℝ, 1 ≤ c ∧
+      ∀ Γ : Configuration (EuclideanSpace ℝ (Fin d)), IsAdmissible Γ ϑ →
+      ∀ k, KernelBounds Γ α Λ k →
+      ∀ f : EuclideanSpace ℝ (Fin d) → ℝ,
+        (∀ (x₀ : EuclideanSpace ℝ (Fin d)) (R : ℝ), 0 < R →
+          MemLp f 2 (volume.restrict (ball x₀ R))) →
+        formHs Set.univ α f ≤ ENNReal.ofReal c * form Set.univ k f
+
+/-- An integral over `ℝ^d × ℝ^d` is the supremum of the integrals over
+`B_n(0) × B_n(0)`. -/
+theorem lintegral_univ_prod_eq_iSup
+    (F : EuclideanSpace ℝ (Fin d) × EuclideanSpace ℝ (Fin d) → ℝ≥0∞) :
+    ∫⁻ p in Set.univ ×ˢ Set.univ, F p
+      = ⨆ n : ℕ, ∫⁻ p in ball (0 : EuclideanSpace ℝ (Fin d)) (n + 1) ×ˢ
+          ball (0 : EuclideanSpace ℝ (Fin d)) (n + 1), F p := by
+  have hdir : Directed (· ⊆ ·) (fun n : ℕ =>
+      ball (0 : EuclideanSpace ℝ (Fin d)) (n + 1) ×ˢ
+        ball (0 : EuclideanSpace ℝ (Fin d)) (n + 1)) := by
+    intro m n
+    have hm : (m : ℝ) + 1 ≤ ((max m n : ℕ) : ℝ) + 1 := by
+      have : (m : ℝ) ≤ ((max m n : ℕ) : ℝ) := by exact_mod_cast Nat.le_max_left m n
+      linarith
+    have hn : (n : ℝ) + 1 ≤ ((max m n : ℕ) : ℝ) + 1 := by
+      have : (n : ℝ) ≤ ((max m n : ℕ) : ℝ) := by exact_mod_cast Nat.le_max_right m n
+      linarith
+    exact ⟨max m n, Set.prod_mono (ball_subset_ball hm) (ball_subset_ball hm),
+      Set.prod_mono (ball_subset_ball hn) (ball_subset_ball hn)⟩
+  have hcover : (⋃ n : ℕ, ball (0 : EuclideanSpace ℝ (Fin d)) (n + 1) ×ˢ
+      ball (0 : EuclideanSpace ℝ (Fin d)) (n + 1)) = Set.univ ×ˢ Set.univ := by
+    rw [Set.univ_prod_univ]
+    refine Set.eq_univ_of_forall fun p => ?_
+    obtain ⟨n, hn⟩ := exists_nat_gt (max ‖p.1‖ ‖p.2‖)
+    refine Set.mem_iUnion.mpr ⟨n, ?_, ?_⟩ <;>
+      simp only [mem_ball, dist_zero_right] <;>
+      [exact lt_of_le_of_lt (le_max_left _ _) (by push_cast; linarith);
+       exact lt_of_le_of_lt (le_max_right _ _) (by push_cast; linarith)]
+  rw [← hcover, setLIntegral_iUnion_of_directed _ hdir]
+
+/-- The `H_k` form on `ℝ^d` is the supremum of the forms on balls about the
+origin. -/
+theorem form_univ_eq_iSup (k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞)
+    (f : EuclideanSpace ℝ (Fin d) → ℝ) :
+    form Set.univ k f = ⨆ n : ℕ, form (ball (0 : EuclideanSpace ℝ (Fin d)) ((n : ℝ) + 1)) k f :=
+  lintegral_univ_prod_eq_iSup _
+
+/-- **Theorem 1.4 on `ℝ^d`, granted Theorem 1.1.** -/
+theorem theoremOneFourUniv_of_theoremOneOne (h : TheoremOneOne d) : TheoremOneFourUniv d := by
+  intro ϑ Λ α hϑ hΛ hα hα2
+  obtain ⟨c, hc, H⟩ := h ϑ Λ α hϑ hΛ hα hα2
+  refine ⟨c, hc, ?_⟩
+  intro Γ hΓ k hk f hf
+  simp only [formHs]
+  rw [form_univ_eq_iSup, form_univ_eq_iSup, ENNReal.mul_iSup]
+  refine iSup_mono fun n => ?_
+  have hR : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  exact H Γ hΓ k hk 0 ((n : ℝ) + 1) hR f (hf 0 _ hR)
+
+/-- The reverse comparison on `ℝ^d` is the reverse inequality of (3). -/
+theorem form_univ_le_formHs_univ {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {α Λ : ℝ}
+    {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
+    (hk : KernelBounds Γ α Λ k) (f : EuclideanSpace ℝ (Fin d) → ℝ) :
+    form Set.univ k f ≤ ENNReal.ofReal Λ * formHs Set.univ α f :=
+  form_le_formHs hk _ _
 
 end QFS
