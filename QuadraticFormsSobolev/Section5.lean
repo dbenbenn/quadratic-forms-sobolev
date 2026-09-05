@@ -945,13 +945,13 @@ theorem core_induction_step (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
           Relation.ReflTransGen (Jump (shift (cone v ϑV) c) c δ) x y)
     {k : ℕ} {r' ρ' R' : ℝ} (hδr' : δ < r') (hkr' : (k : ℝ) ≤ r')
     (hrρ' : r' ≤ ρ') (hρR' : ρ' ≤ R')
-    (IH : ∀ G : Configuration (EuclideanSpace ℝ (Fin d)), (∀ z, ϑ ≤ (G z).apex) →
-      ∀ p ∈ lattice d, (typesIn G (ball p ρ')).encard ≤ (k : ℕ∞) →
-        RRConnected G r' R' p) :
+    (IH : ∀ Γ' : Configuration (EuclideanSpace ℝ (Fin d)), (∀ z, ϑ ≤ (Γ' z).apex) →
+      ∀ p ∈ lattice d, (typesIn Γ' (ball p ρ')).encard ≤ (k : ℕ∞) →
+        RRConnected Γ' r' R' p) :
     ∃ r ρ R : ℝ, δ < r ∧ ((k + 1 : ℕ) : ℝ) ≤ r ∧ r ≤ ρ ∧ ρ ≤ R ∧
-      ∀ G : Configuration (EuclideanSpace ℝ (Fin d)), (∀ z, ϑ ≤ (G z).apex) →
-      ∀ x ∈ lattice d, (typesIn G (ball x ρ)).encard ≤ ((k + 1 : ℕ) : ℕ∞) →
-        RRConnected G r R x := by
+      ∀ Γ' : Configuration (EuclideanSpace ℝ (Fin d)), (∀ z, ϑ ≤ (Γ' z).apex) →
+      ∀ x ∈ lattice d, (typesIn Γ' (ball x ρ)).encard ≤ ((k + 1 : ℕ) : ℕ∞) →
+        RRConnected Γ' r R x := by
   have hσ0 : 0 < Real.sin ϑ := Real.sin_pos_of_pos_of_lt_pi hϑ (by linarith [pi_pos])
   have hσ1 : Real.sin ϑ ≤ 1 := Real.sin_le_one ϑ
   have hD : (0:ℝ) ≤ Real.sqrt d := Real.sqrt_nonneg _
@@ -983,39 +983,39 @@ theorem core_induction_step (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
   have hR30 : 0 < R3 := by linarith
   obtain ⟨R, hR⟩ : ∃ t : ℝ, t = R' + s2 + S + R3 + ρ + 2 * S + sh + 1 := ⟨_, rfl⟩
   refine ⟨S, ρ, R, by linarith, by push_cast; linarith, by linarith, by linarith, ?_⟩
-  intro G hb x hxlat hcard
+  intro Γ' hb x hxlat hcard
   obtain ⟨xh, hxhlat, hxhx, hxhconn⟩ :=
-    exists_rrConnected (Γ := G) (r := s) (R := S) hϑ hb (le_of_lt hs0') (by linarith) hxlat
-  have claim : ∀ y ∈ ball x S, y ∈ lattice d → ConnWithin G (ball x R ∩ lattice d) xh y := by
+    exists_rrConnected (Γ := Γ') (r := s) (R := S) hϑ hb (le_of_lt hs0') (by linarith) hxlat
+  have claim : ∀ y ∈ ball x S, y ∈ lattice d → ConnWithin Γ' (ball x R ∩ lattice d) xh y := by
     intro y hy hylat
     rw [mem_ball, dist_eq_norm] at hy
     have htri1 : ‖(xh - x) - (y - x)‖ ≤ ‖xh - x‖ + ‖y - x‖ := norm_sub_le _ _
     have hxhy : ‖xh - y‖ < 2 * S := by
       have he : xh - y = (xh - x) - (y - x) := by abel
       rw [he]; linarith
-    have hv : ‖(G y).axis‖ = 1 := (G y).norm_axis
-    have hϑV : ϑ ≤ (G y).apex := hb y
-    have hϑV0 : 0 < (G y).apex := (G y).apex_pos
-    have hϑV' : (G y).apex ≤ π / 2 := (G y).apex_le
-    have hσV : Real.sin ϑ ≤ Real.sin (G y).apex :=
+    have hv : ‖(Γ' y).axis‖ = 1 := (Γ' y).norm_axis
+    have hϑV : ϑ ≤ (Γ' y).apex := hb y
+    have hϑV0 : 0 < (Γ' y).apex := (Γ' y).apex_pos
+    have hϑV' : (Γ' y).apex ≤ π / 2 := (Γ' y).apex_le
+    have hσV : Real.sin ϑ ≤ Real.sin (Γ' y).apex :=
       Real.strictMonoOn_sin.monotoneOn ⟨by linarith [pi_pos], by linarith⟩
         ⟨by linarith [pi_pos], hϑV'⟩ hϑV
-    have hσV0 : 0 < Real.sin (G y).apex := lt_of_lt_of_le hσ0 hσV
-    have hdivV : ρ' / Real.sin (G y).apex ≤ ρ' / Real.sin ϑ :=
+    have hσV0 : 0 < Real.sin (Γ' y).apex := lt_of_lt_of_le hσ0 hσV
+    have hdivV : ρ' / Real.sin (Γ' y).apex ≤ ρ' / Real.sin ϑ :=
       div_le_div_of_nonneg_left (le_of_lt hρ'0) hσ0 hσV
-    have hdivV0 : 0 < ρ' / Real.sin (G y).apex := div_pos hρ'0 hσV0
+    have hdivV0 : 0 < ρ' / Real.sin (Γ' y).apex := div_pos hρ'0 hσV0
     obtain ⟨a, ha⟩ : ∃ w : EuclideanSpace ℝ (Fin d),
-        w = xh + (ρ' / Real.sin (G y).apex) • (G y).axis := ⟨_, rfl⟩
-    have haxh : ‖a - xh‖ = ρ' / Real.sin (G y).apex := by
-      have he : a - xh = (ρ' / Real.sin (G y).apex) • (G y).axis := by rw [ha]; abel
+        w = xh + (ρ' / Real.sin (Γ' y).apex) • (Γ' y).axis := ⟨_, rfl⟩
+    have haxh : ‖a - xh‖ = ρ' / Real.sin (Γ' y).apex := by
+      have he : a - xh = (ρ' / Real.sin (Γ' y).apex) • (Γ' y).axis := by rw [ha]; abel
       rw [he, norm_smul, hv, Real.norm_eq_abs, abs_of_pos hdivV0, mul_one]
     have hay : ‖a - y‖ < m := by
       have he : a - y = (a - xh) + (xh - y) := by abel
       have h1 : ‖(a - xh) + (xh - y)‖ ≤ ‖a - xh‖ + ‖xh - y‖ := norm_add_le _ _
       rw [he]; rw [haxh] at h1; linarith
     obtain ⟨z, hzlat, hza, hzy, hzca, hzcy⟩ :=
-      exists_lattice_mem_inter (v := (G y).axis) (R := sh) hv hϑ hϑV hϑV' hay (by linarith)
-    have hedge : z ∈ coneAt G y := by
+      exists_lattice_mem_inter (v := (Γ' y).axis) (R := sh) hv hϑ hϑV hϑV' hay (by linarith)
+    have hedge : z ∈ coneAt Γ' y := by
       rw [mem_coneAt]; exact cone_subset_carrier _ hzcy
     have hzx : ‖z - x‖ < s2 + S := by
       have he : z - x = (z - a) + ((a - xh) + (xh - x)) := by abel
@@ -1027,10 +1027,10 @@ theorem core_induction_step (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
       ⟨by rw [mem_ball, dist_eq_norm]; linarith, hzlat⟩
     have hyball : y ∈ ball x R ∩ lattice d :=
       ⟨by rw [mem_ball, dist_eq_norm]; linarith, hylat⟩
-    have hzy' : ConnWithin G (ball x R ∩ lattice d) y z :=
+    have hzy' : ConnWithin Γ' (ball x R ∩ lattice d) y z :=
       ConnWithin.of_edge hyball hzball hedge
     obtain ⟨Reg, hReg⟩ : ∃ T : Set (EuclideanSpace ℝ (Fin d)),
-        T = ball xh s2 ∩ shift (G y).carrier xh := ⟨_, rfl⟩
+        T = ball xh s2 ∩ shift (Γ' y).carrier xh := ⟨_, rfl⟩
     have hRegdist : ∀ p ∈ Reg, ‖p - xh‖ < s2 := by
       intro p hp
       rw [hReg] at hp
@@ -1044,26 +1044,26 @@ theorem core_induction_step (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
       have he : p - x = (p - xh) + (xh - x) := by abel
       have h2 : ‖(p - xh) + (xh - x)‖ ≤ ‖p - xh‖ + ‖xh - x‖ := norm_add_le _ _
       rw [he]; linarith
-    by_cases hcase : ∃ p ∈ Reg, p ∈ lattice d ∧ (G p).carrier = (G y).carrier
+    by_cases hcase : ∃ p ∈ Reg, p ∈ lattice d ∧ (Γ' p).carrier = (Γ' y).carrier
     · obtain ⟨p, hpReg, hplat, hptype⟩ := hcase
       have hpxh : ‖p - xh‖ < s2 := hRegdist p hpReg
       rw [hReg] at hpReg
-      have hconn := discr_ueber_bande (Γ := G) (R := R3) hϑ hb hxhlat hylat hplat
+      have hconn := discr_ueber_bande (Γ := Γ') (R := R3) hϑ hb hxhlat hylat hplat
         (by linarith : ‖xh - y‖ < s2) hpxh hpReg.2 hptype (by linarith)
       refine (ConnWithin.mono_ball ?_ hconn).symm
       rw [dist_eq_norm]; linarith
-    · have hmiss : ∀ p ∈ Reg, p ∈ lattice d → (G p).carrier ≠ (G y).carrier := by
+    · have hmiss : ∀ p ∈ Reg, p ∈ lattice d → (Γ' p).carrier ≠ (Γ' y).carrier := by
         intro p hp hplat htype
         exact hcase ⟨p, hp, hplat, htype⟩
-      have hRegcard : (typesIn G Reg).encard ≤ (k : ℕ∞) := by
+      have hRegcard : (typesIn Γ' Reg).encard ≤ (k : ℕ∞) := by
         refine encard_typesIn_le_of_missing hRegsub ?_ hylat hmiss hcard
         rw [mem_ball, dist_eq_norm]; linarith
       obtain ⟨w, hwlat, hwc, hwt, hwchain⟩ :=
-        hchain (G y).axis (G y).apex hv hϑV hϑV' a z hzlat hzca
+        hchain (Γ' y).axis (Γ' y).apex hv hϑV hϑV' a z hzlat hzca
       have hshrink := shift_cone_apex_subset_shift_shrink (d := d) hv hϑV0 hϑV'
         (le_of_lt hρ'0) xh
       rw [← ha] at hshrink
-      have hballReg : ∀ p ∈ shift (cone (G y).axis (G y).apex) a ∩ lattice d,
+      have hballReg : ∀ p ∈ shift (cone (Γ' y).axis (Γ' y).apex) a ∩ lattice d,
           ‖p - a‖ ≤ ‖z - a‖ → ball p ρ' ⊆ Reg := by
         intro p hp hpd u hu
         rw [mem_ball, dist_eq_norm] at hu
@@ -1081,12 +1081,12 @@ theorem core_induction_step (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
           have he : u - xh - (p - xh) = u - p := by abel
           rw [he]
           exact le_of_lt hu
-      have hconnp : ∀ p ∈ shift (cone (G y).axis (G y).apex) a ∩ lattice d,
-          ‖p - a‖ ≤ ‖z - a‖ → RRConnected G r' R' p := by
+      have hconnp : ∀ p ∈ shift (cone (Γ' y).axis (Γ' y).apex) a ∩ lattice d,
+          ‖p - a‖ ≤ ‖z - a‖ → RRConnected Γ' r' R' p := by
         intro p hp hpd
-        exact IH G hb p hp.2
+        exact IH Γ' hb p hp.2
           (le_trans (Set.encard_mono (typesIn_mono (hballReg p hp hpd))) hRegcard)
-      have hsubp : ∀ p ∈ shift (cone (G y).axis (G y).apex) a ∩ lattice d,
+      have hsubp : ∀ p ∈ shift (cone (Γ' y).axis (Γ' y).apex) a ∩ lattice d,
           ‖p - a‖ ≤ ‖z - a‖ → R' + dist p x ≤ R := by
         intro p hp hpd
         rw [dist_eq_norm]
@@ -1095,13 +1095,13 @@ theorem core_induction_step (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2)
           norm_add_le _ _
         have h2 : ‖(a - xh) + (xh - x)‖ ≤ ‖a - xh‖ + ‖xh - x‖ := norm_add_le _ _
         rw [he]; rw [haxh] at h2; linarith
-      have hzw : ConnWithin G (ball x R ∩ lattice d) z w :=
+      have hzw : ConnWithin Γ' (ball x R ∩ lattice d) z w :=
         connWithin_of_chain (le_of_lt hδr') hconnp hsubp hwchain
       have hwxh : ‖w - xh‖ < s := by
         have he : w - xh = (w - a) + (a - xh) := by abel
         have h1 : ‖(w - a) + (a - xh)‖ ≤ ‖w - a‖ + ‖a - xh‖ := norm_add_le _ _
         rw [he]; rw [haxh] at h1; linarith
-      have hxhw : ConnWithin G (ball x R ∩ lattice d) xh w := by
+      have hxhw : ConnWithin Γ' (ball x R ∩ lattice d) xh w := by
         refine ConnWithin.mono_ball ?_
           (hxhconn w (by rw [mem_ball, dist_eq_norm]; exact hwxh) hwlat)
         rw [dist_eq_norm]; linarith
@@ -1117,19 +1117,19 @@ depending only on `ϑ` and `d`, such that every lattice point is
 lattice points of `B_{ρ_k}`. -/
 theorem core_induction (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) :
     ∃ δ : ℝ, 0 < δ ∧ ∀ k : ℕ, ∃ r ρ R : ℝ, δ < r ∧ (k : ℝ) ≤ r ∧ r ≤ ρ ∧ ρ ≤ R ∧
-      ∀ G : Configuration (EuclideanSpace ℝ (Fin d)), (∀ z, ϑ ≤ (G z).apex) →
-      ∀ x ∈ lattice d, (typesIn G (ball x ρ)).encard ≤ (k : ℕ∞) →
-        RRConnected G r R x := by
+      ∀ Γ' : Configuration (EuclideanSpace ℝ (Fin d)), (∀ z, ϑ ≤ (Γ' z).apex) →
+      ∀ x ∈ lattice d, (typesIn Γ' (ball x ρ)).encard ≤ (k : ℕ∞) →
+        RRConnected Γ' r R x := by
   obtain ⟨δ, t₀, hδ0, ht₀0, hchain⟩ := exists_chain_to_apex (d := d) hϑ hϑ'
   refine ⟨δ, hδ0, fun k => ?_⟩
   induction k with
   | zero =>
       refine ⟨δ + 1, δ + 1, δ + 1, by linarith, by push_cast; linarith, le_rfl, le_rfl, ?_⟩
-      intro G _hb x hxlat hcard
+      intro Γ' _hb x hxlat hcard
       exfalso
-      have hmem : (G x).carrier ∈ typesIn G (ball x (δ + 1)) :=
+      have hmem : (Γ' x).carrier ∈ typesIn Γ' (ball x (δ + 1)) :=
         mem_typesIn (mem_ball_self (by linarith)) hxlat
-      have h0 : (typesIn G (ball x (δ + 1))).encard = 0 :=
+      have h0 : (typesIn Γ' (ball x (δ + 1))).encard = 0 :=
         le_antisymm (by simpa using hcard) (zero_le)
       rw [Set.encard_eq_zero] at h0
       rw [h0] at hmem
@@ -1196,8 +1196,8 @@ for each `k`, we take `k = max L ⌈r⌉₊` and use that `k ≤ r_k`, which is 
 (The hypothesis `0 < r` that the paper states is not needed — for `r ≤ 0` the
 ball `B_r(x)` is empty and the conclusion is vacuous. It is kept for fidelity.) -/
 theorem discrete_template {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {r : ℝ} (_hr : 0 < r) :
-    ∃ R : ℝ, r ≤ R ∧ ∀ G : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded G ϑ →
-      ∀ x ∈ lattice d, RRConnected G r R x := by
+    ∃ R : ℝ, r ≤ R ∧ ∀ Γ' : Configuration (EuclideanSpace ℝ (Fin d)), IsBounded Γ' ϑ →
+      ∀ x ∈ lattice d, RRConnected Γ' r R x := by
   obtain ⟨L, hL⟩ := ref_config_uniform (E := EuclideanSpace ℝ (Fin d)) hϑ hϑ'
   obtain ⟨δ, hδ0, hcore⟩ :=
     core_induction (d := d) (ϑ := ϑ / 3) (by positivity) (by linarith [pi_pos])
@@ -1207,8 +1207,8 @@ theorem discrete_template {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {r : 
       calc r ≤ ((⌈r⌉₊ : ℕ) : ℝ) := Nat.le_ceil r
         _ ≤ ((max L ⌈r⌉₊ : ℕ) : ℝ) := by exact_mod_cast Nat.le_max_right L ⌈r⌉₊
     linarith
-  refine ⟨Rk, by linarith, fun G hG x hxlat => ?_⟩
-  obtain ⟨G', hcard, hsub, _hapex, hb'⟩ := hL G hG
+  refine ⟨Rk, by linarith, fun Γ' hΓ' x hxlat => ?_⟩
+  obtain ⟨G', hcard, hsub, _hapex, hb'⟩ := hL Γ' hΓ'
   refine RRConnected.mono_config hsub (RRConnected.mono_radius hrk ?_)
   refine h4 G' hb'.2 x hxlat ?_
   calc (typesIn G' (ball x ρk)).encard

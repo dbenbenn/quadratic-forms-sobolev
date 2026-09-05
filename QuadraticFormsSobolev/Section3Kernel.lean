@@ -676,10 +676,10 @@ theorem cor_rescaled_kernel_uniform {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π 
       exact ⟨w, hw, fun _ => hsub⟩
     · exact ⟨e, he, fun hc => absurd hc hu⟩
   choose ax hax haxsub using haxex
-  obtain ⟨G, hG⟩ : ∃ G : Configuration (EuclideanSpace ℝ (Fin d)),
-      G = fun u => (⟨ax (fav u), hax (fav u), θ', hθ'0, hθ'le⟩ :
+  obtain ⟨Γ', hΓ'⟩ : ∃ Γ' : Configuration (EuclideanSpace ℝ (Fin d)),
+      Γ' = fun u => (⟨ax (fav u), hax (fav u), θ', hθ'0, hθ'le⟩ :
         DCone (EuclideanSpace ℝ (Fin d))) := ⟨_, rfl⟩
-  refine ⟨G, fun u => by rw [hG], ⟨hθ'0, fun u => by rw [hG]⟩, ?_⟩
+  refine ⟨Γ', fun u => by rw [hΓ'], ⟨hθ'0, fun u => by rw [hΓ']⟩, ?_⟩
   intro x hx y hy hxy
   refine ⟨?_, ?_⟩
   swap
@@ -688,10 +688,10 @@ theorem cor_rescaled_kernel_uniform {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π 
   -- the lower bound
   have hind : ∀ u w : EuclideanSpace ℝ (Fin d), u ∈ scaledLattice d h →
       w ∈ scaledLattice d h →
-      indE (coneAt G u) w ≤ indE (F.shrunkAt (fav u) (h * Real.sqrt d) u) w := by
+      indE (coneAt Γ' u) w ≤ indE (F.shrunkAt (fav u) (h * Real.sqrt d) u) w := by
     intro u w hu hw
     refine indE_le_indE (fun hmem => ?_)
-    rw [hG] at hmem
+    rw [hΓ'] at hmem
     refine thin_cone_subset_scaled ?_ (hax (fav u)) hθ'0 hθ'le hh
       (haxsub (fav u) (by rw [← hFaxes]; exact (hfav u).1))
       ⟨hmem, sub_mem_scaledLattice hw hu⟩
@@ -709,7 +709,7 @@ theorem cor_rescaled_kernel_uniform {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π 
     rw [inv_le_comm₀ (by positivity) (by positivity)]
     exact le_max_right _ _
   refine le_trans (mul_le_mul' hCle le_rfl) ?_
-  obtain ⟨B, hB⟩ : ∃ B : ℝ≥0∞, B = indE (coneAt G x) y + indE (coneAt G y) x := ⟨_, rfl⟩
+  obtain ⟨B, hB⟩ : ∃ B : ℝ≥0∞, B = indE (coneAt Γ' x) y + indE (coneAt Γ' y) x := ⟨_, rfl⟩
   obtain ⟨B', hB'⟩ : ∃ B' : ℝ≥0∞, B' = indE (F.shrunkAt (fav x) (h * Real.sqrt d) x) y
       + indE (F.shrunkAt (fav y) (h * Real.sqrt d) y) x := ⟨_, rfl⟩
   obtain ⟨J, hJ⟩ : ∃ J : ℝ≥0∞, J = ENNReal.ofReal ((2 * Real.sqrt d) ^ (-(d:ℝ) - α)
