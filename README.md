@@ -2245,6 +2245,35 @@ The appendix chain is written `\begin{align}\label{6.14}` — a leftover from a
 draft, since it prints as `(18)`. And three displays in §3 are labelled `1`, `2`
 and `7`, which print as `(11)`, `(12)` and `(13)`. A label is not a number.
 
+## Notation
+
+The paper's letters are used throughout. Where the paper defines a symbol by a
+semantic macro, the Lean name is given beside it.
+
+| Paper | Lean | |
+| --- | --- | --- |
+| `Γ` | `Γ` | a configuration; `Γ'` where a second one is quantified over |
+| `G` | — | the paper's **directed graph**; never used here for a configuration |
+| `ϑ` | `ϑ` | the apex bound, `IsBounded Γ ϑ` |
+| `α`, `Λ`, `c`, `κ`, `λ` | same | order, kernel constant, comparability constant, ball enlargement, factor |
+| `k(x,y)` | `k` | the kernel of `(2)` |
+| `ω(x,y)` | `ω` | the discrete kernel of `(4)` |
+| `δ` | `δ` | the jump bound, `\JumpMax` |
+| `r`, `ρ`, `R` | `r`, `ρ`, `R` | small radius, chromatic bound, large radius — the indexed families of Lemma 5.7 |
+| `V`, `V'`, `Ṽ`, `V_r` | `doubleCone`, `cone`, `doubleHalfCone` | cones; `coneAt Γ x` is `V^Γ[x]` |
+| `A` | `cube` | the cubes of Definition 2.5 |
+| `Q`, `P` | `block` | blocks; `ℓ` is the block length in both |
+| `U`, `W`, `U'` | `U` | open sets |
+| `x`, `y`, `z` | same | points; `B_r(x)` is `ball x r`, `ℤ^d` is `lattice d` |
+| `(M)` | `CondM` | the measurability condition on `Γ` |
+
+Two notes. The paper **overloads `k`**: it is the kernel `k(x,y)` of `(2)` in
+Theorem 1.1, and the *number of cone types* in §5's core induction (Lemma 5.7).
+The two never occur together, and the Lean inherits both uses. And `ρ` carries
+the paper's meaning — the chromatic bound of Lemma 5.7 — while
+`BeyondThePaper.lean` reuses the letter for its own domination radius; those are
+in disjoint scopes, and the second is new mathematics, not the paper's `ρ`.
+
 ## Verification
 
 Every commit is checked with
