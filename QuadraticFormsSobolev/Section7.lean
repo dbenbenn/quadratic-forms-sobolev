@@ -10,7 +10,7 @@ Two results downstream of Theorem 1.1 that do not need Section 3.2's open step.
   comparability constant does not depend on the ball. That deduction is proved
   here, conditionally on Theorem 1.1 (`theoremOneFourUniv_of_theoremOneOne`).
 
-* **The chain (6.14) inside Lemma 7.1.** Lemma 7.1 passes from balls to a
+* **The chain (18) inside Lemma A.1.** Lemma A.1 passes from balls to a
   bounded Lipschitz domain using a Whitney family and Dyda's inequality (13),
   both quoted rather than proved. The one step the paper carries out itself is
   the finite-overlap estimate, and it is proved here
@@ -90,16 +90,16 @@ theorem theoremOneFourUniv_of_theoremOneOne (h : TheoremOneOne d) : TheoremOneFo
   have hR : (0 : ℝ) < (n : ℝ) + 1 := by positivity
   exact H Γ hΓ k hk 0 ((n : ℝ) + 1) hR f (hf 0 _ hR)
 
-/-- The reverse comparison on `ℝ^d` is the reverse inequality of (1.5). -/
+/-- The reverse comparison on `ℝ^d` is the reverse inequality of (3). -/
 theorem form_univ_le_formHs_univ {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {α Λ : ℝ}
     {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
     (hk : KernelBounds Γ α Λ k) (f : EuclideanSpace ℝ (Fin d) → ℝ) :
     form Set.univ k f ≤ ENNReal.ofReal Λ * formHs Set.univ α f :=
   form_le_formHs hk _ _
 
-/-! ## The finite-overlap step of Lemma 7.1
+/-! ## The finite-overlap step of Lemma A.1
 
-Lemma 7.1's proof runs the chain (6.14). Its first inequality is the only step
+Lemma A.1's proof runs the chain (18). Its first inequality is the only step
 carried out in the paper rather than quoted: if the enlarged Whitney balls `B*`
 lie in `Ω` and no point lies in more than `M` of them, the sum of the forms over
 the `B*` is controlled by the form over `Ω`. -/
@@ -107,7 +107,7 @@ the `B*` is controlled by the form over `Ω`. -/
 /-- **Finite overlap.** If each `S i` lies in `Ω` and no point of `ℝ^d` lies in
 more than `M` of the `S i`, then `∑ᵢ ∫_{Sᵢ×Sᵢ} F ≤ M ∫_{Ω×Ω} F`.
 
-The paper's display (6.14) uses the factor `M²`; `M` already suffices, since a
+The paper's display (18) uses the factor `M²`; `M` already suffices, since a
 pair `(x,y)` lies in `Sᵢ × Sᵢ` only for those `i` with `x ∈ Sᵢ`, of which there
 are at most `M`. See `tsum_setLIntegral_le_of_overlap_sq` for the paper's form. -/
 theorem tsum_setLIntegral_le_of_overlap {ι : Type} [Countable ι]
@@ -153,7 +153,7 @@ theorem tsum_setLIntegral_le_of_overlap {ι : Type} [Countable ι]
 
 
 /-- The paper's form of the finite-overlap estimate, with the factor `M²` of
-display (6.14). -/
+display (18). -/
 theorem tsum_setLIntegral_le_of_overlap_sq {ι : Type} [Countable ι]
     {S : ι → Set (EuclideanSpace ℝ (Fin d))} {Ω : Set (EuclideanSpace ℝ (Fin d))} {M : ℕ}
     (hSm : ∀ i, MeasurableSet (S i)) (hΩ : MeasurableSet Ω) (hsub : ∀ i, S i ⊆ Ω)
@@ -166,13 +166,13 @@ theorem tsum_setLIntegral_le_of_overlap_sq {ι : Type} [Countable ι]
     mul_le_mul' le_rfl (by exact_mod_cast hM1)
   simpa [sq] using this
 
-/-- **The chain (6.14) of Lemma 7.1**, the one part of that lemma the paper
+/-- **The chain (18) of Lemma A.1**, the one part of that lemma the paper
 carries out rather than quotes.
 
 The two quoted inputs appear as hypotheses: `hsub` and `hM` are properties (ii)
 and (iii) of the Whitney family, and `hdyda` is inequality (13) of [Dyda06].
-`hball` is the comparability on balls that Lemma 7.1 assumes. The conclusion is
-the comparability on `Ω`, with the constant `c·c'/M` that (6.14) produces. -/
+`hball` is the comparability on balls that Lemma A.1 assumes. The conclusion is
+the comparability on `Ω`, with the constant `c·c'/M` that (18) produces. -/
 theorem lemma_ball_to_domain {ι : Type} [Countable ι]
     {S S' : ι → Set (EuclideanSpace ℝ (Fin d))} {Ω : Set (EuclideanSpace ℝ (Fin d))}
     {M : ℕ} {α c c' : ℝ}
@@ -196,13 +196,13 @@ theorem lemma_ball_to_domain {ι : Type} [Countable ι]
 
 /-! ## The last link: from the enlarged ball to Theorem 1.1
 
-Section 3.2 ends by applying Lemma 7.1 with `Ω = B` a ball, turning the
+Section 3.2 ends by applying Lemma A.1 with `Ω = B` a ball, turning the
 enlarged-ball comparability `|f|_{H^{α/2}(B)} ≲ |f|_{H_k(B*)}` into the
 same-ball one. That step is proved here, so the only unproved links in the
 chain from the discrete theory to Theorem 1.1 are the ones the paper does not
 prove either — plus §3.2's remaining inclusion. -/
 
-/-- The input Lemma 7.1 quotes, specialised to `Ω` a ball: a countable Whitney
+/-- The input Lemma A.1 quotes, specialised to `Ω` a ball: a countable Whitney
 family whose `κ`-enlargements lie inside the ball and overlap at most
 `overlapBound` times, together with the constant of Dyda's inequality (13). The
 paper proves none of this — the family is produced by "the Whitney decomposition
@@ -231,11 +231,11 @@ structure WhitneyBallData (d : ℕ) (α κ : ℝ) where
   /-- Property (iii): the enlarged balls overlap at most `overlapBound` times. -/
   overlap : ∀ x₀ R, 0 < R → ∀ y,
     {i | y ∈ ball (ctr x₀ R i) (κ * rad x₀ R i)}.encard ≤ (overlapBound : ℕ∞)
-  /-- Inequality (13) of [Dyda06], as used in the last step of (6.14). -/
+  /-- Inequality (13) of [Dyda06], as used in the last step of (18). -/
   dyda : ∀ x₀ R, 0 < R → ∀ f, ENNReal.ofReal dydaConst * formHs (ball x₀ R) α f
     ≤ ∑' i, formHs (ball (ctr x₀ R i) (rad x₀ R i)) α f
 
-/-- **The chain (6.14) for a single ball**, taking the enlarged-ball
+/-- **The chain (18) for a single ball**, taking the enlarged-ball
 comparability as an input for one fixed kernel and one fixed function.
 
 This is the content of the passage from `B*` to `B`; the two theorems below are
@@ -281,7 +281,7 @@ theorem formHs_le_form_of_ballComparability {α κ c₀ : ℝ} (hc₀ : 1 ≤ c�
     · have hempty : ball (W.ctr x₀ R i) (W.rad x₀ R i) = ∅ :=
         ball_eq_empty.mpr (not_lt.mp hri)
       simp [formHs, form, hempty]
-  -- the chain (6.14)
+  -- the chain (18)
   have hchain := lemma_ball_to_domain (S := fun i => ball (W.ctr x₀ R i) (W.rad x₀ R i))
     (S' := fun i => ball (W.ctr x₀ R i) (κ * W.rad x₀ R i)) (Ω := ball x₀ R)
     (M := W.overlapBound) (α := α) (c := c₀⁻¹) (c' := W.dydaConst) (k := k) (f := f)
@@ -297,7 +297,7 @@ theorem formHs_le_form_of_ballComparability {α κ c₀ : ℝ} (hc₀ : 1 ≤ c�
   rw [ENNReal.ofReal_div_of_pos hMR, ENNReal.ofReal_mul (le_of_lt (inv_pos.mpr hc₀pos)),
     ENNReal.ofReal_natCast, div_eq_mul_inv]
   ring
-/-- **Theorem 1.1 from its enlarged-ball form**, by Lemma 7.1 applied to a ball. -/
+/-- **Theorem 1.1 from its enlarged-ball form**, by Lemma A.1 applied to a ball. -/
 theorem formHs_le_form_of_theoremOneOneBall (h : TheoremOneOneBall d)
     {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
     (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ)) :
@@ -344,15 +344,15 @@ noncomputable def whitneyBallData_one (d : ℕ) (α : ℝ) : WhitneyBallData d �
   dyda := by intro x₀ R _ f; simp
 
 
-/-! ## Lemma 7.1 for a domain
+/-! ## Lemma A.1 for a domain
 
-`lemma_ball_to_domain` is the chain (6.14) for an arbitrary `Ω`; combining it
+`lemma_ball_to_domain` is the chain (18) for an arbitrary `Ω`; combining it
 with the comparability on balls gives the comparability on `Ω`, which is what
 Theorem 1.4 uses for a bounded Lipschitz domain. The Whitney family and Dyda's
 inequality are hypotheses, exactly as in the paper. -/
 
 /-- The Whitney family of a domain, and Dyda's inequality for it: the input
-Lemma 7.1 quotes rather than proves, for a general `Ω` rather than for a ball.
+Lemma A.1 quotes rather than proves, for a general `Ω` rather than for a ball.
 Compare `QFS.WhitneyBallData`. -/
 structure WhitneyDomainData (d : ℕ) (α κ : ℝ) (Ω : Set (EuclideanSpace ℝ (Fin d))) where
   /-- The index set of the family. -/
@@ -379,7 +379,7 @@ structure WhitneyDomainData (d : ℕ) (α κ : ℝ) (Ω : Set (EuclideanSpace �
   dyda : ∀ f, ENNReal.ofReal dydaConst * formHs Ω α f
     ≤ ∑' i, formHs (ball (ctr i) (rad i)) α f
 
-/-- **Lemma 7.1 for a domain**: the enlarged-ball comparability, a Whitney
+/-- **Lemma A.1 for a domain**: the enlarged-ball comparability, a Whitney
 family for `Ω` and Dyda's inequality give the comparability on `Ω`. -/
 theorem formHs_le_form_domain {Ω : Set (EuclideanSpace ℝ (Fin d))} {α κ c₀ : ℝ}
     (hc₀ : 1 ≤ c₀) (hΩ : MeasurableSet Ω) (W : WhitneyDomainData d α κ Ω)

@@ -1,5 +1,5 @@
 /-
-Lemma 7.2 of Bux–Kassmann–Schulze: a Lebesgue differentiation theorem along
+Lemma A.2 of Bux–Kassmann–Schulze: a Lebesgue differentiation theorem along
 cubes.
 
   *Let `φ : ℝ^d → ℝ` be locally integrable. For almost every `s`: if `(x_h)_{h>0}`
@@ -172,9 +172,9 @@ lemma tendsto_closedCube_filterAt {ι : Type} {l : Filter ι} {x : EuclideanSpac
   exact (closedCube_subset_closedBall_of_mem (hmem i)).trans
     (closedBall_subset_closedBall (le_of_lt hi))
 
-/-! ## Lemma 7.2 -/
+/-! ## Lemma A.2 -/
 
-/-- **Lemma 7.2** of Bux–Kassmann–Schulze. For a locally integrable `φ` and
+/-- **Lemma A.2** of Bux–Kassmann–Schulze. For a locally integrable `φ` and
 almost every `s`, the averages of `φ` over any shrinking sequence of cubes
 containing `s` converge to `φ(s)`.
 

@@ -3,7 +3,7 @@ Section 6 of Bux–Kassmann–Schulze: the proof of Theorem 1.3 from Theorem 5.1
 
 The argument chains along `p_xy`: Cauchy–Schwarz turns `(f(x) − f(y))²` into the
 sum of the squared increments along the path, claim (4) of Theorem 5.15 turns
-`|x − y|^{-d-α}` into `λ^{d+α}|z_{i+1} − z_i|^{-d-α}`, assumption (1.7) turns
+`|x − y|^{-d-α}` into `λ^{d+α}|z_{i+1} − z_i|^{-d-α}`, assumption (4) turns
 that into `Λ ω(z_i, z_{i+1})` — this is where every edge must be longer than
 `R₀`, hence `PathPropsLong` — and claim (3) turns the sum over pairs of sums over
 edges back into a sum over pairs, at the cost of the multiplicity `M`.
@@ -100,7 +100,7 @@ lemma ofReal_list_sum {l : List ℝ} (h : ∀ a ∈ l, 0 ≤ a) :
 
 /-! ## The kernel along an edge
 
-Assumption (1.7) at an edge of `G`: the indicator is `1` because the edge means
+Assumption (4) at an edge of `G`: the indicator is `1` because the edge means
 one endpoint lies in the other's cone, and the edge is longer than `R₀` because
 of `PathPropsLong`. -/
 

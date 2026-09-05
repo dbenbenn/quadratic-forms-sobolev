@@ -1,7 +1,7 @@
 /-
 Section 1 of Bux–Kassmann–Schulze: the quadratic forms, the function spaces
-`H_k(Ω)` and `H^{α/2}(Ω)`, assumption (1.4) on the kernel, the reverse
-inequality of Theorem 1.1 (which "trivially holds"), and the inclusion (1.6).
+`H_k(Ω)` and `H^{α/2}(Ω)`, assumption (2) on the kernel, the reverse
+inequality of Theorem 1.1 (which "trivially holds"), and the inclusion (5).
 
 The two main theorems are also *stated* here, as `Prop`s, so that the targets
 are precise and type-checked. `QFS.TheoremOneThree` is proved in `Section6`;
@@ -17,7 +17,7 @@ variable {d : ℕ}
 
 /-! ## The kernels and the quadratic forms -/
 
-/-- The kernel `|x − y|^{-d-α}` of the `H^{α/2}` seminorm (1.1). -/
+/-- The kernel `|x − y|^{-d-α}` of the `H^{α/2}` seminorm (1). -/
 noncomputable def jumpKernel (d : ℕ) (α : ℝ) (x y : EuclideanSpace ℝ (Fin d)) : ℝ≥0∞ :=
   ENNReal.ofReal (‖x - y‖ ^ (-(d : ℝ) - α))
 
@@ -35,14 +35,14 @@ noncomputable def form (Ω : Set (EuclideanSpace ℝ (Fin d)))
     (f : EuclideanSpace ℝ (Fin d) → ℝ) : ℝ≥0∞ :=
   ∫⁻ p in Ω ×ˢ Ω, ENNReal.ofReal ((f p.2 - f p.1) ^ 2) * k p.1 p.2
 
-/-- The `H^{α/2}(Ω)` form, i.e. the seminorm (1.1) restricted to `Ω`. -/
+/-- The `H^{α/2}(Ω)` form, i.e. the seminorm (1) restricted to `Ω`. -/
 noncomputable def formHs (Ω : Set (EuclideanSpace ℝ (Fin d))) (α : ℝ)
     (f : EuclideanSpace ℝ (Fin d) → ℝ) : ℝ≥0∞ :=
   form Ω (jumpKernel d α) f
 
-/-! ## Assumption (1.4) -/
+/-! ## Assumption (2) -/
 
-/-- Assumption (1.4) of Theorem 1.1: `k` is symmetric and satisfies
+/-- Assumption (2) of Theorem 1.1: `k` is symmetric and satisfies
 
   `Λ⁻¹ (1_{V^Γ[x]}(y) + 1_{V^Γ[y]}(x)) |x−y|^{-d-α} ≤ k(x,y) ≤ Λ |x−y|^{-d-α}`. -/
 structure KernelBounds (Γ : Configuration (EuclideanSpace ℝ (Fin d))) (α Λ : ℝ)
@@ -57,11 +57,11 @@ structure KernelBounds (Γ : Configuration (EuclideanSpace ℝ (Fin d))) (α Λ 
   /-- The upper bound. -/
   upper : ∀ x y, k x y ≤ ENNReal.ofReal Λ * jumpKernel d α x y
 
-/-! ## The reverse inequality, and the inclusion (1.6) -/
+/-! ## The reverse inequality, and the inclusion (5) -/
 
-/-- The upper bound in (1.4) makes the `H^{α/2}` form dominate the `H_k` form on
-every set. This is both the "reverse inequality in (1.5)", which the paper notes
-"trivially holds true", and the inequality behind the inclusion (1.6). -/
+/-- The upper bound in (2) makes the `H^{α/2}` form dominate the `H_k` form on
+every set. This is both the "reverse inequality in (3)", which the paper notes
+"trivially holds true", and the inequality behind the inclusion (5). -/
 theorem form_le_formHs {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {α Λ : ℝ}
     {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
     (hk : KernelBounds Γ α Λ k) (Ω : Set (EuclideanSpace ℝ (Fin d)))
@@ -96,7 +96,7 @@ def Hs (Ω : Set (EuclideanSpace ℝ (Fin d))) (α : ℝ) :
     Set (EuclideanSpace ℝ (Fin d) → ℝ) :=
   {f | MemLp f 2 (volume.restrict Ω) ∧ formHs Ω α f ≠ ⊤}
 
-/-- **Equation (1.6)**: `H^{α/2}(Ω) ⊆ H_k(Ω)`. -/
+/-- **Equation (5)**: `H^{α/2}(Ω) ⊆ H_k(Ω)`. -/
 theorem Hs_subset_Hk {Γ : Configuration (EuclideanSpace ℝ (Fin d))} {α Λ : ℝ}
     {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
     (hk : KernelBounds Γ α Λ k) (Ω : Set (EuclideanSpace ℝ (Fin d))) :
@@ -169,7 +169,7 @@ noncomputable def discreteForm (S : Set (EuclideanSpace ℝ (Fin d))) (R₀ : �
       p.1 ∈ S ∩ lattice d ∧ p.2 ∈ S ∩ lattice d ∧ R₀ < ‖p.1 - p.2‖},
     ENNReal.ofReal ((f p.1.1 - f p.1.2) ^ 2) * ω p.1.1 p.1.2
 
-/-- Assumption (1.7) of Theorem 1.3: the two-sided bound on `ω`, imposed only for
+/-- Assumption (4) of Theorem 1.3: the two-sided bound on `ω`, imposed only for
 `|x − y| > R₀` **and only at pairs of points of the lattice `L`**. The paper's `ω`
 is a function on `ℤ^d × ℤ^d` (on `hℤ^d × hℤ^d` in Corollary 3.1), so asking the
 bounds off the lattice would be a genuine strengthening of the hypothesis: at a

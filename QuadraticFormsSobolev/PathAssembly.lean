@@ -59,7 +59,7 @@ This is the set `A` of Step 2 of the paper's proof. -/
 The paper's window is `[Δ^{n-1}, Δ^n)` for the town `T(Δ^n, Δ^{n-1})`, i.e. one
 scale lower: a pair at distance in `[1, Δ)` would be routed through the town
 `T(Δ, 1)`, whose edges can be as short as `1`. Section 6 needs every edge of
-`p_xy` to be **longer than `R₀`** — the lower bound in assumption (1.7) applies
+`p_xy` to be **longer than `R₀`** — the lower bound in assumption (4) applies
 only to such pairs — and claim (4) of Theorem 5.15 does not give that, since it
 only bounds an edge below by `λ^{-1}‖x − y‖`. Routing one scale up costs a
 factor `Δ` in `λ` and makes every edge at least `Δ > R₀` long. See the README,
@@ -219,7 +219,7 @@ theorem PathProps.mono_config {Γ Γ' : Configuration (EuclideanSpace ℝ (Fin d
 /-! ## A strengthening of claim (4)
 
 Section 6 chains along `p_xy` and, at each edge, applies the *lower* bound of
-assumption (1.7), which holds only for pairs at distance more than `R₀`. Claim
+assumption (4), which holds only for pairs at distance more than `R₀`. Claim
 (4) of Theorem 5.15 bounds an edge below only by `λ^{-1}‖x − y‖`, which for
 `‖x − y‖` just above `R₀` is far less than `R₀`. `PathPropsLong` records the
 extra fact the construction actually delivers: every edge is longer than `R₀`.

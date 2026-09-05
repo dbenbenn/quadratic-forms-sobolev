@@ -99,7 +99,7 @@ lemma indE_congr {S T : Set (EuclideanSpace ℝ (Fin d))} {x y : EuclideanSpace 
 
 /-- **The paper's observation** that "every `ω ∈ M` is of the form
 `h^{-d-α} ω̃(h^{-1}x, h^{-1}y)` for some `ω̃ ∈ N`", read backwards: rescaling a
-kernel on `hℤ^d` gives a kernel on `ℤ^d` satisfying (1.7) with the same `Λ` and
+kernel on `hℤ^d` gives a kernel on `ℤ^d` satisfying (4) with the same `Λ` and
 `R₀`, for the rescaled configuration. -/
 theorem discreteKernelBounds_rescale {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
     {α Λ R₀ h : ℝ} (hh : 0 < h)

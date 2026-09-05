@@ -44,12 +44,12 @@ lemma abs_coord_le_norm (x : EuclideanSpace ℝ (Fin d)) (i : Fin d) : |x i| ≤
   rwa [Real.sqrt_sq (norm_nonneg _), Real.norm_eq_abs] at h2
 
 /-- The maximum norm is dominated by the Euclidean norm: `|v|_∞ ≤ |v|`.
-This is the left half of equation (3.1) in the proof of Lemma 3.4. -/
+This is the left half of equation (9) in the proof of Lemma 3.4. -/
 lemma infNorm_le_norm (x : EuclideanSpace ℝ (Fin d)) : infNorm x ≤ ‖x‖ :=
   infNorm_le (norm_nonneg _) (fun i => abs_coord_le_norm x i)
 
 /-- The Euclidean norm is dominated by `√d` times the maximum norm:
-`|v| ≤ √d |v|_∞`. This is the right half of equation (3.1). -/
+`|v| ≤ √d |v|_∞`. This is the right half of equation (9). -/
 lemma norm_le_sqrt_dim_mul_infNorm (x : EuclideanSpace ℝ (Fin d)) :
     ‖x‖ ≤ Real.sqrt d * infNorm x := by
   rw [EuclideanSpace.norm_eq]

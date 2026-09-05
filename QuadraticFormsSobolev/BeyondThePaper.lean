@@ -44,7 +44,7 @@ proves that *this* construction cannot be pushed to dimension three.
 
 Stripped of hypotheses, what the chaining gives is one inequality
 (`lintegral_visibility_le`): for every configuration satisfying the standing
-assumptions — the kernel bounds (1.4) and condition (M) — the `H^{α/2}` energy of
+assumptions — the kernel bounds (2) and condition (M) — the `H^{α/2}` energy of
 a pair, weighted by how much of its averaging ball can see both endpoints, is at
 most `C·|f|²_{H_k}`. Everything else here exhibits sets of pairs on which that
 weight is bounded below:
@@ -54,7 +54,7 @@ weight is bounded below:
   `formHs_le_form_planar`, `Hk_ball_eq_Hs_ball_planar`,
   `formHs_univ_le_form_univ_planar`, `Hk_univ_eq_Hs_univ_planar`,
   `Hk_domain_eq_Hs_domain_planar` — Theorems 1.1 and 1.4 in the plane, granted
-  the Whitney/Dyda input Lemma 7.1 quotes;
+  the Whitney/Dyda input Lemma A.1 quotes;
 * **dimension one**: `formHs_le_form_dim_one`, where every cone is `ℝ ∖ {0}`;
 * **small axis spread** — the cone axes at most `γ` apart as lines with
   `γ < 2ϑ`: `sobolevInclusion_of_axisSpread` and the chain behind it
@@ -386,7 +386,7 @@ what has to survive that exchange is the weight. This is the estimate that makes
 it work, and it is the reason the argument is scale-invariant: the singular
 weight `‖s − t‖^{-2d-α}` integrated over the `t`-fibre above a point `z` comes
 back as `‖z − s‖^{-d-α}`, exactly the weight of the `H_k` form on the pair
-`(s,z)` — which the lower bound of (1.4) then converts into `k(s,z)`. -/
+`(s,z)` — which the lower bound of (2) then converts into `k(s,z)`. -/
 
 /-- The constant in the fibre estimate: `(1 + 3/sin ϑ)^{2d+α} / (3/sin ϑ − 1)^d`. -/
 noncomputable def chainConst (d : ℕ) (ϑ α : ℝ) : ℝ :=
@@ -525,7 +525,7 @@ theorem osc_weighted_le {d : ℕ} (v : EuclideanSpace ℝ (Fin d)) (ϑ : ℝ) {�
 /-- Off the cone the fibre is a single point: if `z − s` does not lie in
 `Ṽ(v,ϑ)` then no `t ≠ s` has `z` among the common neighbours of `s` and `t`.
 This is what lets the exchange keep the cone membership, without which the lower
-bound of (1.4) could not be applied to the resulting pair `(s,z)`. -/
+bound of (2) could not be applied to the resulting pair `(s,z)`. -/
 theorem fibre_subset_singleton_of_notMem_cone {v : E} (hv : ‖v‖ = 1) {ϑ : ℝ} (hϑ : 0 < ϑ)
     (hϑ' : ϑ ≤ π / 2) {s z : E} (hz : z - s ∉ cone v ϑ) :
     {t | z ∈ closedBall (midCentre v ϑ s t) ‖s - t‖} ⊆ {s} := by
@@ -600,7 +600,7 @@ theorem lintegral_swap_of_fibre_bound {d : ℕ}
 
 /-- **The exchange, at fixed `s`.** Integrating the chaining average over `t` and
 swapping gives back an integral in `z` against the weight `‖z − s‖^{-d-α}` — the
-weight of the `H_k` form on the pair `(s,z)`, which the lower bound of (1.4)
+weight of the `H_k` form on the pair `(s,z)`, which the lower bound of (2)
 turns into `k(s,z)`. -/
 theorem lintegral_swap_fibre {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1)
     {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α) (hd : 0 < d)
@@ -936,7 +936,7 @@ theorem measurable_param_midBall {d : ℕ} (v : EuclideanSpace ℝ (Fin d)) (ϑ 
 
 The flat oscillation of `f` against the weight `‖s − t‖^{-d-α}`, over *all* pairs,
 is bounded by the same quantity restricted to pairs that see the cone `Ṽ(v,ϑ)`.
-Since the lower bound of (1.4) turns the cone-restricted weight into `k`, this is
+Since the lower bound of (2) turns the cone-restricted weight into `k`, this is
 `(★)` for a set of points all of whose cones contain a common direction. -/
 theorem localPoincare_sameDirection {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1)
     {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α : ℝ} (hα : 0 ≤ α) (hd : 0 < d)
@@ -1014,12 +1014,12 @@ theorem localPoincare_sameDirection {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (
 
 /-! ## The open statement, for configurations with a common cone direction
 
-The lower bound of (1.4) turns the cone-restricted weight into `k`, so the local
+The lower bound of (2) turns the cone-restricted weight into `k`, so the local
 Poincaré inequality above becomes exactly the statement §3.2 is missing —
 restricted to configurations all of whose cones share a direction. -/
 
 /-- On a cone pair the jump kernel is dominated by `Λ k`: the lower bound of
-(1.4), read in the direction that gives information. -/
+(2), read in the direction that gives information. -/
 theorem jumpKernel_le_of_mem_coneAt {d : ℕ} {Γ : Configuration (EuclideanSpace ℝ (Fin d))}
     {α Λ : ℝ} {k : EuclideanSpace ℝ (Fin d) → EuclideanSpace ℝ (Fin d) → ℝ≥0∞}
     (hk : KernelBounds Γ α Λ k) {x y : EuclideanSpace ℝ (Fin d)} (hxy : y ∈ coneAt Γ x) :
@@ -2548,7 +2548,7 @@ not parallel, then the `H^{α/2}` energy of the pairs in `U × U'` is bounded by
 `H_k` form.
 
 The block splits in two. The pairs that are *already* cone pairs go into the
-`H_k` form directly by the lower bound of (1.4); the rest are exactly the pairs
+`H_k` form directly by the lower bound of (2); the rest are exactly the pairs
 `localPoincare_planar` handles, and its two cone-restricted terms convert by the
 same lower bound. -/
 theorem formHs_le_form_planar_cross {vs vt : EuclideanSpace ℝ (Fin 2)} (hvs : ‖vs‖ = 1)
@@ -3007,7 +3007,7 @@ The mathematics closing the gap is new; the statement obtained is the paper's. -
 
 /-- **Theorem 1.1 on a ball, unconditionally, in dimension two.** For every
 `ϑ`-bounded configuration satisfying Debreu's measurability condition and every
-kernel satisfying (1.4) there are `κ, c ≥ 1` -- independent of the ball and of
+kernel satisfying (2) there are `κ, c ≥ 1` -- independent of the ball and of
 `f` -- with
 
   `|f|²_{H^{α/2}(B_R)} ≤ c |f|²_{H_k(B_{κR})}`
@@ -3074,8 +3074,8 @@ theorem theoremOneOneBallCondMeas_two : TheoremOneOneBallCondMeas 2 := by
 /-- **Theorem 1.1 in the plane**, on the same ball rather than an enlarged one,
 granted the Whitney/Dyda input the paper quotes rather than proves.
 
-This is `QFS.formHs_le_form_of_theoremOneOneBall` -- the chain (6.14) of
-Lemma 7.1 -- run on the planar ball comparability of this file instead of on the
+This is `QFS.formHs_le_form_of_theoremOneOneBall` -- the chain (18) of
+Lemma A.1 -- run on the planar ball comparability of this file instead of on the
 paper's unproved `QFS.TheoremOneOneBall`. Its hypotheses are the paper's, plus
 the two this formalisation carries throughout (Debreu's condition and the
 measurability of `k`), plus the Whitney family and Dyda's inequality (13), which
@@ -3188,7 +3188,7 @@ theorem Hk_univ_eq_Hs_univ_planar {ϑ Λ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤
 
 /-! ## Theorem 1.4 for a domain, in the plane
 
-Lemma 7.1 for a domain (`QFS.formHs_le_form_domain`) turns the ball
+Lemma A.1 for a domain (`QFS.formHs_le_form_domain`) turns the ball
 comparability into the comparability on `Ω`, given the Whitney family of `Ω` and
 Dyda's inequality — the two inputs the paper quotes.  With the planar ball
 theorem it gives the inclusion `H_k(Ω) ⊆ H^{α/2}(Ω)` for every planar domain
@@ -3337,12 +3337,12 @@ theorem planar_hypotheses_nonvacuous {ϑ α : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤
 /-! ## Theorem 1.1 itself, in the plane
 
 Everything above assembles into the paper's own Theorem 1.1, in dimension two,
-with the two hypotheses this formalisation carries and the one input Lemma 7.1
+with the two hypotheses this formalisation carries and the one input Lemma A.1
 quotes. -/
 
 /-- **Theorem 1.1 in the plane**, in the paper's own statement
 (`QFS.TheoremOneOneCondMeas`): for every `ϑ`-bounded configuration satisfying
-Debreu's condition and every measurable kernel satisfying (1.4) there is a
+Debreu's condition and every measurable kernel satisfying (2) there is a
 `c ≥ 1`, depending only on `ϑ`, `Λ` and `α`, with
 
   `|f|²_{H^{α/2}(B)} ≤ c |f|²_{H_k(B)}`
@@ -4010,7 +4010,7 @@ theorem ballComparability_spread {d : ℕ} (hd : 2 ≤ d) {ϑ γ α Λ : ℝ}
       (fun f hfm hfl hL2 => hmain Γ hΓ hmeas hspread k hk hkm x₀ R hR f hfm hfl hL2)⟩
 
 /-- **Theorem 1.1 for small axis spread**, on the same ball, in every dimension `d ≥ 2`,
-granted the Whitney/Dyda input Lemma 7.1 quotes. -/
+granted the Whitney/Dyda input Lemma A.1 quotes. -/
 theorem formHs_le_form_spread {d : ℕ} (hd : 2 ≤ d) {ϑ γ Λ α : ℝ}
     (hϑ' : ϑ ≤ π / 2) (hγ0 : 0 ≤ γ) (hγ : γ < 2 * ϑ) (hΛ : 1 ≤ Λ) (hα : 0 < α)
     (hα2 : α < 2)
@@ -4182,7 +4182,7 @@ theorem ballComparability_wide {d : ℕ} (hd : 2 ≤ d) {ϑ α Λ : ℝ} (hϑ : 
 
 
 /-- **Theorem 1.1 for wide cones**, on the same ball, in every dimension `d ≥ 2`,
-granted the Whitney/Dyda input Lemma 7.1 quotes. -/
+granted the Whitney/Dyda input Lemma A.1 quotes. -/
 theorem formHs_le_form_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ} (hϑ : π / 4 < ϑ)
     (hϑ' : ϑ ≤ π / 2) (hΛ : 1 ≤ Λ) (hα : 0 < α) (hα2 : α < 2)
     (hW : ∀ κ : ℝ, 1 ≤ κ → Nonempty (WhitneyBallData d α κ)) :
@@ -4247,7 +4247,7 @@ theorem Hk_univ_eq_Hs_univ_wide {d : ℕ} (hd : 2 ≤ d) {ϑ Λ α : ℝ}
 /-! ## Dimension one is trivial
 
 On the line a double cone of positive apex angle is everything but the origin,
-so *every* pair of distinct points is a cone pair and the lower bound of (1.4)
+so *every* pair of distinct points is a cone pair and the lower bound of (2)
 gives the inclusion directly, with the constant `Λ/2`. This is what makes the
 open case precisely "narrow cones in dimension at least three". -/
 
@@ -4301,7 +4301,7 @@ theorem doubleCone_dim_one {v : EuclideanSpace ℝ (Fin 1)} (hv : ‖v‖ = 1) {
 
 
 /-- On the line every pair of distinct points is a cone pair, so the lower bound
-of (1.4) alone gives `jumpKernel ≤ (Λ/2) k`. -/
+of (2) alone gives `jumpKernel ≤ (Λ/2) k`. -/
 theorem jumpKernel_le_of_dim_one {α Λ : ℝ} (hα : 0 ≤ α)
     {Γ : Configuration (EuclideanSpace ℝ (Fin 1))}
     {k : EuclideanSpace ℝ (Fin 1) → EuclideanSpace ℝ (Fin 1) → ℝ≥0∞}
@@ -4373,7 +4373,7 @@ theorem formHs_le_form_dim_one {α Λ : ℝ} (hα : 0 ≤ α)
 
 /-- **The wide-cone hypotheses are satisfiable.** The constant configuration with
 apex angle `π/2` is `ϑ`-bounded for every `ϑ ≤ π/2`, in particular for a
-`ϑ > π/4`, and the plain jump kernel satisfies (1.4) with `Λ = 2`. -/
+`ϑ > π/4`, and the plain jump kernel satisfies (2) with `Λ = 2`. -/
 theorem wide_hypotheses_nonvacuous {d : ℕ} {α : ℝ}
     {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1) :
     ∃ (ϑ : ℝ) (Γ : Configuration (EuclideanSpace ℝ (Fin d)))
@@ -4948,7 +4948,7 @@ theorem localPoincare_vol {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v�
           exact lintegral_mono fun t => lintegral_swap_fibre' hv hϑ hϑ' hα hd t (hGt t)
 
 /-- **The visibility-weighted energy of one type is controlled by the `H_k` form.**
-Beyond the standing assumptions — the kernel bounds (1.4), Debreu's condition and
+Beyond the standing assumptions — the kernel bounds (2), Debreu's condition and
 measurability — nothing is assumed of `Γ`: no lower bound on its apex angles, no
 relation between its cone directions, and no restriction on the dimension. -/
 theorem formHs_le_form_of_vol {d : ℕ} {v : EuclideanSpace ℝ (Fin d)}
@@ -5052,7 +5052,7 @@ theorem formHs_le_form_of_vol {d : ℕ} {v : EuclideanSpace ℝ (Fin d)}
 /-- **The local Poincaré inequality with a densely visible type.** The full
 fractional energy is controlled by the energy of the pairs `(s,z)` with
 `z − s ∈ Ṽ(v,ϑ)` **and `z` of the visible type** — which is the class the lower
-bound of (1.4) can read, through the cone at `z`. -/
+bound of (2) can read, through the cone at `z`. -/
 theorem localPoincare_visible_on {d : ℕ} {v : EuclideanSpace ℝ (Fin d)} (hv : ‖v‖ = 1)
     {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) {α c₀ : ℝ} (hα : 0 ≤ α) (hd : 0 < d)
     (hc₀ : 0 ≤ c₀) {U : Set (EuclideanSpace ℝ (Fin d))} (hUm : MeasurableSet U)
@@ -5341,7 +5341,7 @@ def LocallyDominatedRad {d : ℕ} (Γ : Configuration (EuclideanSpace ℝ (Fin d
         closedBall (midCentre q.2 q.1 s t) ‖s - t‖)
 
 /-- **The visibility-weighted energy is controlled, for every configuration.**
-Beyond the standing assumptions — the kernel bounds (1.4), Debreu's condition and
+Beyond the standing assumptions — the kernel bounds (2), Debreu's condition and
 measurability — nothing is assumed of `Γ`. The weight of a pair is the total volume, across the
 finitely many reference types and apertures, of the points of that type in the
 ball the chaining averages over — that is, how much of the pair is *seen*. The
@@ -5406,7 +5406,7 @@ lemma measurableSet_dominatedPairs {d : ℕ} {Γ : Configuration (EuclideanSpace
   exact measurableSet_le (by fun_prop) (measurable_midBall_inter_volume q.2 q.1 (hmeas _))
 
 /-- **The dominated pairs are always controlled**: for every configuration
-satisfying the standing assumptions — the kernel bounds (1.4), Debreu's condition
+satisfying the standing assumptions — the kernel bounds (2), Debreu's condition
 and measurability — and with nothing else assumed of `Γ`, their `H^{α/2}` energy
 is bounded by the `H_k` form. Everything the local-domination hypotheses below do is to say
 that a given set of pairs is dominated. -/
