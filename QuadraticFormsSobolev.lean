@@ -24,6 +24,6 @@ import QuadraticFormsSobolev.Section3Kernel
 import QuadraticFormsSobolev.Section4
 import QuadraticFormsSobolev.Section5
 import QuadraticFormsSobolev.Section6
-import QuadraticFormsSobolev.Section7
+import QuadraticFormsSobolev.AppendixA
 import QuadraticFormsSobolev.ThinCones
 import QuadraticFormsSobolev.Translate
