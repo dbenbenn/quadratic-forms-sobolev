@@ -2403,7 +2403,7 @@ theorem limsup_lintegral_stepG_le {α Λ R R' : ℝ} (hα : 0 ≤ α)
 
 /-! ## Corollary 3.6, packaged as assumption (4)
 
-`cor_rescaled_kernel` gives the two bounds on `ω^k_h` for pairs separated by
+`cor_rescaled_kernel_uniform` gives the two bounds on `ω^k_h` for pairs separated by
 more than `√d h`; `(15)` consumes them as a `DiscreteKernelBounds`, which
 also asks for symmetry and for a constant at least one. -/
 

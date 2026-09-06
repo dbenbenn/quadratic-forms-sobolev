@@ -614,9 +614,12 @@ theorem discreteKernel_ge_volume_scaled
     _ ≤ ∫⁻ p in cube h x ×ˢ cube h y, k p.1 p.2 :=
         lintegral_mono' (Measure.restrict_mono hsub le_rfl) le_rfl
 
-/-- **Corollary 3.6** of Bux–Kassmann–Schulze, for `d ≥ 2`, with the constant
-where the paper puts it: `C` depends on `d`, `ϑ`, `α` and `Λ` only, and in
-particular neither on the configuration nor on the kernel nor on the scale.
+/-- **Corollary 3.6** of Bux–Kassmann–Schulze, for `d ≥ 2`, at the paper's own
+strength: `C` depends on `d`, `ϑ`, `α` and `Λ` only, and in particular neither on
+the configuration nor on the kernel nor on the scale. Proposition 3.5, which the
+corollary's proof invokes, states its constant as `C = C(d, ϑ)` and its angle as
+depending on `ϑ` alone — "There is no further dependence on `Γ`" — and that is what
+makes the corollary's `C` uniform in `h`.
 For every `h > 0` the discrete kernel `ω^k_h` satisfies assumption (4) on
 `hℤ^d`, for a configuration `Γ^h` whose apex angles are bounded below by a `ϑ'`
 independent of `h`. -/
@@ -746,9 +749,13 @@ theorem cor_rescaled_kernel_uniform {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π 
         exact add_le_add (hind x y hx hy) (hind y x hy hx)
 
 
-/-- **Corollary 3.6** in the shape the paper states it: the constant is produced
-after the configuration and the kernel. It is `cor_rescaled_kernel_uniform` with
-the existential weakened; the proof there gives the stronger order. -/
+/-- **Corollary 3.6 with the existential for `C` pushed past `Γ` and `k`.** This is
+the literal reading of the corollary's own sentence, and it is *weaker* than what the
+paper proves: the corollary obtains its constant by applying Proposition 3.5 to `Γ^h`
+and `k^h`, and Proposition 3.5 declares that constant to be `C = C(d, ϑ)`, adding
+"There is no further dependence on `Γ`". That uniformity is exactly what makes the
+corollary's `C` independent of `h`. So the faithful statement is
+`cor_rescaled_kernel_uniform`, from which this one is derived. -/
 theorem cor_rescaled_kernel {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (hd : 2 ≤ d)
     {α : ℝ} (hα : 0 < α) (hα2 : α ≤ 2) :
     ∃ θ' : ℝ, 0 < θ' ∧ θ' ≤ π / 2 ∧
