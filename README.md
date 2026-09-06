@@ -539,9 +539,9 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | Shrinking commutes with scaling; Lemma 3.3 on `hℤ^d` | Cor. 3.6 | `QFS.mem_shrink_smul`, `QFS.thin_cone_subset_scaled`, `QFS.sub_mem_scaledLattice` | ✅ proved |
 | Proposition 3.5's estimate at scale `h` | Cor. 3.6 | `QFS.discreteKernel_integrand_ge_scaled`, `QFS.discreteKernel_ge_volume_scaled`, `QFS.inv_card_le_volume_cubeCone_scaled` | ✅ proved |
 | **Corollary 3.6** | Cor. 3.6 | `QFS.cor_rescaled_kernel` | ✅ **proved** (`d ≥ 2`) |
-| Cubes are closed / open; a cube containing `x` lies in `B̄_{h√d}(x)` | Lem. 7.2 | `QFS.continuous_coord`, `QFS.isClosed_closedCube`, `QFS.isOpen_cube`, `QFS.closedCube_subset_closedBall_of_mem` | ✅ proved |
-| **The Vitali family of cubes** | Lem. 7.2 | `QFS.unitBallVol`, `QFS.volume_closedBall_eq`, `QFS.cubeVitaliConst`, `QFS.cubeVitali_doubling`, `QFS.cubeVitali`, `QFS.closedCube_mem_setsAt`, `QFS.tendsto_closedCube_filterAt` | ✅ **proved** |
-| **Lemma A.2**: differentiation along cubes | Lem. 7.2 | `QFS.lemma_lebesgue_diff` | ✅ **proved** |
+| Cubes are closed / open; a cube containing `x` lies in `B̄_{h√d}(x)` | Lem. A.2 | `QFS.continuous_coord`, `QFS.isClosed_closedCube`, `QFS.isOpen_cube`, `QFS.closedCube_subset_closedBall_of_mem` | ✅ proved |
+| **The Vitali family of cubes** | Lem. A.2 | `QFS.unitBallVol`, `QFS.volume_closedBall_eq`, `QFS.cubeVitaliConst`, `QFS.cubeVitali_doubling`, `QFS.cubeVitali`, `QFS.closedCube_mem_setsAt`, `QFS.tendsto_closedCube_filterAt` | ✅ **proved** |
+| **Lemma A.2**: differentiation along cubes | Lem. A.2 | `QFS.lemma_lebesgue_diff` | ✅ **proved** |
 | **The half-closed cubes tile `ℝ^d`** | §3.2 | `QFS.existsUnique_mem_halfClosedCube` | ✅ **proved** |
 | **The tiling as a countable measurable partition** | §3.2 | `QFS.latticePt`, `QFS.latticePt_injective`, `QFS.halfClosedCube_eq_preimage`, `QFS.measurableSet_halfClosedCube`, `QFS.volume_halfClosedCube`, `QFS.iUnion_halfClosedCube`, `QFS.pairwiseDisjoint_halfClosedCube` | ✅ **proved** |
 | **The step index `x_h(s)`** | §3.2 | `QFS.stepIndex`, `QFS.stepIndex_mem_scaledLattice`, `QFS.mem_halfClosedCube_stepIndex`, `QFS.mem_closedCube_stepIndex`, `QFS.stepIndex_eq_of_mem`, `QFS.halfClosedCube_subset_closedCube` | ✅ **proved** |
@@ -552,7 +552,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **`(15)` as an inequality between integrals** | §3.2 | `QFS.discret_lintegral`, `QFS.discretePairs`, `QFS.discreteC`, `QFS.discreteFormOn_eq_tsum`, `QFS.discreteFormOn_mul_eq_lintegral`, `QFS.lintegral_stepFun₂`, `QFS.lintegral_eq_tsum_halfClosedCube₂`, `QFS.latticeEquiv` | ✅ **proved** |
 | **The step function `f_h` as a function of the point** | §3.2 | `QFS.cubeAvg`, `QFS.tendsto_cubeAvg_stepIndex`, `QFS.tendsto_stepIndex`, `QFS.norm_stepIndex_sub_le` | ✅ **proved** |
 | **Almost every pair has both coordinates generic, and distinct** | §3.2 | `QFS.ae_prod_both`, `QFS.ae_prod_ne`, `QFS.volume_sphere_eq_zero`, `QFS.ae_notMem_sphere` | ✅ **proved** |
-| **Lemma A.2 on the product space** — the Vitali family of product cubes | §3.2, Lem. 7.2 | `QFS.closedCube₂`, `QFS.volume_closedBall₂_eq`, `QFS.cubeVitaliConst₂`, `QFS.cubeVitali₂_doubling`, `QFS.cubeVitali₂`, `QFS.closedCube₂_mem_setsAt`, `QFS.tendsto_closedCube₂_filterAt`, `QFS.lemma_lebesgue_diff₂` | ✅ **proved** |
+| **Lemma A.2 on the product space** — the Vitali family of product cubes | §3.2, Lem. A.2 | `QFS.closedCube₂`, `QFS.volume_closedBall₂_eq`, `QFS.cubeVitaliConst₂`, `QFS.cubeVitali₂_doubling`, `QFS.cubeVitali₂`, `QFS.closedCube₂_mem_setsAt`, `QFS.tendsto_closedCube₂_filterAt`, `QFS.lemma_lebesgue_diff₂` | ✅ **proved** |
 | **The tile average of a function of a pair**: constant integral, a.e. limit | §3.2 | `QFS.tileAvg₂`, `QFS.lintegral_tileAvg₂`, `QFS.tendsto_tileAvg₂`, `QFS.setLIntegral_congr_of_subset`, `QFS.lintegral_closedCube₂_eq_halfClosedCube₂` | ✅ **proved** |
 | **Jensen for the step function**: `(f_h(x) − f_h(y))² ≤ ⨍⨍_{A(x)×A(y)}(f(u) − f(v))²` | §3.2 | `QFS.ofReal_sq_cubeAvg_sub_le`, `QFS.sq_setIntegral_le_measure_mul`, `QFS.setIntegral_sub_prod`, `QFS.isCompact_closedCube` | ✅ **proved** |
 | **The jump kernel is comparable across a well-separated pair of tiles** | §3.2 | `QFS.jumpKernel_le_of_mem_cubes`, `QFS.norm_sub_mem_cubes`, `QFS.norm_sub_le_of_mem_closedCube` | ✅ **proved** |
@@ -582,11 +582,11 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **Granted Theorem 1.1, an approximation bounded on `H^{α/2}` is bounded on `H_k`** — the circularity in the mollification route | §3.2 | `QFS.form_le_of_theoremOneOneBall` | ✅ **proved** |
 | **The form on `ℝ^d` as a supremum over balls** | Thm. 1.4 | `QFS.lintegral_univ_prod_eq_iSup`, `QFS.form_univ_eq_iSup` | ✅ **proved** |
 | **Theorem 1.4 for `Ω = ℝ^d`**, granted Theorem 1.1 | Thm. 1.4 | `QFS.TheoremOneFourUniv`, `QFS.theoremOneFourUniv_of_theoremOneOne`, `QFS.form_univ_le_formHs_univ` | ✅ **proved** |
-| **The finite-overlap estimate** of (18) | Lem. 7.1 | `QFS.tsum_setLIntegral_le_of_overlap`, `QFS.tsum_setLIntegral_le_of_overlap_sq` | ✅ **proved** |
-| **The chain (18)**, with the Whitney family and Dyda's inequality as hypotheses | Lem. 7.1 | `QFS.lemma_ball_to_domain` | ✅ **proved** |
-| **The quoted Whitney/Dyda input for a ball**, and that it is satisfiable | Lem. 7.1 | `QFS.WhitneyBallData`, `QFS.whitneyBallData_one` | ✅ **stated, non-vacuous** |
-| **The quoted Whitney/Dyda input for a domain**, and Lemma A.1 for a domain | Lem. 7.1 | `QFS.WhitneyDomainData`, `QFS.formHs_le_form_domain` | ✅ **proved** |
-| **Enlarged ball ⟹ same ball**: the last step of §3.2 | §3.2, Lem. 7.1 | `QFS.formHs_le_form_of_ballComparability`, `QFS.formHs_le_form_of_theoremOneOneBall` | ✅ **proved** |
+| **The finite-overlap estimate** of (18) | Lem. A.1 | `QFS.tsum_setLIntegral_le_of_overlap`, `QFS.tsum_setLIntegral_le_of_overlap_sq` | ✅ **proved** |
+| **The chain (18)**, with the Whitney family and Dyda's inequality as hypotheses | Lem. A.1 | `QFS.lemma_ball_to_domain` | ✅ **proved** |
+| **The quoted Whitney/Dyda input for a ball**, and that it is satisfiable | Lem. A.1 | `QFS.WhitneyBallData`, `QFS.whitneyBallData_one` | ✅ **stated, non-vacuous** |
+| **The quoted Whitney/Dyda input for a domain**, and Lemma A.1 for a domain | Lem. A.1 | `QFS.WhitneyDomainData`, `QFS.formHs_le_form_domain` | ✅ **proved** |
+| **Enlarged ball ⟹ same ball**: the last step of §3.2 | §3.2, Lem. A.1 | `QFS.formHs_le_form_of_ballComparability`, `QFS.formHs_le_form_of_theoremOneOneBall` | ✅ **proved** |
 | **Lemma 3.2**: the indicator inequality | Lem. 3.2 | `QFS.lemma_min_dist`, `QFS.lemma_min_dist_favoured` | ✅ **proved** |
 | **Lemma 3.3** fails in `d = 1` for `r = √d` | Lem. 3.3 | `QFS.lemma_new_config_false_dim_one` | ✅ **disproved** (`d=1`) |
 | The lattice is closed under negation | (new) | `QFS.neg_mem_lattice` | ✅ proved |
@@ -1315,8 +1315,8 @@ step.
 | `H_k(Ω) = H^{α/2}(Ω)`, density | Thm. 1.4 | Depends on Thm. 1.1 and on Lipschitz-domain extension theory not in scope. |
 | Regular Dirichlet form; Markov process | Cor. 1.5 | Depends on Thm. 1.1 and on Dirichlet-form theory (Fukushima–Oshima–Takeda) absent from Mathlib. This is the one result here whose obstacle is the library rather than the paper. |
 | Weak Harnack, Hölder regularity | Cor. 1.6 | Quoted from Dyda–Kassmann; not proved in the paper. |
-| The Whitney decomposition of a bounded Lipschitz domain | Lem. 7.1 | Asserted, not proved: "The Whitney decomposition technique provides a family `ℬ` of balls with the following properties." Carried as `QFS.WhitneyBallData` / `QFS.WhitneyDomainData`, which bundle exactly what the chain (18) uses: property (ii) (`enlarged_subset`), property (iii) (`overlap`) and the conclusion of Dyda's inequality (`dyda`). Property (i) — that nearby points of `Ω` share a ball — is what Dyda's inequality is proved from, and is not needed once its conclusion is assumed, so it is not part of the structure. |
-| Dyda's inequality (13) | Lem. 7.1 | Quoted from [Dyda06, proof of Thm. 1]; carried as the hypothesis `hdyda` of `QFS.lemma_ball_to_domain`. |
+| The Whitney decomposition of a bounded Lipschitz domain | Lem. A.1 | Asserted, not proved: "The Whitney decomposition technique provides a family `ℬ` of balls with the following properties." Carried as `QFS.WhitneyBallData` / `QFS.WhitneyDomainData`, which bundle exactly what the chain (18) uses: property (ii) (`enlarged_subset`), property (iii) (`overlap`) and the conclusion of Dyda's inequality (`dyda`). Property (i) — that nearby points of `Ω` share a ball — is what Dyda's inequality is proved from, and is not needed once its conclusion is assumed, so it is not part of the structure. |
+| Dyda's inequality (13) | Lem. A.1 | Quoted from [Dyda06, proof of Thm. 1]; carried as the hypothesis `hdyda` of `QFS.lemma_ball_to_domain`. |
 | Density of `C^∞(Ω̄)` and `C_c^∞(ℝ^d)` in `H^{α/2}` | Thm. 1.4 | Quoted from [DeDe12, Props. 4.52 and 4.27]. |
 | `H_k` on balls | Lem. 3.7 | ✅ **proved** in the enlarged-ball form (`QFS.formHs_ball_le_form_of_formHs_ne_top`), under the finiteness hypothesis above. |
 | `{x \| V ⊆ Γ(x)}` is Lebesgue measurable | §2 (after Cor. 2.4) | The paper does not prove it — "This implication is due to [Debreu67, Thm. 4.4]". It is what makes the sets `A_h^m(u)` measurable, which Proposition 3.5 integrates over, so it is carried there as the explicit hypothesis `QFS.CondMeas`. Checked against Mathlib: the route through Debreu's theorem needs the measurable-projection theorem for analytic sets, which Mathlib does not have (`AnalyticSet` exists, but only `measurablySeparable` and `measurableSet_of_compl`, not universal measurability); and the elementary route — intersecting over a countable dense subset of `V` — fails exactly at apex `π/2`, where the closed double cone is the whole space. |
