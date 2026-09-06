@@ -451,7 +451,7 @@ contain.
 | 3.3 | Lemma | small cone inside `V^m_r` | ❗ false for `d = 1`; ✅ **proved for `d ≥ 2`** (`QFS.lemma_new_config`) |
 | 3.4 | Lemma | `\|s−t\|` vs `\|x−y\|` | ✅ for `hℤ^d`; ❗ **false as printed** |
 | 3.5 | Proposition | test-function bound | ✅ **proved** for `d ≥ 2` (`QFS.prop_test_fct`), with `QFS.CondMeas` as hypothesis |
-| 3.6 | Corollary | the rescaled kernel | ✅ **proved** for `d ≥ 2` (`QFS.cor_rescaled_kernel`), with `QFS.CondMeas` as hypothesis |
+| 3.6 | Corollary | the rescaled kernel | ✅ **proved** for `d ≥ 2` (`QFS.cor_rescaled_kernel_uniform`), with `QFS.CondMeas` as hypothesis |
 | 3.7 | Lemma | comparability on a ball, `\|·\|_{H^{α/2}(B)} ≤ c\|·\|_{H_k(B)}` | 🚧 §3.2's argument is **proved** in the enlarged-ball form (`QFS.formHs_ball_le_form_of_formHs_ne_top`), under the finiteness hypothesis the paper's dominated-convergence step needs; the passage from the enlarged ball to the same ball is `QFS.formHs_le_form_of_theoremOneOneBall`, modulo Lemma A.1's quoted input. Lemma 3.7's own statement (`H_k(B) = H^{α/2}(B)`) is proved in the plane, granted the quoted Whitney/Dyda input, by new mathematics recorded outside these tables (`QFS.Hk_ball_eq_Hs_ball_planar`) |
 | 4.1 | Theorem | **connectivity of `G[U]`** | ✅ **proved** |
 | 4.2 | Definition | type of a point | ✅ |
@@ -538,7 +538,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | Lemma 3.2 and the cube step, at scale `h` | Cor. 3.6 | `QFS.cube_subset_of_mem_shift_shrink_scaled`, `QFS.lemma_min_dist_scaled`, `QFS.lemma_min_dist_E_scaled` | ✅ proved |
 | Shrinking commutes with scaling; Lemma 3.3 on `hℤ^d` | Cor. 3.6 | `QFS.mem_shrink_smul`, `QFS.thin_cone_subset_scaled`, `QFS.sub_mem_scaledLattice` | ✅ proved |
 | Proposition 3.5's estimate at scale `h` | Cor. 3.6 | `QFS.discreteKernel_integrand_ge_scaled`, `QFS.discreteKernel_ge_volume_scaled`, `QFS.inv_card_le_volume_cubeCone_scaled` | ✅ proved |
-| **Corollary 3.6** | Cor. 3.6 | `QFS.cor_rescaled_kernel` | ✅ **proved** (`d ≥ 2`) |
+| **Corollary 3.6** | Cor. 3.6 | `QFS.cor_rescaled_kernel_uniform` | ✅ **proved** (`d ≥ 2`) |
 | Cubes are closed / open; a cube containing `x` lies in `B̄_{h√d}(x)` | Lem. A.2 | `QFS.continuous_coord`, `QFS.isClosed_closedCube`, `QFS.isOpen_cube`, `QFS.closedCube_subset_closedBall_of_mem` | ✅ proved |
 | **The Vitali family of cubes** | Lem. A.2 | `QFS.unitBallVol`, `QFS.volume_closedBall_eq`, `QFS.cubeVitaliConst`, `QFS.cubeVitali_doubling`, `QFS.cubeVitali`, `QFS.closedCube_mem_setsAt`, `QFS.tendsto_closedCube_filterAt` | ✅ **proved** |
 | **Lemma A.2**: differentiation along cubes | Lem. A.2 | `QFS.lemma_lebesgue_diff` | ✅ **proved** |
@@ -563,7 +563,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **Dominated convergence on the right, with the moving dominant** | §3.2 | `QFS.limsup_lintegral_stepG_le`, `QFS.measurable_stepG`, `QFS.measurable_tileAvg₂`, `QFS.measurable_ballIntegrand`, `QFS.measurable_jumpKernel`, `QFS.form_eq_lintegral_ballIntegrand`, `QFS.closedCube_subset_ball` | ✅ **proved** |
 | **Corollary 3.6 as assumption (4) at every scale**, with `R₀ = 3√d` | §3.2, Cor. 3.6 | `QFS.discreteKernelBounds_discreteKernel`, `QFS.discreteKernel_symm` | ✅ **proved** |
 | **§3.2's assembly: Lemma 3.7 on a ball**, under the finiteness hypothesis | Lem. 3.7, §3.2 | `QFS.formHs_ball_le_form_of_formHs_ne_top`, `QFS.form_mono_set`, `QFS.limsup_const_mul` | ✅ **proved** |
-| **Corollary 3.6 with the constant where the paper puts it** (before `Γ` and `k`) | Cor. 3.6 | `QFS.cor_rescaled_kernel_uniform` | ✅ **proved** |
+| **Corollary 3.6 with the existential for `C` pushed past `Γ` and `k`** — the literal reading of the corollary's sentence, weaker than the paper's own strength | Cor. 3.6 | `QFS.cor_rescaled_kernel` | ✅ **proved** |
 | **The ball form of Theorem 1.1 with the hypotheses this formalisation carries** | Thm. 1.1, §3.2 | `QFS.TheoremOneOneBallCondMeas` | ✅ stated |
 | **Theorem 1.1 with the hypotheses this formalisation carries** | Thm. 1.1 | `QFS.TheoremOneOneCondMeas`, `QFS.le_pi_div_two_of_isBounded` | ✅ stated |
 | **A function in `L²` of a ball has a measurable, globally integrable representative** | §3.2 | `QFS.exists_measurable_repr` | ✅ **proved** |
@@ -1120,8 +1120,12 @@ Each departure from the paper, and why.
     configuration and the kernel. Corollary 3.6's constant is built from
     `d, ϑ, α, Λ` only — the reference family comes from `ϑ` and `d` — so the
     existential can be hoisted past `Γ` and `k`, and
-    `QFS.cor_rescaled_kernel_uniform` states it there;
-    `QFS.cor_rescaled_kernel` is the paper-shaped weakening derived from it.
+    `QFS.cor_rescaled_kernel_uniform` states it there — and this is the paper's
+    own strength, not an improvement on it: Proposition 3.5 declares its constant
+    as `C = C(d, ϑ)` and adds "There is no further dependence on `Γ`", which is
+    precisely how the corollary's `C` comes out independent of `h`.
+    `QFS.cor_rescaled_kernel` is the weakening with that existential pushed back
+    inside `Γ` and `k`, derived from it.
     That order carries through §3.2, so
     `QFS.formHs_ball_le_form_of_formHs_ne_top` has the paper's constants.
     What is *not* the paper's is the hypothesis list: Debreu's measurability
@@ -1284,7 +1288,7 @@ The chain, with each link's status:
 | --- | --- |
 | Theorem 1.3 (discrete comparability) | ✅ `QFS.theoremOneThree` |
 | Corollary 3.1 (rescaled to `hℤ^d`) | ✅ `QFS.corollaryThreeOne` |
-| Proposition 3.5, Corollary 3.6 (the discrete kernel `ω^k_h`) | ✅ `QFS.prop_test_fct`, `QFS.cor_rescaled_kernel` (`d ≥ 2`, with `QFS.CondMeas`) |
+| Proposition 3.5, Corollary 3.6 (the discrete kernel `ω^k_h`) | ✅ `QFS.prop_test_fct`, `QFS.cor_rescaled_kernel_uniform` (`d ≥ 2`, with `QFS.CondMeas`) |
 | §3.2: the step functions and their convergence | ✅ `QFS.tendsto_avg_stepIndex`, `QFS.tendsto_cubeAvg_stepIndex`, `QFS.lintegral_stepFun` |
 | §3.2: `(15)` as an inequality between integrals | ✅ `QFS.discret_lintegral` |
 | §3.2: Fatou on the left of `(15)` | ✅ `QFS.formHs_ball_le_liminf` |
@@ -1877,9 +1881,9 @@ proved in Lean:
    (`QFS.formHs_ball_le_form_planar`).
 
 8. **In the paper's own shape, and on the same ball.** Corollary 3.6's constant
-   depends only on `d, ϑ, α, Λ`, so it can be hoisted past the configuration and
-   the kernel (`QFS.cor_rescaled_kernel_uniform`), which puts `κ` and `c` where
-   the paper puts them. With a measurable representative
+   depends only on `d, ϑ, α, Λ` — Proposition 3.5 says so outright — so it sits
+   before the configuration and the kernel (`QFS.cor_rescaled_kernel_uniform`),
+   which puts `κ` and `c` where the paper puts them. With a measurable representative
    (`QFS.exists_measurable_repr`) and the a.e. invariance of the forms
    (`QFS.form_congr_ae`) the hypothesis on `f` becomes `f ∈ L²(B_{κR})`, so the
    planar result is exactly `QFS.TheoremOneOneBall` plus the two hypotheses this
