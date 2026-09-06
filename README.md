@@ -475,8 +475,8 @@ contain.
 | 5.14 | Proposition | renormalisation | ✅ |
 | 5.15 | Theorem | path properties | ✅ **proved** (`QFS.path_props`, and `QFS.path_props_of_pos` without the cap `ϑ ≤ π/2`, which is how the paper states it) |
 | 5.16 | Lemma | the first jump | ✅ |
-| 7.1 | Lemma | from balls to a bounded Lipschitz domain | 🚧 its chain (18) **proved** (`QFS.lemma_ball_to_domain`), including the finite-overlap step (`QFS.tsum_setLIntegral_le_of_overlap`), and packaged for a ball (`QFS.formHs_le_form_of_ballComparability`) and for a domain (`QFS.formHs_le_form_domain`); the Whitney family and Dyda's inequality (13) are hypotheses, as in the paper (`QFS.WhitneyBallData`, `QFS.WhitneyDomainData`) |
-| 7.2 | Lemma | a Lebesgue differentiation argument | ✅ **proved** (`QFS.lemma_lebesgue_diff`) |
+| A.1 | Lemma | from balls to a bounded Lipschitz domain | 🚧 its chain (18) **proved** (`QFS.lemma_ball_to_domain`), including the finite-overlap step (`QFS.tsum_setLIntegral_le_of_overlap`), and packaged for a ball (`QFS.formHs_le_form_of_ballComparability`) and for a domain (`QFS.formHs_le_form_domain`); the Whitney family and Dyda's inequality (13) are hypotheses, as in the paper (`QFS.WhitneyBallData`, `QFS.WhitneyDomainData`) |
+| A.2 | Lemma | a Lebesgue differentiation argument | ✅ **proved** (`QFS.lemma_lebesgue_diff`, and `QFS.lemma_lebesgue_diff_paper` in the paper's own shape) |
 
 Sections 2, 4, 5 and 6 are formalised completely, apart from one remark of
 Section 2 that the paper itself quotes rather than proves (see *Not attempted*).
@@ -1051,7 +1051,7 @@ Each departure from the paper, and why.
     `QFS.exists_mem_ball_inter_shift` carries `ϑ ≤ V.apex`, and with it the
     paper's constant `λ = (sin ϑ)/2` is correct.
 
-19. **Four smaller slips in printed statements, each repaired silently.**
+19. **Five smaller slips in printed statements, each repaired silently.**
 
     * **Definition 2.3** writes `V^m_r = {u ∈ V^m | B̄_r ⊂ V^m}` — the ball has
       no centre, so read literally `V^m_r` is `V^m` or `∅`. Definition 2.1
@@ -1065,6 +1065,14 @@ Each departure from the paper, and why.
       takes `r` first, as Corollary 5.8 correctly states.
     * **Definition 5.3** restricts to `r ≤ R` and `x ∈ ℤ^d`; `QFS.RRConnected`
       imposes neither, which only widens the definition and is never used.
+    * **Corollary 5.2** prints `R = (r + √d)/sin ϑ`, which is the radius of
+      Lemma 5.1 **(1)**. A two-edge path needs Lemma 5.1 **(2)**, whose own
+      hypothesis is `R > (r + √d)/sin ϑ + r`: the extra `r` is what translating
+      the cone from `x` to `y` costs, and 5.1(1) alone does not put its lattice
+      point in the second cone. `QFS.discr_connect_two_of_same_type_two` uses
+      the larger radius. The corollary may still be true as printed by a sharper
+      argument; what fails is that the stated constant follows from the input the
+      paper cites.
 
     Two more definitional notes, neither a defect: `QFS.CondM` asks for
     measurability with respect to the ambient `MeasurableSpace` instance, which
