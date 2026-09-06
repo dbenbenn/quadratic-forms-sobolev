@@ -21,7 +21,7 @@ deduced from the first by a discrete approximation.
 **Theorem 1.3 is proved here** (`QFS.theoremOneThree`), and with it everything it
 rests on: Section 2's definitional set-up and reference cones, Section 4's
 "continuous prelude" and its Theorem 4.1, the whole of Section 5 including
-**Theorem 5.15** (`QFS.path_props`), and Section 6.
+**Theorem 5.15** (`QFS.path_props_of_pos`), and Section 6.
 
 Of the road to Theorem 1.1, **Section 3 is now formalised in full**: Corollary
 3.1, Lemmas 3.2–3.4, **Proposition 3.5**, **Corollary 3.6**, and **§3.2's own
@@ -689,7 +689,7 @@ a type-checked `Prop` alongside its enlarged-ball form.
 | **Lemma 5.16**: the first jump | Lem. 5.16 | `QFS.connect_first_jump` | ✅ **proved** |
 | `G` as a `SimpleGraph`, with walks | §5.3 | `QFS.latticeGraph`, `QFS.LatticePt` | ✅ defined |
 | Statement of Theorem 5.15 | Thm. 5.15 | `QFS.PathProps`, `QFS.PathPropsHolds` | ✅ stated |
-| **Theorem 5.15** | Thm. 5.15 | `QFS.path_props` | ✅ **proved** |
+| **Theorem 5.15** | Thm. 5.15 | `QFS.path_props_of_pos` (the paper's hypothesis), `QFS.path_props` (with the cap `ϑ ≤ π/2`) | ✅ **proved** |
 | Theorem 5.15, Steps 3–6 | Thm. 5.15 | `QFS.pathPropsLong_of_scaleData`, `QFS.pathPropsHolds_of_scaleData`, `QFS.pathPropsLongHolds_of_scaleData` | ✅ proved |
 | Coordinates determine a point; rounding is injective | (new) | `QFS.euclidean_ext`, `QFS.round_injOn_lattice` | ✅ proved |
 | **`#(B_M ∩ ℤ^d) ≤ (2⌈M⌉+1)^d`, uniformly in the centre** | Thm. 5.15, Steps 1–2 | `QFS.encard_lattice_inter_closedBall_le` | ✅ **proved** |
@@ -1033,7 +1033,7 @@ Each departure from the paper, and why.
 
     `QFS.PathPropsLong` is Theorem 5.15 with the extra clause `R₀ < |edge|`, and
     `QFS.path_props_long` proves it; `QFS.PathPropsLong.toPathProps` forgets the
-    clause, so `QFS.path_props` still records exactly the paper's statement.
+    clause, so `QFS.path_props_of_pos` still records exactly the paper's statement.
 
 18. **The `λ`-observation in the proof of Theorem 4.1 is false as printed.** The
     proof opens the case `#Γ(U) > 1` with
@@ -1525,9 +1525,11 @@ so the two cases fit together.
 
 ## Theorem 5.15
 
-`QFS.PathPropsHolds` records the statement and **`QFS.path_props` proves it**:
-for every `d ≥ 1` and every `0 < ϑ ≤ π/2` and every `R₀`, the path family exists
-with constants independent of the configuration. Its four
+`QFS.PathPropsHolds` records the statement and **`QFS.path_props_of_pos` proves
+it**: for every `d ≥ 1`, every `ϑ > 0` and every `R₀`, the path family exists with
+constants independent of the configuration. The paper assumes only that lower
+bound on the apex angles; `QFS.path_props` is the same conclusion with the cap
+`ϑ ≤ π/2` added, and the uncapped form follows from it by capping. Its four
 claims count and measure edges, which the `Relation.ReflTransGen` used up to this
 point cannot express — that records only that a path exists, not which one. So
 the paths are Mathlib `SimpleGraph.Walk`s in `QFS.latticeGraph`, which carry a

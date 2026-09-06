@@ -825,7 +825,9 @@ theorem path_props_long (hd : 1 ≤ d) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ 
   exact pathPropsLong_of_scaleData hd hΔ2R hR1 hΔR₀ hC (fun m z hz =>
     scaleData_of_blockData hΔ0 hRd (Classical.choice (hbd Γ' hΓ' htypes m z hz)))
 
-/-- **Theorem 5.15** of Bux–Kassmann–Schulze, as the paper states it. -/
+/-- **Theorem 5.15** of Bux–Kassmann–Schulze, with the cap `ϑ ≤ π/2` added. The
+paper hypothesises only "apex angles bounded from below by `ϑ > 0`"; that form is
+`path_props_of_pos`, obtained from this one by capping. -/
 theorem path_props (hd : 1 ≤ d) {ϑ : ℝ} (hϑ : 0 < ϑ) (hϑ' : ϑ ≤ π / 2) (R₀ : ℝ) :
     PathPropsHolds d ϑ R₀ :=
   (path_props_long hd hϑ hϑ' R₀).toPathPropsHolds
